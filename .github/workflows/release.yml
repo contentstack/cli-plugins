@@ -1,0 +1,96 @@
+name: Release CLI Plugin Packages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: |
+          pnpm --filter @contentstack/cli-variants compile
+          pnpm --filter './packages/*' -w build
+
+      - name: Reading Configuration
+        id: release_config
+        uses: rgarcia-phi/json-to-variables@v1.1.0
+        with:
+          filename: .github/config/release.json
+          prefix: release
+
+      - name: Prepare for publishing
+        run: node scripts/prepare-publish.js
+
+      # Publish variants (base dependency for plugins)
+      - name: Publishing variants
+        uses: JS-DevTools/npm-publish@v3
+        if: ${{env.release_releaseAll == 'true' || env.release_plugins_variants == 'true'}}
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-variants/package.json
+          access: public
+
+      # Publish audit
+      - name: Publishing audit
+        uses: JS-DevTools/npm-publish@v3
+        if: ${{env.release_releaseAll == 'true' || env.release_plugins_audit == 'true'}}
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-audit/package.json
+          access: public
+
+      # Publish export (depends on variants)
+      - name: Publishing export
+        uses: JS-DevTools/npm-publish@v3
+        if: ${{env.release_releaseAll == 'true' || env.release_plugins_export == 'true'}}
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-export/package.json
+
+      # Publish import (depends on variants and audit)
+      - name: Publishing import
+        uses: JS-DevTools/npm-publish@v3
+        if: ${{env.release_releaseAll == 'true' || env.release_plugins_import == 'true'}}
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-import/package.json
+
+      # Publish clone (depends on export and import)
+      - name: Publishing clone
+        id: publish-clone
+        uses: JS-DevTools/npm-publish@v3
+        if: ${{env.release_releaseAll == 'true' || env.release_plugins_clone == 'true'}}
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-clone/package.json
+
+      # Restore workspace protocol after publishing
+      - name: Restore workspace protocol
+        if: always()
+        run: git restore packages/*/package.json
+
+      # Create release on success
+      - name: Create Release
+        if: ${{ steps.publish-clone.conclusion == 'success' }}
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.publish-clone.outputs.version }}
+        run: gh release create v"$VERSION" --title "Release $VERSION" --generate-notes

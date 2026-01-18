@@ -1,0 +1,46 @@
+{
+  "name": "csdx",
+  "version": "1.0.0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "pnpm": "^10.28.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "cache:clear": "pnpm store prune",
+    "clean": "pnpm --filter './packages/*' -w clean",
+    "build": "pnpm --filter './packages/*' -w build",
+    "bootstrap": "pnpm install --no-frozen-lockfile",
+    "prepack": "pnpm --filter \"./packages/*\" -w prepack",
+    "package-lock-only": "npm i --package-lock-only --workspaces",
+    "setup-repo-old": "npm i && pnpm package-lock-only && pnpm clean && pnpm install --no-frozen-lockfile && pnpm prepack",
+    "clean-repo": "rm -rf ./package-lock.json ./node_modules ./packages/**/node_modules ./packages/**/.nyc_output ./packages/**/package-lock.json",
+    "preinstall-clean": "npm run clean-repo && npm cache clean --force && npx pnpm store prune",
+    "setup-repo": "npm run preinstall-clean && npm i && npm run package-lock-only && npm run clean && pnpm install --no-frozen-lockfile && npm run prepack",
+    "prepare": "npx husky && chmod +x .husky/pre-commit",
+    "test": "pnpm --filter './packages/*' -w test",
+    "prepare-publish": "node scripts/prepare-publish.js",
+    "publish:packages": "pnpm prepare-publish && pnpm publish -r --access public",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "release:beta:enter": "changeset pre enter beta",
+    "release:beta:exit": "changeset pre exit",
+    "release:beta:version": "changeset version && pnpm install",
+    "release:beta:publish": "pnpm build && changeset publish --tag beta",
+    "release:beta": "pnpm release:beta:version && pnpm release:beta:publish",
+    "release:stable:version": "changeset version && pnpm install",
+    "release:stable:publish": "pnpm build && changeset publish",
+    "release:stable": "pnpm release:stable:version && pnpm release:stable:publish",
+    "release:version": "changeset version && pnpm install",
+    "release:publish": "pnpm build && changeset publish",
+    "sync:versions": "node scripts/sync-versions.js"
+  },
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ]
+}

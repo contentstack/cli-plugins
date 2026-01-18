@@ -1,0 +1,17 @@
+{
+  "command": "readme",
+  "module": "readme",
+  "userId": "e947ad78-4152-51b3-9e3a-cbb6026f281c",
+  "email": "shafeeq.pp@contentstack.com",
+  "sessionId": "kuGwwBLycXWZtTMM1pBqyP",
+  "apiKey": "test",
+  "orgId": "",
+  "authenticationMethod": "Basic Auth",
+  "startTimestamp": "2026-01-13T07:41:20.270Z",
+  "MachineEnvironment": {
+    "nodeVersion": "v22.13.1",
+    "os": "darwin",
+    "hostname": "ShafeeqPp-Mac",
+    "CLI_VERSION": "1.54.0"
+  }
+}

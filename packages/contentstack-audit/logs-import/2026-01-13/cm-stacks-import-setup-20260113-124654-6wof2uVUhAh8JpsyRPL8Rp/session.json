@@ -1,0 +1,17 @@
+{
+  "command": "cm:stacks:import-setup",
+  "module": "import-setup",
+  "userId": "e947ad78-4152-51b3-9e3a-cbb6026f281c",
+  "email": "shafeeq.pp@contentstack.com",
+  "sessionId": "6wof2uVUhAh8JpsyRPL8Rp",
+  "apiKey": "test",
+  "orgId": "",
+  "authenticationMethod": "Basic Auth",
+  "startTimestamp": "2026-01-13T07:16:54.514Z",
+  "MachineEnvironment": {
+    "nodeVersion": "v22.13.1",
+    "os": "darwin",
+    "hostname": "ShafeeqPp-Mac",
+    "CLI_VERSION": "1.54.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "releaseAll": true,
+  "plugins": {
+    "variants": false,
+    "audit": false,
+    "export": false,
+    "import": false,
+    "clone": false
+  }
+}

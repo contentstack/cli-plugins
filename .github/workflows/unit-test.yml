@@ -1,0 +1,69 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - name: Check and install beta dependencies
+        run: |
+          if [ -f ".changeset/pre.json" ]; then
+            echo "Installing beta versions of core packages"
+            pnpm add -D \
+              @contentstack/cli-utilities@beta \
+              @contentstack/cli-command@beta \
+              @contentstack/cli-auth@beta \
+              @contentstack/cli-config@beta
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build variants
+        working-directory: ./packages/contentstack-variants
+        run: pnpm compile
+
+      - name: Build export
+        working-directory: ./packages/contentstack-export
+        run: pnpm build
+
+      - name: Build import
+        working-directory: ./packages/contentstack-import
+        run: pnpm build
+
+      - name: Build audit
+        working-directory: ./packages/contentstack-audit
+        run: pnpm build
+
+      - name: Run tests for variants
+        working-directory: ./packages/contentstack-variants
+        run: pnpm test:unit
+
+      - name: Run tests for export
+        working-directory: ./packages/contentstack-export
+        run: pnpm test:unit
+
+      - name: Run tests for import
+        working-directory: ./packages/contentstack-import
+        run: pnpm test:unit
+
+      - name: Run tests for audit
+        working-directory: ./packages/contentstack-audit
+        run: pnpm test:unit
