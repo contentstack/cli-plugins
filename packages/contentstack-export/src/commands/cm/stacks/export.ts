@@ -117,7 +117,7 @@ export default class ExportCommand extends Command {
   static aliases: string[] = ['cm:export'];
 
   async run(): Promise<void> {
-    console.log('ExportCommand running test...');
+    console.log('ExportCommand running test 23...');
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);
