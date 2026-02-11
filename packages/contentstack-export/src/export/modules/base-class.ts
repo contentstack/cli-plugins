@@ -5,7 +5,7 @@ import chunk from 'lodash/chunk';
 import isEmpty from 'lodash/isEmpty';
 import entries from 'lodash/entries';
 import isEqual from 'lodash/isEqual';
-import { log } from '@contentstack/cli-utilities';
+import { log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
 import { ExportConfig, ModuleClassParams } from '../../types';
 
@@ -17,6 +17,13 @@ export type ApiOptions = {
   resolve: (value: any) => void;
   reject: (error: any) => void;
   additionalInfo?: Record<any, any>;
+};
+
+export type CompleteProgressOptions = {
+  moduleName?: string;
+  customSuccessMessage?: string;
+  customWarningMessage?: string;
+  context?: Record<string, any>;
 };
 
 export type EnvType = {
@@ -53,10 +60,86 @@ export type ApiModuleType =
 export default abstract class BaseClass {
   readonly client: any;
   public exportConfig: ExportConfig;
+  protected progressManager: CLIProgressManager | null = null;
+  protected currentModuleName: string = '';
 
   constructor({ exportConfig, stackAPIClient }: Omit<ModuleClassParams, 'moduleName'>) {
     this.client = stackAPIClient;
     this.exportConfig = exportConfig;
+  }
+
+  static printFinalSummary(): void {
+    CLIProgressManager.printGlobalSummary();
+  }
+
+  /**
+   * Create simple progress manager 
+   */
+  protected createSimpleProgress(moduleName: string, total?: number): CLIProgressManager {
+    this.currentModuleName = moduleName;
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false; // Default to true for better UX
+    this.progressManager = CLIProgressManager.createSimple(moduleName, total, showConsoleLogs);
+    return this.progressManager;
+  }
+
+  /**
+   * Create nested progress manager
+   */
+  protected createNestedProgress(moduleName: string): CLIProgressManager {
+    this.currentModuleName = moduleName;
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false; // Default to true for better UX
+    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    return this.progressManager;
+  }
+
+  /**
+   * Complete progress manager
+   */
+  protected completeProgress(success: boolean = true, error?: string): void {
+    this.progressManager?.complete(success, error);
+    this.progressManager = null;
+  }
+
+  /**
+   * Complete progress and log success/warning message based on errors
+   * Checks the progress manager's failure count to determine if errors occurred
+   * @param options - Options object containing:
+   *   - moduleName: The module name to generate the message (e.g., 'Assets', 'Entries')
+   *                 If not provided, uses this.currentModuleName
+   *   - customSuccessMessage: Optional custom success message. If not provided, generates: "{moduleName} have been exported successfully!"
+   *   - customWarningMessage: Optional custom warning message. If not provided, generates: "{moduleName} have been exported with some errors. Please check the logs for details."
+   *   - context: Optional context for logging
+   */
+  protected completeProgressWithMessage(options?: CompleteProgressOptions): void {
+    const logContext = options?.context || this.exportConfig?.context || {};
+    const failureCount = this.progressManager?.getFailureCount() || 0;
+    const hasErrors = failureCount > 0;
+    const name = options?.moduleName || this.currentModuleName || 'Module';
+
+    // Generate default messages if not provided
+    const successMessage = options?.customSuccessMessage || `${name} have been exported successfully!`;
+    const warningMessage = options?.customWarningMessage || `${name} have been exported with some errors. Please check the logs for details.`;
+
+    this.completeProgress(true);
+
+    if (hasErrors) {
+      log.warn(warningMessage, logContext);
+    } else {
+      log.success(successMessage, logContext);
+    }
+  }
+
+  protected async withLoadingSpinner<T>(message: string, action: () => Promise<T>): Promise<T> {
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+
+    if (showConsoleLogs) {
+      // If console logs are enabled, don't show spinner, just execute the action
+      return await action();
+    }
+    return await CLIProgressManager.withLoadingSpinner(message, action);
   }
 
   get stack(): any {
