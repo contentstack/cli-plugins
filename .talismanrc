@@ -359,4 +359,8 @@ fileignoreconfig:
     checksum: 533043fcc944d91d1bfa084a6ba6e87409986c2931197d145237862f55143374
   - filename: packages/contentstack-export/test/unit/utils/export-config-handler.test.ts
     checksum: 64411834509e7e80211348aa8ea81da922a8e07bb0f87b9ae2a19c0bd167c82a
+  - filename: pnpm-lock.yaml
+    checksum: 4a6ed0dd31e71c81b02c3933ad4ee6fc3f3907cade5f3032095ec34563628154
+  - filename: .husky/pre-commit
+    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
 version: "1.0"
