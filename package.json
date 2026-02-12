@@ -19,7 +19,7 @@
     "clean:modules": "rm -rf node_modules packages/**/node_modules",
     "clean:lock": "rm -f pnpm-lock.yaml",
     "clean:all": "pnpm store prune && pnpm run clean:modules && pnpm run clean:lock",
-    "setup": "pnpm run clean:all && pnpm install",
+    "setup": "pnpm run clean:all && pnpm run boootstrap && pnpm run build",
     "prepare": "npx husky && chmod +x .husky/pre-commit",
     "prepare-publish": "node scripts/prepare-publish.js",
     "publish:packages": "pnpm prepare-publish && pnpm publish -r --access public",
