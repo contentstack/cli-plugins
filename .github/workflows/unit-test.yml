@@ -42,10 +42,6 @@ jobs:
         working-directory: ./packages/contentstack-audit
         run: npm run test:unit
 
-      - name: Run tests for Contentstack Migrate RTE
-        working-directory: ./packages/contentstack-migrate-rte
-        run: npm run test
-
       - name: Run tests for Contentstack Migration
         working-directory: ./packages/contentstack-migration
         run: npm run test
