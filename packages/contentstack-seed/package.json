@@ -61,8 +61,10 @@
     "test": "jest",
     "pack": "npm pack --dry-run",
     "postpack": "rm -f oclif.manifest.json",
-    "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
+    "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./node_modules tsconfig.build.tsbuildinfo"
+    "clean": "rm -rf ./lib ./node_modules tsconfig.build.tsbuildinfo",
+    "compile": "tsc -b tsconfig.json",
+    "build": "pnpm compile"
   }
 }

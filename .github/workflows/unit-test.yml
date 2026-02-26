@@ -1,0 +1,43 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0 # or your local pnpm version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm' # optional but recommended
+
+      - name: Install dependencies for all plugins
+        run: |
+          NODE_ENV=PREPACK_MODE npm run bootstrap
+
+      - name: Build all plugins
+        run: |
+          NODE_ENV=PREPACK_MODE npm run build
+
+      - name: Run tests for Contentstack Command
+        working-directory: ./packages/contentstack-command
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Config
+        working-directory: ./packages/contentstack-config
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Auth
+        working-directory: ./packages/contentstack-auth
+        run: NODE_ENV=PREPACK_MODE npm run test
