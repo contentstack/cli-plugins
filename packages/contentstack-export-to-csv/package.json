@@ -65,7 +65,7 @@
   },
   "repository": "https://github.com/contentstack/cli",
   "scripts": {
-    "build": "npm run clean && npm run compile",
+    "build": "pnpm compile",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "lint": "eslint src/**/*.ts",
