@@ -30,14 +30,34 @@ jobs:
         run: |
           NODE_ENV=PREPACK_MODE npm run build
 
-      - name: Run tests for Contentstack Command
-        working-directory: ./packages/contentstack-command
+      - name: Run tests for Contentstack Import Plugin
+        working-directory: ./packages/contentstack-import
         run: npm run test:unit
 
-      - name: Run tests for Contentstack Config
-        working-directory: ./packages/contentstack-config
+      - name: Run tests for Contentstack Export Plugin
+        working-directory: ./packages/contentstack-export
         run: npm run test:unit
 
-      - name: Run tests for Contentstack Auth
-        working-directory: ./packages/contentstack-auth
-        run: NODE_ENV=PREPACK_MODE npm run test
+      - name: Run tests for Audit plugin
+        working-directory: ./packages/contentstack-audit
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Migration
+        working-directory: ./packages/contentstack-migration
+        run: npm run test
+
+      - name: Run tests for Contentstack Export To CSV
+        working-directory: ./packages/contentstack-export-to-csv
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Bootstrap
+        working-directory: ./packages/contentstack-bootstrap
+        run: npm run test
+
+      # - name: Run tests for Contentstack Import Setup
+      #   working-directory: ./packages/contentstack-import-setup
+      #   run: npm run test:unit
+
+      - name: Run tests for Contentstack Branches
+        working-directory: ./packages/contentstack-branches
+        run: npm run test:unit
