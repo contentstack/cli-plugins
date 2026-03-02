@@ -1,0 +1,29 @@
+{
+  "name": "csdx",
+  "version": "1.0.0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "pnpm": "^10.28.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "clean": "pnpm -r --filter './packages/*' run clean",
+    "build": "pnpm -r --filter './packages/*' run build",
+    "test": "pnpm -r --filter './packages/*' run test",
+    "prepack": "pnpm -r --filter './packages/*' run prepack",
+    "bootstrap": "pnpm install",
+    "clean:modules": "rm -rf node_modules packages/**/node_modules",
+    "clean:lock": "rm -f pnpm-lock.yaml",
+    "clean:all": "pnpm store prune && rm -rf node_modules && pnpm run clean",
+    "setup": "pnpm run clean:all && pnpm run bootstrap && pnpm run build",
+    "prepare": "npx husky && chmod +x .husky/pre-commit"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "workspaces": [
+    "packages/*"
+  ]
+}
