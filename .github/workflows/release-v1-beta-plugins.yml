@@ -2,7 +2,7 @@ name: Release CLI Plugins (v1 Beta)
 
 on:
   push:
-    branches: [disable-v1-beta]
+    branches: [v1-beta]
 
 jobs:
   build:
