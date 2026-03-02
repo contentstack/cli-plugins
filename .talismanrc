@@ -1,8 +1,4 @@
 fileignoreconfig:
   - filename: package-lock.json
-    checksum: 45100667793fc7dfaae3e24787871257e7f29e06df69ba10ec05b358d59ff15d
-  - filename: pnpm-lock.yaml
-    checksum: 87d001c32b1d7f9df30a289c277e0ea13cfd8a0e2e5fa5118956ff4183683e5c
-  - filename: .husky/pre-commit
-    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
+    checksum: 192758bcc96f1e4b1a1ad583a18e945926006b39d66515e032723aff3977faaf
 version: '1.0'
