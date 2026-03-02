@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
+    "build": "pnpm compile",
     "prepack": "pnpm compile",
     "compile": "tsc -b tsconfig.json",
     "test": "mocha --require ts-node/register --forbid-only \"test/**/*.test.ts\"",
