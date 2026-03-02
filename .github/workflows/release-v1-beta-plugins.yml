@@ -2,7 +2,7 @@ name: Release CLI Plugins (v1 Beta)
 
 on:
   push:
-    branches: [v1-beta]
+    branches: [disable-v1-beta]
 
 jobs:
   build:
@@ -240,7 +240,7 @@ jobs:
         if: ${{ steps.publish-core.conclusion == 'success'  }}
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
           VERSION: ${{ steps.publish-core.outputs.version }}
         run: |
           # Get the previous beta release for comparison
