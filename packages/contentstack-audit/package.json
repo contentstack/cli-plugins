@@ -66,7 +66,7 @@
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-audit/<%- commandPath %>"
   },
   "scripts": {
-    "build": "pnpm compile",
+    "build": "pnpm compile && oclif manifest",
     "lint": "eslint . --ext .ts --config .eslintrc",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "npm run lint",
