@@ -10,7 +10,7 @@
   },
   "private": true,
   "scripts": {
-    "clean": "pnpm -r --filter './packages/*' run clean",
+    "clean:packages": "pnpm -r --filter './packages/*' run clean",
     "build": "pnpm -r --filter './packages/*' run build",
     "test": "pnpm -r --filter './packages/*' run test",
     "prepack": "pnpm -r --filter './packages/*' run prepack",
