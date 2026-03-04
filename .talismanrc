@@ -1,4 +1,6 @@
 fileignoreconfig:
-  - filename: package-lock.json
-    checksum: 192758bcc96f1e4b1a1ad583a18e945926006b39d66515e032723aff3977faaf
+  - filename: pnpm-lock.yaml
+    checksum: 69c9fefd1240e00e7efa17658a53292444de3eecc70fb93c719b3b92a8cac0f0
+  - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
+    checksum: 8690833f285db085aa1431d4a708c243e2bf5b4ed366c5c15e2daf66eb24c19e
 version: '1.0'
