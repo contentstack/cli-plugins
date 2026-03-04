@@ -27,12 +27,17 @@ describe('ModuleImporter', () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
 
-    // Setup mock stack client
+    // Setup mock stack client (locale chain for masterLocalDetails when stub is bypassed in CI)
+    const localeQueryFind = {
+      find: sandbox.stub().resolves({ items: [{ code: 'en-us' }] }),
+    };
+    (localeQueryFind as any).query = sandbox.stub().returns(localeQueryFind);
     mockStackClient = {
       fetch: sandbox.stub().resolves({
         name: 'Test Stack',
         org_uid: 'org-123'
-      })
+      }),
+      locale: sandbox.stub().returns(localeQueryFind),
     };
 
     // Setup mock management client
