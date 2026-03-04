@@ -1,3 +1,6 @@
+export const BATCH_SIZE = 50;
+export const CHUNK_FILE_SIZE_MB = 1;
+
 /**
  * Main process name for Asset Management 2.0 export (single progress bar).
  * Use this when adding/starting the process and for all ticks.
