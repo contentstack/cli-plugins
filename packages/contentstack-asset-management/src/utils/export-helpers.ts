@@ -1,8 +1,5 @@
 import { createWriteStream } from 'node:fs';
 
-export const BATCH_SIZE = 50;
-export const CHUNK_FILE_SIZE_MB = 1;
-
 export function getArrayFromResponse(data: unknown, arrayKey: string): unknown[] {
   if (Array.isArray(data)) return data;
   if (data != null && typeof data === 'object' && arrayKey in data) {

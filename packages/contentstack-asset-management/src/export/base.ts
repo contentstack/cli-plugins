@@ -6,7 +6,7 @@ import type { AssetManagementAPIConfig } from '../types/asset-management-api';
 import type { ExportContext } from '../types/export-types';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
 import { AM_MAIN_PROCESS_NAME } from '../constants/index';
-import { BATCH_SIZE, CHUNK_FILE_SIZE_MB } from '../utils/export-helpers';
+import { BATCH_SIZE, CHUNK_FILE_SIZE_MB } from '../constants/index';
 
 export type { ExportContext };
 
