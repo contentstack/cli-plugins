@@ -292,6 +292,10 @@ describe('ExportContentTypes', () => {
       const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       const makeDirectoryStub = FsUtility.prototype.makeDirectory as sinon.SinonStub;
 
+      sinon.stub(exportContentTypes as any, 'withLoadingSpinner').callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+      sinon.stub(exportContentTypes as any, 'createSimpleProgress').returns({ updateStatus: sinon.stub() });
+      sinon.stub(exportContentTypes as any, 'completeProgressWithMessage');
+
       const contentTypes = [
         { uid: 'ct-1', title: 'Type 1', description: 'Desc' },
         { uid: 'ct-2', title: 'Type 2', description: 'Desc' },
@@ -317,6 +321,8 @@ describe('ExportContentTypes', () => {
 
     it('should handle empty content types', async () => {
       const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      sinon.stub(exportContentTypes as any, 'withLoadingSpinner').callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+      sinon.stub(exportContentTypes as any, 'createSimpleProgress').returns({ updateStatus: sinon.stub() });
       const completeProgressStub = sinon.stub(exportContentTypes as any, 'completeProgress');
 
       mockStackClient.contentType.returns({
@@ -338,6 +344,9 @@ describe('ExportContentTypes', () => {
     });
 
     it('should handle errors during export without throwing', async () => {
+      sinon.stub(exportContentTypes as any, 'withLoadingSpinner').callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+      sinon.stub(exportContentTypes as any, 'createSimpleProgress').returns({ updateStatus: sinon.stub() });
+
       mockStackClient.contentType.returns({
         query: sinon.stub().returns({
           find: sinon.stub().rejects(new Error('Export failed')),
