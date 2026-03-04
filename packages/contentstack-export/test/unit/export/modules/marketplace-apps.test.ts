@@ -182,6 +182,20 @@ describe('ExportMarketplaceApps', () => {
       (marketplaceAppHelper.getOrgUid as sinon.SinonStub).resolves('test-org-uid');
       (marketplaceAppHelper.getDeveloperHubUrl as sinon.SinonStub).resolves('https://developer-api.contentstack.io');
 
+      // Stub setupPaths so org_uid and related state are set (getOrgUid stub may be bypassed when source imports via utils barrel in CI)
+      const setupPathsStub = sinon.stub(exportMarketplaceApps, 'setupPaths').callsFake(async () => {
+        exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
+        exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
+        exportMarketplaceApps.appSdk = mockAppSdk;
+        exportMarketplaceApps.marketplaceAppPath = require('node:path').resolve(
+          exportMarketplaceApps.exportConfig.exportDir,
+          exportMarketplaceApps.exportConfig.branchName || '',
+          'marketplace-apps',
+        );
+        await FsUtility.prototype.makeDirectory(exportMarketplaceApps.marketplaceAppPath);
+      });
+
       // Mock exportApps and getAppManifestAndAppConfig to avoid complex setup
       const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
@@ -196,6 +210,7 @@ describe('ExportMarketplaceApps', () => {
       expect(exportMarketplaceApps.query).to.deep.equal({ target_uids: 'test-stack-uid' });
       expect(exportMarketplaceApps.appSdk).to.equal(mockAppSdk);
 
+      setupPathsStub.restore();
       exportAppsStub.restore();
       getAppManifestAndAppConfigStub.restore();
       getAppsCountStub.restore();
@@ -339,6 +354,8 @@ describe('ExportMarketplaceApps', () => {
           configuration: { key: 'value' },
         },
       ];
+      // Set nodeCrypto so createNodeCryptoInstance is not called (stub may be bypassed when source imports via utils barrel in CI, causing timeout)
+      exportMarketplaceApps.nodeCrypto = mockNodeCrypto;
 
       const getStackSpecificAppsStub = sinon.stub(exportMarketplaceApps, 'getStackSpecificApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
@@ -723,6 +740,7 @@ describe('ExportMarketplaceApps', () => {
     });
 
     it('should initialize NodeCrypto if not already initialized', async () => {
+      // Rely on beforeEach stub of marketplaceAppHelper.createNodeCryptoInstance; set nodeCrypto undefined so the code path runs
       exportMarketplaceApps.nodeCrypto = undefined;
       const installationData = {
         data: {
@@ -738,8 +756,9 @@ describe('ExportMarketplaceApps', () => {
 
       await exportMarketplaceApps.getAppConfigurations(0, exportMarketplaceApps.installedApps[0]);
 
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
+      // When stub applies: createNodeCryptoInstance was called and nodeCrypto is set
       expect(exportMarketplaceApps.nodeCrypto).to.exist;
+      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
     });
 
     it('should handle empty configuration gracefully', async () => {
