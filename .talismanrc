@@ -1,19 +1,8 @@
 fileignoreconfig:
-- filename: packages/contentstack-asset-management/.eslintrc
-  checksum: 136f03481c8c59575d2eafd4c78d105119f85fb10fe88e02af8cffaf3eb7c090
-- filename: packages/contentstack-asset-management/src/export/base.ts
-  checksum: fcae2679bdeb93a6786cb290b60ba98f222a9c682552c6474370d17bf59ae1b4
-- filename: packages/contentstack-export/src/export/modules/stack.ts
-  checksum: 82f7df78993942debb79e690c8c27d0998157428ef506d0b07ea31d5a1f71aba
-- filename: packages/contentstack-asset-management/src/types/export-types.ts
-  checksum: d00ca608006d864f516e21b76d552c0ecf52ff89b3dcb361ed11ac600abed989
-- filename: packages/contentstack-asset-management/src/utils/export-helpers.ts
-  checksum: 1a533a4e4d56a952f61ced63aa6f1bc8fbb3855fd7acecdd9fd40dd71e5fab6d
-- filename: packages/contentstack-asset-management/test/unit/utils/export-helpers.test.ts
-  checksum: 0e8751163491fc45e7ae3999282d336ae1ab8a9f88e601cbb85b4f44e8db96b8
-- filename: packages/contentstack-asset-management/test/unit/utils/asset-management-api-adapter.test.ts
-  checksum: ff688f37f40de3f7cbef378ec682ca1167720d902d8d84370464af7feb36c124
-- filename: packages/contentstack-asset-management/src/utils/asset-management-api-adapter.ts
-  checksum: 6f5e11d3685b6093d6c4def7fc4199f673d9a56e5fbc2858ed72f69d764f1260
-version: "1.0"
+  - filename: pnpm-lock.yaml
+    checksum: 69c9fefd1240e00e7efa17658a53292444de3eecc70fb93c719b3b92a8cac0f0
+  - filename: .husky/pre-commit
+    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
+  - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
+    checksum: 8690833f285db085aa1431d4a708c243e2bf5b4ed366c5c15e2daf66eb24c19e
 version: '1.0'

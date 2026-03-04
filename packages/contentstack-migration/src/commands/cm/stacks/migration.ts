@@ -52,12 +52,14 @@ export default class MigrationCommand extends Command {
   static flags: FlagInput = {
     'stack-api-key': flags.string({
       char: 'k',
-      description: 'Use this flag to add the API key of your stack. You must use either the --stack-api-key flag or the --alias flag.',
+      description:
+        'Use this flag to add the API key of your stack. You must use either the --stack-api-key flag or the --alias flag.',
       exclusive: ['alias'],
     }),
     alias: flags.string({
       char: 'a',
-      description: 'Use this flag to add the management token alias. You must use either the --alias flag or the --stack-api-key flag.',
+      description:
+        'Use this flag to add the management token alias. You must use either the --alias flag or the --stack-api-key flag.',
     }),
     'file-path': flags.string({
       description: 'Use this flag to provide the path of the file of the migration script.',
@@ -69,11 +71,13 @@ export default class MigrationCommand extends Command {
       description: '[optional] Path of the JSON configuration file.',
     }),
     config: flags.string({
-      description: '[optional] Inline configuration, <key1>:<value1>. Passing an external configuration makes the script re-usable.',
+      description:
+        '[optional] Inline configuration, <key1>:<value1>. Passing an external configuration makes the script re-usable.',
       multiple: true,
     }),
     multiple: flags.boolean({
-      description: 'This flag helps you to migrate multiple content files in a single instance. Mention the folder path where your migration script files are stored.',
+      description:
+        'This flag helps you to migrate multiple content files in a single instance. Mention the folder path where your migration script files are stored.',
     }),
 
     // To be deprecated
@@ -85,7 +89,8 @@ export default class MigrationCommand extends Command {
       hidden: true,
     }),
     authtoken: flags.boolean({
-      description: 'Use this flag to use the auth token of the current session. After logging in CLI, an auth token is generated for each new session.',
+      description:
+        'Use this flag to use the auth token of the current session. After logging in CLI, an auth token is generated for each new session.',
       dependsOn: ['api-key'],
       exclusive: ['alias'],
       hidden: true,
@@ -112,7 +117,7 @@ export default class MigrationCommand extends Command {
 
   async run(): Promise<void> {
     // TODO: filePath validation required.
-    const { flags: migrationCommandFlags } = await this.parse(MigrationCommand) as any;
+    const { flags: migrationCommandFlags } = (await this.parse(MigrationCommand)) as any;
     const branch = (migrationCommandFlags as any).branch;
     const filePath = (migrationCommandFlags as any)['file-path'] || (migrationCommandFlags as any).filePath;
     const multi = (migrationCommandFlags as any).multiple || (migrationCommandFlags as any).multi;

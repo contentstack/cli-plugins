@@ -9,7 +9,7 @@
     "prepack": "pnpm compile",
     "compile": "tsc -b tsconfig.json",
     "test": "mocha --require ts-node/register --forbid-only \"test/**/*.test.ts\"",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.build.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "test:unit:report": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\""
   },
   "keywords": [
