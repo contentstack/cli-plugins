@@ -12,3 +12,4 @@ coverage
 .vscode
 branch-config.json
 /merge_scripts
+/tsconfig.tsbuildinfo
