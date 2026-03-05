@@ -8,6 +8,7 @@
     "@contentstack/cli-command": "~2.0.0-beta",
     "@contentstack/cli-utilities": "~2.0.0-beta.1",
     "@contentstack/cli-variants": "~2.0.0-beta.7",
+    "@contentstack/cli-asset-management": "1.0.0",
     "@oclif/core": "^4.8.0",
     "async": "^3.2.6",
     "big-json": "^3.2.0",
@@ -46,8 +47,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "build": "pnpm compile",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.build.tsbuildinfo",
+    "build": "pnpm compile && oclif manifest",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",

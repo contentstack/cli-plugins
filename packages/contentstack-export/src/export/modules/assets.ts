@@ -25,7 +25,8 @@ import { PATH_CONSTANTS } from '../../constants';
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
-import { PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
+import { ExportSpaces } from '@contentstack/cli-asset-management';
+import { PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES, getOrgUid } from '../../utils';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -48,7 +49,48 @@ export default class ExportAssets extends BaseClass {
   }
 
   async start(): Promise<void> {
-      this.assetsRootPath = pResolve(
+    const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
+
+    if (linkedWorkspaces.length > 0) {
+      const assetManagementUrl = this.exportConfig.region?.assetManagementUrl;
+      if (!assetManagementUrl) {
+        this.completeProgress(
+          false,
+          'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+        );
+        throw new Error(
+          'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+        );
+      }
+      log.debug(
+        `Exporting with AM 2.0: ${assetManagementUrl} (linked_workspaces from exportConfig)`,
+        this.exportConfig.context,
+      );
+      this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
+      const progress = this.createNestedProgress(this.currentModuleName);
+      try {
+        const exporter = new ExportSpaces({
+          linkedWorkspaces,
+          exportDir: this.exportConfig.exportDir,
+          branchName: this.exportConfig.branchName || 'main',
+          assetManagementUrl,
+          org_uid: this.exportConfig.org_uid ?? '',
+          context: this.exportConfig.context as unknown as Record<string, unknown>,
+          securedAssets: this.exportConfig.securedAssets,
+        });
+        exporter.setParentProgressManager(progress);
+        await exporter.start();
+        this.completeProgressWithMessage();
+      } catch (error) {
+        this.completeProgress(false, (error as Error)?.message ?? 'Asset Management export failed');
+        throw error;
+      }
+      return;
+    }
+
+    log.debug('Using legacy asset export (no linked_workspaces in exportConfig)', this.exportConfig.context);
+
+    this.assetsRootPath = pResolve(
       this.exportConfig.exportDir,
       this.exportConfig.branchName || '',
       this.assetConfig.dirName,
@@ -78,10 +120,7 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsFolderCount === 'number' && assetsFolderCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_FOLDERS)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FETCHING,
-            PROCESS_NAMES.ASSET_FOLDERS,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FETCHING, PROCESS_NAMES.ASSET_FOLDERS);
         await this.getAssetsFolders(assetsFolderCount);
         progress.completeProcess(PROCESS_NAMES.ASSET_FOLDERS, true);
       }
@@ -90,10 +129,7 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsCount === 'number' && assetsCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_METADATA)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING,
-            PROCESS_NAMES.ASSET_METADATA,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING, PROCESS_NAMES.ASSET_METADATA);
         await this.getAssets(assetsCount);
         progress.completeProcess(PROCESS_NAMES.ASSET_METADATA, true);
       }
@@ -112,17 +148,13 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsCount === 'number' && assetsCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_DOWNLOADS)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_DOWNLOADS].DOWNLOADING,
-            PROCESS_NAMES.ASSET_DOWNLOADS,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_DOWNLOADS].DOWNLOADING, PROCESS_NAMES.ASSET_DOWNLOADS);
         log.debug('Starting download of all assets...', this.exportConfig.context);
         await this.downloadAssets();
         progress.completeProcess(PROCESS_NAMES.ASSET_DOWNLOADS, true);
       }
 
       this.completeProgressWithMessage();
-
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset export failed');
     }
@@ -148,12 +180,7 @@ export default class ExportAssets extends BaseClass {
       if (!isEmpty(items)) {
         this.assetsFolder.push(...items);
         items.forEach((folder: any) => {
-          this.progressManager?.tick(
-            true,
-            `folder: ${folder.name || folder.uid}`,
-            null,
-            PROCESS_NAMES.ASSET_FOLDERS,
-          );
+          this.progressManager?.tick(true, `folder: ${folder.name || folder.uid}`, null, PROCESS_NAMES.ASSET_FOLDERS);
         });
       }
     };
@@ -254,12 +281,7 @@ export default class ExportAssets extends BaseClass {
         fs?.writeIntoFile(items, { mapKeyVal: true });
         // Track progress for each asset with process name
         items.forEach((asset: any) => {
-          this.progressManager?.tick(
-            true,
-            `asset: ${asset.filename || asset.uid}`,
-            null,
-            PROCESS_NAMES.ASSET_METADATA,
-          );
+          this.progressManager?.tick(true, `asset: ${asset.filename || asset.uid}`, null, PROCESS_NAMES.ASSET_METADATA);
         });
       }
     };
