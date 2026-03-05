@@ -139,7 +139,6 @@ jobs:
           tag: beta
 
       - name: Create Beta Release
-        if: ${{ steps.publish-core.conclusion == 'success'  }}
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
