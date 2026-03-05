@@ -69,6 +69,6 @@
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
-    "build": "pnpm compile && oclif manifest"
+    "build": "pnpm compile && oclif manifest && oclif readme"
   }
 }
