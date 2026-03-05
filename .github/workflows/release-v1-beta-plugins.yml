@@ -44,7 +44,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-variants/package.json
-          access: public
           tag: beta
 
       # Export
@@ -61,7 +60,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-audit/package.json
-          access: public
           tag: beta
 
       # Import
@@ -86,7 +84,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import-setup/package.json
-          access: public
           tag: beta
 
       # Export to CSV
@@ -135,7 +132,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-branches/package.json
-          access: public
           tag: beta
 
       - name: Create Beta Release
