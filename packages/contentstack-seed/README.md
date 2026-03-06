@@ -55,8 +55,8 @@ Create a stack from existing content types, entries, assets, etc
 
 ```
 USAGE
-  $ csdx cm:stacks:seed [--repo <value>] [--org <value>] [-k <value>] [-n <value>] [-y] [-s <value>]
-    [--locale <value>]
+  $ csdx cm:stacks:seed [--repo <value>] [--org <value>] [-k <value>] [-n <value>] [-y] [-s <value>] [--locale
+    <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token

@@ -1,11 +1,11 @@
 {
   "name": "@contentstack/cli-cm-bootstrap",
   "description": "Bootstrap contentstack apps",
-  "version": "1.18.5",
+  "version": "1.18.4",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "scripts": {
-    "build": "pnpm compile && oclif manifest",
+    "build": "pnpm compile && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
@@ -16,7 +16,7 @@
     "test:report": "nyc --reporter=lcov mocha \"test/**/*.test.js\""
   },
   "dependencies": {
-    "@contentstack/cli-cm-seed": "~1.14.4",
+    "@contentstack/cli-cm-seed": "~1.14.3",
     "@contentstack/cli-command": "~1.7.2",
     "@contentstack/cli-config": "~1.19.0",
     "@contentstack/cli-utilities": "~1.17.4",
@@ -24,7 +24,7 @@
     "@oclif/plugin-help": "^6.2.37",
     "inquirer": "8.2.7",
     "mkdirp": "^1.0.4",
-    "tar": "^7.5.7"
+    "tar": "^7.5.10"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.13",
