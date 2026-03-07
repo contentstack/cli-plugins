@@ -27,7 +27,6 @@ import {
   MODULE_NAMES,
   PROCESS_NAMES,
   PROCESS_STATUS,
-  askEncryptionKey,
 } from '../../utils';
 import { ModuleClassParams, MarketplaceAppsConfig, ExportConfig, Installation, Manifest } from '../../types';
 
@@ -78,9 +77,7 @@ export default class ExportMarketplaceApps extends BaseClass {
       if (!this.exportConfig.forceStopMarketplaceAppsPrompt) {
         log.debug('Validating security configuration before progress start', this.exportConfig.context);
         cliux.print('\n');
-        await askEncryptionKey(this.exportConfig);
         this.nodeCrypto = await createNodeCryptoInstance(this.exportConfig);
-        
         cliux.print('\n');
       }
 
