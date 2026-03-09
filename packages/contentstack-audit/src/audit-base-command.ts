@@ -174,8 +174,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       }
     }
 
-    // Print comprehensive summary at the end
-    CLIProgressManager.printGlobalSummary();
+    // Print comprehensive summary at the end (commented out - Summary table above has the counts; progress bars show completion)
+    // CLIProgressManager.printGlobalSummary();
 
     // Clear progress module setting now that audit is complete
     clearProgressModuleSetting();
