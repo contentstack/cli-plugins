@@ -101,11 +101,15 @@ describe('ExportMarketplaceApps', () => {
     // Stub utility functions
     sinon.stub(FsUtility.prototype, 'writeFile').resolves();
     sinon.stub(FsUtility.prototype, 'makeDirectory').resolves();
-    // Note: isAuthenticated is non-configurable, so we'll stub it per test when needed using sinon.replace
     sinon.stub(utilities, 'marketplaceSDKClient').resolves(mockAppSdk);
     sinon.stub(marketplaceAppHelper, 'getOrgUid').resolves('test-org-uid');
     sinon.stub(marketplaceAppHelper, 'getDeveloperHubUrl').resolves('https://developer-api.contentstack.io');
     sinon.stub(marketplaceAppHelper, 'createNodeCryptoInstance').resolves(mockNodeCrypto);
+    sinon.stub(marketplaceAppHelper, 'askEncryptionKey').resolves('test-encryption-key');
+    sinon.stub(utils, 'getOrgUid').resolves('test-org-uid');
+    sinon.stub(utils, 'getDeveloperHubUrl').resolves('https://developer-api.contentstack.io');
+    sinon.stub(utils, 'createNodeCryptoInstance').resolves(mockNodeCrypto);
+    sinon.stub(utils, 'askEncryptionKey').resolves('test-encryption-key');
   });
 
   afterEach(() => {
@@ -177,11 +181,6 @@ describe('ExportMarketplaceApps', () => {
         }),
       });
 
-      // marketplaceSDKClient is already stubbed in beforeEach, no need to stub again
-      // getOrgUid and getDeveloperHubUrl are already stubbed in beforeEach, just ensure they resolve correctly
-      (marketplaceAppHelper.getOrgUid as sinon.SinonStub).resolves('test-org-uid');
-      (marketplaceAppHelper.getDeveloperHubUrl as sinon.SinonStub).resolves('https://developer-api.contentstack.io');
-
       // Mock exportApps and getAppManifestAndAppConfig to avoid complex setup
       const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
@@ -200,9 +199,6 @@ describe('ExportMarketplaceApps', () => {
       getAppManifestAndAppConfigStub.restore();
       getAppsCountStub.restore();
       configHandlerGetStub.restore();
-      // marketplaceSDKClient is restored in afterEach, no need to restore here
-      (marketplaceAppHelper.getOrgUid as sinon.SinonStub).restore();
-      (marketplaceAppHelper.getDeveloperHubUrl as sinon.SinonStub).restore();
     });
 
     it('should set marketplaceAppPath correctly', async () => {
@@ -332,15 +328,15 @@ describe('ExportMarketplaceApps', () => {
     });
 
     it('should encrypt app configurations when present', async () => {
-      exportMarketplaceApps.installedApps = [
-        {
-          uid: 'inst-1',
-          manifest: { uid: 'app-1', name: 'Test App' },
-          configuration: { key: 'value' },
-        },
-      ];
-
-      const getStackSpecificAppsStub = sinon.stub(exportMarketplaceApps, 'getStackSpecificApps').resolves();
+      const getStackSpecificAppsStub = sinon.stub(exportMarketplaceApps, 'getStackSpecificApps').callsFake(async () => {
+        exportMarketplaceApps.installedApps = [
+          {
+            uid: 'inst-1',
+            manifest: { uid: 'app-1', name: 'Test App' },
+            configuration: { key: 'value' },
+          },
+        ];
+      });
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
 
       await exportMarketplaceApps.exportApps();
@@ -365,10 +361,13 @@ describe('ExportMarketplaceApps', () => {
       const getStackSpecificAppsStub = sinon.stub(exportMarketplaceApps, 'getStackSpecificApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
 
+      // Reset the stub call count since it might have been called in previous tests
+      (utils.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
+
       await exportMarketplaceApps.exportApps();
 
       // NodeCrypto should not be initialized if no configurations
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.false;
+      expect((utils.createNodeCryptoInstance as sinon.SinonStub).called).to.be.false;
 
       getStackSpecificAppsStub.restore();
       getAppManifestAndAppConfigStub.restore();
@@ -736,9 +735,12 @@ describe('ExportMarketplaceApps', () => {
         }),
       });
 
+      // Reset the stub call count since it was called in beforeEach
+      (utils.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
+
       await exportMarketplaceApps.getAppConfigurations(0, exportMarketplaceApps.installedApps[0]);
 
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
+      expect((utils.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
       expect(exportMarketplaceApps.nodeCrypto).to.exist;
     });
 
