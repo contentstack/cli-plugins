@@ -8,7 +8,7 @@
     "@contentstack/cli-cm-import": "~2.0.0-beta.11",
     "@contentstack/cli-command": "~2.0.0-beta.2",
     "@contentstack/cli-utilities": "~2.0.0-beta.2",
-    "inquirer": "8.2.7",
+    "inquirer": "12.11.1",
     "mkdirp": "^1.0.4",
     "tar": "^7.5.7",
     "tmp": "^0.2.5"
