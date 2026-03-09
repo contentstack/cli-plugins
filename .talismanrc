@@ -1,6 +1,6 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 69c9fefd1240e00e7efa17658a53292444de3eecc70fb93c719b3b92a8cac0f0
+    checksum: 7b55d6b1e94fc2265b1c64193f820ba5e6d1c22096a651f9975a2cf5429397f4
   - filename: .husky/pre-commit
     checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
   - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
