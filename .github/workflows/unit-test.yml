@@ -1,0 +1,62 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0 # or your local pnpm version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm' # optional but recommended
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all plugins
+        run: |
+          NODE_ENV=PREPACK_MODE pnpm -r --sort run build
+
+      - name: Run tests for Contentstack Import Plugin
+        working-directory: ./packages/contentstack-import
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Export Plugin
+        working-directory: ./packages/contentstack-export
+        run: npm run test:unit
+
+      - name: Run tests for Audit plugin
+        working-directory: ./packages/contentstack-audit
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Migration
+        working-directory: ./packages/contentstack-migration
+        run: npm run test
+
+      - name: Run tests for Contentstack Export To CSV
+        working-directory: ./packages/contentstack-export-to-csv
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Bootstrap
+        working-directory: ./packages/contentstack-bootstrap
+        run: npm run test
+
+      # - name: Run tests for Contentstack Import Setup
+      #   working-directory: ./packages/contentstack-import-setup
+      #   run: npm run test:unit
+
+      - name: Run tests for Contentstack Branches
+        working-directory: ./packages/contentstack-branches
+        run: npm run test:unit

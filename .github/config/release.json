@@ -1,0 +1,13 @@
+{
+  "releaseAll": true,
+  "plugins": {
+    "export": false,
+    "import": false,
+    "clone": false,
+    "export-to-csv": false,
+    "migration": false,
+    "seed": false,
+    "bootstrap": false,
+    "branches": false
+  }
+}

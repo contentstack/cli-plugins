@@ -10,5 +10,5 @@ node_modules
 coverage
 .vscode/
 /lib
-
+/tsconfig.tsbuildinfo
 .env

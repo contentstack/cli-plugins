@@ -1,0 +1,142 @@
+name: Release CLI Plugins (v2 Beta)
+
+on:
+  push:
+    branches: [v2-beta]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install pnpm
+        run: corepack prepare pnpm@10.28.0 --activate
+
+      - name: Clean the repository
+        run: pnpm run clean:all
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all plugins
+        run: pnpm -r --sort run build
+
+      - name: Reading Configuration
+        id: release_config
+        uses: rgarcia-phi/json-to-variables@v1.1.0
+        with:
+          filename: .github/config/release.json
+          prefix: release
+
+      # Variants
+      - name: Publishing variants (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-variants/package.json
+          tag: beta
+
+      # Export
+      - name: Publishing export (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-export/package.json
+          tag: beta
+
+      # Audit
+      - name: Publishing audit (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-audit/package.json
+          tag: beta
+
+      # Import
+      - name: Publishing import (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-import/package.json
+          tag: beta
+
+      # Clone
+      - name: Publishing clone (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-clone/package.json
+          tag: beta
+
+      # Import Setup
+      - name: Publishing import-setup (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-import-setup/package.json
+          tag: beta
+
+      # Export to CSV
+      - name: Publishing export to csv (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-export-to-csv/package.json
+          tag: beta
+
+      # Migration
+      - name: Publishing migration (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-migration/package.json
+          tag: beta
+
+      # Seed
+      - name: Publishing seed (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-seed/package.json
+          tag: beta
+
+      # Bootstrap
+      - name: Publishing bootstrap (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bootstrap/package.json
+          tag: beta
+
+      # Branches
+      - name: Publishing branches (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-branches/package.json
+          tag: beta
+
+      - name: Create Beta Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
+          VERSION: ${{ steps.publish-core.outputs.version }}
+        run: |
+          # Get the previous beta release for comparison
+          PREVIOUS_BETA=$(gh release list --limit 10 | grep 'beta' | head -1 | cut -f1)
+
+          if [ -n "$PREVIOUS_BETA" ]; then
+            gh release create v"$VERSION" --title "Beta Release $VERSION" --notes-from-tag "$PREVIOUS_BETA" --prerelease
+          else
+            gh release create v"$VERSION" --title "Beta Release $VERSION" --generate-notes --prerelease
+          fi
