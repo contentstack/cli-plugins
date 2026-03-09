@@ -204,12 +204,14 @@ export default class Assets extends BaseClass {
         if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
           log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
           cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
+          this.assets[assetUid].publish_details = [];
         }
 
         const publishDetails = this.assets[assetUid]?.publish_details;
         log.debug(`Asset ${assetUid} has ${publishDetails?.length || 0} publish details`, this.config.auditContext);
 
-        this.assets[assetUid].publish_details = this.assets[assetUid]?.publish_details.filter((pd: any) => {
+        if (Array.isArray(this.assets[assetUid].publish_details)) {
+        this.assets[assetUid].publish_details = this.assets[assetUid].publish_details.filter((pd: any) => {
           log.debug(`Checking publish detail: locale=${pd?.locale}, environment=${pd?.environment}`, this.config.auditContext);
           
           if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
@@ -239,6 +241,7 @@ export default class Assets extends BaseClass {
             return false;
           }
         });
+        }
         
         const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
         log.debug(`Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`, this.config.auditContext);

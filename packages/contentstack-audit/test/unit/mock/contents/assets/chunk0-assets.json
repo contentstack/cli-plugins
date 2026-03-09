@@ -1,0 +1,25 @@
+{
+  "asset_uid_1": {
+    "uid": "asset_uid_1",
+    "title": "Test Asset",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env1" }
+    ]
+  },
+  "asset_uid_invalid": {
+    "uid": "asset_uid_invalid",
+    "title": "Invalid Env Locale",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env1" },
+      { "locale": "de-de", "environment": "env99" }
+    ]
+  },
+  "asset_uid_two_invalid": {
+    "uid": "asset_uid_two_invalid",
+    "title": "Two Invalid Pds",
+    "publish_details": [
+      { "locale": "de-de", "environment": "env99" },
+      { "locale": "fr-fr", "environment": "env99" }
+    ]
+  }
+}
