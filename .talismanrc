@@ -1,8 +1,8 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 69c9fefd1240e00e7efa17658a53292444de3eecc70fb93c719b3b92a8cac0f0
-  - filename: .husky/pre-commit
-    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
-  - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
-    checksum: 8690833f285db085aa1431d4a708c243e2bf5b4ed366c5c15e2daf66eb24c19e
+    checksum: ff6e95f04fbaf85b5c7226c76830a4bdd27d47ca8d433383002b8478643e1120
+  - filename: packages/contentstack-seed/README.md
+    checksum: d2a017a8206aae1058d4a91d445a7f7d50e919a0d2dd69605a66529c4f4ebe2e
+  - filename: packages/contentstack-export/test/unit/export/modules/marketplace-apps.test.ts
+    checksum: 408de465c1614dd6cf66dabb4f6b1b2339a02984cb96de763122f175e7397829
 version: '1.0'
