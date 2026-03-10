@@ -27,7 +27,7 @@ export interface ContentModelSeederOptions {
   stackUid: string | undefined;
   stackName: string | undefined;
   fetchLimit: string | undefined;
-  skipStackConfirmation: string | undefined;
+  skipStackConfirmation: boolean | undefined;
   isAuthenticated: boolean | false;
   managementToken?: string | undefined;
   alias?: string | undefined;
@@ -181,52 +181,24 @@ export default class ContentModelSeeder {
   }
 
   async shouldProceed(api_key: string) {
-    let count;
     const stack_details = await this.csClient.getStack(api_key);
-    if(this.options.master_locale != stack_details.master_locale){
-        cliux.print(`Compass app requires the master locale to be set to English (en).`,{
-          color: "yellow",
-          bold: true,
-        });
-        return false;
-    }
-    const managementBody = {
-          "name":"Checking roles for creating management token",
-          "description":"This is a compass app management token.",
-          "scope":[
-              {
-                  "module":"content_type",
-                  "acl":{
-                      "read":true,
-                      "write":true
-                  }
-              },
-              {
-                  "module":"branch",
-                  "branches":[
-                      "main"
-                  ],
-                  "acl":{
-                      "read":true
-                  }
-              }
-          ],
-          "expires_on": "3000-01-01",
-          "is_email_notification_enabled":false
-      }
-    let managementTokenResult = await this.csClient.createManagementToken(api_key, this.managementToken, managementBody);
-    if(managementTokenResult?.response_code == "161" || managementTokenResult?.response_code == "401"){
+    const repoMasterLocale = await this.ghClient.getMasterLocaleFromRepo(this.ghRepo as string);
+    const expectedLocale = repoMasterLocale || this.options.master_locale || ENGLISH_LOCALE;
+
+    if (stack_details.master_locale !== expectedLocale) {
       cliux.print(
-        `Info: Failed to generate a management token.\nNote: Management token is not available in your plan. Please contact the admin for support.`,
+        `Repository '${this.ghRepo}' requires the master locale to be set to '${expectedLocale}', but your stack has '${stack_details.master_locale}'.`,
         {
-          color: 'red',
+          color: 'yellow',
+          bold: true,
         },
       );
       return false;
-    }    
-    count = await this.csClient.getContentTypeCount(api_key, this.managementToken);
+    }
 
-    if (count > 0 && this._options.skipStackConfirmation !== 'yes') {
+    const count = await this.csClient.getContentTypeCount(api_key, this.managementToken);
+
+    if (count > 0 && !this._options.skipStackConfirmation) {
       const proceed = await inquireProceed();
 
       if (!proceed) {
