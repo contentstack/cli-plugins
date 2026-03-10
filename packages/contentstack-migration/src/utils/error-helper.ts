@@ -1,6 +1,6 @@
 // @ts-ignore - no types available
 import { highlight } from 'cardinal';
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import isEmpty from 'lodash/isEmpty';
 import MigrationLogger from './migration-logger';
 import fs from 'fs';
@@ -46,7 +46,7 @@ export default (errors: any, filePath?: string): void => {
       const highlightedCode = highlight(fileContents, { linenos: true });
       const lines = highlightedCode.split('\n');
 
-      const fileErrorsMessage = chalk`{red Errors in ${file}}\n\n`;
+      const fileErrorsMessage = (getChalk())`{red Errors in ${file}}\n\n`;
       errorLogs[file].fileErrorsMessage = fileErrorsMessage.replace(/\u001b\[\d+m/g, '');
       const errorMessages = errorsByFile[file]
         .map((error: any) => {
@@ -54,9 +54,9 @@ export default (errors: any, filePath?: string): void => {
           const context = 2;
           let { before, line, after } = getLineWithContext(lines, callsite.line, context);
 
-          const beforeLines = before.map((_line: string) => chalk`${_line}\n`);
-          const afterLines = after.map((_line: string) => chalk`${_line}\n`);
-          const highlightedLine = chalk`{bold ${line}}\n`;
+          const beforeLines = before.map((_line: string) => (getChalk())`${_line}\n`);
+          const afterLines = after.map((_line: string) => (getChalk())`${_line}\n`);
+          const highlightedLine = (getChalk())`{bold ${line}}\n`;
 
           before = removeSpecialCharacter(before.join('\n'));
           after = removeSpecialCharacter(after.join('\n'));
@@ -95,7 +95,7 @@ export default (errors: any, filePath?: string): void => {
     }
     if (isEmpty(messages) && errors !== undefined && isEmpty(errorsByFile)) {
       logger.log('error', { errors: errors });
-      console.log(chalk`{bold.red migration unsuccessful}`);
+      console.log((getChalk())`{bold.red migration unsuccessful}`);
     } else {
       logger.log('error', { error: messages.join('\n') });
     }

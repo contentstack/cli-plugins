@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import * as csv from 'fast-csv';
 import { copy } from 'fs-extra';
 import { v4 as uuid } from 'uuid';
@@ -55,7 +55,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
         minWidth: 7,
         header: 'Fix Status',
         get: (row: any) => {
-          return row.fixStatus === 'Fixed' ? chalk.greenBright(row.fixStatus) : chalk.redBright(row.fixStatus);
+          return row.fixStatus === 'Fixed' ? getChalk().greenBright(row.fixStatus) : getChalk().redBright(row.fixStatus);
         },
       },
     };
@@ -548,7 +548,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
               value: 'missingRefs',
               alias: 'Missing references',
               formatter: (cellValue: any) => {
-                return chalk.red(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
+                return getChalk().red(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
               },
             },
             {
@@ -588,7 +588,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
           value: key,
           formatter: (cellValue: any) => {
             if (key === 'fixStatus' || key === 'Fixable' || key === 'Fixed') {
-              return chalk.green(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
+              return getChalk().green(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
             } else if (
               key === 'content_types' ||
               key === 'branches' ||
@@ -598,9 +598,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
               key === 'Non-Fixable' ||
               key === 'Not-Fixed'
             ) {
-              return chalk.red(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
+              return getChalk().red(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
             } else {
-              return chalk.white(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
+              return getChalk().white(typeof cellValue === 'object' ? JSON.stringify(cellValue) : cellValue);
             }
           },
         }));
