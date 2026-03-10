@@ -181,7 +181,7 @@ export default class Assets extends BaseClass {
   }
 
   /**
-   * This function traverse over the publish detials of the assets and remove the publish details where the locale or environment does not exist
+   * This function traverses over the publish details of the assets and removes the publish details where the locale or environment does not exist
    */
   async lookForReference(): Promise<void> {
     log.debug('Starting asset reference validation', this.config.auditContext);
