@@ -106,7 +106,7 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~1.15.0-beta.0
+        specifier: ~1.15.0-beta.1
         version: link:../contentstack-seed
       '@contentstack/cli-command':
         specifier: ~1.8.0-beta.0
