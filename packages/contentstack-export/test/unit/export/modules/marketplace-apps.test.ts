@@ -273,6 +273,27 @@ describe('ExportMarketplaceApps', () => {
       exportAppsStub.restore();
       configHandlerGetStub.restore();
     });
+
+    it('should call createNodeCryptoInstance exactly once when prompting for encryption key before progress', async () => {
+      mockExportConfig.forceStopMarketplaceAppsPrompt = false;
+      const configHandlerGetStub = sinon.stub(utilities.configHandler, 'get');
+      configHandlerGetStub.withArgs('authorisationType').returns('BASIC');
+      const getAppsCountStub = sinon.stub(exportMarketplaceApps, 'getAppsCount').resolves(1);
+      const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
+      const getAppManifestAndAppConfigStub = sinon.stub(
+        exportMarketplaceApps,
+        'getAppManifestAndAppConfig',
+      ).resolves();
+
+      await exportMarketplaceApps.start();
+
+      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce).to.be.true;
+
+      getAppsCountStub.restore();
+      exportAppsStub.restore();
+      getAppManifestAndAppConfigStub.restore();
+      configHandlerGetStub.restore();
+    });
   });
 
   describe('exportApps() method', () => {
