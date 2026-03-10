@@ -486,10 +486,10 @@ describe('AuditBaseCommand class', () => {
       }))
       .stub(AuditBaseCommand.prototype, 'showOutputOnScreenWorkflowsAndExtension', () => {})
       .stub(fs, 'createWriteStream', () => new PassThrough())
-      .it('should print global summary at the end of start method', async () => {
+      .it('should complete without printing global summary (summary display commented out)', async () => {
         await AuditCMD.run(['--data-dir', resolve(__dirname, 'mock', 'contents')]);
-        
-        expect(printGlobalSummarySpy.calledOnce).to.be.true;
+
+        expect(printGlobalSummarySpy.called).to.be.false;
       });
    
   });
