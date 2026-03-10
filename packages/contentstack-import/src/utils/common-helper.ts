@@ -18,7 +18,6 @@ import {
 import { PATH_CONSTANTS } from '../constants';
 import { readFileSync, readdirSync, readFile, fileExistsSync } from './file-helper';
 
-import chalk from 'chalk';
 import defaultConfig from '../config';
 import promiseLimit from 'promise-limit';
 import { ImportConfig } from '../types';

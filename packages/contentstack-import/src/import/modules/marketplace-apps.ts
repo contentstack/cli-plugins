@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import map from 'lodash/map';
 import omit from 'lodash/omit';
 import find from 'lodash/find';
@@ -551,7 +551,7 @@ export default class ImportMarketplaceApps extends BaseClass {
 
         if (
           await cliux.confirm(
-            chalk.yellow(
+            getChalk().yellow(
               'WARNING!!! The above error may have an impact if the failed app is referenced in entries/content type. Would you like to proceed? (y/n)',
             ),
           )
