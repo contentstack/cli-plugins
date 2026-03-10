@@ -1,16 +1,16 @@
 {
   "name": "@contentstack/cli-cm-seed",
   "description": "create a Stack from existing content types, entries, assets, etc.",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.10",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-cm-import": "~2.0.0-beta.10",
-    "@contentstack/cli-command": "~2.0.0-beta",
-    "@contentstack/cli-utilities": "~2.0.0-beta.1",
+    "@contentstack/cli-cm-import": "~2.0.0-beta.11",
+    "@contentstack/cli-command": "~2.0.0-beta.2",
+    "@contentstack/cli-utilities": "~2.0.0-beta.2",
     "inquirer": "8.2.7",
     "mkdirp": "^1.0.4",
-    "tar": "^7.5.7",
+    "tar": "^7.5.11",
     "tmp": "^0.2.5"
   },
   "devDependencies": {
@@ -69,6 +69,6 @@
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
-    "build": "pnpm compile && oclif manifest"
+    "build": "pnpm compile && oclif manifest && oclif readme"
   }
 }

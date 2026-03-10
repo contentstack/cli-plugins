@@ -1,0 +1,10 @@
+{
+  "env1": {
+    "name": "Environment 1",
+    "uid": "env-uid-1"
+  },
+  "env2": {
+    "name": "Environment 2",
+    "uid": "env-uid-2"
+  }
+}
