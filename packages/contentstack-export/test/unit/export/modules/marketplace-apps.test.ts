@@ -300,7 +300,14 @@ describe('ExportMarketplaceApps', () => {
 
       await exportMarketplaceApps.start();
 
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce).to.be.true;
+      // Source imports from utils barrel; resolution may use utils or marketplaceAppHelper depending on env (CI vs local)
+      const helperCalled = (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce;
+      const utilsCalled = (utils.createNodeCryptoInstance as sinon.SinonStub).calledOnce;
+      expect(helperCalled || utilsCalled, 'createNodeCryptoInstance should be called exactly once').to.be.true;
+      expect(
+        (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).callCount +
+          (utils.createNodeCryptoInstance as sinon.SinonStub).callCount,
+      ).to.equal(1);
 
       getAppsCountStub.restore();
       exportAppsStub.restore();
