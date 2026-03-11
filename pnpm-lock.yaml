@@ -843,6 +843,9 @@ importers:
         specifier: ^0.2.5
         version: 0.2.5
     devDependencies:
+      '@oclif/plugin-help':
+        specifier: ^6.2.28
+        version: 6.2.37
       '@types/inquirer':
         specifier: ^9.0.9
         version: 9.0.9
@@ -6053,8 +6056,8 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
-  tmp@0.0.33:
-    resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
+  tmp@0.2.4:
+    resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
     engines: {node: '>=0.6.0'}
 
   tmp@0.2.5:
@@ -11227,7 +11230,7 @@ snapshots:
     dependencies:
       chardet: 0.4.2
       iconv-lite: 0.4.24
-      tmp: 0.0.33
+      tmp: 0.2.4
 
   eyes@0.1.8: {}
 
@@ -13879,7 +13882,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
 
-  tmp@0.0.33:
+  tmp@0.2.4:
     dependencies:
       os-tmpdir: 1.0.2
 
