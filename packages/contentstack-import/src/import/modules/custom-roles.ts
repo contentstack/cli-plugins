@@ -14,6 +14,7 @@ export default class ImportCustomRoles extends BaseClass {
   private customRolesUidMapperPath: string;
   private envUidMapperFolderPath: string;
   private entriesUidMapperFolderPath: string;
+  private assetsUidMapperFolderPath: string;
   private createdCustomRolesPath: string;
   private customRolesFailsPath: string;
   private customRolesConfig: CustomRoleConfig;
@@ -25,6 +26,8 @@ export default class ImportCustomRoles extends BaseClass {
   private environmentsUidMap: Record<string, unknown>;
   private entriesUidMap: Record<string, unknown>;
   private localesUidMap: Record<string, unknown>;
+  private assetsUidMap: Record<string, unknown>;
+  private assetsFolderUidMap: Record<string, unknown>;
   public targetLocalesMap: Record<string, unknown>;
   public sourceLocalesMap: Record<string, unknown>;
 
@@ -37,6 +40,7 @@ export default class ImportCustomRoles extends BaseClass {
     this.customRolesUidMapperPath = join(this.customRolesMapperPath, 'uid-mapping.json');
     this.envUidMapperFolderPath = join(this.importConfig.backupDir, 'mapper', 'environments');
     this.entriesUidMapperFolderPath = join(this.importConfig.backupDir, 'mapper', 'entries');
+    this.assetsUidMapperFolderPath = join(this.importConfig.backupDir, 'mapper', 'assets');
     this.createdCustomRolesPath = join(this.customRolesMapperPath, 'success.json');
     this.customRolesFailsPath = join(this.customRolesMapperPath, 'fails.json');
     this.customRoles = {};
@@ -47,6 +51,8 @@ export default class ImportCustomRoles extends BaseClass {
     this.environmentsUidMap = {};
     this.entriesUidMap = {};
     this.localesUidMap = {};
+    this.assetsUidMap = {};
+    this.assetsFolderUidMap = {};
   }
 
   /**
@@ -84,6 +90,16 @@ export default class ImportCustomRoles extends BaseClass {
     log.debug('Loading entries UID data...', this.importConfig.context);
     this.entriesUidMap = fileHelper.fileExistsSync(this.entriesUidMapperFolderPath)
       ? (fsUtil.readFile(join(this.entriesUidMapperFolderPath, 'uid-mapping.json'), true) as Record<string, unknown>) || {}
+      : {};
+
+    log.debug('Loading assets UID data...', this.importConfig.context);
+    this.assetsUidMap = fileHelper.fileExistsSync(this.assetsUidMapperFolderPath)
+      ? (fsUtil.readFile(join(this.assetsUidMapperFolderPath, 'uid-mapping.json'), true) as Record<string, unknown>) || {}
+      : {};
+
+    log.debug('Loading asset folders UID data...', this.importConfig.context);
+    this.assetsFolderUidMap = fileHelper.fileExistsSync(this.assetsUidMapperFolderPath)
+      ? (fsUtil.readFile(join(this.assetsUidMapperFolderPath, 'folder-mapping.json'), true) as Record<string, unknown>) || {}
       : {};
 
     if (this.customRolesUidMapper && Object.keys(this.customRolesUidMapper || {}).length > 0) {
@@ -289,6 +305,23 @@ export default class ImportCustomRoles extends BaseClass {
         log.debug(`Transformed ${originalEntries} entry UIDs for rule`, this.importConfig.context);
       } else {
         log.debug('No entry UID mappings available for transformation.', this.importConfig.context);
+      }
+    } else if (rule.module === 'asset') {
+      if (!isEmpty(this.assetsUidMap)) {
+        const originalAssets = rule.assets?.length || 0;
+        rule.assets = map(rule.assets, (uid: string) => (this.assetsUidMap[uid] as string) ?? uid);
+        log.debug(`Transformed ${originalAssets} asset UIDs for rule`, this.importConfig.context);
+      } else {
+        log.debug('No asset UID mappings available for transformation.', this.importConfig.context);
+      }
+    } else if (rule.module === 'folder') {
+      if (!isEmpty(this.assetsFolderUidMap)) {
+        const originalFolders = rule.folders?.length || 0;
+        rule.folders = map(rule.folders, (uid: string) => (this.assetsFolderUidMap[uid] as string) ?? uid);
+        rule.heirarchy = map(rule.heirarchy, (uid: string) => (this.assetsFolderUidMap[uid] as string) ?? uid);
+        log.debug(`Transformed ${originalFolders} folder UIDs for rule`, this.importConfig.context);
+      } else {
+        log.debug('No asset folder UID mappings available for transformation.', this.importConfig.context);
       }
     }
     return rule;
