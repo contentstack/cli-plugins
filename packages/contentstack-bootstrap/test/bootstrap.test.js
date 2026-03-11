@@ -75,7 +75,7 @@ describe('Bootstrapping an app', () => {
       configHandlerTokens = { 'test-alias': { token: aliasToken } },
     } = options;
 
-    // configHandler stub
+    // configHandler stub (tokens only when hasAlias; do not stub get for auth - use configHandler.set('authorisationType', 'OAUTH') in tests instead)
     if (hasAlias) {
       sandbox.stub(configHandler, 'get').withArgs('tokens').returns(configHandlerTokens);
     }
@@ -371,9 +371,8 @@ describe('Bootstrapping an app', () => {
         },
       });
 
-      // Mock region and cmaHost
-      command.region = mock.region;
-      command.cmaHost = mock.region.cma;
+      // Mock region and cmaHost (base class getter uses _region, then cmaHost uses region)
+      command._region = mock.region;
 
       // Mock managementSDKClient
       const managementAPIClientStub = {
@@ -408,6 +407,7 @@ describe('Bootstrapping an app', () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       setupStubs();
+      configHandler.set('authorisationType', 'OAUTH');
 
       const BootstrapCommand = require('../lib/commands/cm/bootstrap').default;
       const command = new BootstrapCommand([], {});
@@ -417,6 +417,8 @@ describe('Bootstrapping an app', () => {
       sandbox.stub(interactive, 'inquireAppType').resolves('starterapp');
       sandbox.stub(interactive, 'inquireApp').resolves(mock.appConfig);
       sandbox.stub(interactive, 'inquireCloneDirectory').resolves('/test/path');
+      sandbox.stub(interactive, 'inquireLivePreviewSupport');
+      sandbox.stub(interactive, 'inquireRunDevServer');
 
       // Mock config
       const config = require('../lib/config');
@@ -462,6 +464,7 @@ describe('Bootstrapping an app', () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       setupStubs();
+      configHandler.set('authorisationType', 'OAUTH');
 
       const BootstrapCommand = require('../lib/commands/cm/bootstrap').default;
       const command = new BootstrapCommand([], {});
@@ -471,6 +474,8 @@ describe('Bootstrapping an app', () => {
       sandbox.stub(interactive, 'inquireAppType').resolves('starterapp');
       sandbox.stub(interactive, 'inquireApp').resolves(mock.appConfig);
       sandbox.stub(interactive, 'inquireCloneDirectory').resolves('/test/path');
+      sandbox.stub(interactive, 'inquireLivePreviewSupport');
+      sandbox.stub(interactive, 'inquireRunDevServer');
 
       // Mock config
       const config = require('../lib/config');
@@ -516,6 +521,7 @@ describe('Bootstrapping an app', () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       setupStubs();
+      configHandler.set('authorisationType', 'OAUTH');
 
       const BootstrapCommand = require('../lib/commands/cm/bootstrap').default;
       const command = new BootstrapCommand([], {});
@@ -572,6 +578,7 @@ describe('Bootstrapping an app', () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       setupStubs();
+      configHandler.set('authorisationType', 'OAUTH');
 
       const BootstrapCommand = require('../lib/commands/cm/bootstrap').default;
       const command = new BootstrapCommand([], {});
@@ -619,21 +626,23 @@ describe('Bootstrapping an app', () => {
       // Verify that appType is set correctly
       expect(bootstrapOptions).to.not.be.null;
       expect(bootstrapOptions.appType).to.equal('sampleapp');
-      // Verify that inquireApp was called with sampleApps
-      expect(interactive.inquireApp.calledWith(config.sampleApps)).to.be.true;
+      // Verify that inquireApp was called with sampleApps (config.default in compiled CJS)
+      expect(interactive.inquireApp.calledWith(config.default.sampleApps)).to.be.true;
     });
 
     it('should handle app-name flag correctly', async () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       setupStubs();
+      configHandler.set('authorisationType', 'OAUTH');
 
       const BootstrapCommand = require('../lib/commands/cm/bootstrap').default;
       const command = new BootstrapCommand([], {});
 
-      // Mock interactive functions
+      // Mock interactive functions (stub inquireApp so .called exists for assertion)
       const interactive = require('../lib/bootstrap/interactive');
       sandbox.stub(interactive, 'inquireAppType').resolves('starterapp');
+      sandbox.stub(interactive, 'inquireApp').resolves(mock.appConfig);
       sandbox.stub(interactive, 'inquireCloneDirectory').resolves('/test/path');
       sandbox.stub(interactive, 'inquireLivePreviewSupport').resolves(false);
       sandbox.stub(interactive, 'inquireRunDevServer').resolves(false);
