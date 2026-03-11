@@ -1652,6 +1652,31 @@ describe('ImportMarketplaceApps', () => {
       expect(completeProgressStub.called).to.be.true;
       expect(completeProgressStub.calledWith(false, 'Start process failed')).to.be.true;
     });
+
+    it('should call getAndValidateEncryptionKey exactly once when prompt is not forced and start runs', async () => {
+      mockImportConfig.forceStopMarketplaceAppsPrompt = false;
+      importMarketplaceApps = new ImportMarketplaceApps(mockModuleClassParams);
+      importMarketplaceApps.importConfig = mockImportConfig;
+
+      const configHandler = require('@contentstack/cli-utilities').configHandler;
+      sandbox.stub(configHandler, 'get').callsFake((key) => {
+        if (key === 'authorisationType') {
+          return 'OAUTH';
+        }
+        return 'some-value';
+      });
+
+      const getAndValidateEncryptionKeyStub = sandbox
+        .stub(importMarketplaceApps, 'getAndValidateEncryptionKey')
+        .resolves();
+      sandbox.stub(importMarketplaceApps as any, 'setupMarketplaceEnvironment').resolves();
+      sandbox.stub(importMarketplaceApps, 'handleAllPrivateAppsCreationProcess').resolves();
+      sandbox.stub(importMarketplaceApps, 'importMarketplaceApps').resolves();
+
+      await importMarketplaceApps.start();
+
+      expect(getAndValidateEncryptionKeyStub.calledOnce).to.be.true;
+    });
   });
 
   describe('importMarketplaceApps()', () => {
