@@ -329,6 +329,29 @@ describe('Assets module', () => {
           fs.writeFileSync(chunkPath, typeof original === 'string' ? original : String(original));
         }
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should log scan success message exactly once per asset', async () => {
+        const infoSpy = Sinon.spy();
+        Sinon.stub(require('@contentstack/cli-utilities'), 'log').value({
+          ...mockLogger,
+          info: infoSpy,
+        });
+        const instance = new Assets(constructorParam);
+        await instance.prerequisiteData();
+        await instance.lookForReference();
+        const successMsgCalls = infoSpy.getCalls().filter(
+          (call: Sinon.SinonSpyCall) =>
+            typeof call.args[0] === 'string' && call.args[0].includes("Successfully completed the scanning of Asset with UID"),
+        );
+        const expectedAssetUids = ['asset_uid_1', 'asset_uid_invalid', 'asset_uid_two_invalid'];
+        expect(successMsgCalls).to.have.lengthOf(expectedAssetUids.length);
+        expectedAssetUids.forEach((uid) => {
+          const forUid = successMsgCalls.filter((c: Sinon.SinonSpyCall) => c.args[0].includes(uid));
+          expect(forUid).to.have.lengthOf(1, `expected exactly one success log for asset ${uid}`);
+        });
+      });
   });
 
   describe('integration-style run with real FsUtility', () => {

@@ -216,7 +216,6 @@ export default class Assets extends BaseClass {
           
           if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
             log.debug(`Publish detail valid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
-            log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
             return true;
           } else {
             log.debug(`Publish detail invalid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
@@ -237,12 +236,11 @@ export default class Assets extends BaseClass {
                 publish_environment: pd.environment,
               });
             }
-            log.success($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
             return false;
           }
         });
         }
-        
+        log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
         const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
         log.debug(`Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`, this.config.auditContext);
         
