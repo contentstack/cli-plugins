@@ -672,7 +672,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       | 'Summary',
     listOfMissingRefs: Record<string, any>,
   ): Promise<void> {
-    if (Object.keys(config.moduleConfig).includes(moduleName) || config.feild_level_modules.includes(moduleName)) {
+    if (Object.keys(config.moduleConfig).includes(moduleName) || config.field_level_modules.includes(moduleName)) {
       const csvPath = join(sanitizePath(this.sharedConfig.reportPath), `${sanitizePath(moduleName)}.csv`);
       return new Promise<void>((resolve, reject) => {
         // file deepcode ignore MissingClose: Will auto close once csv stream end
