@@ -1,8 +1,0 @@
-fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    checksum: ff6e95f04fbaf85b5c7226c76830a4bdd27d47ca8d433383002b8478643e1120
-  - filename: packages/contentstack-seed/README.md
-    checksum: d2a017a8206aae1058d4a91d445a7f7d50e919a0d2dd69605a66529c4f4ebe2e
-  - filename: packages/contentstack-export/test/unit/export/modules/marketplace-apps.test.ts
-    checksum: 408de465c1614dd6cf66dabb4f6b1b2339a02984cb96de763122f175e7397829
-version: '1.0'
