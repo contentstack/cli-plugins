@@ -43,7 +43,6 @@ export default class SeedCommand extends Command {
       exclusive: ['stack-api-key'],
     }),
     'fetch-limit': flags.string({
-      char: 'l',
       description: 'Limit for number of organizations or stacks to be fetched.',
       multiple: false,
       required: false,
