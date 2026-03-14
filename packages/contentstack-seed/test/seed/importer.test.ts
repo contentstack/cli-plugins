@@ -13,6 +13,7 @@ jest.mock('@contentstack/cli-utilities', () => {
 jest.mock('@contentstack/cli-cm-import');
 jest.mock('@contentstack/cli-utilities');
 
+import * as fs from 'fs';
 import * as importer from '../../src/seed/importer';
 import ImportCommand from '@contentstack/cli-cm-import';
 import * as path from 'node:path';
@@ -37,6 +38,11 @@ describe('Importer', () => {
     jest.spyOn(cliUtilities, 'pathValidator').mockImplementation((p: any) => p);
     jest.spyOn(cliUtilities, 'sanitizePath').mockImplementation((p: any) => p);
     (ImportCommand.run as jest.Mock) = jest.fn().mockResolvedValue(undefined);
+    // Mock fs.existsSync: stack folder exists (standard repo structure)
+    jest.spyOn(fs, 'existsSync').mockImplementation((checkPath: fs.PathLike) => {
+      const p = typeof checkPath === 'string' ? checkPath : checkPath.toString();
+      return p.endsWith('stack') || p.includes(path.sep + 'stack');
+    });
   });
 
   describe('run', () => {
@@ -175,6 +181,22 @@ describe('Importer', () => {
 
       const expectedPath = path.resolve(mockOptions.tmpPath, 'stack');
       expect(cliUtilities.pathValidator).toHaveBeenCalledWith(expectedPath);
+    });
+
+    it('should use tmpPath when stack folder does not exist (content at root)', async () => {
+      jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+      await importer.run(mockOptions);
+
+      const expectedPath = path.resolve(mockOptions.tmpPath);
+      expect(cliUtilities.pathValidator).toHaveBeenCalledWith(expectedPath);
+      expect(ImportCommand.run).toHaveBeenCalledWith([
+        '-k',
+        mockOptions.api_key,
+        '-d',
+        expectedPath,
+        '--skip-audit',
+      ]);
     });
   });
 });

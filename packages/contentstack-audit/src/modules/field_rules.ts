@@ -119,7 +119,7 @@ export default class FieldRule extends BaseClass {
 
       // Create progress manager if we have a total count
       if (totalCount && totalCount > 0) {
-        const progress = this.createSimpleProgress(this.moduleName, totalCount);
+        const progress = this.createSimpleProgress('field-rules', totalCount);
         progress.updateStatus('Validating field rules...');
       }
 
@@ -155,6 +155,10 @@ export default class FieldRule extends BaseClass {
           $t(auditMsg.SCAN_CT_SUCCESS_MSG, { title, module: this.config.moduleConfig[this.moduleName].name }),
           this.config.auditContext,
         );
+
+        if (this.progressManager) {
+          this.progressManager.tick(true, `field-rules: ${title}`, null);
+        }
       }
 
       if (this.fix) {
