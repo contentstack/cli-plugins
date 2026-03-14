@@ -181,7 +181,7 @@ export default class Assets extends BaseClass {
   }
 
   /**
-   * This function traverse over the publish detials of the assets and remove the publish details where the locale or environment does not exist
+   * This function traverses over the publish details of the assets and removes the publish details where the locale or environment does not exist
    */
   async lookForReference(): Promise<void> {
     log.debug('Starting asset reference validation', this.config.auditContext);
@@ -204,17 +204,18 @@ export default class Assets extends BaseClass {
         if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
           log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
           cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
+          this.assets[assetUid].publish_details = [];
         }
 
         const publishDetails = this.assets[assetUid]?.publish_details;
         log.debug(`Asset ${assetUid} has ${publishDetails?.length || 0} publish details`, this.config.auditContext);
 
-        this.assets[assetUid].publish_details = this.assets[assetUid]?.publish_details.filter((pd: any) => {
+        if (Array.isArray(this.assets[assetUid].publish_details)) {
+        this.assets[assetUid].publish_details = this.assets[assetUid].publish_details.filter((pd: any) => {
           log.debug(`Checking publish detail: locale=${pd?.locale}, environment=${pd?.environment}`, this.config.auditContext);
           
           if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
             log.debug(`Publish detail valid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
-            log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
             return true;
           } else {
             log.debug(`Publish detail invalid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
@@ -235,11 +236,11 @@ export default class Assets extends BaseClass {
                 publish_environment: pd.environment,
               });
             }
-            log.success($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
             return false;
           }
         });
-        
+        }
+        log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
         const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
         log.debug(`Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`, this.config.auditContext);
         
