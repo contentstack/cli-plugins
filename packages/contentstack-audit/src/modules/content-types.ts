@@ -225,6 +225,7 @@ export default class ContentType extends BaseClass {
       log.debug('Fix mode enabled, checking write permissions', this.config.auditContext);
       if (!this.config.flags['copy-dir'] && !this.config.flags['external-config']?.skipConfirm) {
         log.debug('Asking user for confirmation to write fix content', this.config.auditContext);
+        this.completeProgress(true);
         canWrite = this.config.flags.yes ?? (await cliux.confirm(commonMsg.FIX_CONFIRMATION));
       } else {
         log.debug('Skipping confirmation due to copy-dir or external-config flags', this.config.auditContext);
