@@ -1,8 +1,26 @@
 fileignoreconfig:
+  - filename: packages/contentstack-audit/test/unit/mock/contents/environments/environments.json
+    checksum: d983bc17ab56937c66a6d25f449ecbe285d00c807923ed56deacb3a571aa3448
+  - filename: package-lock.json
+    checksum: 8fd93d7b01c7d064fa797fba81d09da612b5639468c02003e11b2f3b599e49a2
   - filename: pnpm-lock.yaml
-    checksum: 69c9fefd1240e00e7efa17658a53292444de3eecc70fb93c719b3b92a8cac0f0
-  - filename: .husky/pre-commit
-    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
-  - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
-    checksum: 8690833f285db085aa1431d4a708c243e2bf5b4ed366c5c15e2daf66eb24c19e
+    checksum: 458cb8d135905583080023055430cf8344f46e92dd1c9e90cdb6f78bbd02eecb
+  - filename: packages/contentstack-seed/src/commands/cm/stacks/seed.ts
+    checksum: 5c59296f3d5ba078f16bca23a47c920dc2180cff3b8250a341176185a4dabc39
+  - filename: packages/contentstack-seed/README.md
+    checksum: d2a017a8206aae1058d4a91d445a7f7d50e919a0d2dd69605a66529c4f4ebe2e
+  - filename: packages/contentstack-seed/src/seed/github/client.ts
+    checksum: 44d491ab5253ebb6c24bb0ac5c8d985320bdc4cc3711de77adfe79f7fb1874a1
+  - filename: packages/contentstack-seed/test/commands/cm/stacks/seed.test.ts
+    checksum: 999b1afe970452691318c76d5e9abd8852384fcf2d826cecda19f156de75fb59
+  - filename: packages/contentstack-seed/src/seed/index.ts
+    checksum: 2bd73b2562618a37e02247459141432515471277ee5b85f5053f169891a54eb5
+  - filename: packages/contentstack-export-to-csv/src/utils/interactive.ts
+    checksum: 8aa3870a6694e404f4f8df3ed884dd69521099fe66851c4f8c9860276254da9d
+  - filename: packages/contentstack-import/test/unit/import/modules/marketplace-apps.test.ts
+    checksum: e927e670f70374bfa09a4866faf2af0a65476709412882122ea2811717e528aa
+  - filename: packages/contentstack-export/test/unit/export/modules/marketplace-apps.test.ts
+    checksum: 6cb665ee2ea09372b3f80c3d2c38d1c3c3889ce0a1ba7d8488614a73aedf17b7
+  - filename: packages/contentstack-import/test/unit/import/module-importer.test.ts
+    checksum: baf0ffc77d2afe9084da2d1fecac4a3a6ef875739677ef6186cd7de278886406
 version: '1.0'
