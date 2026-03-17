@@ -11,6 +11,7 @@ import { PATH_CONSTANTS } from '../../constants';
 import BaseClass from './base-class';
 import {
   fsUtil,
+  getExportBasePath,
   PROCESS_NAMES,
   MODULE_CONTEXTS,
   PROCESS_STATUS,
@@ -31,8 +32,7 @@ export default class ExportStack extends BaseClass {
     this.stackConfig = exportConfig.modules.stack;
     this.qs = { include_count: true };
     this.stackFolderPath = pResolve(
-      this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
+      getExportBasePath(this.exportConfig),
       this.stackConfig.dirName,
     );
     this.exportConfig.context.module = MODULE_CONTEXTS.STACK;

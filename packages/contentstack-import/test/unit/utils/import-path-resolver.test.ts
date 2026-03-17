@@ -87,65 +87,32 @@ describe('Import Path Resolver', () => {
       expect(result).to.be.null;
     });
 
-    it('should auto-resolve single branch when branch path exists', async () => {
+    it('should return branchName for single branch (content at root)', async () => {
       const branchesJsonPath = path.join(contentDir, 'branches.json');
-      const branchPath = path.join(contentDir, 'branch1');
       const branchesData = [{ uid: 'branch1' }];
 
       fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(branchPath).returns(true);
       readFileStub.withArgs(branchesJsonPath).resolves(branchesData);
 
       const result = await selectBranchFromDirectory(contentDir);
 
-      expect(result).to.deep.equal({ branchPath });
+      expect(result).to.deep.equal({ branchName: 'branch1' });
       expect(askBranchSelectionStub.called).to.be.false;
     });
 
-    it('should return null when single branch path does not exist', async () => {
+    it('should prompt user when multiple branches exist and return selected branchName', async () => {
       const branchesJsonPath = path.join(contentDir, 'branches.json');
-      const branchPath = path.join(contentDir, 'branch1');
-      const branchesData = [{ uid: 'branch1' }];
-
-      fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(branchPath).returns(false);
-      readFileStub.withArgs(branchesJsonPath).resolves(branchesData);
-
-      const result = await selectBranchFromDirectory(contentDir);
-
-      expect(result).to.be.null;
-    });
-
-    it('should prompt user when multiple branches exist', async () => {
-      const branchesJsonPath = path.join(contentDir, 'branches.json');
-      const selectedBranchPath = path.join(contentDir, 'branch2');
       const branchesData = [{ uid: 'branch1' }, { uid: 'branch2' }, { uid: 'branch3' }];
 
       fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(selectedBranchPath).returns(true);
       readFileStub.withArgs(branchesJsonPath).resolves(branchesData);
       askBranchSelectionStub.withArgs(['branch1', 'branch2', 'branch3']).resolves('branch2');
 
       const result = await selectBranchFromDirectory(contentDir);
 
-      expect(result).to.deep.equal({ branchPath: selectedBranchPath });
+      expect(result).to.deep.equal({ branchName: 'branch2' });
       expect(askBranchSelectionStub.calledOnce).to.be.true;
       expect(askBranchSelectionStub.calledWith(['branch1', 'branch2', 'branch3'])).to.be.true;
-    });
-
-    it('should return null when selected branch path does not exist', async () => {
-      const branchesJsonPath = path.join(contentDir, 'branches.json');
-      const selectedBranchPath = path.join(contentDir, 'branch2');
-      const branchesData = [{ uid: 'branch1' }, { uid: 'branch2' }];
-
-      fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(selectedBranchPath).returns(false);
-      readFileStub.withArgs(branchesJsonPath).resolves(branchesData);
-      askBranchSelectionStub.withArgs(['branch1', 'branch2']).resolves('branch2');
-
-      const result = await selectBranchFromDirectory(contentDir);
-
-      expect(result).to.be.null;
     });
 
     it('should throw error when readFile fails', async () => {
@@ -211,24 +178,9 @@ describe('Import Path Resolver', () => {
       expect(result).to.equal('/test/content');
     });
 
-    it('should return branch path when branchName is specified and path exists', async () => {
+    it('should return contentDir when branchName is specified (content always at root)', async () => {
       mockConfig.branchName = 'branch1';
-      const branchPath = path.join('/test/content', 'branch1');
-
       fileExistsSyncStub.withArgs('/test/content').returns(true);
-      fileExistsSyncStub.withArgs(branchPath).returns(true);
-
-      const result = await resolveImportPath(mockConfig, mockStackAPIClient);
-
-      expect(result).to.equal(branchPath);
-    });
-
-    it('should return contentDir when branchName is specified but path does not exist', async () => {
-      mockConfig.branchName = 'branch1';
-      const branchPath = path.join('/test/content', 'branch1');
-
-      fileExistsSyncStub.withArgs('/test/content').returns(true);
-      fileExistsSyncStub.withArgs(branchPath).returns(false);
 
       const result = await resolveImportPath(mockConfig, mockStackAPIClient);
 
@@ -246,9 +198,7 @@ describe('Import Path Resolver', () => {
       expect(result).to.equal('/test/content');
     });
 
-    it('should call selectBranchFromDirectory when no branch name', async () => {
-      const branchPath = path.join('/test/content', 'branch1');
-
+    it('should use contentDir and set branchName from selectBranchFromDirectory when no branch name', async () => {
       fileExistsSyncStub.withArgs('/test/content').returns(true);
 
       // Mock module types check - all return false
@@ -256,15 +206,15 @@ describe('Import Path Resolver', () => {
         fileExistsSyncStub.withArgs(path.join('/test/content', moduleType)).returns(false);
       });
 
-      // Mock branches.json and branch selection
+      // Mock branches.json - single branch
       const branchesJsonPath = path.join('/test/content', 'branches.json');
       fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(branchPath).returns(true);
       readFileStub.withArgs(branchesJsonPath).resolves([{ uid: 'branch1' }]);
 
       const result = await resolveImportPath(mockConfig, mockStackAPIClient);
 
-      expect(result).to.equal(branchPath);
+      expect(result).to.equal('/test/content');
+      expect(mockConfig.branchName).to.equal('branch1');
     });
 
     it('should return contentDir when selectBranchFromDirectory returns null', async () => {
@@ -329,13 +279,10 @@ describe('Import Path Resolver', () => {
       } as ImportConfig;
     });
 
-    it('should execute complete path resolution logic', async () => {
-      const resolvedPath = path.join('/test/content', 'branch1');
-
+    it('should execute complete path resolution logic (content at root)', async () => {
       fileExistsSyncStub.withArgs('/test/content').returns(true);
-      fileExistsSyncStub.withArgs(resolvedPath).returns(true);
 
-      // Mock module types check
+      // Mock module types check - no module folders at root
       defaultConfig.modules.types.forEach((moduleType) => {
         fileExistsSyncStub.withArgs(path.join('/test/content', moduleType)).returns(false);
       });
@@ -343,14 +290,14 @@ describe('Import Path Resolver', () => {
       // Mock branches.json - single branch
       const branchesJsonPath = path.join('/test/content', 'branches.json');
       fileExistsSyncStub.withArgs(branchesJsonPath).returns(true);
-      fileExistsSyncStub.withArgs(resolvedPath).returns(true);
       readFileStub.withArgs(branchesJsonPath).resolves([{ uid: 'branch1' }]);
 
       const result = await executeImportPathLogic(mockConfig, mockStackAPIClient);
 
-      expect(result).to.equal(resolvedPath);
-      expect(mockConfig.branchDir).to.equal(resolvedPath);
-      expect(mockConfig.contentDir).to.equal(resolvedPath);
+      expect(result).to.equal('/test/content');
+      expect(mockConfig.branchDir).to.equal('/test/content');
+      expect(mockConfig.contentDir).to.equal('/test/content');
+      expect(mockConfig.branchName).to.equal('branch1');
     });
   });
 });

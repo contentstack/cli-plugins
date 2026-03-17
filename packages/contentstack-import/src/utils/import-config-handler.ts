@@ -98,7 +98,6 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['branch']) {
     config.branchName = importCmdFlags['branch'];
-    config.branchDir = config.contentDir;
   }
   if (importCmdFlags['module']) {
     config.moduleName = importCmdFlags['module'];

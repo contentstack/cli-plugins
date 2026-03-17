@@ -22,8 +22,7 @@ export default class ExportAttributes extends PersonalizationAdapter<ExportConfi
     this.personalizeConfig = exportConfig.modules.personalize;
     this.attributesConfig = exportConfig.modules.attributes;
     this.attributesFolderPath = pResolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(exportConfig.branchDir ?? exportConfig.exportDir),
       sanitizePath(this.personalizeConfig.dirName),
       sanitizePath(this.attributesConfig.dirName),
     );
