@@ -24,6 +24,20 @@ describe('Variant Entries Export', () => {
     config = exportConf as unknown as ExportConfig;
   });
 
+  describe('path construction', () => {
+    test.it('should use branchDir as base path when set (no branch segment in path)', () => {
+      const configWithBranchDir = {
+        ...config,
+        exportDir: '/base/export',
+        branchName: 'dev',
+        branchDir: '/base/export',
+      } as ExportConfig;
+      const instance = new Export.VariantEntries(configWithBranchDir);
+      expect(instance.entriesDirPath).to.not.include('dev');
+      expect(instance.entriesDirPath).to.include('entries');
+    });
+  });
+
   describe('exportVariantEntry method', () => {
     test
       .stub(VariantHttpClient.prototype, 'variantEntries', async () => {})

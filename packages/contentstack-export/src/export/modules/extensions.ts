@@ -5,7 +5,7 @@ import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilit
 
 import BaseClass from './base-class';
 import { ExtensionsConfig, ModuleClassParams } from '../../types';
-import { fsUtil, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
+import { fsUtil, getExportBasePath, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
 
 export default class ExportExtensions extends BaseClass {
   private extensionsFolderPath: string;
@@ -33,8 +33,7 @@ export default class ExportExtensions extends BaseClass {
       // Setup with loading spinner
       const [totalCount] = await this.withLoadingSpinner('EXTENSIONS: Analyzing extensions...', async () => {
         this.extensionsFolderPath = pResolve(
-          this.exportConfig.exportDir,
-          this.exportConfig.branchName || '',
+          getExportBasePath(this.exportConfig),
           this.extensionConfig.dirName,
         );
         await fsUtil.makeDirectory(this.extensionsFolderPath);

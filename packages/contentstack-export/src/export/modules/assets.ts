@@ -25,7 +25,7 @@ import { PATH_CONSTANTS } from '../../constants';
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
-import { PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
+import { getExportBasePath, PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -49,8 +49,7 @@ export default class ExportAssets extends BaseClass {
 
   async start(): Promise<void> {
       this.assetsRootPath = pResolve(
-      this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
+      getExportBasePath(this.exportConfig),
       this.assetConfig.dirName,
     );
     log.debug(`Assets root path resolved to: ${this.assetsRootPath}`, this.exportConfig.context);

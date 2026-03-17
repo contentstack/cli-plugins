@@ -235,8 +235,9 @@ describe('ExportMarketplaceApps', () => {
       configHandlerGetStub.restore();
     });
 
-    it('should handle branchName in path when provided', async () => {
-      mockExportConfig.branchName = 'test-branch';
+    it('should use export path directly when branchDir is set (content at path, no branch subfolder)', async () => {
+      mockExportConfig.branchDir = '/test/export';
+      mockExportConfig.branchName = 'main';
       exportMarketplaceApps = new ExportMarketplaceApps({
         exportConfig: mockExportConfig,
         stackAPIClient: {} as any,
@@ -249,7 +250,9 @@ describe('ExportMarketplaceApps', () => {
 
       await exportMarketplaceApps.start();
 
-      expect(exportMarketplaceApps.marketplaceAppPath).to.include('test-branch');
+      expect(exportMarketplaceApps.marketplaceAppPath).to.include('marketplace_apps');
+      expect(exportMarketplaceApps.marketplaceAppPath).to.include('/test/export');
+      expect(exportMarketplaceApps.marketplaceAppPath).to.not.include('main');
 
       exportAppsStub.restore();
       configHandlerGetStub.restore();

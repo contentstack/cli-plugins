@@ -22,8 +22,7 @@ export default class ExportExperiences extends PersonalizationAdapter<ExportConf
     this.exportConfig = exportConfig;
     this.personalizeConfig = exportConfig.modules.personalize;
     this.experiencesFolderPath = path.resolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(exportConfig.branchDir ?? exportConfig.exportDir),
       sanitizePath(this.personalizeConfig.dirName),
       'experiences',
     );

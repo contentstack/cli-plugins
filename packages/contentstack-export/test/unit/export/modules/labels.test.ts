@@ -450,8 +450,9 @@ describe('ExportLabels', () => {
       expect(exportLabels.labelsFolderPath).to.include('labels');
     });
 
-    it('should handle branchName in path when provided', async () => {
-      mockExportConfig.branchName = 'test-branch';
+    it('should use export path directly when branchDir is set (content at path, no branch subfolder)', async () => {
+      mockExportConfig.branchDir = '/test/export';
+      mockExportConfig.branchName = 'main';
       exportLabels = new ExportLabels({
         exportConfig: mockExportConfig,
         stackAPIClient: mockStackClient,
@@ -471,8 +472,9 @@ describe('ExportLabels', () => {
 
       await exportLabels.start();
 
-      // Verify branchName is included in path
-      expect(exportLabels.labelsFolderPath).to.include('test-branch');
+      expect(exportLabels.labelsFolderPath).to.include('labels');
+      expect(exportLabels.labelsFolderPath).to.include('/test/export');
+      expect(exportLabels.labelsFolderPath).to.not.include('main');
     });
 
     it('should write file with correct path and data', async () => {

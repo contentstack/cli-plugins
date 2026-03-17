@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   ContentstackClient,
   handleAndLogError,
@@ -66,7 +65,7 @@ class ModuleExporter {
     try {
       this.exportConfig.branchName = targetBranch.uid;
       this.stackAPIClient.stackHeaders.branch = targetBranch.uid;
-      this.exportConfig.branchDir = path.join(this.exportConfig.exportDir, targetBranch.uid);
+      this.exportConfig.branchDir = this.exportConfig.exportDir;
 
       // Initialize progress manager for the target branch
       CLIProgressManager.clearGlobalSummary();
