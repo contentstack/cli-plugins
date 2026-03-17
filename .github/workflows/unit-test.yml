@@ -22,13 +22,14 @@ jobs:
           node-version: '22.x'
           cache: 'pnpm' # optional but recommended
 
-      - name: Install dependencies for all plugins
-        run: |
-          NODE_ENV=PREPACK_MODE npm run bootstrap
+      - name: Prune pnpm store
+        run: pnpm store prune
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build all plugins
         run: |
-          NODE_ENV=PREPACK_MODE npm run build
+          NODE_ENV=PREPACK_MODE pnpm -r --sort run build
 
       - name: Run tests for Contentstack Import Plugin
         working-directory: ./packages/contentstack-import

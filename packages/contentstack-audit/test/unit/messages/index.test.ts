@@ -1,7 +1,7 @@
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 
-import { $t, auditMsg } from '../../../src/messages';
+import { $t, auditMsg, auditFixMsg } from '../../../src/messages';
 
 describe('messages utility', () => {
   describe('$t method', () => {
@@ -20,5 +20,14 @@ describe('messages utility', () => {
       .it('should return if the provided string is empty', () => {
         expect($t('', {})).to.be.empty.string;
       });
+  });
+
+  describe('typo regression: details not detials', () => {
+    it('ASSET_FIX and ENTRY_PUBLISH_DETAILS should contain "details"', () => {
+      expect(auditMsg.ENTRY_PUBLISH_DETAILS).to.include('details');
+      expect(auditMsg.ENTRY_PUBLISH_DETAILS).to.not.include('detials');
+      expect(auditFixMsg.ASSET_FIX).to.include('details');
+      expect(auditFixMsg.ASSET_FIX).to.not.include('detials');
+    });
   });
 });

@@ -91,8 +91,13 @@ export default class ContentType extends BaseClass {
       this.schema = this.moduleName === 'content-types' ? this.ctSchema : this.gfSchema;
       log.debug(`Found ${this.schema?.length || 0} ${this.moduleName} schemas to audit`, this.config.auditContext);
 
-      // Load prerequisite data with loading spinner
-      await this.withLoadingSpinner(`${this.moduleName.toUpperCase()}: Loading prerequisite data...`, async () => {
+      // Load prerequisite data with loading spinner.
+      // When run as prerequisite (returnFixSchema), use a neutral message so the global
+      // progress summary is not overwritten with 0 items for this module.
+      const spinnerMessage = returnFixSchema
+        ? 'Loading schema for entries...'
+        : `${this.moduleName.toUpperCase()}: Loading prerequisite data...`;
+      await this.withLoadingSpinner(spinnerMessage, async () => {
         await this.prerequisiteData();
       });
 
