@@ -1,10 +1,4 @@
 fileignoreconfig:
-  - filename: package-lock.json
-    checksum: c91b9e5fba1c84c0b6de15ad2f8cce698a5c781c9db31bebb7a3ad63ee88d9e1
   - filename: pnpm-lock.yaml
-    checksum: f71f23aaad4ba997741b6c3cbc89822bd92e8b0c66c96bc30c199e2cbeaaad77
-  - filename: packages/contentstack-bootstrap/src/bootstrap/utils.ts
-    checksum: 6e6fb00bb11b03141e5ad27eeaa4af9718dc30520c3e73970bc208cc0ba2a7d2
-  - filename: .husky/pre-commit
-    checksum: 7a12030ddfea18d6f85edc25f1721fb2009df00fdd42bab66b05de25ab3e32b2
+    checksum: 97cb862682f7dec430f2079ac686bbfec4fc22c080c8d50cf14c4e2249bb8c8c
 version: '1.0'
