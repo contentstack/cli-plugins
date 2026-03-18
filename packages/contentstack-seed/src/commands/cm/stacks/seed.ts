@@ -14,7 +14,7 @@ export default class SeedCommand extends Command {
   ];
 
   static usage =
-    'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [--yes <value>] [--alias <value>] [--locale <value>]';
+    'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>] [--locale <value>]';
 
   static flags: FlagInput = {
     repo: flags.string({
@@ -43,13 +43,12 @@ export default class SeedCommand extends Command {
       exclusive: ['stack-api-key'],
     }),
     'fetch-limit': flags.string({
-      char: 'l',
       description: 'Limit for number of organizations or stacks to be fetched.',
       multiple: false,
       required: false,
       hidden: true,
     }),
-    yes: flags.string({
+    yes: flags.boolean({
       char: 'y',
       required: false,
       description: '[Optional] Skip the stack confirmation.',
@@ -60,6 +59,7 @@ export default class SeedCommand extends Command {
     }),
     locale: flags.string({
       description: 'Master Locale of the stack',
+      default: 'en-us',
       hidden: true,
     }),
   };
@@ -84,7 +84,7 @@ export default class SeedCommand extends Command {
         stackUid: seedFlags['stack-api-key'],
         stackName: seedFlags['stack-name'],
         fetchLimit: seedFlags['fetch-limit'],
-        skipStackConfirmation: seedFlags['yes'],
+        skipStackConfirmation: seedFlags.yes,
         isAuthenticated: isAuthenticated(),
         alias: managementTokenAlias,
         master_locale: seedFlags['locale'],
