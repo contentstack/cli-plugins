@@ -22,6 +22,8 @@ jobs:
           node-version: '22.x'
           cache: 'pnpm' # optional but recommended
 
+      - name: Prune pnpm store
+        run: pnpm store prune
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 

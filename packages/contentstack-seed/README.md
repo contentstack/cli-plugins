@@ -10,22 +10,22 @@ To import content to your stack, you can choose from the following two sources:
 <!-- usagestop -->
 ## Commands
 <!-- commands -->
-* [`csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [--yes <value>] [--alias <value>] [--locale <value>]`](#csdx-cmstacksseed---repo-value---org-value---stack-api-key-value---stack-name-value---yes-value---alias-value---locale-value)
+* [`csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>] [--locale <value>]`](#csdx-cmstacksseed---repo-value---org-value---stack-api-key-value---stack-name-value--y---alias-value---locale-value)
 
-## `csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [--yes <value>] [--alias <value>] [--locale <value>]`
+## `csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>] [--locale <value>]`
 
 Create a stack from existing content types, entries, assets, etc
 
 ```
 USAGE
-  $ csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [--yes
-    <value>] [--alias <value>] [--locale <value>]
+  $ csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y]
+    [--alias <value>] [--locale <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
   -k, --stack-api-key=<value>  Provide stack API key to seed content to
   -n, --stack-name=<value>     Name of a new stack that needs to be created.
-  -y, --yes=<value>            [Optional] Skip the stack confirmation.
+  -y, --yes                    [Optional] Skip the stack confirmation.
       --org=<value>            Provide Organization UID to create a new stack
       --repo=<value>           GitHub organization name or GitHub user name/repository name.
 
