@@ -15,7 +15,7 @@ $ npm install -g @contentstack/cli-cm-bootstrap
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-bootstrap/1.18.2 darwin-arm64 node-v24.13.0
+@contentstack/cli-cm-bootstrap/1.19.0-beta.1 darwin-arm64 node-v22.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -44,14 +44,14 @@ Bootstrap contentstack apps
 
 ```
 USAGE
-  $ csdx cm:bootstrap [--app-name <value>] [--project-dir <value>] [-k <value> | --org <value> | -n <value>] [-y
-    <value>] [--run-dev-server] [-a <value>]
+  $ csdx cm:bootstrap [--app-name <value>] [--project-dir <value>] [-k <value> | --org <value> | -n <value>] [-y]
+    [--run-dev-server] [-a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
   -k, --stack-api-key=<value>  Provide stack API key to seed content
   -n, --stack-name=<value>     Name of the new stack that will be created.
-  -y, --yes=<value>            [Optional] Skip stack confirmation
+  -y, --yes                    [Optional] Skip stack confirmation
       --app-name=<value>       App name, kickstart-next, kickstart-next-ssr, kickstart-next-ssg, kickstart-next-graphql,
                                kickstart-next-middleware, kickstart-nuxt, kickstart-nuxt-ssr
       --org=<value>            Provide organization UID to create a new stack

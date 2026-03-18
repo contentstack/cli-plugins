@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as process from 'process';
 import * as path from 'path';
 import ImportCommand from '@contentstack/cli-cm-import';
@@ -16,7 +17,13 @@ export interface ImporterOptions {
 }
 
 export async function run(options: ImporterOptions) {
-  const importPath = pathValidator(path.resolve(sanitizePath(options.tmpPath), STACK_FOLDER));
+  const tmpPathResolved = path.resolve(sanitizePath(options.tmpPath));
+  const stackPath = path.join(tmpPathResolved, STACK_FOLDER);
+
+  // Support both structures: repo with stack/ folder (per docs) or content at root
+  const importPath = fs.existsSync(stackPath)
+    ? pathValidator(stackPath)
+    : pathValidator(tmpPathResolved);
 
   const args = options.alias
     ? ['-k', options.api_key, '-d', importPath, '--alias', options.alias!]
