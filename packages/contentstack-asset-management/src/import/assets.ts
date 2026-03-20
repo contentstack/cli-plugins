@@ -1,0 +1,227 @@
+import { resolve as pResolve, join } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { log } from '@contentstack/cli-utilities';
+
+import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
+import { AssetManagementImportAdapter } from './base';
+import { getArrayFromResponse } from '../utils/export-helpers';
+import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+
+type FolderRecord = {
+  uid: string;
+  title: string;
+  description?: string;
+  parent_uid?: string;
+};
+
+type AssetRecord = {
+  uid: string;
+  url: string;
+  filename?: string;
+  file_name?: string;
+  parent_uid?: string;
+  title?: string;
+  description?: string;
+};
+
+/**
+ * Imports folders and assets for a single AM space.
+ * - Reads `spaces/{spaceUid}/assets/folders.json` → creates folders, builds folderUidMap
+ * - Reads chunked `assets.json` → uploads each file from `files/{oldUid}/{filename}`
+ * - Builds UID and URL mapper entries for entries.ts consumption
+ * Mirrors ExportAssets.
+ */
+export default class ImportAssets extends AssetManagementImportAdapter {
+  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+    super(apiConfig, importContext);
+  }
+
+  /**
+   * Loads chunked `assets.json` when present; shared by reuse (identity maps) and upload path.
+   */
+  private async loadExportedAssetItems(spaceDir: string): Promise<AssetRecord[] | null> {
+    const assetsDir = pResolve(spaceDir, 'assets');
+    if (!existsSync(join(assetsDir, 'assets.json'))) {
+      return null;
+    }
+    return this.readAllChunkedJson<AssetRecord>(assetsDir, 'assets.json');
+  }
+
+  /**
+   * Build identity uid/url mappers from export JSON only (reuse path — no upload).
+   * Keys and values are equal so lookupAssets contract is satisfied without remapping.
+   */
+  async buildIdentityMappersFromExport(
+    spaceDir: string,
+  ): Promise<{ uidMap: Record<string, string>; urlMap: Record<string, string> }> {
+    const uidMap: Record<string, string> = {};
+    const urlMap: Record<string, string> = {};
+
+    const assetItems = await this.loadExportedAssetItems(spaceDir);
+    if (!assetItems) {
+      log.debug(
+        `No assets.json index in ${pResolve(spaceDir, 'assets')}, identity mappers empty`,
+        this.importContext.context,
+      );
+      return { uidMap, urlMap };
+    }
+    log.debug(
+      `Building identity mappers for ${assetItems.length} exported asset(s) (reuse path)`,
+      this.importContext.context,
+    );
+
+    for (const asset of assetItems) {
+      if (asset.uid) {
+        uidMap[asset.uid] = asset.uid;
+      }
+      if (asset.url) {
+        urlMap[asset.url] = asset.url;
+      }
+    }
+
+    return { uidMap, urlMap };
+  }
+
+  async start(
+    newSpaceUid: string,
+    spaceDir: string,
+  ): Promise<{ uidMap: Record<string, string>; urlMap: Record<string, string> }> {
+    const assetsDir = pResolve(spaceDir, 'assets');
+    const uidMap: Record<string, string> = {};
+    const urlMap: Record<string, string> = {};
+
+    // -----------------------------------------------------------------------
+    // 1. Import folders
+    // -----------------------------------------------------------------------
+    const folderUidMap: Record<string, string> = {};
+    const foldersFilePath = join(assetsDir, 'folders.json');
+
+    if (existsSync(foldersFilePath)) {
+      let foldersData: unknown;
+      try {
+        foldersData = JSON.parse(readFileSync(foldersFilePath, 'utf8'));
+      } catch (e) {
+        log.debug(`Could not read folders.json: ${e}`, this.importContext.context);
+      }
+
+      if (foldersData) {
+        const folders = getArrayFromResponse(foldersData, 'folders') as FolderRecord[];
+        this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FOLDERS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FOLDERS);
+        log.debug(`Importing ${folders.length} folder(s) for space ${newSpaceUid}`, this.importContext.context);
+        await this.importFolders(newSpaceUid, folders, folderUidMap);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. Import assets (chunked)
+    // -----------------------------------------------------------------------
+    const assetItems = await this.loadExportedAssetItems(spaceDir);
+    if (!assetItems) {
+      log.debug(`No assets.json index found in ${assetsDir}, skipping asset upload`, this.importContext.context);
+      return { uidMap, urlMap };
+    }
+    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSETS);
+    log.debug(`Uploading ${assetItems.length} asset(s) for space ${newSpaceUid}`, this.importContext.context);
+
+    for (const asset of assetItems) {
+      const oldUid = asset.uid;
+      const filename = asset.filename ?? asset.file_name ?? 'asset';
+      const filePath = pResolve(assetsDir, 'files', oldUid, filename);
+
+      if (!existsSync(filePath)) {
+        log.debug(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
+        this.tick(false, `asset: ${oldUid}`, 'File not found on disk', PROCESS_NAMES.AM_IMPORT_ASSETS);
+        continue;
+      }
+
+      const assetParent = asset.parent_uid && asset.parent_uid !== 'root' ? asset.parent_uid : undefined;
+      const mappedParentUid = assetParent ? folderUidMap[assetParent] ?? undefined : undefined;
+
+      try {
+        const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
+          title: asset.title ?? filename,
+          description: asset.description,
+          parent_uid: mappedParentUid,
+        });
+
+        uidMap[oldUid] = created.uid;
+
+        // Map old AM direct URL → new AM direct URL.
+        if (asset.url && created.url) {
+          urlMap[asset.url] = created.url;
+        }
+
+        this.tick(true, `asset: ${oldUid}`, null, PROCESS_NAMES.AM_IMPORT_ASSETS);
+        log.debug(`Uploaded asset ${oldUid} → ${created.uid}`, this.importContext.context);
+      } catch (e) {
+        this.tick(
+          false,
+          `asset: ${oldUid}`,
+          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].FAILED,
+          PROCESS_NAMES.AM_IMPORT_ASSETS,
+        );
+        log.debug(`Failed to upload asset ${oldUid}: ${e}`, this.importContext.context);
+      }
+    }
+
+    return { uidMap, urlMap };
+  }
+
+  /**
+   * Creates folders respecting hierarchy: parents before children.
+   * Uses multiple passes to handle arbitrary depth without requiring sorted input.
+   */
+  private async importFolders(
+    newSpaceUid: string,
+    folders: FolderRecord[],
+    folderUidMap: Record<string, string>,
+  ): Promise<void> {
+    let remaining = [...folders];
+    let prevLength = -1;
+
+    while (remaining.length > 0 && remaining.length !== prevLength) {
+      prevLength = remaining.length;
+      const nextPass: FolderRecord[] = [];
+
+      for (const folder of remaining) {
+        const { parent_uid: parentUid } = folder;
+        // "root" is the AM API sentinel for a top-level folder
+        const isRootParent = !parentUid || parentUid === 'root';
+        const parentMapped = isRootParent || folderUidMap[parentUid] !== undefined;
+
+        if (!parentMapped) {
+          nextPass.push(folder);
+          continue;
+        }
+
+        try {
+          const { folder: created } = await this.createFolder(newSpaceUid, {
+            title: folder.title,
+            description: folder.description,
+            parent_uid: isRootParent ? undefined : folderUidMap[parentUid],
+          });
+          folderUidMap[folder.uid] = created.uid;
+          this.tick(true, `folder: ${folder.uid}`, null, PROCESS_NAMES.AM_IMPORT_FOLDERS);
+          log.debug(`Created folder ${folder.uid} → ${created.uid}`, this.importContext.context);
+        } catch (e) {
+          this.tick(
+            false,
+            `folder: ${folder.uid}`,
+            (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FOLDERS].FAILED,
+            PROCESS_NAMES.AM_IMPORT_FOLDERS,
+          );
+          log.debug(`Failed to create folder ${folder.uid}: ${e}`, this.importContext.context);
+        }
+      }
+
+      remaining = nextPass;
+    }
+
+    if (remaining.length > 0) {
+      log.debug(
+        `${remaining.length} folder(s) could not be imported (unresolved parent UIDs)`,
+        this.importContext.context,
+      );
+    }
+  }
+}

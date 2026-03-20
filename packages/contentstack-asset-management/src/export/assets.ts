@@ -21,8 +21,8 @@ export default class ExportAssets extends AssetManagementExportAdapter {
     log.debug(`Fetching folders and assets for space ${workspace.space_uid}`, this.exportContext.context);
 
     const [folders, assetsData] = await Promise.all([
-      this.getWorkspaceFolders(workspace.space_uid),
-      this.getWorkspaceAssets(workspace.space_uid),
+      this.getWorkspaceFolders(workspace.space_uid, workspace.uid),
+      this.getWorkspaceAssets(workspace.space_uid, workspace.uid),
     ]);
 
     await writeFile(pResolve(assetsDir, 'folders.json'), JSON.stringify(folders, null, 2));

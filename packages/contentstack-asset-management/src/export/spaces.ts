@@ -29,15 +29,8 @@ export class ExportSpaces {
   }
 
   async start(): Promise<void> {
-    const {
-      linkedWorkspaces,
-      exportDir,
-      branchName,
-      assetManagementUrl,
-      org_uid,
-      context,
-      securedAssets,
-    } = this.options;
+    const { linkedWorkspaces, exportDir, branchName, assetManagementUrl, org_uid, apiKey, context, securedAssets } =
+      this.options;
 
     if (!linkedWorkspaces.length) {
       log.debug('No linked workspaces to export', context);
@@ -54,7 +47,9 @@ export class ExportSpaces {
     const totalSteps = 2 + linkedWorkspaces.length * 4;
     const progress = this.createProgress();
     progress.addProcess(AM_MAIN_PROCESS_NAME, totalSteps);
-    progress.startProcess(AM_MAIN_PROCESS_NAME).updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_FIELDS].FETCHING, AM_MAIN_PROCESS_NAME);
+    progress
+      .startProcess(AM_MAIN_PROCESS_NAME)
+      .updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_FIELDS].FETCHING, AM_MAIN_PROCESS_NAME);
 
     const apiConfig: AssetManagementAPIConfig = {
       baseURL: assetManagementUrl,
