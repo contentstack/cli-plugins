@@ -72,6 +72,15 @@ export default interface DefaultConfig {
       uploadAssetsConcurrency: number;
       importFoldersConcurrency: number;
     };
+    'asset-management': {
+      dirName: string;
+      fieldsDir: string;
+      assetTypesDir: string;
+      foldersFileName: string;
+      assetsFileName: string;
+      uploadAssetsConcurrency: number;
+      importFoldersConcurrency: number;
+    };
     content_types: {
       dirName: string;
       fileName: string;

@@ -101,6 +101,15 @@ const config: DefaultConfig = {
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
     },
+    'asset-management': {
+      dirName: 'spaces',
+      fieldsDir: 'fields',
+      assetTypesDir: 'asset_types',
+      foldersFileName: 'folders.json',
+      assetsFileName: 'assets.json',
+      uploadAssetsConcurrency: 2,
+      importFoldersConcurrency: 1,
+    },
     'assets-old': {
       dirName: 'assets',
       fileName: 'assets.json',

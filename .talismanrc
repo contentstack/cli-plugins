@@ -1,26 +1,24 @@
 fileignoreconfig:
-  - filename: packages/contentstack-audit/test/unit/mock/contents/environments/environments.json
-    checksum: d983bc17ab56937c66a6d25f449ecbe285d00c807923ed56deacb3a571aa3448
-  - filename: package-lock.json
-    checksum: 8fd93d7b01c7d064fa797fba81d09da612b5639468c02003e11b2f3b599e49a2
-  - filename: pnpm-lock.yaml
-    checksum: 458cb8d135905583080023055430cf8344f46e92dd1c9e90cdb6f78bbd02eecb
-  - filename: packages/contentstack-seed/src/commands/cm/stacks/seed.ts
-    checksum: 5c59296f3d5ba078f16bca23a47c920dc2180cff3b8250a341176185a4dabc39
-  - filename: packages/contentstack-seed/README.md
-    checksum: d2a017a8206aae1058d4a91d445a7f7d50e919a0d2dd69605a66529c4f4ebe2e
-  - filename: packages/contentstack-seed/src/seed/github/client.ts
-    checksum: 44d491ab5253ebb6c24bb0ac5c8d985320bdc4cc3711de77adfe79f7fb1874a1
-  - filename: packages/contentstack-seed/test/commands/cm/stacks/seed.test.ts
-    checksum: 999b1afe970452691318c76d5e9abd8852384fcf2d826cecda19f156de75fb59
-  - filename: packages/contentstack-seed/src/seed/index.ts
-    checksum: 2bd73b2562618a37e02247459141432515471277ee5b85f5053f169891a54eb5
-  - filename: packages/contentstack-export-to-csv/src/utils/interactive.ts
-    checksum: 8aa3870a6694e404f4f8df3ed884dd69521099fe66851c4f8c9860276254da9d
-  - filename: packages/contentstack-import/test/unit/import/modules/marketplace-apps.test.ts
-    checksum: e927e670f70374bfa09a4866faf2af0a65476709412882122ea2811717e528aa
-  - filename: packages/contentstack-export/test/unit/export/modules/marketplace-apps.test.ts
-    checksum: 6cb665ee2ea09372b3f80c3d2c38d1c3c3889ce0a1ba7d8488614a73aedf17b7
-  - filename: packages/contentstack-import/test/unit/import/module-importer.test.ts
-    checksum: baf0ffc77d2afe9084da2d1fecac4a3a6ef875739677ef6186cd7de278886406
+  - filename: packages/contentstack-export/src/export/modules/assets.ts
+    checksum: 1eacc8e86cb50fe283febe6688965854f420e02cf1b49555a15661fa0c3e3c7a
+  - filename: packages/contentstack-import/src/utils/import-config-handler.ts
+    checksum: f831cef1b7c3bd97bdbc170cff452350cee0f448d97df02e25aa41d6c4d64ad3
+  - filename: packages/contentstack-asset-management/src/import/asset-types.ts
+    checksum: a39caa373b2a736d1e57063326cfb2073ae78376efa931b27d2c7110997708a5
+  - filename: packages/contentstack-asset-management/src/export/spaces.ts
+    checksum: 3ec11c8f710b60ae495c69344025587df2e6195c872a0c82feaf04ac044ecefa
+  - filename: packages/contentstack-import/src/import/modules/assets.ts
+    checksum: d9f4a29a29e8b8a2a36e498f2380d39e1c5c0ec13ff894ef450abd817f2a646e
+  - filename: packages/contentstack-asset-management/src/import/fields.ts
+    checksum: bbae69c28ec69bf67c2c7b4df3620380ef3fca488b3288e137b65a60ee738b9e
+  - filename: packages/contentstack-asset-management/src/import/spaces.ts
+    checksum: 79cf2f1b55523d28c218d970155f887255a00dc095a941556b709d1f19c6a8a0
+  - filename: packages/contentstack-asset-management/src/types/asset-management-api.ts
+    checksum: 716df03dcba70b2cc0f77b1f6338524553ba740080d7087a8699147c3ce8f0ba
+  - filename: packages/contentstack-asset-management/src/utils/asset-management-api-adapter.ts
+    checksum: 92bcad2feabc1954ead89b370d284b7af5f38ec1dca60a41752371977ef106ff
+  - filename: packages/contentstack-asset-management/src/import/base.ts
+    checksum: 513b55cf7e92bdbe8b815141822ba10579b6a728bec4424fc664794246ad33bb
+  - filename: packages/contentstack-asset-management/src/import/assets.ts
+    checksum: 2d34fa57f5ab269f6c535dff3242cc1135dbe1decd84fa0bc8997d0410d520b2
 version: '1.0'

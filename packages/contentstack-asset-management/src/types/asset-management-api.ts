@@ -36,6 +36,9 @@ export type Space = {
 /** Response shape of GET /api/spaces/{space_uid}. */
 export type SpaceResponse = { space: Space };
 
+/** Response shape of GET /api/spaces (list all spaces in the org). */
+export type SpacesListResponse = { spaces: Space[]; count?: number };
+
 /**
  * Field structure from GET /api/fields (org-level).
  */
@@ -118,10 +121,11 @@ export type AssetManagementAPIConfig = {
  */
 export interface IAssetManagementAdapter {
   init(): Promise<void>;
+  listSpaces(): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
   getWorkspaceFields(spaceUid: string): Promise<FieldsResponse>;
-  getWorkspaceAssets(spaceUid: string): Promise<unknown>;
-  getWorkspaceFolders(spaceUid: string): Promise<unknown>;
+  getWorkspaceAssets(spaceUid: string, workspaceUid?: string): Promise<unknown>;
+  getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
 }
 
@@ -137,4 +141,119 @@ export type AssetManagementExportOptions = {
   context?: Record<string, unknown>;
   /** When true, the AM package will add authtoken to asset download URLs. */
   securedAssets?: boolean;
+  /**
+   * API key of the stack being exported.
+   * Saved to `spaces/export-metadata.json` so that during import the URL mapper
+   * can reconstruct old CMA proxy URLs (format: /v3/assets/{apiKey}/{amUid}/...).
+   */
+  apiKey?: string;
+};
+
+// ---------------------------------------------------------------------------
+// Import types
+// ---------------------------------------------------------------------------
+
+/**
+ * Context passed down to every import adapter class.
+ * Mirrors ExportContext but carries the import-specific fields needed for
+ * URL mapper reconstruction and API calls.
+ */
+export type ImportContext = {
+  /** Absolute path to the root `spaces/` directory inside the backup/content dir. */
+  spacesRootPath: string;
+  /** Source stack API key — used to reconstruct old CMA proxy URLs. */
+  sourceApiKey?: string;
+  /** Target stack API key — used to build new CMA proxy URLs. */
+  apiKey: string;
+  /** Target CMA host (may include /v3), e.g. "https://api.contentstack.io/v3". */
+  host: string;
+  /** Target org UID — required as `x-organization-uid` header when creating spaces. */
+  org_uid: string;
+  /** Optional logging context (same shape as ExportConfig.context). */
+  context?: Record<string, unknown>;
+};
+
+/**
+ * Options accepted by the top-level `ImportSpaces` class.
+ */
+export type AssetManagementImportOptions = {
+  /** Absolute path to the root content / backup directory. */
+  contentDir: string;
+  /** AM 2.0 base URL (e.g. "https://am.contentstack.io"). */
+  assetManagementUrl: string;
+  /** Target organisation UID. */
+  org_uid: string;
+  /** Target stack API key. */
+  apiKey: string;
+  /** Target CMA host. */
+  host: string;
+  /** Source stack API key — used for old CMA proxy URL reconstruction. */
+  sourceApiKey?: string;
+  /** Optional logging context. */
+  context?: Record<string, unknown>;
+};
+
+/**
+ * Maps an old source-org space UID to the newly created target-org space UID.
+ */
+export type SpaceMapping = {
+  oldSpaceUid: string;
+  newSpaceUid: string;
+  /** Workspace identifier inside the space (typically "main"). */
+  workspaceUid: string;
+  isDefault: boolean;
+};
+
+/**
+ * The value returned by `ImportSpaces.start()`.
+ * Written to `mapper/assets/uid-mapping.json` and `mapper/assets/url-mapping.json`
+ * by the bridge module so `entries.ts` can resolve asset references.
+ */
+export type ImportResult = {
+  uidMap: Record<string, string>;
+  urlMap: Record<string, string>;
+  spaceMappings: SpaceMapping[];
+  /** old space UID → new space UID, written to mapper/assets/space-uid-mapping.json */
+  spaceUidMap: Record<string, string>;
+};
+
+// ---------------------------------------------------------------------------
+// Import payload types (confirmed from Postman collection)
+// ---------------------------------------------------------------------------
+
+export type CreateSpacePayload = {
+  title: string;
+  description?: string;
+};
+
+export type CreateFolderPayload = {
+  title: string;
+  description?: string;
+  parent_uid?: string;
+};
+
+export type CreateAssetMetadata = {
+  title?: string;
+  description?: string;
+  parent_uid?: string;
+};
+
+export type CreateFieldPayload = {
+  uid: string;
+  title: string;
+  display_type?: string;
+  child?: unknown[];
+  is_mandatory?: boolean;
+  is_multiple?: boolean;
+  [key: string]: unknown;
+};
+
+export type CreateAssetTypePayload = {
+  uid: string;
+  title: string;
+  description?: string;
+  content_type?: string;
+  file_extension?: string | string[];
+  fields?: string[];
+  [key: string]: unknown;
 };

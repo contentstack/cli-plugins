@@ -17,10 +17,15 @@ export const PROCESS_NAMES = {
   AM_FIELDS: 'Fields',
   AM_ASSET_TYPES: 'Asset types',
   AM_DOWNLOADS: 'Asset downloads',
+  // Import process names
+  AM_IMPORT_FIELDS: 'Import fields',
+  AM_IMPORT_ASSET_TYPES: 'Import asset types',
+  AM_IMPORT_FOLDERS: 'Import folders',
+  AM_IMPORT_ASSETS: 'Import assets',
 } as const;
 
 /**
- * Status messages for each process (exporting, fetching, failed).
+ * Status messages for each process (exporting, fetching, importing, failed).
  */
 export const PROCESS_STATUS = {
   [PROCESS_NAMES.AM_SPACE_METADATA]: {
@@ -46,5 +51,21 @@ export const PROCESS_STATUS = {
   [PROCESS_NAMES.AM_DOWNLOADS]: {
     DOWNLOADING: 'Downloading asset files...',
     FAILED: 'Failed to download assets.',
+  },
+  [PROCESS_NAMES.AM_IMPORT_FIELDS]: {
+    IMPORTING: 'Importing shared fields...',
+    FAILED: 'Failed to import fields.',
+  },
+  [PROCESS_NAMES.AM_IMPORT_ASSET_TYPES]: {
+    IMPORTING: 'Importing shared asset types...',
+    FAILED: 'Failed to import asset types.',
+  },
+  [PROCESS_NAMES.AM_IMPORT_FOLDERS]: {
+    IMPORTING: 'Importing folders...',
+    FAILED: 'Failed to import folders.',
+  },
+  [PROCESS_NAMES.AM_IMPORT_ASSETS]: {
+    IMPORTING: 'Importing assets...',
+    FAILED: 'Failed to import assets.',
   },
 } as const;
