@@ -164,9 +164,23 @@ describe('Content types', () => {
       .it('should prompt and ask confirmation', async () => {
         sinon.replace(cliux, 'confirm', async () => false);
         const ctInstance = new ContentType({ ...constructorParam, fix: true });
+        (ctInstance as any).schema = constructorParam.ctSchema?.length ? [constructorParam.ctSchema[0]] : [{ uid: 'ct1', title: 'T' } as ContentTypeStruct];
         const spy = sinon.spy(cliux, 'confirm');
         await ctInstance.writeFixContent();
         expect(spy.callCount).to.be.equals(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it('should not prompt or write when schema is empty in fix mode', async () => {
+        const ctInstance = new ContentType({ ...constructorParam, fix: true });
+        (ctInstance as any).schema = [];
+        const confirmSpy = sinon.spy(cliux, 'confirm');
+        const fsSpy = sinon.spy(fs, 'writeFileSync');
+        await ctInstance.writeFixContent();
+        expect(confirmSpy.callCount).to.be.equals(0);
+        expect(fsSpy.callCount).to.be.equals(0);
       });
   });
 
