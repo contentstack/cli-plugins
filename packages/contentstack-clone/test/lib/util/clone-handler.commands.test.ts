@@ -195,7 +195,7 @@ describe('CloneHandler - Commands', () => {
       expect(cmdArgs).to.include('dest-alias');
     });
 
-    it('should execute import command with sourceStackBranch data path (covers lines 637-641)', async () => {
+    it('should execute import command with pathDir as export root when contentDir unset (single-branch layout)', async () => {
       const config: CloneConfig = {
         cloneContext: {
           command: 'test',
@@ -216,11 +216,10 @@ describe('CloneHandler - Commands', () => {
 
       expect(fsStub.writeFileSync.calledTwice).to.be.true;
       expect(importCmdStub.run.calledOnce).to.be.true;
-      // Verify -d flag with data path is added (line 639)
       const cmdArgs = importCmdStub.run.firstCall.args[0];
       expect(cmdArgs).to.include('-d');
       const dataPathIndex = cmdArgs.indexOf('-d');
-      expect(cmdArgs[dataPathIndex + 1]).to.include('/test/path/main');
+      expect(cmdArgs[dataPathIndex + 1]).to.equal('/test/path');
     });
 
     it('should execute import command with data path instead of sourceStackBranch (covers line 637 condition)', async () => {
