@@ -2,7 +2,7 @@ import merge from 'merge';
 import * as path from 'path';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
-import { readFile } from './file-helper';
+import { readFile, isDirectoryNonEmpty } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
 import login from './basic-login';
 import { filter, includes } from 'lodash';
@@ -41,6 +41,15 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   }
   config.exportDir = config.exportDir.replace(/['"]/g, '');
   config.exportDir = path.resolve(config.exportDir);
+
+  if (exportCmdFlags['data-dir'] || exportCmdFlags['data']) {
+    if (isDirectoryNonEmpty(config.exportDir)) {
+      cliux.print(
+        '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
+        { color: 'yellow' },
+      );
+    }
+  }
 
   const managementTokenAlias = exportCmdFlags['management-token-alias'] || exportCmdFlags['alias'];
 
