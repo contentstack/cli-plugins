@@ -63,7 +63,7 @@ describe('Export Config Handler', () => {
       expect(askExportDirStub.called).to.be.false;
     });
 
-    it('should print yellow warning when data-dir is set and export directory is not empty', async () => {
+    it('should print yellow warning when export directory is not empty (data-dir flag)', async () => {
       configHandlerGetStub.withArgs('authorisationType').returns('OAUTH');
       const isNonEmptyStub = sandbox.stub(fileHelper, 'isDirectoryNonEmpty').returns(true);
       const cliuxPrint = utilities.cliux.print as sinon.SinonStub;
@@ -73,6 +73,24 @@ describe('Export Config Handler', () => {
       await setupConfig(flags);
 
       expect(isNonEmptyStub.calledWith(path.resolve('/some/export'))).to.be.true;
+      expect(
+        cliuxPrint.calledWith(
+          '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
+          { color: 'yellow' },
+        ),
+      ).to.be.true;
+    });
+
+    it('should print yellow warning when export directory is not empty (interactive path)', async () => {
+      configHandlerGetStub.withArgs('authorisationType').returns('OAUTH');
+      const isNonEmptyStub = sandbox.stub(fileHelper, 'isDirectoryNonEmpty').returns(true);
+      const cliuxPrint = utilities.cliux.print as sinon.SinonStub;
+      cliuxPrint.resetHistory();
+
+      const flags = {};
+      await setupConfig(flags);
+
+      expect(isNonEmptyStub.calledWith(path.resolve('/default/export/dir'))).to.be.true;
       expect(
         cliuxPrint.calledWith(
           '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
