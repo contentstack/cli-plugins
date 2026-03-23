@@ -42,13 +42,11 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   config.exportDir = config.exportDir.replace(/['"]/g, '');
   config.exportDir = path.resolve(config.exportDir);
 
-  if (exportCmdFlags['data-dir'] || exportCmdFlags['data']) {
-    if (isDirectoryNonEmpty(config.exportDir)) {
-      cliux.print(
-        '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
-        { color: 'yellow' },
-      );
-    }
+  if (isDirectoryNonEmpty(config.exportDir)) {
+    cliux.print(
+      '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
+      { color: 'yellow' },
+    );
   }
 
   const managementTokenAlias = exportCmdFlags['management-token-alias'] || exportCmdFlags['alias'];
