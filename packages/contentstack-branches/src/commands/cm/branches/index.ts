@@ -8,7 +8,7 @@ import {
   TableHeader,
 } from '@contentstack/cli-utilities';
 import { getbranchesList, getbranchConfig, interactive, handleErrorMsg } from '../../../utils/index';
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 export default class BranchListCommand extends Command {
   static description: string = messageHandler.parse('List the branches'); // Note: Update the description
 
@@ -54,10 +54,10 @@ export default class BranchListCommand extends Command {
 
         if (!verbose) {
           currentBranch[0]?.Source
-            ? cliux.print(`* ${chalk.bold(currentBranch[0].Branch)} (source: ${currentBranch[0].Source})`, {
+            ? cliux.print(`* ${getChalk().bold(currentBranch[0].Branch)} (source: ${currentBranch[0].Source})`, {
                 color: 'blue',
               })
-            : cliux.print(`* ${chalk.bold(currentBranch[0].Branch)}`, {
+            : cliux.print(`* ${getChalk().bold(currentBranch[0].Branch)}`, {
                 color: 'blue',
               });
 
