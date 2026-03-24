@@ -1,7 +1,13 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import type { PathLike } from 'node:fs';
 import * as path from 'path';
 import { FsUtility, handleAndLogError, messageHandler } from '@contentstack/cli-utilities';
+
+declare global {
+  var __CONTENTSTACK_TEST_FS__: typeof import('node:fs');
+}
+const fs = globalThis.__CONTENTSTACK_TEST_FS__;
 import * as utilities from '@contentstack/cli-utilities';
 import EntriesExport from '../../../../src/export/modules/entries';
 import ExportConfig from '../../../../src/types/export-config';
@@ -146,6 +152,35 @@ describe('EntriesExport', () => {
     sandbox.stub(FsUtility.prototype, 'readdir').returns([]);
     sandbox.stub(FsUtility.prototype, 'readFile').returns(undefined);
 
+    // readContentTypeSchemas() uses node:fs — mirror FsUtility stubs; only intercept content_types paths
+    const originalExistsSync = fs.existsSync.bind(fs);
+    const originalReaddirSync = fs.readdirSync.bind(fs);
+    const originalReadFileSync = fs.readFileSync.bind(fs);
+    sandbox.stub(fs, 'existsSync').callsFake((p: PathLike) => {
+      const s = String(p);
+      if (s.includes('content_types')) {
+        return true;
+      }
+      return originalExistsSync(p);
+    });
+    sandbox.stub(fs, 'readdirSync').callsFake((dirPath: PathLike) => {
+      const s = String(dirPath);
+      if (s.includes('content_types')) {
+        return (FsUtility.prototype.readdir as sinon.SinonStub)(s);
+      }
+      return originalReaddirSync(dirPath);
+    });
+    sandbox.stub(fs, 'readFileSync').callsFake((filePath: string | Buffer | URL, encoding?: Parameters<typeof fs.readFileSync>[1]) => {
+      const p = String(filePath);
+      if (p.includes('content_types')) {
+        const r = (FsUtility.prototype.readFile as sinon.SinonStub)(p);
+        if (r !== undefined) {
+          return typeof r === 'string' ? r : JSON.stringify(r);
+        }
+      }
+      return originalReadFileSync(filePath, encoding as any);
+    });
+
     entriesExport = new EntriesExport({
       exportConfig: mockExportConfig,
       stackAPIClient: mockStackAPIClient,
@@ -275,7 +310,9 @@ describe('EntriesExport', () => {
 
       const locales = [{ code: 'en-us' }];
       const contentTypes = [{ uid: 'ct-1', title: 'Content Type 1' }];
-      mockFsUtil.readFile.onFirstCall().returns(locales).onSecondCall().returns(contentTypes);
+      mockFsUtil.readFile.returns(locales);
+      (FsUtility.prototype.readdir as sinon.SinonStub).returns(['ct-1.json']);
+      (FsUtility.prototype.readFile as sinon.SinonStub).returns(contentTypes[0]);
 
       // Mock successful entry fetch - use callsFake to preserve call tracking
       const contentTypeStub = sandbox.stub().returns({
