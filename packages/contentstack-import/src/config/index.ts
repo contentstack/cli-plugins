@@ -93,13 +93,23 @@ const config: DefaultConfig = {
       assetBatchLimit: 1,
       fileName: 'assets.json',
       importSameStructure: true,
-      uploadAssetsConcurrency: 2,
+      uploadAssetsConcurrency: 10, // Increased from 2 to 10 based on customer success
       displayExecutionTime: false,
-      importFoldersConcurrency: 1,
+      importFoldersConcurrency: 5, // Increased from 1 to 5 for better performance
       includeVersionedAssets: false,
       host: 'https://api.contentstack.io',
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
+      // New memory management configuration
+      enableMemoryMonitoring: true, // Enable memory monitoring by default
+      memoryThresholdMB: 768, // Memory pressure threshold for large datasets
+      enableIncrementalPersistence: true, // Enable incremental state saving
+      maxRetries: 5, // Retry logic for failed uploads
+      retryDelay: 2000, // Delay between retries (ms)
+      enableRateLimiting: true, // Enable rate limiting
+      rateLimitDelay: 200, // Delay between API calls (ms)
+      backupSkipThresholdGB: 1, // Skip backup for datasets larger than 1GB
+      queueClearInterval: 100, // Clear completed queue items every N items
     },
     'assets-old': {
       dirName: 'assets',

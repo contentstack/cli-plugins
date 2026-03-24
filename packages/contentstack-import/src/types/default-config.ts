@@ -61,6 +61,16 @@ export default interface DefaultConfig {
       host: string;
       folderValidKeys: string[];
       validKeys: string[];
+      // New memory management options
+      enableMemoryMonitoring?: boolean;
+      memoryThresholdMB?: number;
+      enableIncrementalPersistence?: boolean;
+      maxRetries?: number;
+      retryDelay?: number;
+      enableRateLimiting?: boolean;
+      rateLimitDelay?: number;
+      backupSkipThresholdGB?: number;
+      queueClearInterval?: number;
     };
     'assets-old': {
       dirName: string;

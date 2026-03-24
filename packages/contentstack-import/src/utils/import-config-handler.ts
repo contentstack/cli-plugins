@@ -126,6 +126,27 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
   }
 
+  // Handle new memory optimization flags
+  if (importCmdFlags['force-backup']) {
+    config.forceBackup = importCmdFlags['force-backup'];
+  }
+
+  if (importCmdFlags['disable-memory-optimization']) {
+    config.modules.assets.enableMemoryMonitoring = false;
+    config.modules.assets.enableIncrementalPersistence = false;
+    log.debug('Memory optimization disabled via command line flag', { ...config });
+  }
+
+  if (importCmdFlags['memory-threshold']) {
+    config.modules.assets.memoryThresholdMB = importCmdFlags['memory-threshold'];
+    log.debug(`Memory threshold set to ${importCmdFlags['memory-threshold']}MB`, { ...config });
+  }
+
+  if (importCmdFlags['asset-concurrency']) {
+    config.modules.assets.uploadAssetsConcurrency = importCmdFlags['asset-concurrency'];
+    log.debug(`Asset concurrency set to ${importCmdFlags['asset-concurrency']}`, { ...config });
+  }
+
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Import configuration setup completed.', { ...config });

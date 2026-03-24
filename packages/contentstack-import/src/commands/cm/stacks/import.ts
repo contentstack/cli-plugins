@@ -108,6 +108,20 @@ export default class ImportCommand extends Command {
       description: 'Skips entry publishing during the import process',
       default: false,
     }),
+    'force-backup': flags.boolean({
+      description: 'Forces backup creation even for large datasets that would normally skip backup for memory optimization.',
+      default: false,
+    }),
+    'disable-memory-optimization': flags.boolean({
+      description: 'Disables memory optimization features and uses legacy processing (not recommended for large datasets).',
+      default: false,
+    }),
+    'memory-threshold': flags.integer({
+      description: 'Memory threshold in MB for triggering garbage collection (default: 768MB for large datasets).',
+    }),
+    'asset-concurrency': flags.integer({
+      description: 'Number of concurrent asset uploads (default: 10).',
+    }),
   };
 
   static usage: string =

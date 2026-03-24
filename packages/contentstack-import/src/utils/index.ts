@@ -32,4 +32,8 @@ export {
 } from './entries-helper';
 export * from './common-helper';
 export { lookUpTaxonomy, lookUpTerms } from './taxonomies-helper';
+export { MemoryMonitor, MemoryStats, MemoryMonitorConfig } from './memory-monitor';
+export { IncrementalStateManager, StateEntry, AssetMappings, StateManagerConfig } from './incremental-state';
+export { AssetQueue, AssetQueueItem, AssetQueueConfig, AssetProcessor } from './asset-queue';
+export { ImportRecoveryManager, ImportRecoveryInfo, RecoveryRecommendation } from './import-recovery';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
