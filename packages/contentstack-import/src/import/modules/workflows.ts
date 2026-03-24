@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import map from 'lodash/map';
 import find from 'lodash/find';
 import { join } from 'node:path';
@@ -290,7 +290,7 @@ export default class ImportWorkflows extends BaseClass {
     } else {
       if (workflow.admin_users !== undefined) {
         log.info(
-          chalk.yellow('We are skipping import of `Workflow superuser(s)` from workflow'),
+          getChalk().yellow('We are skipping import of `Workflow superuser(s)` from workflow'),
           this.importConfig.context,
         );
         delete workflow.admin_users;
