@@ -1,5 +1,5 @@
 import map from 'lodash/map';
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import chunk from 'lodash/chunk';
 import first from 'lodash/first';
 import merge from 'lodash/merge';
@@ -99,7 +99,7 @@ export default class ExportAssets extends BaseClass {
     log.debug('Fetching assets and folders count...', this.exportConfig.context);
     // NOTE step 1: Get assets and it's folder count in parallel
     const [assetsCount, assetsFolderCount] = await this.withLoadingSpinner(
-      `${chalk.bold('ASSETS')}: Analyzing stack content...`,
+      `${getChalk().bold('ASSETS')}: Analyzing stack content...`,
       () => Promise.all([this.getAssetsCount(), this.getAssetsCount(true)]),
     );
 

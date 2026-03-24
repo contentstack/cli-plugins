@@ -1,4 +1,3 @@
-import * as chalk from 'chalk';
 import { log, fsUtil } from '../../utils';
 import { join } from 'path';
 import { AssetRecord, ImportConfig, ModuleClassParams } from '../../types';

@@ -1,4 +1,4 @@
-import { Color } from "chalk";
+import type { ForegroundColorName } from 'chalk';
 import { PrintOptions } from "@contentstack/cli-utilities";
 
 import config from "../config";
@@ -26,7 +26,7 @@ export type LoggerType = "info" | "warn" | "error" | "debug" | 'hidden';
 export type PrintType = {
   message: string;
   bold?: boolean;
-  color?: typeof Color;
+  color?: ForegroundColorName;
 };
 
 export type JSONFlagOptions = {
