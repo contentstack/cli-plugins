@@ -1,4 +1,18 @@
 fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    checksum: 97cb862682f7dec430f2079ac686bbfec4fc22c080c8d50cf14c4e2249bb8c8c
+  - filename: packages/contentstack-import/src/config/index.ts
+    checksum: 541136c45d6a74010e4999389dd9c06a0e6b7b74bea62087d66c50b17e8e5d11
+  - filename: packages/contentstack-variants/src/types/export-config.ts
+    checksum: 5707cf07e6777d31d4730567d861300a94b16b8a97e47fb3d804efb67f214aab
+  - filename: packages/contentstack-import/src/types/index.ts
+    checksum: 068079597f11b6460cca4005ca2345d7c2a954dc516a14c51782c631652cd5a3
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 2c811d2bd7b6657b567fd120cfaf05306ca751109c070bf7b49c18d06b211764
+  - filename: packages/contentstack-export/src/types/index.ts
+    checksum: 173b811f93b12da873d5860275a85438d2f78a1c4e387c77ec5246f1c0231da2
+  - filename: packages/contentstack-export/src/types/default-config.ts
+    checksum: 0cc62919207384ec710ea3f8a3445d6e5bd78cc2c5306b9e74aaeec688eb028d
+  - filename: packages/contentstack-import/src/types/default-config.ts
+    checksum: 0db51c83ce44e31d51ae881a0f0bfc2cd39cb15bd333fe3b1e9f19292d575d91
+  - filename: packages/contentstack-import/src/import/modules/publishing-rules.ts
+    checksum: 429a803bc18e691db93bae3df1714071d0face6441b82cb938a83e8bf94ae14c
 version: '1.0'

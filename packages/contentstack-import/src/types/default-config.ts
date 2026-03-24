@@ -49,6 +49,11 @@ export default interface DefaultConfig {
       fileName: string;
       invalidKeys: string[];
     };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+    };
     assets: {
       dirName: string;
       assetBatchLimit: number;
