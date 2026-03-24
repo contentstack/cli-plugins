@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import type { PathLike } from 'node:fs';
 import EntriesImport from '../../../../src/import/modules/entries';
+
+declare global {
+  var __CONTENTSTACK_TEST_FS__: typeof import('node:fs');
+}
+const fs = globalThis.__CONTENTSTACK_TEST_FS__;
 import { ImportConfig, ModuleClassParams } from '../../../../src/types';
 import { FsUtility } from '@contentstack/cli-utilities';
 import { fsUtil, fileHelper, MODULE_CONTEXTS } from '../../../../src/utils';
@@ -36,6 +42,36 @@ describe('EntriesImport', () => {
     // This also stubs fsUtil.readFile since fsUtil is an instance of FsUtility
     // Don't set a default return value - let individual tests configure it
     fsUtilityReadFileStub = sinon.stub(FsUtility.prototype, 'readFile');
+
+    // readContentTypeSchemas() uses node:fs; only intercept content_types paths (see content-types.test.ts).
+    const originalExistsSync = fs.existsSync.bind(fs);
+    const originalReaddirSync = fs.readdirSync.bind(fs);
+    const originalReadFileSync = fs.readFileSync.bind(fs);
+    sinon.stub(fs, 'existsSync').callsFake((p: PathLike) => {
+      const s = String(p);
+      if (s.includes('content_types')) {
+        return true;
+      }
+      return originalExistsSync(p);
+    });
+    sinon.stub(fs, 'readdirSync').callsFake((dirPath: PathLike) => {
+      const s = String(dirPath);
+      if (s.includes('content_types')) {
+        return (FsUtility.prototype.readdir as sinon.SinonStub)(s);
+      }
+      return originalReaddirSync(dirPath);
+    });
+    sinon.stub(fs, 'readFileSync').callsFake((filePath: string | Buffer | URL, encoding?: Parameters<typeof fs.readFileSync>[1]) => {
+      const p = String(filePath);
+      if (p.includes('content_types')) {
+        const r = (FsUtility.prototype.readFile as sinon.SinonStub)(p);
+        if (r !== undefined) {
+          return typeof r === 'string' ? r : JSON.stringify(r);
+        }
+      }
+      return originalReadFileSync(filePath, encoding as any);
+    });
+
     fsUtilityWriteFileStub = sinon.stub(fsUtil, 'writeFile').callsFake(() => {
       return Promise.resolve();
     });
