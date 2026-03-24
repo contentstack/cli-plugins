@@ -18,7 +18,7 @@ import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
-import { formatDate, PROCESS_NAMES, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS } from '../../utils';
+import { formatDate, PROCESS_NAMES, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS, MemoryUtils } from '../../utils';
 import BaseClass, { ApiOptions } from './base-class';
 
 export default class ImportAssets extends BaseClass {
@@ -241,6 +241,29 @@ export default class ImportAssets extends BaseClass {
       this.progressManager?.tick(true, `asset: ${title || uid}`, null, progressProcessName);
       log.debug(`Created asset: ${title} (Mapped ${uid} → ${response.uid})`, this.importConfig.context);
       log.success(`Created asset: '${title}'`, this.importConfig.context);
+      
+      // Periodic mapping cleanup every 1000 assets to prevent memory accumulation
+      const totalMappings = Object.keys(this.assetsUidMap).length;
+      if (MemoryUtils.shouldCleanup(totalMappings, 1000)) {
+        log.debug(`Performing periodic cleanup at ${totalMappings} assets`, this.importConfig.context);
+        
+        // Write current mappings to disk
+        if (!isEmpty(this.assetsUidMap)) {
+          this.fs.writeFile(this.assetUidMapperPath, this.assetsUidMap);
+        }
+        if (!isEmpty(this.assetsUrlMap)) {
+          this.fs.writeFile(this.assetUrlMapperPath, this.assetsUrlMap);
+        }
+        
+        // Clear in-memory maps to free memory
+        this.assetsUidMap = {};
+        this.assetsUrlMap = {};
+        
+        // Force garbage collection if available
+        MemoryUtils.forceGarbageCollection(this.importConfig.context);
+        
+        MemoryUtils.logMemoryStats(`After cleanup at ${totalMappings} assets`, this.importConfig.context);
+      }
     };
 
     const onReject = ({ error, apiData: { title, uid } = undefined }: any) => {
@@ -307,20 +330,33 @@ export default class ImportAssets extends BaseClass {
           undefined,
           !isVersion,
         );
+        
+        // Memory cleanup after chunk processing
+        MemoryUtils.cleanup(chunk, apiContent);
+        
+        // Log memory stats periodically
+        if (+index % 10 === 0) {
+          MemoryUtils.logMemoryStats(`Processed chunk ${index}/${indexerCount}`, this.importConfig.context);
+        }
       }
     }
 
     if (!isVersion) {
+      // Write any remaining mappings that weren't written during periodic cleanup
       if (!isEmpty(this.assetsUidMap)) {
         const uidMappingCount = Object.keys(this.assetsUidMap || {}).length;
-        log.debug(`Writing ${uidMappingCount} UID mappings`, this.importConfig.context);
+        log.debug(`Writing final ${uidMappingCount} UID mappings`, this.importConfig.context);
         this.fs.writeFile(this.assetUidMapperPath, this.assetsUidMap);
       }
       if (!isEmpty(this.assetsUrlMap)) {
         const urlMappingCount = Object.keys(this.assetsUrlMap || {}).length;
-        log.debug(`Writing ${urlMappingCount} URL mappings`, this.importConfig.context);
+        log.debug(`Writing final ${urlMappingCount} URL mappings`, this.importConfig.context);
         this.fs.writeFile(this.assetUrlMapperPath, this.assetsUrlMap);
       }
+      
+      // Final memory cleanup
+      MemoryUtils.cleanup(this.assetsUidMap, this.assetsUrlMap);
+      MemoryUtils.logMemoryStats('Import completed', this.importConfig.context);
     }
   }
 

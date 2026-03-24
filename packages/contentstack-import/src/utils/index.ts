@@ -32,4 +32,5 @@ export {
 } from './entries-helper';
 export * from './common-helper';
 export { lookUpTaxonomy, lookUpTerms } from './taxonomies-helper';
+export { MemoryUtils, MemoryStats } from './memory-utils';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
