@@ -17,6 +17,7 @@ export type Modules =
   | 'content-types'
   | 'custom-roles'
   | 'workflows'
+  | 'publishing-rules'
   | 'labels'
   | 'marketplace-apps'
   | 'taxonomies'
@@ -87,6 +88,13 @@ export interface DefaultConfig {
       fileName: string;
       invalidKeys: string[];
       dependencies?: Modules[];
+    };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+      limit?: number;
     };
     globalfields: {
       dirName: string;
