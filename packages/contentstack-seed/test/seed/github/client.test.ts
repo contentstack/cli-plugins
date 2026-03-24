@@ -195,7 +195,7 @@ describe('GitHubClient', () => {
       const mockExtract = new Stream();
 
       (zlib.createUnzip as jest.Mock) = jest.fn().mockReturnValue(mockUnzip);
-      (tar.extract as jest.Mock) = jest.fn().mockReturnValue(mockExtract);
+      (tar.extract as unknown as jest.Mock) = jest.fn().mockReturnValue(mockExtract);
 
       // Mock pipe chain
       mockStream.pipe = jest.fn().mockReturnValue(mockUnzip);
@@ -222,7 +222,7 @@ describe('GitHubClient', () => {
       const mockExtract = new Stream();
 
       (zlib.createUnzip as jest.Mock) = jest.fn().mockReturnValue(mockUnzip);
-      (tar.extract as jest.Mock) = jest.fn().mockReturnValue(mockExtract);
+      (tar.extract as unknown as jest.Mock) = jest.fn().mockReturnValue(mockExtract);
 
       mockStream.pipe = jest.fn().mockReturnValue(mockUnzip);
       mockUnzip.pipe = jest.fn().mockReturnValue(mockExtract);
