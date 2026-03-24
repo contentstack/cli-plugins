@@ -93,9 +93,9 @@ const config: DefaultConfig = {
       assetBatchLimit: 1,
       fileName: 'assets.json',
       importSameStructure: true,
-      uploadAssetsConcurrency: 2,
+      uploadAssetsConcurrency: 2, // Keeping original concurrency setting
       displayExecutionTime: false,
-      importFoldersConcurrency: 1,
+      importFoldersConcurrency: 1, // Keeping original concurrency setting
       includeVersionedAssets: false,
       host: 'https://api.contentstack.io',
       folderValidKeys: ['name', 'parent_uid'],

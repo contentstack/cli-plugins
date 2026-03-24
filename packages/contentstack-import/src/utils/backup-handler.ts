@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { copy } from 'fs-extra';
+import { statSync } from 'node:fs';
 import { cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 
 import { fileHelper } from './index';
@@ -53,6 +54,27 @@ export default async function backupHandler(importConfig: ImportConfig): Promise
   }
 
   if (backupDirPath) {
+    // Check dataset size before backup to prevent memory issues
+    try {
+      const stats = statSync(sourceDir);
+      const sizeGB = stats.size / (1024 * 1024 * 1024);
+      const sizeThresholdGB = 1; // Skip backup for datasets larger than 1GB
+      
+      log.debug(`Source directory size: ${sizeGB.toFixed(2)}GB`, importConfig.context);
+      
+      if (sizeGB > sizeThresholdGB) {
+        const skipMessage = `Large dataset detected (${sizeGB.toFixed(2)}GB > ${sizeThresholdGB}GB threshold). Skipping backup to save memory and prevent OOM errors.`;
+        log.warn(skipMessage, importConfig.context);
+        cliux.print(skipMessage, { color: 'yellow' });
+        
+        // Return the source directory as the "backup" directory
+        log.debug(`Using source directory directly: ${sourceDir}`, importConfig.context);
+        return sourceDir;
+      }
+    } catch (error) {
+      log.debug(`Could not determine source directory size: ${error}. Proceeding with backup.`, importConfig.context);
+    }
+
     log.debug(`Starting content copy to backup directory: ${backupDirPath}`);
     log.info('Copying content to the backup directory...', importConfig.context);
 
