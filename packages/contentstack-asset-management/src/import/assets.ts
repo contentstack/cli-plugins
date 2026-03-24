@@ -5,6 +5,7 @@ import { log } from '@contentstack/cli-utilities';
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
+import { runInBatches } from '../utils/concurrent-batch';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
 type FolderRecord = {
@@ -123,6 +124,14 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSETS);
     log.debug(`Uploading ${assetItems.length} asset(s) for space ${newSpaceUid}`, this.importContext.context);
 
+    type UploadJob = {
+      asset: AssetRecord;
+      filePath: string;
+      mappedParentUid: string | undefined;
+      oldUid: string;
+    };
+    const uploadJobs: UploadJob[] = [];
+
     for (const asset of assetItems) {
       const oldUid = asset.uid;
       const filename = asset.filename ?? asset.file_name ?? 'asset';
@@ -137,6 +146,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
       const assetParent = asset.parent_uid && asset.parent_uid !== 'root' ? asset.parent_uid : undefined;
       const mappedParentUid = assetParent ? folderUidMap[assetParent] ?? undefined : undefined;
 
+      uploadJobs.push({ asset, filePath, mappedParentUid, oldUid });
+    }
+
+    await runInBatches(uploadJobs, this.apiConcurrency, async ({ asset, filePath, mappedParentUid, oldUid }) => {
+      const filename = asset.filename ?? asset.file_name ?? 'asset';
       try {
         const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
           title: asset.title ?? filename,
@@ -146,7 +160,6 @@ export default class ImportAssets extends AssetManagementImportAdapter {
 
         uidMap[oldUid] = created.uid;
 
-        // Map old AM direct URL → new AM direct URL.
         if (asset.url && created.url) {
           urlMap[asset.url] = created.url;
         }
@@ -162,7 +175,7 @@ export default class ImportAssets extends AssetManagementImportAdapter {
         );
         log.debug(`Failed to upload asset ${oldUid}: ${e}`, this.importContext.context);
       }
-    }
+    });
 
     return { uidMap, urlMap };
   }
@@ -181,24 +194,29 @@ export default class ImportAssets extends AssetManagementImportAdapter {
 
     while (remaining.length > 0 && remaining.length !== prevLength) {
       prevLength = remaining.length;
+      const ready: FolderRecord[] = [];
       const nextPass: FolderRecord[] = [];
 
       for (const folder of remaining) {
         const { parent_uid: parentUid } = folder;
-        // "root" is the AM API sentinel for a top-level folder
         const isRootParent = !parentUid || parentUid === 'root';
         const parentMapped = isRootParent || folderUidMap[parentUid] !== undefined;
 
         if (!parentMapped) {
           nextPass.push(folder);
-          continue;
+        } else {
+          ready.push(folder);
         }
+      }
 
+      await runInBatches(ready, this.apiConcurrency, async (folder) => {
+        const { parent_uid: parentUid } = folder;
+        const isRootParent = !parentUid || parentUid === 'root';
         try {
           const { folder: created } = await this.createFolder(newSpaceUid, {
             title: folder.title,
             description: folder.description,
-            parent_uid: isRootParent ? undefined : folderUidMap[parentUid],
+            parent_uid: isRootParent ? undefined : folderUidMap[parentUid!],
           });
           folderUidMap[folder.uid] = created.uid;
           this.tick(true, `folder: ${folder.uid}`, null, PROCESS_NAMES.AM_IMPORT_FOLDERS);
@@ -212,7 +230,7 @@ export default class ImportAssets extends AssetManagementImportAdapter {
           );
           log.debug(`Failed to create folder ${folder.uid}: ${e}`, this.importContext.context);
         }
-      }
+      });
 
       remaining = nextPass;
     }

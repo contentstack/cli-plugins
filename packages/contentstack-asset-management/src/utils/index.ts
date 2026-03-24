@@ -6,3 +6,4 @@ export {
   getReadableStreamFromDownloadResponse,
   writeStreamToFile,
 } from './export-helpers';
+export { chunkArray, runInBatches } from './concurrent-batch';

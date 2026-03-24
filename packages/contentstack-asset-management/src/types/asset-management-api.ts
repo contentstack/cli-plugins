@@ -171,6 +171,11 @@ export type ImportContext = {
   org_uid: string;
   /** Optional logging context (same shape as ExportConfig.context). */
   context?: Record<string, unknown>;
+  /**
+   * Max parallel AM API calls for import (fields, asset types, folders batch, uploads).
+   * Set from `AssetManagementImportOptions.apiConcurrency`.
+   */
+  apiConcurrency?: number;
 };
 
 /**
@@ -191,6 +196,12 @@ export type AssetManagementImportOptions = {
   sourceApiKey?: string;
   /** Optional logging context. */
   context?: Record<string, unknown>;
+  /**
+   * When set, mapper files are written under `{backupDir}/mapper/assets/` after import.
+   */
+  backupDir?: string;
+  /** Parallel AM API limit; defaults to package constant when omitted. */
+  apiConcurrency?: number;
 };
 
 /**
@@ -206,8 +217,8 @@ export type SpaceMapping = {
 
 /**
  * The value returned by `ImportSpaces.start()`.
- * Written to `mapper/assets/uid-mapping.json` and `mapper/assets/url-mapping.json`
- * by the bridge module so `entries.ts` can resolve asset references.
+ * When `backupDir` is set on options, the AM package also writes these maps under
+ * `mapper/assets/` for `entries.ts` to resolve asset references.
  */
 export type ImportResult = {
   uidMap: Record<string, string>;

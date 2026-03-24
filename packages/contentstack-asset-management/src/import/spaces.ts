@@ -1,5 +1,6 @@
 import { resolve as pResolve, join } from 'node:path';
-import { readdirSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, statSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
 import type {
@@ -9,7 +10,11 @@ import type {
   ImportResult,
   SpaceMapping,
 } from '../types/asset-management-api';
-import { AM_MAIN_PROCESS_NAME } from '../constants/index';
+import {
+  AM_MAIN_PROCESS_NAME,
+  IMPORT_ASSETS_MAPPER_DIR_SEGMENTS,
+  IMPORT_ASSETS_MAPPER_FILES,
+} from '../constants/index';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
 import ImportAssetTypes from './asset-types';
 import ImportFields from './fields';
@@ -34,7 +39,16 @@ export class ImportSpaces {
   }
 
   async start(): Promise<ImportResult> {
-    const { contentDir, assetManagementUrl, org_uid, apiKey, host, sourceApiKey, context } = this.options;
+    const {
+      contentDir,
+      assetManagementUrl,
+      org_uid,
+      apiKey,
+      host,
+      sourceApiKey,
+      context,
+      apiConcurrency,
+    } = this.options;
 
     const spacesRootPath = pResolve(contentDir, 'spaces');
 
@@ -45,6 +59,7 @@ export class ImportSpaces {
       host,
       org_uid,
       context,
+      apiConcurrency,
     };
 
     const apiConfig: AssetManagementAPIConfig = {
@@ -140,6 +155,19 @@ export class ImportSpaces {
           );
           log.debug(`Failed to import space ${spaceUid}: ${err}`, context);
         }
+      }
+
+      if (this.options.backupDir) {
+        const mapperDir = join(this.options.backupDir, ...IMPORT_ASSETS_MAPPER_DIR_SEGMENTS);
+        mkdirSync(mapperDir, { recursive: true });
+        await writeFile(join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.UID_MAPPING), JSON.stringify(allUidMap), 'utf8');
+        await writeFile(join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.URL_MAPPING), JSON.stringify(allUrlMap), 'utf8');
+        await writeFile(
+          join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.SPACE_UID_MAPPING),
+          JSON.stringify(allSpaceUidMap),
+          'utf8',
+        );
+        log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', context);
       }
 
       progress.completeProcess(AM_MAIN_PROCESS_NAME, !hasFailures);

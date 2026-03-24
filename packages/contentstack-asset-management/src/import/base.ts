@@ -3,7 +3,7 @@ import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack
 
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME } from '../constants/index';
+import { AM_MAIN_PROCESS_NAME, DEFAULT_AM_API_CONCURRENCY } from '../constants/index';
 
 export type { ImportContext };
 
@@ -59,6 +59,11 @@ export class AssetManagementImportAdapter extends AssetManagementAdapter {
 
   protected get spacesRootPath(): string {
     return this.importContext.spacesRootPath;
+  }
+
+  /** Parallel AM API limit for import batches. */
+  protected get apiConcurrency(): number {
+    return this.importContext.apiConcurrency ?? DEFAULT_AM_API_CONCURRENCY;
   }
 
   protected getAssetTypesDir(): string {
