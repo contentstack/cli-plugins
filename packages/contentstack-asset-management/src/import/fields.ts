@@ -5,6 +5,7 @@ import { log } from '@contentstack/cli-utilities';
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+import { runInBatches } from '../utils/concurrent-batch';
 
 const STRIP_KEYS = ['created_at', 'created_by', 'updated_at', 'updated_by', 'is_system', 'asset_types_count'];
 
@@ -50,6 +51,9 @@ export default class ImportFields extends AssetManagementImportAdapter {
 
     this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FIELDS);
 
+    type ToCreate = { uid: string; payload: Record<string, unknown> };
+    const toCreate: ToCreate[] = [];
+
     for (const field of items) {
       const uid = field.uid as string;
 
@@ -74,15 +78,23 @@ export default class ImportFields extends AssetManagementImportAdapter {
         continue;
       }
 
-      const payload = omit(field, STRIP_KEYS);
+      toCreate.push({ uid, payload: omit(field, STRIP_KEYS) as Record<string, unknown> });
+    }
+
+    await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createField(payload as any);
         this.tick(true, `field: ${uid}`, null, PROCESS_NAMES.AM_IMPORT_FIELDS);
         log.debug(`Imported field: ${uid}`, this.importContext.context);
       } catch (e) {
-        this.tick(false, `field: ${uid}`, (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].FAILED, PROCESS_NAMES.AM_IMPORT_FIELDS);
+        this.tick(
+          false,
+          `field: ${uid}`,
+          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].FAILED,
+          PROCESS_NAMES.AM_IMPORT_FIELDS,
+        );
         log.debug(`Failed to import field ${uid}: ${e}`, this.importContext.context);
       }
-    }
+    });
   }
 }

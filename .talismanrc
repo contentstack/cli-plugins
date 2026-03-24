@@ -1,24 +1,6 @@
 fileignoreconfig:
-  - filename: packages/contentstack-export/src/export/modules/assets.ts
-    checksum: 1eacc8e86cb50fe283febe6688965854f420e02cf1b49555a15661fa0c3e3c7a
-  - filename: packages/contentstack-import/src/utils/import-config-handler.ts
-    checksum: f831cef1b7c3bd97bdbc170cff452350cee0f448d97df02e25aa41d6c4d64ad3
   - filename: packages/contentstack-asset-management/src/import/asset-types.ts
-    checksum: a39caa373b2a736d1e57063326cfb2073ae78376efa931b27d2c7110997708a5
-  - filename: packages/contentstack-asset-management/src/export/spaces.ts
-    checksum: 3ec11c8f710b60ae495c69344025587df2e6195c872a0c82feaf04ac044ecefa
-  - filename: packages/contentstack-import/src/import/modules/assets.ts
-    checksum: d9f4a29a29e8b8a2a36e498f2380d39e1c5c0ec13ff894ef450abd817f2a646e
+    checksum: 78f9334477ccb4b59a2b14b09214377f2eaf271e2dc68d1976321910d3b4e91c
   - filename: packages/contentstack-asset-management/src/import/fields.ts
-    checksum: bbae69c28ec69bf67c2c7b4df3620380ef3fca488b3288e137b65a60ee738b9e
-  - filename: packages/contentstack-asset-management/src/import/spaces.ts
-    checksum: 79cf2f1b55523d28c218d970155f887255a00dc095a941556b709d1f19c6a8a0
-  - filename: packages/contentstack-asset-management/src/types/asset-management-api.ts
-    checksum: 716df03dcba70b2cc0f77b1f6338524553ba740080d7087a8699147c3ce8f0ba
-  - filename: packages/contentstack-asset-management/src/utils/asset-management-api-adapter.ts
-    checksum: 92bcad2feabc1954ead89b370d284b7af5f38ec1dca60a41752371977ef106ff
-  - filename: packages/contentstack-asset-management/src/import/base.ts
-    checksum: 513b55cf7e92bdbe8b815141822ba10579b6a728bec4424fc664794246ad33bb
-  - filename: packages/contentstack-asset-management/src/import/assets.ts
-    checksum: 2d34fa57f5ab269f6c535dff3242cc1135dbe1decd84fa0bc8997d0410d520b2
+    checksum: 2a079cb7b58c11cf69068a9373f4b9a871487bc7ad03d2bc1efb45a3c1e333be
 version: '1.0'

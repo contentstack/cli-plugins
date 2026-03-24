@@ -5,6 +5,7 @@ import { log } from '@contentstack/cli-utilities';
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+import { runInBatches } from '../utils/concurrent-batch';
 
 const STRIP_KEYS = ['created_at', 'created_by', 'updated_at', 'updated_by', 'is_system', 'category', 'preview_image_url', 'category_detail'];
 
@@ -50,6 +51,9 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
 
     this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
 
+    type ToCreate = { uid: string; payload: Record<string, unknown> };
+    const toCreate: ToCreate[] = [];
+
     for (const assetType of items) {
       const uid = assetType.uid as string;
 
@@ -74,15 +78,23 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
         continue;
       }
 
-      const payload = omit(assetType, STRIP_KEYS);
+      toCreate.push({ uid, payload: omit(assetType, STRIP_KEYS) as Record<string, unknown> });
+    }
+
+    await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createAssetType(payload as any);
         this.tick(true, `asset-type: ${uid}`, null, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
         log.debug(`Imported asset type: ${uid}`, this.importContext.context);
       } catch (e) {
-        this.tick(false, `asset-type: ${uid}`, (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].FAILED, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+        this.tick(
+          false,
+          `asset-type: ${uid}`,
+          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].FAILED,
+          PROCESS_NAMES.AM_IMPORT_ASSET_TYPES,
+        );
         log.debug(`Failed to import asset type ${uid}: ${e}`, this.importContext.context);
       }
-    }
+    });
   }
 }

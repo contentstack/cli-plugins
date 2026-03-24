@@ -5,7 +5,7 @@ import unionBy from 'lodash/unionBy';
 import orderBy from 'lodash/orderBy';
 import isEmpty from 'lodash/isEmpty';
 import uniq from 'lodash/uniq';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
 import { v4 as uuid } from 'uuid';
 import { resolve as pResolve, join } from 'node:path';
@@ -80,28 +80,18 @@ export default class ImportAssets extends BaseClass {
             host: this.importConfig.region?.cma ?? this.importConfig.host ?? '',
             sourceApiKey: this.importConfig.source_stack,
             context: this.importConfig.context as unknown as Record<string, unknown>,
+            backupDir: this.importConfig.backupDir,
+            apiConcurrency: this.importConfig.modules?.apiConcurrency,
           });
           importer.setParentProgressManager(progress);
 
-          const { uidMap, urlMap, spaceMappings, spaceUidMap } = await importer.start();
+          const { spaceMappings } = await importer.start();
 
-          const mapperDirPath = join(
-            this.importConfig.backupDir,
-            PATH_CONSTANTS.MAPPER,
-            PATH_CONSTANTS.MAPPER_MODULES.ASSETS,
-          );
-          mkdirSync(mapperDirPath, { recursive: true });
-          await fsUtil.writeFile(join(mapperDirPath, PATH_CONSTANTS.FILES.UID_MAPPING), uidMap);
-          await fsUtil.writeFile(join(mapperDirPath, PATH_CONSTANTS.FILES.URL_MAPPING), urlMap);
-          await fsUtil.writeFile(join(mapperDirPath, PATH_CONSTANTS.FILES.SPACE_UID_MAPPING), spaceUidMap);
-          log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', this.importConfig.context);
-
-          // Link newly-created spaces to the target stack via branch settings POST.
+          // Link imported AM spaces to the target stack via CMA branch settings.
           if (spaceMappings.length > 0) {
             try {
               const branchUid = this.importConfig.branchName ?? 'main';
 
-              // Fetch the current branch settings to get already-linked workspaces.
               const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
                 string,
                 any
@@ -130,12 +120,7 @@ export default class ImportAssets extends BaseClass {
                 this.importConfig.context,
               );
             } catch (linkErr) {
-              log.warn(
-                `AM 2.0 spaces were imported but could not be linked to the target stack: ${
-                  (linkErr as Error)?.message
-                }. Re-run the import or link manually.`,
-                this.importConfig.context,
-              );
+              handleAndLogError(linkErr, { ...this.importConfig.context });
             }
           }
 
