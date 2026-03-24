@@ -1,16 +1,16 @@
-import { resolve as pResolve } from 'node:path';
-import omit from 'lodash/omit';
+import { handleAndLogError, log, messageHandler } from '@contentstack/cli-utilities';
 import isEmpty from 'lodash/isEmpty';
-import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilities';
+import omit from 'lodash/omit';
+import { resolve as pResolve } from 'node:path';
 
-import BaseClass from './base-class';
-import { fsUtil } from '../../utils';
 import { EnvironmentConfig, ModuleClassParams } from '../../types';
+import { fsUtil } from '../../utils';
+import BaseClass from './base-class';
 
 export default class ExportEnvironments extends BaseClass {
-  private environments: Record<string, unknown>;
-  private environmentConfig: EnvironmentConfig;
   public environmentsFolderPath: string;
+  private environmentConfig: EnvironmentConfig;
+  private environments: Record<string, unknown>;
   private qs: {
     include_count: boolean;
     skip?: number;
@@ -22,34 +22,6 @@ export default class ExportEnvironments extends BaseClass {
     this.environmentConfig = exportConfig.modules.environments;
     this.qs = { include_count: true };
     this.exportConfig.context.module = 'environments';
-  }
-
-  async start(): Promise<void> {
-    log.debug('Starting environment export process...', this.exportConfig.context);
-    this.environmentsFolderPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.environmentConfig.dirName,
-    );
-    log.debug(`Environments folder path is: ${this.environmentsFolderPath}`, this.exportConfig.context);
-
-    await fsUtil.makeDirectory(this.environmentsFolderPath);
-    log.debug('Environments directory created.', this.exportConfig.context);
-    
-    await this.getEnvironments();
-    log.debug(`Retrieved ${Object.keys(this.environments).length} environments.`, this.exportConfig.context);
-
-    if (this.environments === undefined || isEmpty(this.environments)) {
-      log.info(messageHandler.parse('ENVIRONMENT_NOT_FOUND'), this.exportConfig.context);
-    } else {
-      const environmentsFilePath = pResolve(this.environmentsFolderPath, this.environmentConfig.fileName);
-      log.debug(`Writing environments to: ${environmentsFilePath}.`, this.exportConfig.context);
-      fsUtil.writeFile(environmentsFilePath, this.environments);
-      log.success(
-        messageHandler.parse('ENVIRONMENT_EXPORT_COMPLETE', Object.keys(this.environments).length),
-        this.exportConfig.context,
-      );
-    }
   }
 
   async getEnvironments(skip = 0): Promise<void> {
@@ -67,7 +39,7 @@ export default class ExportEnvironments extends BaseClass {
       .query(this.qs)
       .find()
       .then(async (data: any) => {
-        const { items, count } = data;
+        const { count, items } = data;
         log.debug(`Fetched ${items?.length || 0} environments out of ${count} total.`, this.exportConfig.context);
         
         if (items?.length) {
@@ -103,5 +75,33 @@ export default class ExportEnvironments extends BaseClass {
     }
     
     log.debug(`Sanitization complete. Total environments processed: ${Object.keys(this.environments).length}`, this.exportConfig.context);
+  }
+
+  async start(): Promise<void> {
+    log.debug('Starting environment export process...', this.exportConfig.context);
+    this.environmentsFolderPath = pResolve(
+      this.exportConfig.data,
+      this.exportConfig.branchName || '',
+      this.environmentConfig.dirName,
+    );
+    log.debug(`Environments folder path is: ${this.environmentsFolderPath}`, this.exportConfig.context);
+
+    await fsUtil.makeDirectory(this.environmentsFolderPath);
+    log.debug('Environments directory created.', this.exportConfig.context);
+    
+    await this.getEnvironments();
+    log.debug(`Retrieved ${Object.keys(this.environments).length} environments.`, this.exportConfig.context);
+
+    if (this.environments === undefined || isEmpty(this.environments)) {
+      log.info(messageHandler.parse('ENVIRONMENT_NOT_FOUND'), this.exportConfig.context);
+    } else {
+      const environmentsFilePath = pResolve(this.environmentsFolderPath, this.environmentConfig.fileName);
+      log.debug(`Writing environments to: ${environmentsFilePath}.`, this.exportConfig.context);
+      fsUtil.writeFile(environmentsFilePath, this.environments);
+      log.success(
+        messageHandler.parse('ENVIRONMENT_EXPORT_COMPLETE', Object.keys(this.environments).length),
+        this.exportConfig.context,
+      );
+    }
   }
 }

@@ -1,35 +1,35 @@
 type AppLocation =
-  | 'cs.cm.stack.config'
-  | 'cs.cm.stack.dashboard'
-  | 'cs.cm.stack.sidebar'
-  | 'cs.cm.stack.custom_field'
-  | 'cs.cm.stack.rte'
   | 'cs.cm.stack.asset_sidebar'
+  | 'cs.cm.stack.config'
+  | 'cs.cm.stack.custom_field'
+  | 'cs.cm.stack.dashboard'
+  | 'cs.cm.stack.rte'
+  | 'cs.cm.stack.sidebar'
   | 'cs.org.config';
 
 interface ExtensionMeta {
-  uid?: string;
-  name?: string;
+  blur?: boolean;
+  data_type?: string;
+  default_width?: 'full' | 'half';
   description?: string;
+  enabled?: boolean;
+  extension_uid?: string;
+  name?: string;
   path?: string;
   signed: boolean;
-  extension_uid?: string;
-  data_type?: string;
-  enabled?: boolean;
+  uid?: string;
   width?: number;
-  blur?: boolean;
-  default_width?: 'full' | 'half';
 }
 
 interface Extension {
-  type: AppLocation;
   meta: ExtensionMeta[];
+  type: AppLocation;
 }
 
 interface LocationConfiguration {
-  signed: boolean;
   base_url: string;
   locations: Extension[];
+  signed: boolean;
 }
 
 interface AnyProperty {
@@ -37,29 +37,29 @@ interface AnyProperty {
 }
 
 type Manifest = {
-  uid: string;
-  name: string;
-  icon?: string;
-  hosting?: any;
-  version?: number;
   description: string;
-  organization_uid: string;
   framework_version?: string;
+  hosting?: any;
+  icon?: string;
+  name: string;
   oauth?: any;
-  webhook?: any;
+  organization_uid: string;
+  target_type: 'organization' | 'stack';
   ui_location: LocationConfiguration;
-  target_type: 'stack' | 'organization';
+  uid: string;
+  version?: number;
   visibility: 'private' | 'public' | 'public_unlisted';
+  webhook?: any;
 } & AnyProperty;
 
 type Installation = {
-  uid: string;
-  status: string;
-  manifest: Manifest;
   configuration: any;
+  manifest: Manifest;
   server_configuration: any;
+  status: string;
   target: { type: string; uid: string };
   ui_location: LocationConfiguration;
+  uid: string;
 } & AnyProperty;
 
 export { Installation, Manifest };

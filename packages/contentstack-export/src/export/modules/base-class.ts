@@ -1,54 +1,54 @@
-import map from 'lodash/map';
-import fill from 'lodash/fill';
-import last from 'lodash/last';
-import chunk from 'lodash/chunk';
-import isEmpty from 'lodash/isEmpty';
-import entries from 'lodash/entries';
-import isEqual from 'lodash/isEqual';
 import { log } from '@contentstack/cli-utilities';
+import chunk from 'lodash/chunk';
+import entries from 'lodash/entries';
+import fill from 'lodash/fill';
+import isEmpty from 'lodash/isEmpty';
+import isEqual from 'lodash/isEqual';
+import last from 'lodash/last';
+import map from 'lodash/map';
 
 import { ExportConfig, ModuleClassParams } from '../../types';
 
 export type ApiOptions = {
-  uid?: string;
-  url?: string;
+  additionalInfo?: Record<any, any>;
   module: ApiModuleType;
   queryParam?: Record<any, any>;
-  resolve: (value: any) => void;
   reject: (error: any) => void;
-  additionalInfo?: Record<any, any>;
+  resolve: (value: any) => void;
+  uid?: string;
+  url?: string;
 };
 
 export type EnvType = {
+  apiBatches?: number[];
+  apiParams?: ApiOptions;
+  concurrencyLimit: number;
   module: string;
   totalCount: number;
-  apiBatches?: number[];
-  concurrencyLimit: number;
-  apiParams?: ApiOptions;
 };
 
 export type CustomPromiseHandlerInput = {
-  index: number;
+  apiParams?: ApiOptions;
   batchIndex: number;
   element?: Record<string, any>;
-  apiParams?: ApiOptions;
+  index: number;
   isLastRequest: boolean;
 };
 
 export type CustomPromiseHandler = (input: CustomPromiseHandlerInput) => Promise<any>;
 
 export type ApiModuleType =
-  | 'stack'
   | 'asset'
   | 'assets'
-  | 'entry'
-  | 'entries'
   | 'content-type'
   | 'content-types'
-  | 'stacks'
-  | 'versioned-entries'
   | 'download-asset'
-  | 'export-taxonomy';
+  | 'entries'
+  | 'entry'
+  | 'export-taxonomy'
+  | 'stack'
+  | 'stacks'
+  | 'versioned-entries';
 
 export default abstract class BaseClass {
   readonly client: any;
@@ -63,65 +63,23 @@ export default abstract class BaseClass {
     return this.client;
   }
 
+  protected applyQueryFilters(requestObject: any, moduleName: string): any {
+    if (this.exportConfig.query?.modules?.[moduleName]) {
+      const moduleQuery = this.exportConfig.query.modules[moduleName];
+      // Merge the query parameters with existing requestObject
+      if (moduleQuery) {
+        if (!requestObject.query) {
+          requestObject.query = moduleQuery;
+        }
+        Object.assign(requestObject.query, moduleQuery);
+      }
+    }
+    return requestObject;
+  }
+
   delay(ms: number): Promise<void> {
     /* eslint-disable no-promise-executor-return */
     return new Promise((resolve) => setTimeout(resolve, ms <= 0 ? 0 : ms));
-  }
-
-  makeConcurrentCall(env: EnvType, promisifyHandler?: CustomPromiseHandler): Promise<void> {
-    const { module, apiBatches, totalCount, apiParams, concurrencyLimit } = env;
-
-    /* eslint-disable no-async-promise-executor */
-    return new Promise(async (resolve) => {
-      let batchNo = 0;
-      let isLastRequest = false;
-      const batch = fill(Array.from({ length: Number.parseInt(String(totalCount / 100), 10) }), 100);
-
-      if (totalCount % 100) batch.push(100);
-
-      const batches: Array<number | any> =
-        apiBatches ||
-        chunk(
-          map(batch, (skip: number, i: number) => skip * i),
-          concurrencyLimit,
-        );
-
-      /* eslint-disable no-promise-executor-return */
-      if (isEmpty(batches)) return resolve();
-
-      for (const [batchIndex, batch] of entries(batches)) {
-        batchNo += 1;
-        const allPromise = [];
-        const start = Date.now();
-
-        for (const [index, element] of entries(batch)) {
-          let promise;
-          isLastRequest = isEqual(last(batch), element) && isEqual(last(batches), batch);
-
-          if (promisifyHandler instanceof Function) {
-            promise = promisifyHandler({
-              apiParams,
-              element,
-              isLastRequest,
-              index: Number(index),
-              batchIndex: Number(batchIndex),
-            });
-          } else if (apiParams?.queryParam) {
-            apiParams.queryParam.skip = element;
-            promise = this.makeAPICall(apiParams, isLastRequest);
-          }
-
-          allPromise.push(promise);
-        }
-
-        /* eslint-disable no-await-in-loop */
-        await Promise.allSettled(allPromise);
-        /* eslint-disable no-await-in-loop */
-        await this.logMsgAndWaitIfRequired(module, start, batchNo);
-
-        if (isLastRequest) resolve();
-      }
-    });
   }
 
   /**
@@ -157,7 +115,7 @@ export default abstract class BaseClass {
    * @returns Promise<any>
    */
   makeAPICall(
-    { module: moduleName, reject, resolve, url = '', uid = '', additionalInfo, queryParam = {} }: ApiOptions,
+    { additionalInfo, module: moduleName, queryParam = {}, reject, resolve, uid = '', url = '' }: ApiOptions,
     isLastRequest = false,
   ): Promise<any> {
     switch (moduleName) {
@@ -165,21 +123,21 @@ export default abstract class BaseClass {
         return this.stack
           .asset(uid)
           .fetch(queryParam)
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: Error) => reject({ error, isLastRequest, additionalInfo }));
+          .then((response: any) => resolve({ additionalInfo, isLastRequest, response }))
+          .catch((error: Error) => reject({ additionalInfo, error, isLastRequest }));
       case 'assets':
         return this.stack
           .asset()
           .query(queryParam)
           .find()
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: Error) => reject({ error, isLastRequest, additionalInfo }));
+          .then((response: any) => resolve({ additionalInfo, isLastRequest, response }))
+          .catch((error: Error) => reject({ additionalInfo, error, isLastRequest }));
       case 'download-asset':
         return this.stack
           .asset()
-          .download({ url, responseType: 'stream' })
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: any) => reject({ error, isLastRequest, additionalInfo }));
+          .download({ responseType: 'stream', url })
+          .then((response: any) => resolve({ additionalInfo, isLastRequest, response }))
+          .catch((error: any) => reject({ additionalInfo, error, isLastRequest }));
       case 'export-taxonomy':
         return this.stack
           .taxonomy(uid)
@@ -191,17 +149,59 @@ export default abstract class BaseClass {
     }
   }
 
-  protected applyQueryFilters(requestObject: any, moduleName: string): any {
-    if (this.exportConfig.query?.modules?.[moduleName]) {
-      const moduleQuery = this.exportConfig.query.modules[moduleName];
-      // Merge the query parameters with existing requestObject
-      if (moduleQuery) {
-        if (!requestObject.query) {
-          requestObject.query = moduleQuery;
+  makeConcurrentCall(env: EnvType, promisifyHandler?: CustomPromiseHandler): Promise<void> {
+    const { apiBatches, apiParams, concurrencyLimit, module, totalCount } = env;
+
+    /* eslint-disable no-async-promise-executor */
+    return new Promise(async (resolve) => {
+      let batchNo = 0;
+      let isLastRequest = false;
+      const batch = fill(Array.from({ length: Number.parseInt(String(totalCount / 100), 10) }), 100);
+
+      if (totalCount % 100) batch.push(100);
+
+      const batches: Array<any | number> =
+        apiBatches ||
+        chunk(
+          map(batch, (skip: number, i: number) => skip * i),
+          concurrencyLimit,
+        );
+
+      /* eslint-disable no-promise-executor-return */
+      if (isEmpty(batches)) return resolve();
+
+      for (const [batchIndex, batch] of entries(batches)) {
+        batchNo += 1;
+        const allPromise = [];
+        const start = Date.now();
+
+        for (const [index, element] of entries(batch)) {
+          let promise;
+          isLastRequest = isEqual(last(batch), element) && isEqual(last(batches), batch);
+
+          if (promisifyHandler instanceof Function) {
+            promise = promisifyHandler({
+              apiParams,
+              batchIndex: Number(batchIndex),
+              element,
+              index: Number(index),
+              isLastRequest,
+            });
+          } else if (apiParams?.queryParam) {
+            apiParams.queryParam.skip = element;
+            promise = this.makeAPICall(apiParams, isLastRequest);
+          }
+
+          allPromise.push(promise);
         }
-        Object.assign(requestObject.query, moduleQuery);
+
+        /* eslint-disable no-await-in-loop */
+        await Promise.allSettled(allPromise);
+        /* eslint-disable no-await-in-loop */
+        await this.logMsgAndWaitIfRequired(module, start, batchNo);
+
+        if (isLastRequest) resolve();
       }
-    }
-    return requestObject;
+    });
   }
 }

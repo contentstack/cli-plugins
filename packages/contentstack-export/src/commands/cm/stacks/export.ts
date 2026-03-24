@@ -1,19 +1,17 @@
 import { Command } from '@contentstack/cli-command';
 import {
-  cliux,
-  messageHandler,
-  printFlagDeprecation,
-  managementSDKClient,
-  flags,
   ContentstackClient,
   FlagInput,
-  pathValidator,
-  sanitizePath,
-  configHandler,
-  log,
-  handleAndLogError,
-  getLogPath,
   createLogContext,
+  flags,
+  getLogPath,
+  handleAndLogError,
+  log,
+  managementSDKClient,
+  messageHandler,
+  pathValidator,
+  printFlagDeprecation,
+  sanitizePath,
 } from '@contentstack/cli-utilities';
 
 import { ModuleExporter } from '../../../export';
@@ -21,6 +19,8 @@ import { ExportConfig } from '../../../types';
 import { setupExportConfig, writeExportMetaFile } from '../../../utils';
 
 export default class ExportCommand extends Command {
+  static aliases: string[] = ['cm:export'];
+
   static description: string = messageHandler.parse('Export content from a stack');
 
   static examples: string[] = [
@@ -33,23 +33,39 @@ export default class ExportCommand extends Command {
     'csdx cm:stacks:export --branch [optional] branch name',
   ];
 
-  static usage: string =
-    'cm:stacks:export [-c <value>] [-k <value>] [-d <value>] [-a <value>] [--module <value>] [--content-types <value>] [--branch <value>] [--secured-assets]';
-
   static flags: FlagInput = {
+    alias: flags.string({
+      char: 'a',
+      description: 'The management token alias of the source stack from which you will export content.',
+    }),
+    'auth-token': flags.boolean({
+      char: 'A',
+      description: 'to use auth token',
+      hidden: true,
+      parse: printFlagDeprecation(['-A', '--auth-token']),
+    }),
+    branch: flags.string({
+      char: 'B',
+      // default: 'main',
+      description:
+        "[optional] The name of the branch where you want to export your content. If you don't mention the branch name, then by default the content will be exported from all the branches of your stack.",
+      exclusive: ['branch-alias'],
+      parse: printFlagDeprecation(['-B'], ['--branch']),
+    }),
+    'branch-alias': flags.string({
+      description: '(Optional) The alias of the branch from which you want to export content.',
+      exclusive: ['branch'],
+    }),
     config: flags.string({
       char: 'c',
       description: '[optional] Path of the config',
     }),
-    'stack-uid': flags.string({
-      char: 's',
-      description: 'API key of the source stack',
-      hidden: true,
-      parse: printFlagDeprecation(['-s', '--stack-uid'], ['-k', '--stack-api-key']),
-    }),
-    'stack-api-key': flags.string({
-      char: 'k',
-      description: 'API Key of the source stack',
+    'content-types': flags.string({
+      char: 't',
+      description:
+        '[optional]  The UID of the content type(s) whose content you want to export. In case of multiple content types, specify the IDs separated by spaces.',
+      multiple: true,
+      parse: printFlagDeprecation(['-t'], ['--content-types']),
     }),
     data: flags.string({
       description: 'path or location to store the data',
@@ -60,20 +76,10 @@ export default class ExportCommand extends Command {
       char: 'd',
       description: 'The path or the location in your file system to store the exported content. For e.g., ./content',
     }),
-    alias: flags.string({
-      char: 'a',
-      description: 'The management token alias of the source stack from which you will export content.',
-    }),
     'management-token-alias': flags.string({
       description: 'alias of the management token',
       hidden: true,
       parse: printFlagDeprecation(['--management-token-alias'], ['-a', '--alias']),
-    }),
-    'auth-token': flags.boolean({
-      char: 'A',
-      description: 'to use auth token',
-      hidden: true,
-      parse: printFlagDeprecation(['-A', '--auth-token']),
     }),
     module: flags.string({
       char: 'm',
@@ -81,40 +87,32 @@ export default class ExportCommand extends Command {
         '[optional] Specific module name. If not specified, the export command will export all the modules to the stack. The available modules are assets, content-types, entries, environments, extensions, marketplace-apps, global-fields, labels, locales, webhooks, workflows, custom-roles, taxonomies, and studio.',
       parse: printFlagDeprecation(['-m'], ['--module']),
     }),
-    'content-types': flags.string({
-      char: 't',
-      description:
-        '[optional]  The UID of the content type(s) whose content you want to export. In case of multiple content types, specify the IDs separated by spaces.',
-      multiple: true,
-      parse: printFlagDeprecation(['-t'], ['--content-types']),
-    }),
-    branch: flags.string({
-      char: 'B',
-      // default: 'main',
-      description:
-        "[optional] The name of the branch where you want to export your content. If you don't mention the branch name, then by default the content will be exported from all the branches of your stack.",
-      parse: printFlagDeprecation(['-B'], ['--branch']),
-      exclusive: ['branch-alias'],
-    }),
-    'branch-alias': flags.string({
-      description: '(Optional) The alias of the branch from which you want to export content.',
-      exclusive: ['branch'],
-    }),
-    'secured-assets': flags.boolean({
-      description: '[optional] Use this flag for assets that are secured.',
-    }),
-    yes: flags.boolean({
-      char: 'y',
-      required: false,
-      description: '[optional] Force override all Marketplace prompts.',
-    }),
     query: flags.string({
       description: '[optional] Query object (inline JSON or file path) to filter module exports.',
       hidden: true,
     }),
+    'secured-assets': flags.boolean({
+      description: '[optional] Use this flag for assets that are secured.',
+    }),
+    'stack-api-key': flags.string({
+      char: 'k',
+      description: 'API Key of the source stack',
+    }),
+    'stack-uid': flags.string({
+      char: 's',
+      description: 'API key of the source stack',
+      hidden: true,
+      parse: printFlagDeprecation(['-s', '--stack-uid'], ['-k', '--stack-api-key']),
+    }),
+    yes: flags.boolean({
+      char: 'y',
+      description: '[optional] Force override all Marketplace prompts.',
+      required: false,
+    }),
   };
 
-  static aliases: string[] = ['cm:export'];
+  static usage =
+    'cm:stacks:export [-c <value>] [-k <value>] [-d <value>] [-a <value>] [--module <value>] [--content-types <value>] [--branch <value>] [--secured-assets]';
 
   async run(): Promise<void> {
     let exportDir: string = pathValidator('logs');

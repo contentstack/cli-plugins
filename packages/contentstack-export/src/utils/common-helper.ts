@@ -4,12 +4,12 @@
  * MIT Licensed
  */
 
+import { getLogPath, isAuthenticated, sanitizePath } from '@contentstack/cli-utilities';
 import * as path from 'path';
 import promiseLimit from 'promise-limit';
-import { isAuthenticated, getLogPath, sanitizePath } from '@contentstack/cli-utilities';
 
+import { ExportConfig, ExternalConfig } from '../types';
 import { fsUtil } from './file-helper';
-import { ExternalConfig, ExportConfig } from '../types';
 
 export const validateConfig = function (config: ExternalConfig) {
   if (!config.host || !config.cdn) {
