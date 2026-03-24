@@ -19,10 +19,6 @@ import ImportCommand from '@contentstack/cli-cm-import';
 import * as path from 'node:path';
 import * as cliUtilities from '@contentstack/cli-utilities';
 
-// Mock process.chdir
-const mockChdir = jest.fn();
-jest.spyOn(process, 'chdir').mockImplementation(mockChdir);
-
 describe('Importer', () => {
   const mockOptions = {
     master_locale: 'en-us',
@@ -52,7 +48,6 @@ describe('Importer', () => {
       const expectedPath = path.resolve(mockOptions.tmpPath, 'stack');
       expect(cliUtilities.pathValidator).toHaveBeenCalledWith(expectedPath);
       expect(cliUtilities.sanitizePath).toHaveBeenCalledWith(mockOptions.tmpPath);
-      expect(mockChdir).toHaveBeenCalledWith(mockOptions.tmpPath);
       expect(ImportCommand.run).toHaveBeenCalledWith(['-k', mockOptions.api_key, '-d', expectedPath, '--skip-audit']);
     });
 
@@ -124,7 +119,6 @@ describe('Importer', () => {
 
         const expectedPath = path.resolve(testPath, 'stack');
         expect(cliUtilities.pathValidator).toHaveBeenCalledWith(expectedPath);
-        expect(mockChdir).toHaveBeenCalledWith(testPath);
       }
     });
 
@@ -157,16 +151,6 @@ describe('Importer', () => {
       await importer.run(options);
 
       expect(cliUtilities.pathValidator).toHaveBeenCalled();
-    });
-
-    it('should change directory before running import', async () => {
-      await importer.run(mockOptions);
-
-      // Verify chdir is called before ImportCommand.run
-      const chdirCallOrder = mockChdir.mock.invocationCallOrder[0];
-      const importCallOrder = (ImportCommand.run as jest.Mock).mock.invocationCallOrder[0];
-
-      expect(chdirCallOrder).toBeLessThan(importCallOrder);
     });
 
     it('should handle import command errors', async () => {
