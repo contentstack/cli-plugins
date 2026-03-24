@@ -18,10 +18,20 @@ import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
-import { formatDate, PROCESS_NAMES, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS } from '../../utils';
+import { 
+  formatDate, 
+  PROCESS_NAMES, 
+  MODULE_CONTEXTS, 
+  MODULE_NAMES, 
+  PROCESS_STATUS,
+  MemoryMonitor,
+  IncrementalStateManager,
+  AssetQueue,
+  AssetProcessor
+} from '../../utils';
 import BaseClass, { ApiOptions } from './base-class';
 
-export default class ImportAssets extends BaseClass {
+export default class ImportAssets extends BaseClass implements AssetProcessor {
   private fs: FsUtility;
   private assetsPath: string;
   private mapperDirPath: string;
@@ -35,6 +45,12 @@ export default class ImportAssets extends BaseClass {
   private assetsUrlMap: Record<string, unknown> = {};
   private assetsFolderMap: Record<string, unknown> = {};
   private rootFolder: { uid: string; name: string; parent_uid: string; created_at: string };
+  
+  // New memory management utilities
+  private memoryMonitor: MemoryMonitor;
+  private stateManager: IncrementalStateManager;
+  private assetQueue: AssetQueue;
+  private enableMemoryOptimizations: boolean;
 
   constructor({ importConfig, stackAPIClient }: ModuleClassParams) {
     super({ importConfig, stackAPIClient });
@@ -60,6 +76,40 @@ export default class ImportAssets extends BaseClass {
       ),
       true,
     ) as Record<string, unknown>;
+
+    // Initialize memory management utilities
+    this.enableMemoryOptimizations = this.assetConfig.enableMemoryMonitoring !== false;
+    
+    if (this.enableMemoryOptimizations) {
+      // Create memory monitor for large datasets
+      this.memoryMonitor = MemoryMonitor.createForLargeDataset(this.importConfig.context);
+      
+      // Create incremental state manager
+      this.stateManager = IncrementalStateManager.createForLargeDataset(
+        this.importConfig.backupDir,
+        this.importConfig.context
+      );
+      
+      // Create asset queue with memory management
+      this.assetQueue = AssetQueue.createForLargeDataset(
+        this.memoryMonitor,
+        this.stateManager,
+        this.importConfig.context
+      );
+      
+      // Set this class as the asset processor
+      this.assetQueue.setProcessor(this);
+      
+      // Check for existing state and log resume capability
+      const existingMappings = this.stateManager.getMappingCount();
+      if (existingMappings.assets > 0 || existingMappings.folders > 0) {
+        log.info(`Found existing import state: ${existingMappings.assets} assets, ${existingMappings.folders} folders. Import will resume from where it left off.`, this.importConfig.context);
+      }
+      
+      log.debug('Memory optimization utilities initialized', this.importConfig.context);
+    } else {
+      log.debug('Memory optimizations disabled', this.importConfig.context);
+    }
   }
 
   /**
@@ -235,6 +285,153 @@ export default class ImportAssets extends BaseClass {
 
     log.debug(`Found ${indexerCount} asset chunks to process`, this.importConfig.context);
 
+    // Use memory-efficient processing if enabled
+    if (this.enableMemoryOptimizations && !isVersion) {
+      await this.importAssetsMemoryEfficient(fs, indexer, indexerCount, progressProcessName);
+    } else {
+      // Fallback to legacy processing for versioned assets or when optimizations are disabled
+      await this.importAssetsLegacy(fs, indexer, indexerCount, processName, progressProcessName, isVersion);
+    }
+
+    // Handle state persistence
+    if (!isVersion) {
+      if (this.enableMemoryOptimizations) {
+        // Flush incremental state
+        await this.stateManager.flushState();
+        
+        // Write legacy mapping files for compatibility
+        const assetMappings = this.stateManager.getAllMappings('asset');
+        const urlMappings = this.stateManager.getUrlMappings();
+        
+        if (!isEmpty(assetMappings)) {
+          log.debug(`Writing ${Object.keys(assetMappings).length} UID mappings`, this.importConfig.context);
+          this.fs.writeFile(this.assetUidMapperPath, assetMappings);
+        }
+        if (!isEmpty(urlMappings)) {
+          log.debug(`Writing ${Object.keys(urlMappings).length} URL mappings`, this.importConfig.context);
+          this.fs.writeFile(this.assetUrlMapperPath, urlMappings);
+        }
+      } else {
+        // Legacy state persistence
+        if (!isEmpty(this.assetsUidMap)) {
+          const uidMappingCount = Object.keys(this.assetsUidMap || {}).length;
+          log.debug(`Writing ${uidMappingCount} UID mappings`, this.importConfig.context);
+          this.fs.writeFile(this.assetUidMapperPath, this.assetsUidMap);
+        }
+        if (!isEmpty(this.assetsUrlMap)) {
+          const urlMappingCount = Object.keys(this.assetsUrlMap || {}).length;
+          log.debug(`Writing ${urlMappingCount} URL mappings`, this.importConfig.context);
+          this.fs.writeFile(this.assetUrlMapperPath, this.assetsUrlMap);
+        }
+      }
+    }
+  }
+
+  /**
+   * Memory-efficient asset import using queue-based processing
+   */
+  private async importAssetsMemoryEfficient(
+    fs: FsUtility, 
+    indexer: Record<string, string>, 
+    indexerCount: number, 
+    progressProcessName: string
+  ): Promise<void> {
+    log.debug('Using memory-efficient asset processing', this.importConfig.context);
+
+    // Set up queue event handlers for progress tracking
+    this.assetQueue.on('itemCompleted', (item, result) => {
+      this.progressManager?.tick(true, `asset: ${item.asset.title || item.asset.uid}`, null, progressProcessName);
+      log.success(`Created asset: '${item.asset.title}'`, this.importConfig.context);
+    });
+
+    this.assetQueue.on('itemFailed', (item, error) => {
+      this.progressManager?.tick(
+        false,
+        `asset: ${item.asset.title || item.asset.uid}`,
+        error?.message || PROCESS_STATUS[PROCESS_NAMES.ASSET_UPLOAD].FAILED,
+        progressProcessName,
+      );
+      log.error(`${item.asset.title} asset upload failed: ${error}`, this.importConfig.context);
+    });
+
+    let processedChunks = 0;
+    
+    /* eslint-disable @typescript-eslint/no-unused-vars, guard-for-in */
+    for (const index in indexer) {
+      // Memory check before processing each chunk
+      if (this.memoryMonitor.checkMemoryPressure()) {
+        log.debug(`Memory pressure detected at chunk ${index}, triggering GC`, this.importConfig.context);
+        await this.memoryMonitor.forceGarbageCollection();
+        
+        // Brief pause after GC
+        await this.sleep(500);
+      }
+
+      // Log memory stats periodically
+      if (processedChunks % 10 === 0) {
+        this.memoryMonitor.logMemoryStats(`Chunk ${index}/${indexerCount}`);
+      }
+
+      log.debug(`Processing chunk ${index} of ${indexerCount}`, this.importConfig.context);
+
+      const chunk = await fs.readChunkFiles.next().catch((error) => {
+        handleAndLogError(error, { ...this.importConfig.context });
+      });
+
+      if (chunk) {
+        const apiContent = orderBy(values(chunk as Record<string, any>[]), '_version');
+        log.debug(`Queueing ${apiContent.length} assets from chunk`, this.importConfig.context);
+
+        // Queue assets individually, skipping already processed ones
+        let skippedCount = 0;
+        for (const asset of apiContent) {
+          // Check if asset was already processed (resume functionality)
+          if (this.stateManager.hasMapping(asset.uid, 'asset')) {
+            skippedCount++;
+            // Still update progress for skipped items
+            this.progressManager?.tick(true, `asset: ${asset.title || asset.uid} (resumed)`, null, progressProcessName);
+            continue;
+          }
+          
+          this.assetQueue.enqueue(asset);
+        }
+        
+        if (skippedCount > 0) {
+          log.debug(`Skipped ${skippedCount} already processed assets from chunk`, this.importConfig.context);
+        }
+
+        // Clear chunk from memory immediately
+        (chunk as any) = null;
+        
+        // Process queued assets with controlled concurrency
+        await this.assetQueue.waitForCompletion();
+        
+        // Clear completed items from queue to free memory
+        const clearedCount = this.assetQueue.clearCompleted();
+        if (clearedCount > 0) {
+          log.debug(`Cleared ${clearedCount} completed items from queue`, this.importConfig.context);
+        }
+        
+        processedChunks++;
+      }
+    }
+
+    log.debug(`Memory-efficient processing completed for ${processedChunks} chunks`, this.importConfig.context);
+  }
+
+  /**
+   * Legacy asset import processing (fallback)
+   */
+  private async importAssetsLegacy(
+    fs: FsUtility,
+    indexer: Record<string, string>,
+    indexerCount: number,
+    processName: string,
+    progressProcessName: string,
+    isVersion: boolean
+  ): Promise<void> {
+    log.debug('Using legacy asset processing', this.importConfig.context);
+
     const onSuccess = ({ response = {}, apiData: { uid, url, title } = undefined }: any) => {
       this.assetsUidMap[uid] = response.uid;
       this.assetsUrlMap[url] = response.url;
@@ -309,19 +506,13 @@ export default class ImportAssets extends BaseClass {
         );
       }
     }
+  }
 
-    if (!isVersion) {
-      if (!isEmpty(this.assetsUidMap)) {
-        const uidMappingCount = Object.keys(this.assetsUidMap || {}).length;
-        log.debug(`Writing ${uidMappingCount} UID mappings`, this.importConfig.context);
-        this.fs.writeFile(this.assetUidMapperPath, this.assetsUidMap);
-      }
-      if (!isEmpty(this.assetsUrlMap)) {
-        const urlMappingCount = Object.keys(this.assetsUrlMap || {}).length;
-        log.debug(`Writing ${urlMappingCount} URL mappings`, this.importConfig.context);
-        this.fs.writeFile(this.assetUrlMapperPath, this.assetsUrlMap);
-      }
-    }
+  /**
+   * Sleep utility for memory management
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
@@ -604,5 +795,73 @@ export default class ImportAssets extends BaseClass {
     log.debug(`Starting ${name.toLowerCase()}`, this.importConfig.context);
     await action();
     progress.completeProcess(name, true);
+  }
+
+  /**
+   * AssetProcessor interface implementation
+   * Process a single asset through the API
+   */
+  async processAsset(asset: any): Promise<{ uid: string; url?: string }> {
+    // Check if asset was already processed (additional safety check)
+    if (this.enableMemoryOptimizations && this.stateManager.hasMapping(asset.uid, 'asset')) {
+      const existingUid = this.stateManager.getMapping(asset.uid, 'asset');
+      log.debug(`Asset ${asset.uid} already processed, returning existing mapping: ${existingUid}`, this.importConfig.context);
+      return { uid: existingUid as string, url: asset.url };
+    }
+
+    const serializedAsset = this.serializeAssets({
+      apiData: asset,
+      entity: 'create-assets',
+      resolve: () => {},
+      reject: () => {}
+    });
+
+    if (!serializedAsset.entity) {
+      // Asset was skipped during serialization
+      throw new Error(`Asset ${asset.uid} was skipped during serialization`);
+    }
+
+    // Use the existing makeAPICall method but wrap it in a promise
+    return new Promise((resolve, reject) => {
+      const apiOptions: ApiOptions = {
+        ...serializedAsset,
+        resolve: ({ response }) => {
+          // Update legacy mappings for compatibility
+          if (this.enableMemoryOptimizations) {
+            // State manager handles persistence automatically
+          } else {
+            // Legacy behavior
+            this.assetsUidMap[asset.uid] = response.uid;
+            if (asset.url && response.url) {
+              this.assetsUrlMap[asset.url] = response.url;
+            }
+          }
+          
+          resolve({ 
+            uid: response.uid, 
+            url: response.url 
+          });
+        },
+        reject: ({ error }) => {
+          // Enhanced error handling with context
+          const enhancedError = new Error(`Failed to process asset ${asset.uid} (${asset.title}): ${error.message}`);
+          enhancedError.stack = error.stack;
+          
+          // Add asset context to error for better debugging
+          (enhancedError as any).assetContext = {
+            uid: asset.uid,
+            title: asset.title,
+            filename: asset.filename,
+            fileSize: asset.file_size,
+            contentType: asset.content_type
+          };
+          
+          reject(enhancedError);
+        },
+        includeParamOnCompletion: true
+      };
+
+      this.makeAPICall(apiOptions, false);
+    });
   }
 }
