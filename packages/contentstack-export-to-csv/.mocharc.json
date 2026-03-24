@@ -1,6 +1,8 @@
 {
   "require": [
-    "ts-node/register"
+    "test/helpers/init.js",
+    "ts-node/register",
+    "test/helpers/mocha-root-hooks.js"
   ],
   "watch-extensions": [
     "ts"
