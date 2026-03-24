@@ -1,25 +1,25 @@
-import { resolve as pResolve } from 'node:path';
 import {
+  HttpClient,
+  authenticationHandler,
   cliux,
+  handleAndLogError,
   isAuthenticated,
   log,
   messageHandler,
-  handleAndLogError,
-  HttpClient,
-  authenticationHandler,
 } from '@contentstack/cli-utilities';
+import { resolve as pResolve } from 'node:path';
 
+import { ComposableStudioConfig, ComposableStudioProject, ExportConfig, ModuleClassParams } from '../../types';
 import { fsUtil, getOrgUid } from '../../utils';
-import { ModuleClassParams, ComposableStudioConfig, ExportConfig, ComposableStudioProject } from '../../types';
 
 export default class ExportComposableStudio {
-  protected composableStudioConfig: ComposableStudioConfig;
-  protected composableStudioProject: ComposableStudioProject | null = null;
   protected apiClient: HttpClient;
+  protected composableStudioConfig: ComposableStudioConfig;
   public composableStudioPath: string;
+  protected composableStudioProject: ComposableStudioProject | null = null;
   public exportConfig: ExportConfig;
 
-  constructor({ exportConfig }: Omit<ModuleClassParams, 'stackAPIClient' | 'moduleName'>) {
+  constructor({ exportConfig }: Omit<ModuleClassParams, 'moduleName' | 'stackAPIClient'>) {
     this.exportConfig = exportConfig;
     this.composableStudioConfig = exportConfig.modules['composable-studio'];
     this.exportConfig.context.module = 'composable-studio';
@@ -27,34 +27,6 @@ export default class ExportComposableStudio {
     // Initialize HttpClient with Studio API base URL
     this.apiClient = new HttpClient();
     this.apiClient.baseUrl(`${this.composableStudioConfig.apiBaseUrl}/${this.composableStudioConfig.apiVersion}`);
-  }
-
-  async start(): Promise<void> {
-    log.debug('Starting Studio project export process...', this.exportConfig.context);
-
-    if (!isAuthenticated()) {
-      cliux.print(
-        'WARNING!!! To export Studio projects, you must be logged in. Please check csdx auth:login --help to log in',
-        { color: 'yellow' },
-      );
-      return Promise.resolve();
-    }
-
-    this.composableStudioPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.composableStudioConfig.dirName,
-    );
-    log.debug(`Studio folder path: ${this.composableStudioPath}`, this.exportConfig.context);
-
-    await fsUtil.makeDirectory(this.composableStudioPath);
-    log.debug('Created Studio directory', this.exportConfig.context);
-
-    this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
-    log.debug(`Organization UID: ${this.exportConfig.org_uid}`, this.exportConfig.context);
-
-    await this.exportProjects();
-    log.debug('Studio project export process completed', this.exportConfig.context);
   }
 
   /**
@@ -84,8 +56,8 @@ export default class ExportComposableStudio {
 
       // Set organization_uid header
       this.apiClient.headers({
-        organization_uid: this.exportConfig.org_uid,
         Accept: 'application/json',
+        organization_uid: this.exportConfig.org_uid,
       });
 
       const apiUrl = '/projects';
@@ -134,5 +106,33 @@ export default class ExportComposableStudio {
         ...this.exportConfig.context,
       });
     }
+  }
+
+  async start(): Promise<void> {
+    log.debug('Starting Studio project export process...', this.exportConfig.context);
+
+    if (!isAuthenticated()) {
+      cliux.print(
+        'WARNING!!! To export Studio projects, you must be logged in. Please check csdx auth:login --help to log in',
+        { color: 'yellow' },
+      );
+      return Promise.resolve();
+    }
+
+    this.composableStudioPath = pResolve(
+      this.exportConfig.data,
+      this.exportConfig.branchName || '',
+      this.composableStudioConfig.dirName,
+    );
+    log.debug(`Studio folder path: ${this.composableStudioPath}`, this.exportConfig.context);
+
+    await fsUtil.makeDirectory(this.composableStudioPath);
+    log.debug('Created Studio directory', this.exportConfig.context);
+
+    this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
+    log.debug(`Organization UID: ${this.exportConfig.org_uid}`, this.exportConfig.context);
+
+    await this.exportProjects();
+    log.debug('Studio project export process completed', this.exportConfig.context);
   }
 }

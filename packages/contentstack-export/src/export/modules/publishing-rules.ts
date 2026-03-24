@@ -1,11 +1,11 @@
-import omit from 'lodash/omit';
-import isEmpty from 'lodash/isEmpty';
-import { resolve as pResolve } from 'node:path';
 import { handleAndLogError, log } from '@contentstack/cli-utilities';
+import isEmpty from 'lodash/isEmpty';
+import omit from 'lodash/omit';
+import { resolve as pResolve } from 'node:path';
 
-import BaseClass from './base-class';
+import { ModuleClassParams, PublishingRulesConfig } from '../../types';
 import { fsUtil } from '../../utils';
-import { PublishingRulesConfig, ModuleClassParams } from '../../types';
+import BaseClass from './base-class';
 
 export default class ExportPublishingRules extends BaseClass {
   private readonly publishingRules: Record<string, Record<string, unknown>> = {};
@@ -52,7 +52,7 @@ export default class ExportPublishingRules extends BaseClass {
         this.qs.skip = skip;
       }
 
-      const data: { items?: Record<string, unknown>[]; count?: number } = await this.stack
+      const data: { count?: number; items?: Record<string, unknown>[] } = await this.stack
         .workflow()
         .publishRule()
         .fetchAll(this.qs);

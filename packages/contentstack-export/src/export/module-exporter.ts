@@ -1,19 +1,22 @@
-import * as path from 'path';
 import {
   ContentstackClient,
-  handleAndLogError,
-  messageHandler,
-  log,
   getBranchFromAlias,
+  handleAndLogError,
+  log,
+  messageHandler,
 } from '@contentstack/cli-utilities';
+import * as path from 'path';
+
+import { ExportConfig, Modules } from '../types';
 import { setupBranches, setupExportDir, writeExportMetaFile } from '../utils';
 import startModuleExport from './modules';
+// CJS: modules-js/index.js uses module.exports (no ESM default)
+// eslint-disable-next-line import/default -- resolved at runtime via module.exports
 import startJSModuleExport from './modules-js';
-import { ExportConfig, Modules } from '../types';
 
 class ModuleExporter {
-  private managementAPIClient: ContentstackClient;
   private exportConfig: ExportConfig;
+  private managementAPIClient: ContentstackClient;
   private stackAPIClient: ReturnType<ContentstackClient['stack']>;
 
   constructor(managementAPIClient: ContentstackClient, exportConfig: ExportConfig) {
@@ -25,22 +28,19 @@ class ModuleExporter {
     this.exportConfig = exportConfig;
   }
 
-  async start(): Promise<any> {
-    // setup the branches
-    try {
-      if (!this.exportConfig.branchName && this.exportConfig.branchAlias) {
-        this.exportConfig.branchName = await getBranchFromAlias(this.stackAPIClient, this.exportConfig.branchAlias);
-      }
-      await setupBranches(this.exportConfig, this.stackAPIClient);
-      await setupExportDir(this.exportConfig);
-      // if branches available run it export by branches
-      if (this.exportConfig.branches) {
-        this.exportConfig.branchEnabled = true;
-        return this.exportByBranches();
-      }
-      return this.export();
-    } catch (error) {
-      throw error;
+  async export() {
+    log.info(`Started to export content, version is ${this.exportConfig.contentVersion}`, this.exportConfig.context);
+    // checks for single module or all modules
+    if (this.exportConfig.singleModuleExport) {
+      return this.exportSingleModule(this.exportConfig.moduleName);
+    }
+    return this.exportAllModules();
+  }
+
+  async exportAllModules(): Promise<any> {
+    // use the algorithm to determine the parallel and sequential execution of modules
+    for (const moduleName of this.exportConfig.modules.types) {
+      await this.exportByModuleByName(moduleName);
     }
   }
 
@@ -66,15 +66,6 @@ class ModuleExporter {
     }
   }
 
-  async export() {
-    log.info(`Started to export content, version is ${this.exportConfig.contentVersion}`, this.exportConfig.context);
-    // checks for single module or all modules
-    if (this.exportConfig.singleModuleExport) {
-      return this.exportSingleModule(this.exportConfig.moduleName);
-    }
-    return this.exportAllModules();
-  }
-
   async exportByModuleByName(moduleName: Modules) {
     log.info(`Exporting module: '${moduleName}'...`, this.exportConfig.context);
     // export the modules by name
@@ -82,17 +73,17 @@ class ModuleExporter {
     let exportedModuleResponse;
     if (this.exportConfig.contentVersion === 2) {
       exportedModuleResponse = await startModuleExport({
-        stackAPIClient: this.stackAPIClient,
         exportConfig: this.exportConfig,
         moduleName,
+        stackAPIClient: this.stackAPIClient,
       });
     } else {
       //NOTE - new modules support only ts
       if (this.exportConfig.onlyTSModules.indexOf(moduleName) === -1) {
         exportedModuleResponse = await startJSModuleExport({
-          stackAPIClient: this.stackAPIClient,
           exportConfig: this.exportConfig,
           moduleName,
+          stackAPIClient: this.stackAPIClient,
         });
       }
     }
@@ -126,10 +117,22 @@ class ModuleExporter {
     }
   }
 
-  async exportAllModules(): Promise<any> {
-    // use the algorithm to determine the parallel and sequential execution of modules
-    for (const moduleName of this.exportConfig.modules.types) {
-      await this.exportByModuleByName(moduleName);
+  async start(): Promise<any> {
+    // setup the branches
+    try {
+      if (!this.exportConfig.branchName && this.exportConfig.branchAlias) {
+        this.exportConfig.branchName = await getBranchFromAlias(this.stackAPIClient, this.exportConfig.branchAlias);
+      }
+      await setupBranches(this.exportConfig, this.stackAPIClient);
+      await setupExportDir(this.exportConfig);
+      // if branches available run it export by branches
+      if (this.exportConfig.branches) {
+        this.exportConfig.branchEnabled = true;
+        return this.exportByBranches();
+      }
+      return this.export();
+    } catch (error) {
+      throw error;
     }
   }
 }

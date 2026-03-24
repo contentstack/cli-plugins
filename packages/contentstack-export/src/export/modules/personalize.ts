@@ -1,18 +1,18 @@
+import { handleAndLogError, log, messageHandler } from '@contentstack/cli-utilities';
 import {
-  ExportProjects,
-  ExportExperiences,
-  ExportEvents,
+  AnyProperty,
   ExportAttributes,
   ExportAudiences,
-  AnyProperty,
+  ExportEvents,
+  ExportExperiences,
+  ExportProjects,
 } from '@contentstack/cli-variants';
-import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilities';
 
-import { ModuleClassParams, ExportConfig } from '../../types';
+import { ExportConfig, ModuleClassParams } from '../../types';
 
 export default class ExportPersonalize {
   public exportConfig: ExportConfig;
-  public personalizeConfig: { dirName: string; baseURL: Record<string, string> } & AnyProperty;
+  public personalizeConfig: { baseURL: Record<string, string>; dirName: string } & AnyProperty;
   constructor({ exportConfig }: ModuleClassParams) {
     this.exportConfig = exportConfig;
     this.personalizeConfig = exportConfig.modules.personalize;
@@ -44,9 +44,9 @@ export default class ExportPersonalize {
         log.debug('Personalization is enabled, processing personalize modules... ' + this.exportConfig.modules.personalize.exportOrder.join(', '), this.exportConfig.context);
         
         const moduleMapper = {
-          events: new ExportEvents(this.exportConfig),
           attributes: new ExportAttributes(this.exportConfig),
           audiences: new ExportAudiences(this.exportConfig),
+          events: new ExportEvents(this.exportConfig),
           experiences: new ExportExperiences(this.exportConfig),
         };
 

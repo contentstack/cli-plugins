@@ -1,18 +1,18 @@
+import { handleAndLogError, isAuthenticated, log, managementSDKClient } from '@contentstack/cli-utilities';
 import find from 'lodash/find';
 import { resolve as pResolve } from 'node:path';
-import { handleAndLogError, isAuthenticated, managementSDKClient, log } from '@contentstack/cli-utilities';
 
-import BaseClass from './base-class';
+import { ModuleClassParams, StackConfig } from '../../types';
 import { fsUtil } from '../../utils';
-import { StackConfig, ModuleClassParams } from '../../types';
+import BaseClass from './base-class';
 
 export default class ExportStack extends BaseClass {
-  private stackConfig: StackConfig;
-  private stackFolderPath: string;
   private qs: {
     include_count: boolean;
     skip?: number;
   };
+  private stackConfig: StackConfig;
+  private stackFolderPath: string;
 
   constructor({ exportConfig, stackAPIClient }: ModuleClassParams) {
     super({ exportConfig, stackAPIClient });
@@ -26,67 +26,47 @@ export default class ExportStack extends BaseClass {
     this.exportConfig.context.module = 'stack';
   }
 
-  async start(): Promise<void> {
-    log.debug('Starting stack export process...', this.exportConfig.context);
+  async exportStack(): Promise<any> {
+    log.debug(`Starting stack export for: '${this.exportConfig.source_stack}'...`, this.exportConfig.context);
 
-    if (isAuthenticated()) {
-      log.debug('User authenticated.', this.exportConfig.context);
-      const stackData = await this.getStack();
-      if (stackData?.org_uid) {
-        log.debug(`Found organization UID: '${stackData.org_uid}'.`, this.exportConfig.context);
-        this.exportConfig.org_uid = stackData.org_uid;
-        this.exportConfig.sourceStackName = stackData.name;
-        log.debug(`Set source stack name: '${stackData.name}'.`, this.exportConfig.context);
-      } else {
-        log.debug('No stack data found or missing organization UID.', this.exportConfig.context);
-      }
-    } else {
-      log.debug('User is not authenticated.', this.exportConfig.context);
-    }
+    await fsUtil.makeDirectory(this.stackFolderPath);
+    log.debug(`Created stack directory at: '${this.stackFolderPath}'`, this.exportConfig.context);
 
-    if (this.exportConfig.management_token) {
-      log.info(
-        'Skipping stack settings export: Operation is not supported when using a management token.',
-        this.exportConfig.context,
-      );
-    } else {
-      await this.exportStackSettings();
-    }
-    if (!this.exportConfig.preserveStackVersion && !this.exportConfig.hasOwnProperty('master_locale')) {
-      log.debug(
-        'Preserve stack version is false and master locale not set, fetching locales...',
-        this.exportConfig.context,
-      );
-      //fetch master locale details
-      return this.getLocales();
-    } else if (this.exportConfig.preserveStackVersion) {
-      log.debug('Preserve stack version is set to true.', this.exportConfig.context);
-      return this.exportStack();
-    } else {
-      log.debug('Master locale is already set.', this.exportConfig.context);
-    }
-  }
-
-  async getStack(): Promise<any> {
-    log.debug(`Fetching stack data for: '${this.exportConfig.source_stack}'...`, this.exportConfig.context);
-
-    const tempAPIClient = await managementSDKClient({ host: this.exportConfig.host });
-    log.debug(`Created Management SDK client with host: '${this.exportConfig.host}'.`, this.exportConfig.context);
-
-    return await tempAPIClient
-      .stack({ api_key: this.exportConfig.source_stack })
+    return this.stack
       .fetch()
-      .then((data: any) => {
-        log.debug(`Successfully fetched stack data for: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
-        return data;
+      .then((resp: any) => {
+        const stackFilePath = pResolve(this.stackFolderPath, this.stackConfig.fileName);
+        log.debug(`Writing stack data to: '${stackFilePath}'`, this.exportConfig.context);
+        fsUtil.writeFile(stackFilePath, resp);
+        log.success(
+          `Stack details exported successfully for stack ${this.exportConfig.source_stack}`,
+          this.exportConfig.context,
+        );
+        log.debug('Stack export completed successfully.', this.exportConfig.context);
+        return resp;
       })
       .catch((error: any) => {
-        log.debug(`Failed to fetch stack data for: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
-        return {};
+        log.debug(`An error occurred while exporting stack: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
+        handleAndLogError(error, { ...this.exportConfig.context });
       });
   }
 
-  async getLocales(skip: number = 0) {
+  async exportStackSettings(): Promise<any> {
+    log.info('Exporting stack settings...', this.exportConfig.context);
+    await fsUtil.makeDirectory(this.stackFolderPath);
+    return this.stack
+      .settings()
+      .then((resp: any) => {
+        fsUtil.writeFile(pResolve(this.stackFolderPath, 'settings.json'), resp);
+        log.success('Exported stack settings successfully!', this.exportConfig.context);
+        return resp;
+      })
+      .catch((error: any) => {
+        handleAndLogError(error, { ...this.exportConfig.context });
+      });
+  }
+
+  async getLocales(skip = 0) {
     if (skip) {
       this.qs.skip = skip;
       log.debug(`Fetching locales with skip: ${skip}.`, this.exportConfig.context);
@@ -101,7 +81,7 @@ export default class ExportStack extends BaseClass {
       .query(this.qs)
       .find()
       .then(async (data: any) => {
-        const { items, count } = data;
+        const { count, items } = data;
         log.debug(`Fetched ${items?.length || 0} locales out of ${count}.`, this.exportConfig.context);
 
         if (items?.length) {
@@ -148,43 +128,63 @@ export default class ExportStack extends BaseClass {
       });
   }
 
-  async exportStack(): Promise<any> {
-    log.debug(`Starting stack export for: '${this.exportConfig.source_stack}'...`, this.exportConfig.context);
+  async getStack(): Promise<any> {
+    log.debug(`Fetching stack data for: '${this.exportConfig.source_stack}'...`, this.exportConfig.context);
 
-    await fsUtil.makeDirectory(this.stackFolderPath);
-    log.debug(`Created stack directory at: '${this.stackFolderPath}'`, this.exportConfig.context);
+    const tempAPIClient = await managementSDKClient({ host: this.exportConfig.host });
+    log.debug(`Created Management SDK client with host: '${this.exportConfig.host}'.`, this.exportConfig.context);
 
-    return this.stack
+    return await tempAPIClient
+      .stack({ api_key: this.exportConfig.source_stack })
       .fetch()
-      .then((resp: any) => {
-        const stackFilePath = pResolve(this.stackFolderPath, this.stackConfig.fileName);
-        log.debug(`Writing stack data to: '${stackFilePath}'`, this.exportConfig.context);
-        fsUtil.writeFile(stackFilePath, resp);
-        log.success(
-          `Stack details exported successfully for stack ${this.exportConfig.source_stack}`,
-          this.exportConfig.context,
-        );
-        log.debug('Stack export completed successfully.', this.exportConfig.context);
-        return resp;
+      .then((data: any) => {
+        log.debug(`Successfully fetched stack data for: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
+        return data;
       })
       .catch((error: any) => {
-        log.debug(`An error occurred while exporting stack: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
-        handleAndLogError(error, { ...this.exportConfig.context });
+        log.debug(`Failed to fetch stack data for: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
+        return {};
       });
   }
 
-  async exportStackSettings(): Promise<any> {
-    log.info('Exporting stack settings...', this.exportConfig.context);
-    await fsUtil.makeDirectory(this.stackFolderPath);
-    return this.stack
-      .settings()
-      .then((resp: any) => {
-        fsUtil.writeFile(pResolve(this.stackFolderPath, 'settings.json'), resp);
-        log.success('Exported stack settings successfully!', this.exportConfig.context);
-        return resp;
-      })
-      .catch((error: any) => {
-        handleAndLogError(error, { ...this.exportConfig.context });
-      });
+  async start(): Promise<void> {
+    log.debug('Starting stack export process...', this.exportConfig.context);
+
+    if (isAuthenticated()) {
+      log.debug('User authenticated.', this.exportConfig.context);
+      const stackData = await this.getStack();
+      if (stackData?.org_uid) {
+        log.debug(`Found organization UID: '${stackData.org_uid}'.`, this.exportConfig.context);
+        this.exportConfig.org_uid = stackData.org_uid;
+        this.exportConfig.sourceStackName = stackData.name;
+        log.debug(`Set source stack name: '${stackData.name}'.`, this.exportConfig.context);
+      } else {
+        log.debug('No stack data found or missing organization UID.', this.exportConfig.context);
+      }
+    } else {
+      log.debug('User is not authenticated.', this.exportConfig.context);
+    }
+
+    if (this.exportConfig.management_token) {
+      log.info(
+        'Skipping stack settings export: Operation is not supported when using a management token.',
+        this.exportConfig.context,
+      );
+    } else {
+      await this.exportStackSettings();
+    }
+    if (!this.exportConfig.preserveStackVersion && !this.exportConfig.hasOwnProperty('master_locale')) {
+      log.debug(
+        'Preserve stack version is false and master locale not set, fetching locales...',
+        this.exportConfig.context,
+      );
+      //fetch master locale details
+      return this.getLocales();
+    } else if (this.exportConfig.preserveStackVersion) {
+      log.debug('Preserve stack version is set to true.', this.exportConfig.context);
+      return this.exportStack();
+    } else {
+      log.debug('Master locale is already set.', this.exportConfig.context);
+    }
   }
 }

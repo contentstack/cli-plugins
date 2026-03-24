@@ -1,5 +1,5 @@
-import path from 'path';
 import { sanitizePath } from '@contentstack/cli-utilities';
+import path from 'path';
 
 import { ExportConfig } from '../types';
 import { makeDirectory } from './file-helper';

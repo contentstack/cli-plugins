@@ -2,45 +2,45 @@ import { Context, Modules, Region } from '.';
 import DefaultConfig from './default-config';
 
 export default interface ExportConfig extends DefaultConfig {
-  context: Context;
-  cliLogsPath: string;
-  exportDir: string;
-  data: string;
-  management_token?: string;
+  access_token?: string;
   apiKey: string;
-  forceStopMarketplaceAppsPrompt: boolean;
   auth_token?: string;
-  branchName?: string;
+  authenticationMethod?: string;
   branchAlias?: string;
-  securedAssets?: boolean;
-  contentTypes?: string[];
-  branches?: branch[];
-  branchEnabled?: boolean;
   branchDir?: string;
-  singleModuleExport?: boolean;
-  moduleName?: Modules;
-  master_locale: masterLocale;
-  query?: any; // Added query field
+  branchEnabled?: boolean;
+  branchName?: string;
+  branches?: branch[];
+  cliLogsPath: string;
+  contentTypes?: string[];
+  context: Context;
+  data: string;
+  exportDir: string;
+  forceStopMarketplaceAppsPrompt: boolean;
   headers?: {
-    api_key: string;
-    access_token?: string;
-    authtoken?: string;
     'X-User-Agent': string;
+    access_token?: string;
+    api_key: string;
+    authtoken?: string;
     organization_uid?: string;
   };
-  access_token?: string;
+  management_token?: string;
+  master_locale: masterLocale;
+  moduleName?: Modules;
   org_uid?: string;
+  query?: any; // Added query field
+  region: Region;
+  securedAssets?: boolean;
+  singleModuleExport?: boolean;
+  skipDependencies?: boolean;
+  skipStackSettings?: boolean;
   source_stack?: string;
   sourceStackName?: string;
-  region: Region;
-  skipStackSettings?: boolean;
-  skipDependencies?: boolean;
-  authenticationMethod?: string;
 }
 
 type branch = {
-  uid: string;
   source: string;
+  uid: string;
 };
 
 type masterLocale = {

@@ -1,4 +1,4 @@
-import { cliux, handleAndLogError, NodeCrypto, managementSDKClient, createDeveloperHubUrl } from '@contentstack/cli-utilities';
+import { NodeCrypto, cliux, createDeveloperHubUrl, handleAndLogError, managementSDKClient } from '@contentstack/cli-utilities';
 
 import { ExportConfig } from '../types';
 
@@ -25,15 +25,15 @@ export async function createNodeCryptoInstance(config: ExportConfig): Promise<No
     cryptoArgs['encryptionKey'] = config.marketplaceAppEncryptionKey;
   } else {
     cryptoArgs['encryptionKey'] = await cliux.inquire({
-      type: 'input',
-      name: 'name',
       default: config.marketplaceAppEncryptionKey,
+      message: 'Enter Marketplace app configurations encryption key',
+      name: 'name',
+      type: 'input',
       validate: (url: any) => {
         if (!url) return "Encryption key can't be empty.";
 
         return true;
       },
-      message: 'Enter Marketplace app configurations encryption key',
     });
   }
 

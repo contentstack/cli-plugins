@@ -1,12 +1,13 @@
+import { cliux, configHandler,isAuthenticated, log, sanitizePath } from '@contentstack/cli-utilities';
+import { filter, includes } from 'lodash';
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated,cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+
 import defaultConfig from '../config';
-import { readFile } from './file-helper';
-import { askExportDir, askAPIKey } from './interactive';
-import login from './basic-login';
-import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
+import login from './basic-login';
+import { readFile } from './file-helper';
+import { askAPIKey, askExportDir } from './interactive';
 
 const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   let config = merge({}, defaultConfig);
@@ -43,7 +44,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
   if (managementTokenAlias) {
     log.debug('Using management token alias', { alias: managementTokenAlias });
-    const { token, apiKey } = configHandler.get(`tokens.${managementTokenAlias}`) || {};
+    const { apiKey, token } = configHandler.get(`tokens.${managementTokenAlias}`) || {};
     config.management_token = token;
     config.apiKey = apiKey;
     authenticationMethod = 'Management Token';
