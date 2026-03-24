@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import { log as defaultLog } from '@contentstack/cli-utilities';
 import { ImportConfig } from 'src/types';
 
@@ -22,8 +22,8 @@ export const validateBranch = async (
       const data = await stackAPIClient.branch(branch).fetch();
       if (data && typeof data === 'object') {
         if (data.error_message) {
-          log.error(chalk.red(data.error_message), { error: data.error_message });
-          log.error(chalk.red('No branch found with the name ' + branch), { branch });
+          log.error(getChalk().red(data.error_message), { error: data.error_message });
+          log.error(getChalk().red('No branch found with the name ' + branch), { branch });
           reject({ message: 'No branch found with the name ' + branch, error: data.error_message });
         } else {
           resolve(data);
@@ -32,7 +32,7 @@ export const validateBranch = async (
         reject({ message: 'No branch found with the name ' + branch, error: {} });
       }
     } catch (error) {
-      log.error(chalk.red('No branch found with the name ' + branch), { error, branch });
+      log.error(getChalk().red('No branch found with the name ' + branch), { error, branch });
       reject({ message: 'No branch found with the name ' + branch, error });
     }
   });
