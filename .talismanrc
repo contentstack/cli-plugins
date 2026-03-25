@@ -1,10 +1,16 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 0a12c6c1e4df121f6a217425ef0bd7b1acccc1cd3f972157f7ca7480281277fd
+    checksum: ac795ffbdc0f82463baf34715a30b76cf6a67b2d8893ec835a5861aa915b20bf
   - filename: .cursor/rules/contentstack-cli.mdc
     checksum: ba287a9e9dcf6565d2d2e79c9bbf6350a89e13afbd1f8755973d837563115c83
   - filename: .cursor/rules/dev-workflow.md
     checksum: ae8f8b2894c5cf0da6a85eb53c97775bd38835c191f9132ecaa24dcb9f439811
   - filename: .cursor/rules/oclif-commands.mdc
     checksum: 3f9891d3d5872a2823c83215bc1727911dd32935d17d91ad5f2e7d5f75f3ab61
+  - filename: packages/contentstack-audit/test/unit/logger-config.js
+    checksum: 493e2e65939325f48d354469f409f1dbf84462adca995ed3a78461e80148d309
+  - filename: packages/contentstack-audit/test/unit/base-command.test.ts
+    checksum: 4208fae6e7cf1aeeb2b936d119c85cdc40e5e3560c7207e04bb94ba3e0305557
+  - filename: packages/contentstack-audit/test/unit/modules/entries.test.ts
+    checksum: aaf2e125c5e93ab15364e41559390502a18b83a4b3de5879c02572969381c0a6
 version: '1.0'
