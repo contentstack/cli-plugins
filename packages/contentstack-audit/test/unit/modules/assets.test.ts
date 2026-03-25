@@ -332,6 +332,29 @@ describe('Assets module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('when fix true and multiple assets in chunk, confirm is called only once', async () => {
+        const instance = new Assets({ ...constructorParam, fix: true });
+        await instance.prerequisiteData();
+        const confirmStub = Sinon.stub(cliux, 'confirm').resolves(true);
+        const writeStub = Sinon.stub(fs, 'writeFileSync');
+        await instance.lookForReference();
+        expect(confirmStub.callCount).to.equal(1);
+        confirmStub.restore();
+        writeStub.restore();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('calls writeFixContent once per chunk file when fix is true (not per asset)', async () => {
+        const instance = new Assets({ ...constructorParam, fix: true });
+        await instance.prerequisiteData();
+        const writeFixSpy = Sinon.stub(Assets.prototype, 'writeFixContent').resolves();
+        await instance.lookForReference();
+        expect(writeFixSpy.callCount).to.equal(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
       .it('should log scan success message exactly once per asset', async () => {
         const infoSpy = Sinon.spy();
         Sinon.stub(require('@contentstack/cli-utilities'), 'log').value({
