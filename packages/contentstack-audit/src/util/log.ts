@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import winston from 'winston';
-import chalk, { Chalk } from 'chalk';
+import { getChalk, ChalkInstance } from '@contentstack/cli-utilities';
 import replace from 'lodash/replace';
 import isObject from 'lodash/isObject';
 import { normalize, resolve } from 'path';
@@ -170,10 +170,11 @@ export default class Logger {
  * @param printInput - An array of objects with the following properties:
  */
 export function print(printInput: Array<PrintType>): void {
+  const chalk = getChalk();
   const str = map(printInput, ({ message, bold, color }: PrintType) => {
-    let chalkFn: Chalk = chalk;
-    if (color) chalkFn = chalkFn[color];
-    if (bold) chalkFn = chalkFn.bold;
+    let chalkFn: ChalkInstance = chalk;
+    if (color) chalkFn = chalkFn[color] as ChalkInstance;
+    if (bold) chalkFn = chalkFn.bold as ChalkInstance;
 
     return chalkFn(message);
   }).join(' ');
