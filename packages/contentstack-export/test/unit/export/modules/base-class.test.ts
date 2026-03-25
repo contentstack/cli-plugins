@@ -192,6 +192,7 @@ describe('BaseClass', () => {
         stack: {
           dirName: 'stack',
           fileName: 'stack.json',
+          invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid'],
         },
         dependency: {
           entries: [],
