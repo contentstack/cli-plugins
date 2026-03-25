@@ -3,7 +3,6 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import { FileTransportInstance } from 'winston/lib/winston/transports';
-
 import { BaseCommand } from '../../src/base-command';
 import { mockLogger } from './mock-logger';
 
@@ -167,5 +166,53 @@ describe('BaseCommand class', () => {
           expect(error).to.exist;
         }
       });
+  });
+
+  describe('init with external-config', () => {
+    class CMDCheckConfig extends BaseCommand<typeof CMDCheckConfig> {
+      async run() {
+        const sc = this.sharedConfig as Record<string, unknown>;
+        if (sc.testMergeKey !== undefined) this.log(String(sc.testMergeKey));
+        if (this.flags['external-config']?.noLog) this.log('noLog');
+      }
+    }
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(BaseCommand.prototype, 'parse', () =>
+        Promise.resolve({
+          args: {},
+          flags: { 'external-config': { config: { testMergeKey: 'merged' } } },
+        } as any)
+      )
+      .do(() => CMDCheckConfig.run([]))
+      .do((output: { stdout: string }) => expect(output.stdout).to.include('merged'))
+      .it('merges external-config.config into sharedConfig when present');
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(BaseCommand.prototype, 'parse', () =>
+        Promise.resolve({
+          args: {},
+          flags: { 'external-config': { noLog: true } },
+        } as any)
+      )
+      .do(() => CMDCheckConfig.run([]))
+      .do((output: { stdout: string }) => expect(output.stdout).to.include('noLog'))
+      .it('hits noLog branch when external-config.noLog is true');
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(BaseCommand.prototype, 'parse', () =>
+        Promise.resolve({ args: {}, flags: { 'external-config': {} } } as any)
+      )
+      .do(() => CMDCheckConfig.run([]))
+      .it('completes when external-config is empty (no merge, no noLog)');
   });
 });
