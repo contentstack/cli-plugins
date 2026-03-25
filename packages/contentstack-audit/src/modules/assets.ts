@@ -27,6 +27,7 @@ export default class Assets extends BaseClass {
   protected schema: ContentTypeStruct[] = [];
   protected missingEnvLocales: Record<string, any> = {};
   public moduleName: keyof typeof auditConfig.moduleConfig;
+  private fixOverwriteConfirmed: boolean | null = null;
 
   constructor({ fix, config, moduleName }: ModuleConstructorParam & CtConstructorParam) {
     super({ config });
@@ -161,11 +162,17 @@ export default class Assets extends BaseClass {
 
     if (this.fix) {
       log.debug('Fix mode enabled, checking write permissions', this.config.auditContext);
-      if (!this.config.flags['copy-dir'] && !this.config.flags['external-config']?.skipConfirm) {
-        log.debug(`Asking user for confirmation to write fix content (--yes flag: ${this.config.flags.yes})`, this.config.auditContext);
-        canWrite = this.config.flags.yes || (await cliux.confirm(commonMsg.FIX_CONFIRMATION));
+      if (this.config.flags['copy-dir'] || this.config.flags['external-config']?.skipConfirm || this.config.flags.yes) {
+        this.fixOverwriteConfirmed = true;
+        log.debug('Skipping confirmation due to copy-dir, external-config, or yes flags', this.config.auditContext);
+      } else if (this.fixOverwriteConfirmed !== null) {
+        canWrite = this.fixOverwriteConfirmed;
+        log.debug(`Using cached overwrite confirmation: ${canWrite}`, this.config.auditContext);
       } else {
-        log.debug('Skipping confirmation due to copy-dir or external-config flags', this.config.auditContext);
+        log.debug(`Asking user for confirmation to write fix content (--yes flag: ${this.config.flags.yes})`, this.config.auditContext);
+        this.completeProgress(true);
+        canWrite = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+        this.fixOverwriteConfirmed = canWrite;
       }
 
       if (canWrite) {
@@ -248,12 +255,15 @@ export default class Assets extends BaseClass {
         if (this.progressManager) {
           this.progressManager.tick(true, `asset: ${assetUid}`, null);
         }
-        
+
         if (this.fix) {
           log.debug(`Fixing asset ${assetUid}`, this.config.auditContext);
           log.info($t(auditFixMsg.ASSET_FIX, { uid: assetUid }), this.config.auditContext);
-          await this.writeFixContent(`${basePath}/${indexer[fileIndex]}`, this.assets);
         }
+      }
+
+      if (this.fix) {
+        await this.writeFixContent(`${basePath}/${indexer[fileIndex]}`, this.assets);
       }
     }
     

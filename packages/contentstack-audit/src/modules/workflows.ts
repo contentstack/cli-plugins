@@ -194,7 +194,22 @@ export default class Workflows extends BaseClass {
     
     log.debug(`Loaded ${Object.keys(newWorkflowSchema).length} workflows for fixing`, this.config.auditContext);
 
-    if (Object.keys(newWorkflowSchema).length !== 0) {
+    const hasWorkflowsToFix = Object.keys(newWorkflowSchema).length !== 0;
+    let userConfirm: boolean;
+    if (!hasWorkflowsToFix) {
+      userConfirm = true;
+    } else if (
+      this.config.flags['copy-dir'] ||
+      this.config.flags['external-config']?.skipConfirm ||
+      this.config.flags.yes
+    ) {
+      userConfirm = true;
+    } else {
+      this.completeProgress(true);
+      userConfirm = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+    }
+
+    if (hasWorkflowsToFix) {
       log.debug(`Processing ${this.workflowSchema.length} workflows for fixes`, this.config.auditContext);
       
       for (const workflow of this.workflowSchema) {
@@ -237,7 +252,7 @@ export default class Workflows extends BaseClass {
 
           cliux.print(warningMessage, { color: 'yellow' });
 
-          if (this.config.flags.yes || (await cliux.confirm(commonMsg.WORKFLOW_FIX_CONFIRMATION))) {
+          if (userConfirm) {
             log.debug(`Deleting workflow ${name} (${uid})`, this.config.auditContext);
             delete newWorkflowSchema[workflow.uid];
           } else {
@@ -250,10 +265,10 @@ export default class Workflows extends BaseClass {
     }
 
     log.debug(`Workflow schema fix completed`, this.config.auditContext);
-    await this.writeFixContent(newWorkflowSchema);
+    await this.writeFixContent(newWorkflowSchema, userConfirm);
   }
 
-  async writeFixContent(newWorkflowSchema: Record<string, Workflow>) {
+  async writeFixContent(newWorkflowSchema: Record<string, Workflow>, preConfirmed?: boolean) {
     log.debug(`Writing fix content`, this.config.auditContext);
     log.debug(`Fix mode: ${this.fix}`, this.config.auditContext);
     log.debug(`Copy directory flag: ${this.config.flags['copy-dir']}`, this.config.auditContext);
@@ -261,13 +276,23 @@ export default class Workflows extends BaseClass {
     log.debug(`Yes flag: ${this.config.flags.yes}`, this.config.auditContext);
     log.debug(`Workflows to write: ${Object.keys(newWorkflowSchema).length}`, this.config.auditContext);
     
-    if (
-      this.fix &&
-      (this.config.flags['copy-dir'] ||
-        this.config.flags['external-config']?.skipConfirm ||
-        this.config.flags.yes ||
-        (await cliux.confirm(commonMsg.FIX_CONFIRMATION)))
+    let shouldWrite: boolean;
+    if (!this.fix) {
+      shouldWrite = false;
+    } else if (preConfirmed !== undefined) {
+      shouldWrite = preConfirmed;
+    } else if (
+      this.config.flags['copy-dir'] ||
+      this.config.flags['external-config']?.skipConfirm ||
+      this.config.flags.yes
     ) {
+      shouldWrite = true;
+    } else {
+      this.completeProgress(true);
+      shouldWrite = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+    }
+
+    if (shouldWrite) {
       const outputPath = join(this.folderPath, this.config.moduleConfig[this.moduleName].fileName);
       log.debug(`Writing fixed workflows to: ${outputPath}`, this.config.auditContext);
       
