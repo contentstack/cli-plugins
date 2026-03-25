@@ -279,10 +279,8 @@ export default class Workflows extends BaseClass {
     let shouldWrite: boolean;
     if (!this.fix) {
       shouldWrite = false;
-    } else if (preConfirmed === true) {
-      shouldWrite = true;
-    } else if (preConfirmed === false) {
-      shouldWrite = false;
+    } else if (preConfirmed !== undefined) {
+      shouldWrite = preConfirmed;
     } else if (
       this.config.flags['copy-dir'] ||
       this.config.flags['external-config']?.skipConfirm ||
