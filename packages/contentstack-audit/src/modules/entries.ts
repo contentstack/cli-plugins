@@ -60,6 +60,7 @@ export default class Entries extends BaseClass {
   public environments: string[] = [];
   public entryMetaData: Record<string, any>[] = [];
   public moduleName: keyof typeof auditConfig.moduleConfig = 'entries';
+  private fixOverwriteConfirmed: boolean | null = null;
 
   constructor({ fix, config, moduleName, ctSchema, gfSchema }: ModuleConstructorParam & CtConstructorParam) {
     super({ config });
@@ -541,13 +542,20 @@ export default class Entries extends BaseClass {
 
       const skipConfirm = this.config.flags['copy-dir'] || this.config.flags['external-config']?.skipConfirm;
 
-      if (skipConfirm) {
-        log.debug('Skipping confirmation due to copy-dir or external-config flags', this.config.auditContext);
+      let canWrite: boolean;
+      if (skipConfirm || this.config.flags.yes) {
+        canWrite = true;
+        this.fixOverwriteConfirmed = true;
+        log.debug('Skipping confirmation due to copy-dir, external-config, or yes flags', this.config.auditContext);
+      } else if (this.fixOverwriteConfirmed !== null) {
+        canWrite = this.fixOverwriteConfirmed;
+        log.debug(`Using cached overwrite confirmation: ${canWrite}`, this.config.auditContext);
       } else {
         log.debug('Asking user for confirmation to write fix content', this.config.auditContext);
+        this.completeProgress(true);
+        canWrite = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+        this.fixOverwriteConfirmed = canWrite;
       }
-
-      const canWrite = skipConfirm || this.config.flags.yes || (await cliux.confirm(commonMsg.FIX_CONFIRMATION));
 
       if (canWrite) {
         log.debug(`Writing fixed entries to: ${filePath}`, this.config.auditContext);
