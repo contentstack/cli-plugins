@@ -104,6 +104,30 @@ describe('Entries module', () => {
         expect(fixPrerequisiteData.callCount).to.be.equals(1);
         expect(prepareEntryMetaData.callCount).to.be.equals(1);
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('run with real folder runs main loop and removeEmptyVal', async () => {
+        const realCtSchema = cloneDeep(require('../mock/contents/content_types/schema.json'));
+        const realGfSchema = cloneDeep(require('../mock/contents/global_fields/globalfields.json'));
+        ctStub.resolves(realCtSchema);
+        gfStub.resolves(realGfSchema);
+        try {
+          const ctInstance = new Entries(constructorParam);
+          const result = (await ctInstance.run()) as any;
+          expect(result).to.have.property('missingEntryRefs');
+          expect(result).to.have.property('missingSelectFeild');
+          expect(result).to.have.property('missingMandatoryFields');
+          expect(result).to.have.property('missingTitleFields');
+          expect(result).to.have.property('missingEnvLocale');
+          expect(result).to.have.property('missingMultipleFields');
+        } finally {
+          ctStub.resetHistory();
+          gfStub.resetHistory();
+          ctStub.resolves({ ct1: [{}] });
+          gfStub.resolves({ gf1: [{}] });
+        }
+      });
   });
 
   describe('fixPrerequisiteData method', () => {
@@ -120,6 +144,44 @@ describe('Entries module', () => {
         expect(gfStub.callCount).to.be.equals(1);
         expect(ctInstance.ctSchema).deep.contain({ ct1: [{}] });
         expect(ctInstance.gfSchema).deep.contain({ gf1: [{}] });
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads extensions when extensions.json exists', async () => {
+        Sinon.stub(fs, 'existsSync').callsFake((path: any) => String(path).includes('extensions.json'));
+        Sinon.stub(fs, 'readFileSync').callsFake(() => JSON.stringify({ ext_uid_1: {}, ext_uid_2: {} }));
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).missingSelectFeild = { 'test-entry': [] };
+        (ctInstance as any).missingMandatoryFields = { 'test-entry': [] };
+        await ctInstance.fixPrerequisiteData();
+        expect(ctInstance.extensions).to.include('ext_uid_1');
+        expect(ctInstance.extensions).to.include('ext_uid_2');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads extension UIDs from marketplace apps when file exists', async () => {
+        if ((fs.existsSync as any).restore) (fs.existsSync as any).restore();
+        if ((fs.readFileSync as any).restore) (fs.readFileSync as any).restore();
+        Sinon.stub(fs, 'existsSync').callsFake((path: any) => String(path).includes('marketplace_apps.json'));
+        Sinon.stub(fs, 'readFileSync').callsFake((path: any) => {
+          if (String(path).includes('marketplace')) {
+            return JSON.stringify([
+              { uid: 'app1', manifest: { name: 'App1' }, ui_location: { locations: [{ meta: { extension_uid: 'market_ext_1' } }] } },
+            ]);
+          }
+          return '{}';
+        });
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).missingSelectFeild = { 'test-entry': [] };
+        (ctInstance as any).missingMandatoryFields = { 'test-entry': [] };
+        await ctInstance.fixPrerequisiteData();
+        expect(ctInstance.extensions).to.include('market_ext_1');
       });
   });
 
@@ -148,6 +210,39 @@ describe('Entries module', () => {
         expect(writeFileSync.callCount).to.be.equals(1);
         expect(writeFileSync.calledWithExactly(resolve(__dirname, '..', 'mock', 'contents'), JSON.stringify({}))).to.be
           .true;
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it("should skip confirmation when copy-dir flag passed", async () => {
+        const writeFileSync = Sinon.spy(fs, 'writeFileSync');
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        ctInstance.config.flags['copy-dir'] = true;
+        await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents'), { e1: {} as EntryStruct });
+        expect(writeFileSync.callCount).to.be.equals(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .stub(cliux, 'confirm', async () => false)
+      .it('should not write when user declines confirmation', async () => {
+        const writeFileSync = Sinon.spy(fs, 'writeFileSync');
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents'), {});
+        expect(writeFileSync.callCount).to.be.equals(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it('when fix true and writeFixContent called multiple times, confirm is called only once', async () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        const confirmStub = Sinon.stub(cliux, 'confirm').resolves(true);
+        await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents', 'chunk1.json'), { e1: {} as EntryStruct });
+        await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents', 'chunk2.json'), { e2: {} as EntryStruct });
+        expect(confirmStub.callCount).to.equal(1);
       });
   });
 
@@ -219,10 +314,12 @@ describe('Entries module', () => {
 
     fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('should return missing reference', async () => {
       const ctInstance = new Class();
+      // Reference that is missing from entryMetaData so it appears in missingRefs
+      const entryData = [{ uid: 'test-uid-1', _content_type_uid: 'page_0' }];
       const missingRefs = await ctInstance.validateReferenceField(
         [{ uid: 'test-uid', name: 'reference', field: 'reference' }],
         ctInstance.ctSchema[3].schema as any,
-        ctInstance.entries['reference'] as any,
+        entryData as any,
       );
 
       expect(missingRefs).deep.equal([
@@ -250,34 +347,24 @@ describe('Entries module', () => {
     });
   });
 
-  // describe('validateGlobalField method', () => {
-  //   let lookForReferenceSpy;
-  //   let ctInstance;
-
-  //   beforeEach(() => {
-  //     // Restore original methods before each test
-  //     Sinon.restore();
-
-  //     // Spy on the lookForReference method
-  //     lookForReferenceSpy = Sinon.spy(Entries.prototype, 'lookForReference');
-
-  //     // Create a new instance of Entries for each test
-  //     ctInstance = new (class extends Entries {
-  //       public entries: Record<string, EntryStruct> = (
-  //         require('../mock/contents/entries/page_1/en-us/e7f6e3cc-64ca-4226-afb3-7794242ae5f5-entries.json') as any
-  //       )['test-uid-2'];
-  //     })(constructorParam);
-  //   });
-
-  //   it('should call lookForReference method', async () => {
-  //     // Call the method under test
-  //     await ctInstance.validateGlobalField([], ctInstance.ctSchema as any, ctInstance.entries);
-
-  //     // Assertions
-  //     expect(lookForReferenceSpy.callCount).to.be.equals(1);
-  //     expect(lookForReferenceSpy.calledWithExactly([], ctInstance.ctSchema, ctInstance.entries)).to.be.true;
-  //   });
-  // });
+  describe('validateGlobalField method', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('calls lookForReference and completes validation', () => {
+        const lookForReference = Sinon.spy(Entries.prototype, 'lookForReference');
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).missingSelectFeild = { 'test-entry': [] };
+        (ctInstance as any).missingMandatoryFields = { 'test-entry': [] };
+        const tree: Record<string, unknown>[] = [];
+        const fieldStructure = { uid: 'gf_1', display_name: 'Global Field 1', schema: [{ uid: 'ref', data_type: 'reference' }] };
+        const field = { ref: [] };
+        ctInstance.validateGlobalField(tree, fieldStructure as any, field as any);
+        expect(lookForReference.callCount).to.equal(1);
+        expect(lookForReference.calledWith(tree, fieldStructure, field)).to.be.true;
+      });
+  });
 
   describe('validateJsonRTEFields method', () => {
     fancy
@@ -404,6 +491,154 @@ describe('Entries module', () => {
         expect(runFixOnSchema.firstCall.args[2]).to.deep.equal(entryData);
         expect(result).to.deep.equal(entryData);
       });
+  });
+
+  describe('removeMissingKeysOnEntry', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('removes entry keys not in schema and not in systemKeys', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'e1';
+        const schema = [{ uid: 'title' }, { uid: 'body' }];
+        const entry: Record<string, any> = { title: 'T', body: 'B', invalid_key: 'remove me', uid: 'keep-uid' };
+        (ctInstance as any).removeMissingKeysOnEntry(schema, entry);
+        expect(entry.invalid_key).to.be.undefined;
+        expect(entry.title).to.equal('T');
+        expect(entry.uid).to.equal('keep-uid');
+      });
+  });
+
+  describe('runFixOnSchema', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('skips field when not present in entry', () => {
+        if ((Entries.prototype.fixGlobalFieldReferences as any).restore) (Entries.prototype.fixGlobalFieldReferences as any).restore();
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).missingMultipleField = { e1: [] };
+        const schema = [{ uid: 'only_in_schema', data_type: 'text', display_name: 'Only' }];
+        const entry = { other_key: 'v' };
+        const result = (ctInstance as any).runFixOnSchema([], schema, entry);
+        expect((entry as any).only_in_schema).to.be.undefined;
+        expect(result).to.equal(entry);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('converts non-array to array when field is multiple', () => {
+        if ((Entries.prototype.fixGlobalFieldReferences as any).restore) (Entries.prototype.fixGlobalFieldReferences as any).restore();
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).missingMultipleField = { e1: [] };
+        Sinon.stub(Entries.prototype, 'fixGlobalFieldReferences').callsFake((_t: any, _f: any, e: any) => e);
+        const schema = [{ uid: 'multi', data_type: 'global_field', multiple: true, display_name: 'M', schema: [] }];
+        const entry = { multi: 'single value' as any };
+        (ctInstance as any).runFixOnSchema([], schema, entry);
+        expect(entry.multi).to.eql(['single value']);
+        (Entries.prototype.fixGlobalFieldReferences as any).restore?.();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('deletes reference field when fixMissingReferences returns falsy', () => {
+        if ((Entries.prototype.fixMissingReferences as any).restore) (Entries.prototype.fixMissingReferences as any).restore();
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).entryMetaData = [];
+        Sinon.stub(Entries.prototype, 'fixMissingReferences').returns(undefined as any);
+        const schema = [{ uid: 'ref', data_type: 'reference', display_name: 'Ref', reference_to: ['ct1'] }];
+        const entry = { ref: [{ uid: 'missing' }] };
+        (ctInstance as any).runFixOnSchema([], schema, entry);
+        expect(entry.ref).to.be.undefined;
+        (Entries.prototype.fixMissingReferences as any).restore?.();
+      });
+  });
+
+  describe('validateMandatoryFields', () => {
+    const initInstance = (ctInstance: Entries) => {
+      (ctInstance as any).currentUid = 'test-entry';
+      (ctInstance as any).currentTitle = 'Test Entry';
+      (ctInstance as any).missingMandatoryFields = { 'test-entry': [] };
+    };
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns missing field when mandatory JSON RTE is empty', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = {
+        uid: 'body',
+        display_name: 'Body',
+        data_type: 'json',
+        mandatory: true,
+        multiple: false,
+        field_metadata: { allow_json_rte: true },
+      };
+      const entry = {
+        body: {
+          children: [{ children: [{ text: '' }] }],
+        },
+      };
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.have.length(1);
+      expect(result[0]).to.include({ display_name: 'Body', missingFieldUid: 'body' });
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns missing field when mandatory number is empty', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = { uid: 'num', display_name: 'Number', data_type: 'number', mandatory: true, multiple: false, field_metadata: {} };
+      const entry = {};
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.have.length(1);
+      expect(result[0].missingFieldUid).to.equal('num');
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns missing field when mandatory text is empty', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = { uid: 'title', display_name: 'Title', data_type: 'text', mandatory: true, multiple: false, field_metadata: {} };
+      const entry = { title: '' };
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.have.length(1);
+      expect(result[0].missingFieldUid).to.equal('title');
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns missing field when mandatory reference array is empty', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = { uid: 'ref', display_name: 'Reference', data_type: 'reference', mandatory: true, multiple: false, field_metadata: {} };
+      const entry = { ref: [] };
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.have.length(1);
+      expect(result[0].missingFieldUid).to.equal('ref');
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns empty array when mandatory field has value', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = { uid: 'title', display_name: 'Title', data_type: 'text', mandatory: true, multiple: false, field_metadata: {} };
+      const entry = { title: 'Has value' };
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.eql([]);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns empty array when field is not mandatory', () => {
+      const ctInstance = new Entries(constructorParam);
+      initInstance(ctInstance);
+      const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+      const fieldStructure = { uid: 'opt', display_name: 'Optional', data_type: 'text', mandatory: false, multiple: false, field_metadata: {} };
+      const entry = {};
+      const result = (ctInstance as any).validateMandatoryFields(tree, fieldStructure, entry);
+      expect(result).to.eql([]);
+    });
   });
 
   describe('validateSelectField method', () => {
@@ -1090,6 +1325,31 @@ describe('Entries module', () => {
 
         expect(result).to.have.length(0);
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns empty array when fix mode is enabled', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).entryMetaData = [];
+        const referenceFieldSchema = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entryData = [{ uid: 'blt1', _content_type_uid: 'ct1' }];
+        const result = ctInstance.validateReferenceValues([], referenceFieldSchema as any, entryData);
+        expect(result).to.eql([]);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('does not flag blt reference when found in entryMetaData and content type allowed', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).entryMetaData = [{ uid: 'blt999', ctUid: 'ct1' }];
+        const referenceFieldSchema = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entryData = ['blt999'];
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+        const result = ctInstance.validateReferenceValues(tree, referenceFieldSchema as any, entryData as any);
+        expect(result).to.have.length(0);
+      });
   });
 
   describe('validateModularBlocksField method', () => {
@@ -1307,6 +1567,61 @@ describe('Entries module', () => {
         const result = ctInstance.validateExtensionAndAppField(tree, fileFieldSchema as any, entryData as any);
 
         expect(result).to.be.an('array'); // Should return an array of missing references
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('reports extension as valid when extension_uid is in extensions list', async ({}) => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        ctInstance.extensions = ['valid-ext-uid'];
+        const field = { uid: 'ext_f', display_name: 'Ext Field', data_type: 'json', field_metadata: { extension: true } };
+        const entry = { ext_f: { metadata: { extension_uid: 'valid-ext-uid' } } };
+        const tree: Record<string, unknown>[] = [];
+        const result = ctInstance.validateExtensionAndAppField(tree, field as any, entry as any);
+        expect(result).to.be.an('array');
+        expect(result).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns empty array when fix mode is enabled', async ({}) => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        ctInstance.extensions = [];
+        const field = { uid: 'ext_f', display_name: 'Ext', data_type: 'json' };
+        const entry = { ext_f: { metadata: { extension_uid: 'any' } } };
+        const result = ctInstance.validateExtensionAndAppField([], field as any, entry as any);
+        expect(result).to.eql([]);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns empty array when field has no extension data (no entry[uid])', async ({}) => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        ctInstance.extensions = [];
+        const field = { uid: 'ext_f', display_name: 'Ext Field', data_type: 'json' };
+        const entry = {} as any;
+        const result = ctInstance.validateExtensionAndAppField([], field as any, entry);
+        expect(result).to.eql([]);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns result with treeStr when extension UID is missing', async ({}) => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        ctInstance.extensions = ['other-ext'];
+        const field = { uid: 'ext_f', display_name: 'Ext Field', data_type: 'json' };
+        const entry = { ext_f: { metadata: { extension_uid: 'missing-ext' } } };
+        const tree = [{ uid: 'e1', name: 'Entry 1' }];
+        const result = ctInstance.validateExtensionAndAppField(tree, field as any, entry as any);
+        expect(result).to.have.length(1);
+        expect(result[0]).to.have.property('treeStr');
+        expect(result[0].missingRefs).to.deep.include({ uid: 'ext_f', extension_uid: 'missing-ext', type: 'Extension or Apps' });
       });
 
     fancy
@@ -1539,5 +1854,437 @@ describe('Entries module', () => {
     fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns true when refCtUid is in skipRefs', () => {
       expect(callHelper('sys_assets', ['ct1'])).to.be.true;
     });
+  });
+
+  describe('jsonRefCheck entry ref and no-entry-uid branches', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('pushes to missingRefs and returns null when entry UID is not in entryMetaData', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).currentTitle = 'Test Entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).entryMetaData = []; // entry not present
+
+        const schema = {
+          uid: 'json_rte',
+          display_name: 'JSON RTE',
+          data_type: 'richtext',
+          reference_to: ['ct1'],
+        };
+        const child = {
+          type: 'embed',
+          uid: 'child-uid',
+          attrs: { 'entry-uid': 'missing-uid', 'content-type-uid': 'ct1' },
+          children: [],
+        };
+        const tree: Record<string, unknown>[] = [];
+
+        const result = (ctInstance as any).jsonRefCheck(tree, schema, child);
+
+        expect(result).to.be.null;
+        expect((ctInstance as any).missingRefs['test-entry']).to.have.length(1);
+        expect((ctInstance as any).missingRefs['test-entry'][0].missingRefs).to.deep.include({
+          uid: 'missing-uid',
+          'content-type-uid': 'ct1',
+        });
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns true when entry UID is in entryMetaData and isRefContentTypeAllowed (valid ref)', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'blt123', ctUid: 'ct1' }];
+
+        const schema = {
+          uid: 'json_rte',
+          display_name: 'JSON RTE',
+          data_type: 'richtext',
+          reference_to: ['ct1'],
+        };
+        const child = {
+          type: 'embed',
+          uid: 'child-uid',
+          attrs: { 'entry-uid': 'blt123', 'content-type-uid': 'ct1' },
+          children: [],
+        };
+        const tree: Record<string, unknown>[] = [];
+
+        const result = (ctInstance as any).jsonRefCheck(tree, schema, child);
+
+        expect(result).to.be.true;
+        expect((ctInstance as any).missingRefs['test-entry']).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns true when child has no entry-uid (no entry UID in JSON child)', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingRefs = { 'test-entry': [] };
+        (ctInstance as any).entryMetaData = [];
+
+        const schema = {
+          uid: 'json_rte',
+          display_name: 'JSON RTE',
+          data_type: 'richtext',
+        };
+        const child = {
+          type: 'embed',
+          uid: 'child-uid',
+          attrs: {}, // no entry-uid
+          children: [],
+        };
+        const tree: Record<string, unknown>[] = [];
+
+        const result = (ctInstance as any).jsonRefCheck(tree, schema, child);
+
+        expect(result).to.be.true;
+        expect((ctInstance as any).missingRefs['test-entry']).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns true and does not push when entry ref is valid (covers Entry reference is valid log)', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'valid-uid', ctUid: 'page_0' }];
+        const schema = { uid: 'rte', display_name: 'RTE', data_type: 'richtext', reference_to: ['page_0'] };
+        const child = {
+          type: 'reference',
+          uid: 'c1',
+          attrs: { 'entry-uid': 'valid-uid', 'content-type-uid': 'page_0' },
+          children: [],
+        };
+        const result = (ctInstance as any).jsonRefCheck([], schema, child);
+        expect(result).to.be.true;
+        expect((ctInstance as any).missingRefs.e1).to.have.length(0);
+      });
+  });
+
+  describe('prepareEntryMetaData', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads locales, environments, and entry metadata from mock contents', async () => {
+        const ctInstance = new Entries(constructorParam);
+        await ctInstance.prepareEntryMetaData();
+
+        expect(ctInstance.entryMetaData).to.be.an('array');
+        expect(ctInstance.environments).to.be.an('array');
+        expect(ctInstance.locales).to.be.an('array');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads only master locales when additional locales file is missing', async () => {
+        if ((fs.existsSync as any).restore) (fs.existsSync as any).restore();
+        const realExists = fs.existsSync.bind(fs);
+        Sinon.stub(fs, 'existsSync').callsFake((path: fs.PathLike) => {
+          const p = String(path);
+          if (p.includes('locales.json') && !p.includes('master-locale')) return false;
+          return realExists(path);
+        });
+        try {
+          const ctInstance = new Entries(constructorParam);
+          await ctInstance.prepareEntryMetaData();
+          expect(ctInstance.locales).to.be.an('array');
+          expect(ctInstance.entryMetaData).to.be.an('array');
+        } finally {
+          (fs.existsSync as any).restore?.();
+        }
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('records empty title and no-title entries and pushes to entryMetaData', async () => {
+        if ((fs.existsSync as any).restore) (fs.existsSync as any).restore();
+        if ((fs.readFileSync as any).restore) (fs.readFileSync as any).restore();
+        const fullSchema = cloneDeep(require('../mock/contents/content_types/schema.json'));
+        const page1 = fullSchema.find((c: any) => c.uid === 'page_1');
+        const emptyTitleCt = page1 ? { ...page1, uid: 'empty_title_ct' } : fullSchema[0];
+        const param = {
+          ...constructorParam,
+          ctSchema: [emptyTitleCt],
+          config: { ...constructorParam.config },
+        };
+        const ctInstance = new Entries(param);
+        await ctInstance.prepareEntryMetaData();
+        const missingTitleFields = (ctInstance as any).missingTitleFields;
+        expect(missingTitleFields).to.be.an('object');
+        expect(missingTitleFields['entry-empty-title']).to.deep.include({
+          'Entry UID': 'entry-empty-title',
+          'Content Type UID': 'empty_title_ct',
+          Locale: 'en-us',
+        });
+        const metaNoTitle = ctInstance.entryMetaData.find((m: any) => m.uid === 'entry-no-title');
+        expect(metaNoTitle).to.be.ok;
+        expect(metaNoTitle!.title).to.be.undefined;
+        const metaEmpty = ctInstance.entryMetaData.find((m: any) => m.uid === 'entry-empty-title');
+        expect(metaEmpty).to.be.ok;
+        expect(ctInstance.entryMetaData.length).to.be.at.least(2);
+      });
+  });
+
+  describe('findNotPresentSelectField', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('initializes field as empty array when field is null or undefined', () => {
+        const ctInstance = new Entries(constructorParam);
+        const choices = { choices: [{ value: 'a' }, { value: 'b' }] };
+        const result = (ctInstance as any).findNotPresentSelectField(null, choices);
+        expect(result.filteredFeild).to.eql([]);
+        expect(result.notPresent).to.eql([]);
+      });
+  });
+
+  describe('fixMissingReferences uncovered branches', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('parses entry when entry is string (JSON)', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'Entry 1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'blt123', ctUid: 'ct1' }];
+        const field = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entry = '[{"uid":"blt123","_content_type_uid":"ct1"}]';
+        const tree: Record<string, unknown>[] = [];
+        const result = ctInstance.fixMissingReferences(tree, field as any, entry as any);
+        expect(result).to.be.an('array');
+        expect(result.length).to.equal(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('handles blt reference when ref missing and reference_to single', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [];
+        const field = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entry = ['blt999'];
+        const tree: Record<string, unknown>[] = [];
+        const result = ctInstance.fixMissingReferences(tree, field as any, entry as any);
+        expect((ctInstance as any).missingRefs.e1).to.have.length(1);
+        expect((ctInstance as any).missingRefs.e1[0].missingRefs).to.deep.include({ uid: 'blt999', _content_type_uid: 'ct1' });
+        expect(result.filter((r: any) => r != null)).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('records no missing references when all refs valid', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'blt1', ctUid: 'ct1' }];
+        const field = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entry = [{ uid: 'blt1', _content_type_uid: 'ct1' }];
+        const tree: Record<string, unknown>[] = [];
+        const result = ctInstance.fixMissingReferences(tree, field as any, entry);
+        expect(result).to.have.length(1);
+        expect((ctInstance as any).missingRefs.e1).to.have.length(0);
+        expect(result[0].uid).to.equal('blt1');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('keeps blt reference when found in entryMetaData and content type allowed', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'blt1', ctUid: 'ct1' }];
+        const field = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1'] };
+        const entry = ['blt1'];
+        const tree: Record<string, unknown>[] = [];
+        const result = ctInstance.fixMissingReferences(tree, field as any, entry as any);
+        expect(result).to.have.length(1);
+        expect(result[0]).to.deep.include({ uid: 'blt1', _content_type_uid: 'ct1' });
+        expect((ctInstance as any).missingRefs.e1).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('pushes fullRef when reference_to has multiple and ref has wrong content type', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        (ctInstance as any).entryMetaData = [{ uid: 'ref-uid', ctUid: 'ct3' }];
+        const field = { uid: 'ref', display_name: 'Ref', data_type: 'reference', reference_to: ['ct1', 'ct2'] };
+        const fullRef = { uid: 'ref-uid', _content_type_uid: 'ct3' };
+        const entry = [fullRef];
+        const tree: Record<string, unknown>[] = [];
+        ctInstance.fixMissingReferences(tree, field as any, entry);
+        expect((ctInstance as any).missingRefs.e1).to.have.length(1);
+        expect((ctInstance as any).missingRefs.e1[0].missingRefs).to.have.length(1);
+        expect((ctInstance as any).missingRefs.e1[0].missingRefs[0]).to.deep.equal(fullRef);
+      });
+  });
+
+  describe('modularBlockRefCheck invalid keys with fix', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('deletes invalid block key when fix is true', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        const blocks = [{ uid: 'block_1', title: 'Block 1', schema: [] }];
+        const entryBlock = { block_1: {}, invalid_key: {} };
+        const tree: Record<string, unknown>[] = [];
+        const result = (ctInstance as any).modularBlockRefCheck(tree, blocks, entryBlock, 0);
+        expect(result.invalid_key).to.be.undefined;
+        expect((ctInstance as any).missingRefs.e1).to.have.length(1);
+      });
+  });
+
+  describe('fixGroupField', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('processes array group field entry when entry is array', () => {
+        if ((Entries.prototype.runFixOnSchema as any).restore) (Entries.prototype.runFixOnSchema as any).restore();
+        Sinon.stub(Entries.prototype, 'runFixOnSchema').callsFake((_t: any, _s: any, e: any) => e);
+        const ctInstance = new Entries(constructorParam);
+        const field = { uid: 'gf', display_name: 'GF', schema: [{ uid: 'f1', display_name: 'F1' }] };
+        const entry = [{ f1: 'v1' }];
+        const result = (ctInstance as any).fixGroupField([], field, entry);
+        expect(result).to.eql(entry);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('processes single group field entry when entry is not array', () => {
+        if ((Entries.prototype.runFixOnSchema as any).restore) (Entries.prototype.runFixOnSchema as any).restore();
+        Sinon.stub(Entries.prototype, 'runFixOnSchema').callsFake((_t: any, _s: any, e: any) => e);
+        const ctInstance = new Entries(constructorParam);
+        const field = { uid: 'gf', display_name: 'GF', schema: [{ uid: 'f1', display_name: 'F1' }] };
+        const entry = { f1: 'v1' };
+        const result = (ctInstance as any).fixGroupField([], field, entry);
+        expect(result).to.eql(entry);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('skips fixes when group field has no schema', () => {
+        const ctInstance = new Entries(constructorParam);
+        const field = { uid: 'gf', display_name: 'GF', schema: [] };
+        const entry = { f1: 'v1' };
+        const result = (ctInstance as any).fixGroupField([], field, entry);
+        expect(result).to.eql(entry);
+      });
+  });
+
+  describe('fixMissingExtensionOrApp', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('deletes entry field when extension missing and fix true', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        ctInstance.extensions = [];
+        const field = { uid: 'ext_f', display_name: 'Ext', data_type: 'extension' };
+        const entry: Record<string, any> = { ext_f: { metadata: { extension_uid: 'missing_ext' } } };
+        (ctInstance as any).fixMissingExtensionOrApp([], field, entry);
+        expect(entry.ext_f).to.be.undefined;
+        expect((ctInstance as any).missingRefs.e1).to.have.length(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('logs when no extension data for field', () => {
+        const ctInstance = new Entries(constructorParam);
+        ctInstance.extensions = ['ext1'];
+        const field = { uid: 'ext_f', display_name: 'Ext', data_type: 'extension' };
+        const entry: Record<string, any> = {};
+        (ctInstance as any).fixMissingExtensionOrApp([], field, entry);
+        expect(entry.ext_f).to.be.undefined;
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('keeps field when extension is valid', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).currentTitle = 'E1';
+        (ctInstance as any).missingRefs = { e1: [] };
+        ctInstance.extensions = ['valid-ext'];
+        const field = { uid: 'ext_f', display_name: 'Ext', data_type: 'extension' };
+        const entry: Record<string, any> = { ext_f: { metadata: { extension_uid: 'valid-ext' } } };
+        (ctInstance as any).fixMissingExtensionOrApp([], field, entry);
+        expect(entry.ext_f).to.be.ok;
+        expect((ctInstance as any).missingRefs.e1).to.have.length(0);
+      });
+  });
+
+  describe('fixModularBlocksReferences', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('fixes modular blocks and filters empty', () => {
+        if ((Entries.prototype.modularBlockRefCheck as any).restore) (Entries.prototype.modularBlockRefCheck as any).restore();
+        if ((Entries.prototype.runFixOnSchema as any).restore) (Entries.prototype.runFixOnSchema as any).restore();
+        Sinon.stub(Entries.prototype, 'modularBlockRefCheck').callsFake((_t: any, blocks: any, entryBlock: any) => {
+          const key = blocks?.[0]?.uid || 'b1';
+          return { [key]: entryBlock?.[key] || {} };
+        });
+        Sinon.stub(Entries.prototype, 'runFixOnSchema').callsFake((_t: any, _s: any, e: any) => e);
+        const ctInstance = new Entries(constructorParam);
+        const blocks = [{ uid: 'b1', title: 'B1', schema: [{ uid: 'f1' }] }];
+        const entry = [{ b1: { f1: 'v1' } }];
+        const result = (ctInstance as any).fixModularBlocksReferences([], blocks, entry);
+        expect(result).to.be.an('array');
+      });
+  });
+
+  describe('fixJsonRteMissingReferences', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns entry when entry has no children', () => {
+        const ctInstance = new Entries(constructorParam);
+        const field = { uid: 'rte', display_name: 'RTE', data_type: 'richtext' };
+        const entry = { type: 'doc', children: [] };
+        const result = (ctInstance as any).fixJsonRteMissingReferences([], field, entry);
+        expect(result).to.eql(entry);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('processes array entry by mapping over each child', () => {
+        const ctInstance = new Entries(constructorParam);
+        const field = { uid: 'rte', display_name: 'RTE', data_type: 'richtext' };
+        const child1 = { type: 'p', uid: 'c1', children: [] };
+        const child2 = { type: 'reference', uid: 'c2', children: [] };
+        const entry = [child1, child2];
+        const result = (ctInstance as any).fixJsonRteMissingReferences([], field, entry);
+        expect(result).to.be.an('array');
+        expect(result).to.have.length(2);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('filters out invalid refs and recursively fixes children with children', () => {
+        if ((Entries.prototype.jsonRefCheck as any).restore) (Entries.prototype.jsonRefCheck as any).restore();
+        Sinon.stub(Entries.prototype, 'jsonRefCheck').callsFake(function (_tree: any, _field: any, child: any) {
+          return (child as any).uid !== 'invalid' ? true : null;
+        });
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'e1';
+        (ctInstance as any).entryMetaData = [{ uid: 'valid', ctUid: 'ct1' }];
+        const field = { uid: 'rte', display_name: 'RTE', data_type: 'richtext', reference_to: ['ct1'] };
+        const validChild = { type: 'reference', uid: 'valid', attrs: { 'entry-uid': 'valid' }, children: [] };
+        const invalidChild = { type: 'reference', uid: 'invalid', attrs: {}, children: [] };
+        const nestedChild = { type: 'p', uid: 'nested', children: [{ type: 'text', text: 'x' }] };
+        const entry = { type: 'doc', children: [validChild, invalidChild, nestedChild] };
+        const result = (ctInstance as any).fixJsonRteMissingReferences([], field, entry);
+        expect((result as any).children).to.have.length(2);
+        expect((result as any).children.filter((c: any) => c?.uid === 'invalid')).to.have.length(0);
+        (Entries.prototype.jsonRefCheck as any).restore();
+      });
   });
 });
