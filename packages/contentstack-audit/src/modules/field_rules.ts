@@ -474,6 +474,7 @@ export default class FieldRule extends BaseClass {
     if (this.fix) {
       if (!this.config.flags['copy-dir'] && !this.config.flags['external-config']?.skipConfirm) {
         log.debug(`Asking user for confirmation to write fix content`, this.config.auditContext);
+        this.completeProgress(true);
         canWrite = this.config.flags.yes ?? (await cliux.confirm(commonMsg.FIX_CONFIRMATION));
         log.debug(`User confirmation: ${canWrite}`, this.config.auditContext);
       } else {
