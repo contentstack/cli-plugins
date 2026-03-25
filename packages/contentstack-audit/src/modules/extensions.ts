@@ -172,7 +172,19 @@ export default class Extensions extends BaseClass {
       ? JSON.parse(readFileSync(this.extensionsPath, 'utf8'))
       : {};
     log.debug(`Loaded ${Object.keys(newExtensionSchema).length} existing extensions`, this.config.auditContext);
-    
+
+    let userConfirm: boolean;
+    if (
+      this.config.flags['copy-dir'] ||
+      this.config.flags['external-config']?.skipConfirm ||
+      this.config.flags.yes
+    ) {
+      userConfirm = true;
+    } else {
+      this.completeProgress(true);
+      userConfirm = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+    }
+
     for (const ext of missingCtInExtensions) {
       const { uid, title } = ext;
       log.debug(`Fixing extension: ${title} (${uid})`, this.config.auditContext);
@@ -187,8 +199,7 @@ export default class Extensions extends BaseClass {
       } else {
         log.debug(`Extension ${title} has no valid content types or scope not found`, this.config.auditContext);
         cliux.print($t(commonMsg.EXTENSION_FIX_WARN, { title: title, uid }), { color: 'yellow' });
-        const shouldDelete = this.config.flags.yes || (await cliux.confirm(commonMsg.EXTENSION_FIX_CONFIRMATION));
-        if (shouldDelete) {
+        if (userConfirm) {
           log.debug(`Deleting extension: ${title} (${uid})`, this.config.auditContext);
           delete newExtensionSchema[uid];
         } else {
@@ -198,23 +209,33 @@ export default class Extensions extends BaseClass {
     }
     
     log.debug(`Extensions scope fix completed, writing updated schema`, this.config.auditContext);
-    await this.writeFixContent(newExtensionSchema);
+    await this.writeFixContent(newExtensionSchema, userConfirm);
   }
 
-  async writeFixContent(fixedExtensions: Record<string, Extension>) {
+  async writeFixContent(fixedExtensions: Record<string, Extension>, preConfirmed?: boolean) {
     log.debug(`Writing fix content for ${Object.keys(fixedExtensions).length} extensions`, this.config.auditContext);
     log.debug(`Fix mode: ${this.fix}`, this.config.auditContext);
     log.debug(`Copy directory flag: ${this.config.flags['copy-dir']}`, this.config.auditContext);
     log.debug(`External config skip confirm: ${this.config.flags['external-config']?.skipConfirm}`, this.config.auditContext);
     log.debug(`Yes flag: ${this.config.flags.yes}`, this.config.auditContext);
     
-    if (
-      this.fix &&
-      (this.config.flags['copy-dir'] ||
-        this.config.flags['external-config']?.skipConfirm ||
-        this.config.flags.yes ||
-        (await cliux.confirm(commonMsg.FIX_CONFIRMATION)))
+    let shouldWrite: boolean;
+    if (!this.fix) {
+      shouldWrite = false;
+    } else if (preConfirmed !== undefined) {
+      shouldWrite = preConfirmed;
+    } else if (
+      this.config.flags['copy-dir'] ||
+      this.config.flags['external-config']?.skipConfirm ||
+      this.config.flags.yes
     ) {
+      shouldWrite = true;
+    } else {
+      this.completeProgress(true);
+      shouldWrite = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
+    }
+
+    if (shouldWrite) {
       const outputPath = join(this.folderPath, this.config.moduleConfig[this.moduleName].fileName);
       log.debug(`Writing fixed extensions to: ${outputPath}`, this.config.auditContext);
       log.debug(`Extensions to write: ${Object.keys(fixedExtensions).join(', ')}`, this.config.auditContext);

@@ -164,9 +164,23 @@ describe('Content types', () => {
       .it('should prompt and ask confirmation', async () => {
         sinon.replace(cliux, 'confirm', async () => false);
         const ctInstance = new ContentType({ ...constructorParam, fix: true });
+        (ctInstance as any).schema = constructorParam.ctSchema?.length ? [constructorParam.ctSchema[0]] : [{ uid: 'ct1', title: 'T' } as ContentTypeStruct];
         const spy = sinon.spy(cliux, 'confirm');
         await ctInstance.writeFixContent();
         expect(spy.callCount).to.be.equals(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it('should not prompt or write when schema is empty in fix mode', async () => {
+        const ctInstance = new ContentType({ ...constructorParam, fix: true });
+        (ctInstance as any).schema = [];
+        const confirmSpy = sinon.spy(cliux, 'confirm');
+        const fsSpy = sinon.spy(fs, 'writeFileSync');
+        await ctInstance.writeFixContent();
+        expect(confirmSpy.callCount).to.be.equals(0);
+        expect(fsSpy.callCount).to.be.equals(0);
       });
   });
 
@@ -212,6 +226,57 @@ describe('Content types', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
       .stub(ContentType.prototype, 'runFixOnSchema', () => [])
+      .it('skips json extension field when not in fix types', async () => {
+        const ctInstance = new (class TempClass extends ContentType {
+          constructor() {
+            super({
+              ...constructorParam,
+              config: { ...constructorParam.config, 'fix-fields': ['reference'], flags: {} } as any,
+            });
+            this.currentUid = 'test';
+            (this as any).missingRefs['test'] = [];
+          }
+        })();
+        sinon.stub(ContentType.prototype, 'validateReferenceField').returns([]);
+        sinon.stub(ContentType.prototype, 'validateGlobalField').resolves();
+        sinon.stub(ContentType.prototype, 'validateJsonRTEFields').returns([]);
+        sinon.stub(ContentType.prototype, 'validateGroupField').resolves();
+        sinon.stub(ContentType.prototype, 'validateModularBlocksField').resolves();
+        const schema = [
+          { data_type: 'json', uid: 'j1', display_name: 'Json', field_metadata: { extension: true } },
+        ];
+        await ctInstance.lookForReference([], { schema } as unknown as CtType);
+        expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('skips json RTE field when not in fix types', async () => {
+        const ctInstance = new (class TempClass extends ContentType {
+          constructor() {
+            super({
+              ...constructorParam,
+              config: { ...constructorParam.config, 'fix-fields': ['reference'], flags: {} } as any,
+            });
+            this.currentUid = 'test';
+            (this as any).missingRefs['test'] = [];
+          }
+        })();
+        sinon.stub(ContentType.prototype, 'validateReferenceField').returns([]);
+        sinon.stub(ContentType.prototype, 'validateGlobalField').resolves();
+        sinon.stub(ContentType.prototype, 'validateJsonRTEFields').returns([]);
+        sinon.stub(ContentType.prototype, 'validateGroupField').resolves();
+        sinon.stub(ContentType.prototype, 'validateModularBlocksField').resolves();
+        const schema = [
+          { data_type: 'json', uid: 'j1', display_name: 'RTE', field_metadata: { allow_json_rte: true } },
+        ];
+        await ctInstance.lookForReference([], { schema } as unknown as CtType);
+        expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(ContentType.prototype, 'runFixOnSchema', () => [])
       .it('should call runFixOnSchema method', async () => {
         const ctInstance = new ContentType({ ...constructorParam, fix: true });
         const validateReferenceFieldSpy = sinon.spy(ctInstance, 'runFixOnSchema');
@@ -219,6 +284,82 @@ describe('Content types', () => {
 
         expect(validateReferenceFieldSpy.callCount).to.be.equals(1);
       });
+  });
+
+  describe('validateExtensionAndAppField method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns [] in fix mode', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      const field = {
+        uid: 'ext_f',
+        extension_uid: 'ext_123',
+        display_name: 'Ext Field',
+        data_type: 'json',
+      } as any;
+      const result = ctInstance.validateExtensionAndAppField([], field);
+      expect(result).to.deep.equal([]);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns [] when extension found in loaded extensions', () => {
+      const ctInstance = new ContentType(constructorParam);
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      (ctInstance as any).extensions = ['ext_123'];
+      const field = {
+        uid: 'ext_f',
+        extension_uid: 'ext_123',
+        display_name: 'Ext Field',
+        data_type: 'json',
+      } as any;
+      const result = ctInstance.validateExtensionAndAppField([{ uid: 'ext_f', name: 'Ext Field' }], field);
+      expect(result).to.deep.equal([]);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns issue when extension not in loaded extensions', () => {
+      const ctInstance = new ContentType(constructorParam);
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      (ctInstance as any).extensions = [];
+      const field = {
+        uid: 'ext_f',
+        extension_uid: 'missing_ext',
+        display_name: 'Ext Field',
+        data_type: 'json',
+      } as any;
+      const result = ctInstance.validateExtensionAndAppField([{ uid: 'ext_f', name: 'Ext Field' }], field);
+      expect(result).to.have.lengthOf(1);
+      expect(result[0].missingRefs).to.deep.include({ uid: 'ext_f', extension_uid: 'missing_ext', type: 'Extension or Apps' });
+    });
+  });
+
+  describe('validateReferenceToValues method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns empty when single reference exists in ctSchema', () => {
+      const ctInstance = new ContentType(constructorParam);
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      const field = { uid: 'ref_f', reference_to: 'page_1', display_name: 'Ref', data_type: 'reference' } as any;
+      const result = ctInstance.validateReferenceToValues([], field);
+      expect(result).to.have.lengthOf(0);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('skips ref in skipRefs in array path', () => {
+      const ctInstance = new ContentType(constructorParam);
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      const field = { uid: 'ref_f', reference_to: ['page_1', 'sys_assets'], display_name: 'Ref', data_type: 'reference' } as any;
+      const result = ctInstance.validateReferenceToValues([], field);
+      expect(result).to.have.lengthOf(0);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns empty when array references all exist in ctSchema', () => {
+      const ctInstance = new ContentType(constructorParam);
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      const field = { uid: 'ref_f', reference_to: ['page_1', 'page_2'], display_name: 'Ref', data_type: 'reference' } as any;
+      const result = ctInstance.validateReferenceToValues([], field);
+      expect(result).to.have.lengthOf(0);
+    });
   });
 
   describe('validateReferenceField method', () => {
@@ -286,6 +427,158 @@ describe('Content types', () => {
       });
   });
 
+  describe('fixMissingExtensionOrApp method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns field when extension found in loaded extensions', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      (ctInstance as any).missingRefs['test'] = [];
+      (ctInstance as any).extensions = ['ext_123'];
+      const field = {
+        uid: 'ext_f',
+        extension_uid: 'ext_123',
+        display_name: 'Ext Field',
+        data_type: 'json',
+      } as any;
+      const result = ctInstance.fixMissingExtensionOrApp([], field);
+      expect(result).to.equal(field);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns null and pushes to missingRefs when extension missing and fix mode', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).currentTitle = 'Test';
+      (ctInstance as any).missingRefs['test'] = [];
+      (ctInstance as any).extensions = [];
+      const field = {
+        uid: 'ext_f',
+        extension_uid: 'missing_ext',
+        display_name: 'Ext Field',
+        data_type: 'json',
+      } as any;
+      const result = ctInstance.fixMissingExtensionOrApp([{ uid: 'ext_f', name: 'Ext' }], field);
+      expect(result).to.be.null;
+      expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(1);
+      expect((ctInstance as any).missingRefs['test'][0].fixStatus).to.equal('Fixed');
+    });
+  });
+
+  describe('runFixOnSchema method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('filters out field with empty schema when in schema-fields-data-type', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const schema = [
+        { data_type: 'blocks', uid: 'b1', display_name: 'Blocks', schema: [], blocks: [] },
+        { data_type: 'text', uid: 't1', display_name: 'Title' },
+      ] as any;
+      const result = ctInstance.runFixOnSchema([], schema);
+      expect(result.some((f: any) => f?.uid === 't1')).to.be.true;
+      expect(result.filter((f: any) => f?.uid === 'b1')).to.have.lengthOf(0);
+    });
+  });
+
+  describe('fixModularBlocksReferences method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns false for block with no schema in content-types', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const blocks = [
+        { uid: 'blk1', title: 'Block1', reference_to: 'gf_0', schema: undefined },
+      ] as any;
+      const result = ctInstance.fixModularBlocksReferences([], blocks);
+      expect(result).to.have.lengthOf(0);
+      expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(1);
+    });
+  });
+
+  describe('fixMissingReferences method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('skips reference in skipRefs (single reference)', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const field = {
+        uid: 'ref_f',
+        reference_to: 'sys_assets',
+        display_name: 'Ref',
+        data_type: 'reference',
+        field_metadata: {},
+      } as any;
+      const result = ctInstance.fixMissingReferences([], field);
+      expect(result).to.equal(field);
+      expect(field.reference_to).to.deep.equal(['sys_assets']);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('keeps single reference when it exists in ctSchema (branch: found)', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const field = {
+        uid: 'ref_f',
+        reference_to: 'page_1',
+        display_name: 'Ref',
+        data_type: 'reference',
+        field_metadata: {},
+      } as any;
+      const result = ctInstance.fixMissingReferences([], field);
+      expect(result).to.equal(field);
+      expect(field.reference_to).to.deep.equal(['page_1']);
+      expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(0);
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('removes missing refs from array and pushes to missingRefs when fix mode', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const field = {
+        uid: 'ref_f',
+        reference_to: ['page_1', 'nonexistent_ct'],
+        display_name: 'Ref',
+        data_type: 'reference',
+        field_metadata: {},
+      } as any;
+      const result = ctInstance.fixMissingReferences([], field);
+      expect(result).to.equal(field);
+      expect(field.reference_to).to.deep.equal(['page_1']);
+      expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(1);
+      expect((ctInstance as any).missingRefs['test'][0].fixStatus).to.equal('Fixed');
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('skips references in skipRefs when processing array', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const field = {
+        uid: 'ref_f',
+        reference_to: ['page_1', 'sys_assets', 'page_2'],
+        display_name: 'Ref',
+        data_type: 'reference',
+        field_metadata: {},
+      } as any;
+      ctInstance.fixMissingReferences([], field);
+      expect(field.reference_to).to.include('page_1');
+      expect(field.reference_to).to.include('page_2');
+      expect(field.reference_to).to.include('sys_assets');
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('keeps refs when all references exist in ctSchema (array path)', () => {
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      (ctInstance as any).currentUid = 'test';
+      (ctInstance as any).missingRefs['test'] = [];
+      const field = {
+        uid: 'ref_f',
+        reference_to: ['page_1', 'page_2'],
+        display_name: 'Ref',
+        data_type: 'reference',
+        field_metadata: {},
+      } as any;
+      const result = ctInstance.fixMissingReferences([], field);
+      expect(result).to.equal(field);
+      expect(field.reference_to).to.deep.equal(['page_1', 'page_2']);
+      expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(0);
+    });
+  });
+
   describe('fixGlobalFieldReferences method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
@@ -309,6 +602,56 @@ describe('Content types', () => {
         const actual = ctInstance.missingRefs;
         expect(actual).to.deep.equals({'audit-fix': []});
         expect(fixField?.schema).is.undefined;
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('pushes missingRefs when global-fields module and referred GF has no schema', () => {
+        const ctInstance = new ContentType({
+          ...constructorParam,
+          moduleName: 'global-fields',
+          gfSchema: [{ uid: 'ref_gf', title: 'Ref GF', schema: undefined }] as any,
+          ctSchema: [],
+        });
+        (ctInstance as any).currentUid = 'test';
+        (ctInstance as any).currentTitle = 'Test';
+        (ctInstance as any).missingRefs['test'] = [];
+        const field = {
+          data_type: 'global_field',
+          display_name: 'Global',
+          reference_to: 'ref_gf',
+          uid: 'global_field',
+          schema: undefined,
+        } as any;
+        const result = ctInstance.fixGlobalFieldReferences([], field);
+        expect(result).to.equal(field);
+        expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(1);
+        expect((ctInstance as any).missingRefs['test'][0].missingRefs).to.equal('Referred Global Field Does not exist');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('pushes Empty schema found when content-types module and GF has no schema', () => {
+        const ctInstance = new ContentType({
+          ...constructorParam,
+          moduleName: 'content-types',
+          fix: true,
+        });
+        (ctInstance as any).currentUid = 'test';
+        (ctInstance as any).currentTitle = 'Test';
+        (ctInstance as any).missingRefs['test'] = [];
+        (ctInstance as any).gfSchema = [{ uid: 'gf_empty', title: 'GF', schema: undefined }] as any;
+        const field = {
+          data_type: 'global_field',
+          display_name: 'Global',
+          reference_to: 'gf_empty',
+          uid: 'global_field',
+          schema: undefined,
+        } as any;
+        const result = ctInstance.fixGlobalFieldReferences([], field);
+        expect(result).to.equal(field);
+        expect((ctInstance as any).missingRefs['test']).to.have.lengthOf(1);
+        expect((ctInstance as any).missingRefs['test'][0].missingRefs).to.equal('Empty schema found');
         // NOTE: TO DO
         // expect(actual).to.deep.equals(expected);
         // expect(fixField?.schema).is.not.empty;
