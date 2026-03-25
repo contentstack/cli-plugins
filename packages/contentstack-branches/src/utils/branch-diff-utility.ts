@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import forEach from 'lodash/forEach';
 import padStart from 'lodash/padStart';
 import startCase from 'lodash/startCase';
@@ -196,19 +196,19 @@ function printCompactTextView(branchTextRes: BranchCompactTextRes): void {
     cliux.print(' ');
     forEach(branchTextRes.added, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
 
     forEach(branchTextRes.modified, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.blue(`± '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().blue(`± '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
 
     forEach(branchTextRes.deleted, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
   }
@@ -442,16 +442,16 @@ function printVerboseTextView(branchTextRes: BranchDiffVerboseRes): void {
   if (branchTextRes.modified?.length || branchTextRes.added?.length || branchTextRes.deleted?.length) {
     cliux.print(' ');
     forEach(branchTextRes.added, (diff: BranchDiffRes) => {
-      cliux.print(chalk.green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
+      cliux.print(getChalk().green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
     });
 
     forEach(branchTextRes.modified, (diff: BranchModifiedDetails) => {
-      cliux.print(chalk.blue(`± '${diff.moduleDetails.title}' ${startCase(camelCase(diff.moduleDetails.type))}`));
+      cliux.print(getChalk().blue(`± '${diff.moduleDetails.title}' ${startCase(camelCase(diff.moduleDetails.type))}`));
       printModifiedFields(diff.modifiedFields);
     });
 
     forEach(branchTextRes.deleted, (diff: BranchDiffRes) => {
-      cliux.print(chalk.red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
+      cliux.print(getChalk().red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
     });
   }
 }
@@ -466,17 +466,17 @@ function printModifiedFields(modfiedFields: ModifiedFieldsInput): void {
     forEach(modfiedFields.modified, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field}` : 'field';
       const fieldDetail = diff.path ? `(${diff.path}) ${field}`: `${field}`;
-      cliux.print(`   ${chalk.blue(`± "${diff.displayName}" ${fieldDetail}`)}`);
+      cliux.print(`   ${getChalk().blue(`± "${diff.displayName}" ${fieldDetail}`)}`);
     });
 
     forEach(modfiedFields.added, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field} field` : 'field';
-      cliux.print(`   ${chalk.green(`+ "${diff.displayName}" (${diff.path}) ${field}`)}`);
+      cliux.print(`   ${getChalk().green(`+ "${diff.displayName}" (${diff.path}) ${field}`)}`);
     });
 
     forEach(modfiedFields.deleted, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field} field` : 'field';
-      cliux.print(`   ${chalk.red(`- "${diff.displayName}" (${diff.path}) ${field}`)}`);
+      cliux.print(`   ${getChalk().red(`- "${diff.displayName}" (${diff.path}) ${field}`)}`);
     });
   }
 }
