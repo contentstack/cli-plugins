@@ -1,8 +1,8 @@
-name: Release CLI Plugins (v1 Beta)
+name: Release CLI Plugins (Production)
 
 on:
   push:
-    branches: [v1-beta]
+    branches: [main]
 
 jobs:
   build:
@@ -39,112 +39,112 @@ jobs:
           prefix: release
 
       # Variants
-      - name: Publishing variants (Beta)
+      - name: Publishing variants (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-variants/package.json
-          tag: beta
+          tag: latest
 
       # Export
-      - name: Publishing export (Beta)
+      - name: Publishing export (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export/package.json
-          tag: beta
+          tag: latest
 
       # Audit
-      - name: Publishing audit (Beta)
+      - name: Publishing audit (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-audit/package.json
-          tag: beta
+          tag: latest
 
       # Import
-      - name: Publishing import (Beta)
+      - name: Publishing import (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import/package.json
-          tag: beta
+          tag: latest
 
       # Clone
-      - name: Publishing clone (Beta)
+      - name: Publishing clone (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-clone/package.json
-          tag: beta
+          tag: latest
 
       # Import Setup
-      - name: Publishing import-setup (Beta)
+      - name: Publishing import-setup (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import-setup/package.json
-          tag: beta
+          tag: latest
 
       # Export to CSV
-      - name: Publishing export to csv (Beta)
+      - name: Publishing export to csv (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export-to-csv/package.json
-          tag: beta
+          tag: latest
 
       # Migration
-      - name: Publishing migration (Beta)
+      - name: Publishing migration (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-migration/package.json
-          tag: beta
+          tag: latest
 
       # Seed
-      - name: Publishing seed (Beta)
+      - name: Publishing seed (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-seed/package.json
-          tag: beta
+          tag: latest
 
       # Bootstrap
-      - name: Publishing bootstrap (Beta)
+      - name: Publishing bootstrap (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bootstrap/package.json
-          tag: beta
+          tag: latest
 
       # Bulk Publish
-      - name: Publishing bulk publish (Beta)
+      - name: Publishing bulk publish (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bulk-publish/package.json
-          tag: beta
+          tag: latest
 
       # Branches
-      - name: Publishing branches (Beta)
+      - name: Publishing branches (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-branches/package.json
-          tag: beta
+          tag: latest
 
-      - name: Create Beta Release
+      - name: Create Production Release
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
-          VERSION: ${{ steps.publish-core.outputs.version }}
+          VERSION: ${{ steps.publish-plugins.outputs.version }}
         run: |
-          # Get the previous beta release for comparison
-          PREVIOUS_BETA=$(gh release list --limit 10 | grep 'beta' | head -1 | cut -f1)
+          # Get the previous production release for comparison
+          PREVIOUS_PROD=$(gh release list --limit 10 | grep -v 'prerelease' | head -1 | cut -f1)
 
-          if [ -n "$PREVIOUS_BETA" ]; then
-            gh release create v"$VERSION" --title "Beta Release $VERSION" --notes-from-tag "$PREVIOUS_BETA" --prerelease
+          if [ -n "$PREVIOUS_PROD" ]; then
+            gh release create "v${VERSION}" --title "Production Release $VERSION" --notes-from-tag "$PREVIOUS_PROD"
           else
-            gh release create v"$VERSION" --title "Beta Release $VERSION" --generate-notes --prerelease
+            gh release create "v${VERSION}" --title "Production Release $VERSION" --generate-notes
           fi
