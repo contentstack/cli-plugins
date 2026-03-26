@@ -201,7 +201,7 @@ const config: DefaultConfig = {
     stack: {
       dirName: 'stack',
       fileName: 'stack.json',
-      invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid'],
+      invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid', 'description', 'master_key'],
     },
     dependency: {
       entries: ['stack', 'locales', 'content-types'],
