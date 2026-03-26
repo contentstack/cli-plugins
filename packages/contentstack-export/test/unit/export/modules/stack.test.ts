@@ -187,7 +187,7 @@ describe('ExportStack', () => {
         stack: {
           dirName: 'stack',
           fileName: 'stack.json',
-          invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid'],
+          invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid', 'description', 'master_key'],
           limit: 100,
         },
         dependency: {
@@ -435,6 +435,8 @@ describe('ExportStack', () => {
         SYS_ACL: {},
         user_uids: ['u1'],
         owner_uid: 'owner-1',
+        description: 'Stack description',
+        master_key: 'secret-master-key',
       };
       const expectedWritten = { name: 'Test Stack', uid: 'stack-uid', org_uid: 'org-123' };
       mockStackClient.fetch = sinon.stub().resolves(stackData);
