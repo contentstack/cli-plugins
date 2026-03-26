@@ -19,7 +19,7 @@
     "@contentstack/cli-cm-seed": "~1.15.0",
     "@contentstack/cli-command": "~1.8.0",
     "@contentstack/cli-config": "~1.20.0",
-    "@contentstack/cli-utilities": "~1.19.0",
+    "@contentstack/cli-utilities": "~1.18.0",
     "@oclif/core": "^4.3.0",
     "@oclif/plugin-help": "^6.2.37",
     "inquirer": "8.2.7",
