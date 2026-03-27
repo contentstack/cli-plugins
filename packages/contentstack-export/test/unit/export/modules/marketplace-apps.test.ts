@@ -219,8 +219,28 @@ describe('ExportMarketplaceApps', () => {
     });
 
     it('should set marketplaceAppPath correctly', async () => {
+      mockExportConfig.forceStopMarketplaceAppsPrompt = true;
       const configHandlerGetStub = sinon.stub(utilities.configHandler, 'get');
-      configHandlerGetStub.withArgs('authorisationType').returns('BASIC');
+      configHandlerGetStub.callsFake((key: string) => {
+        if (key === 'authorisationType') return 'BASIC';
+        if (key === 'log') return { showConsoleLogs: true };
+        return undefined;
+      });
+
+      const setupPathsStub = sinon.stub(exportMarketplaceApps, 'setupPaths').callsFake(async () => {
+        const pResolve = require('node:path').resolve;
+        exportMarketplaceApps.marketplaceAppPath = pResolve(
+          exportMarketplaceApps.exportConfig.exportDir,
+          exportMarketplaceApps.exportConfig.branchName || '',
+          'marketplace-apps',
+        );
+        exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
+        exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
+        exportMarketplaceApps.appSdk = mockAppSdk;
+        await (FsUtility.prototype.makeDirectory as sinon.SinonStub)(exportMarketplaceApps.marketplaceAppPath);
+      });
+      const getAppsCountStub = sinon.stub(exportMarketplaceApps, 'getAppsCount').resolves(0);
       const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
 
       await exportMarketplaceApps.start();
@@ -228,6 +248,8 @@ describe('ExportMarketplaceApps', () => {
       expect(exportMarketplaceApps.marketplaceAppPath).to.include('marketplace-apps');
       expect(exportMarketplaceApps.marketplaceAppPath).to.include('/test/export');
 
+      setupPathsStub.restore();
+      getAppsCountStub.restore();
       exportAppsStub.restore();
       configHandlerGetStub.restore();
     });
@@ -294,7 +316,25 @@ describe('ExportMarketplaceApps', () => {
     it('should call createNodeCryptoInstance exactly once when prompting for encryption key before progress', async () => {
       mockExportConfig.forceStopMarketplaceAppsPrompt = false;
       const configHandlerGetStub = sinon.stub(utilities.configHandler, 'get');
-      configHandlerGetStub.withArgs('authorisationType').returns('BASIC');
+      configHandlerGetStub.callsFake((key: string) => {
+        if (key === 'authorisationType') return 'BASIC';
+        if (key === 'log') return { showConsoleLogs: true };
+        return undefined;
+      });
+
+      const setupPathsStub = sinon.stub(exportMarketplaceApps, 'setupPaths').callsFake(async () => {
+        const pResolve = require('node:path').resolve;
+        exportMarketplaceApps.marketplaceAppPath = pResolve(
+          exportMarketplaceApps.exportConfig.exportDir,
+          exportMarketplaceApps.exportConfig.branchName || '',
+          'marketplace-apps',
+        );
+        exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
+        exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
+        exportMarketplaceApps.appSdk = mockAppSdk;
+        await (FsUtility.prototype.makeDirectory as sinon.SinonStub)(exportMarketplaceApps.marketplaceAppPath);
+      });
       const getAppsCountStub = sinon.stub(exportMarketplaceApps, 'getAppsCount').resolves(1);
       const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
@@ -304,6 +344,7 @@ describe('ExportMarketplaceApps', () => {
       expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce).to.be.true;
       expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).callCount).to.equal(1);
 
+      setupPathsStub.restore();
       getAppsCountStub.restore();
       exportAppsStub.restore();
       getAppManifestAndAppConfigStub.restore();
