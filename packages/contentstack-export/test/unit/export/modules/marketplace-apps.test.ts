@@ -339,6 +339,16 @@ describe('ExportMarketplaceApps', () => {
       const exportAppsStub = sinon.stub(exportMarketplaceApps, 'exportApps').resolves();
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
 
+      // Avoid CLIProgressManager.createNested / completeProgressWithMessage touching real TTY progress (can hang in CI).
+      const chain = { updateStatus: sinon.stub().returnsThis() };
+      const progressStub = {
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns(chain),
+        completeProcess: sinon.stub(),
+      };
+      const createNestedProgressStub = sinon.stub(exportMarketplaceApps, 'createNestedProgress').returns(progressStub as any);
+      const completeProgressWithMessageStub = sinon.stub(exportMarketplaceApps, 'completeProgressWithMessage');
+
       await exportMarketplaceApps.start();
 
       expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce).to.be.true;
@@ -348,6 +358,8 @@ describe('ExportMarketplaceApps', () => {
       getAppsCountStub.restore();
       exportAppsStub.restore();
       getAppManifestAndAppConfigStub.restore();
+      createNestedProgressStub.restore();
+      completeProgressWithMessageStub.restore();
       configHandlerGetStub.restore();
     });
   });
