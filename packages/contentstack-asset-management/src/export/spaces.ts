@@ -29,8 +29,18 @@ export class ExportSpaces {
   }
 
   async start(): Promise<void> {
-    const { linkedWorkspaces, exportDir, branchName, assetManagementUrl, org_uid, apiKey, context, securedAssets } =
-      this.options;
+    const {
+      linkedWorkspaces,
+      exportDir,
+      branchName,
+      assetManagementUrl,
+      org_uid,
+      apiKey,
+      context,
+      securedAssets,
+      chunkWriteBatchSize,
+      chunkFileSizeMb,
+    } = this.options;
 
     if (!linkedWorkspaces.length) {
       log.debug('No linked workspaces to export', context);
@@ -60,6 +70,8 @@ export class ExportSpaces {
       spacesRootPath,
       context,
       securedAssets,
+      chunkWriteBatchSize,
+      chunkFileSizeMb,
     };
 
     const sharedFieldsDir = pResolve(spacesRootPath, 'fields');

@@ -1,19 +1,36 @@
-export const BATCH_SIZE = 50;
-export const CHUNK_FILE_SIZE_MB = 1;
+/** Fallback when export/import do not pass `chunkWriteBatchSize`. */
+export const FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE = 50;
+/** Fallback when export/import do not pass `chunkFileSizeMb`. */
+export const FALLBACK_AM_CHUNK_FILE_SIZE_MB = 1;
+/** Fallback when import does not pass `apiConcurrency`. */
+export const FALLBACK_AM_API_CONCURRENCY = 5;
+/** @deprecated Use FALLBACK_AM_API_CONCURRENCY */
+export const DEFAULT_AM_API_CONCURRENCY = FALLBACK_AM_API_CONCURRENCY;
 
-/** Default parallel AM API calls when import caller does not set apiConcurrency. */
-export const DEFAULT_AM_API_CONCURRENCY = 5;
+/** Fallback strip lists when import options omit `fieldsImportInvalidKeys` / `assetTypesImportInvalidKeys`. */
+export const FALLBACK_FIELDS_IMPORT_INVALID_KEYS = [
+  'created_at',
+  'created_by',
+  'updated_at',
+  'updated_by',
+  'is_system',
+  'asset_types_count',
+] as const;
+export const FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS = [
+  'created_at',
+  'created_by',
+  'updated_at',
+  'updated_by',
+  'is_system',
+  'category',
+  'preview_image_url',
+  'category_detail',
+] as const;
 
-/**
- * Mapper output paths — must stay aligned with contentstack-import `PATH_CONSTANTS`
- * (`mapper` / `assets` / uid, url, space-uid file names).
- */
-export const IMPORT_ASSETS_MAPPER_DIR_SEGMENTS = ['mapper', 'assets'] as const;
-export const IMPORT_ASSETS_MAPPER_FILES = {
-  UID_MAPPING: 'uid-mapping.json',
-  URL_MAPPING: 'url-mapping.json',
-  SPACE_UID_MAPPING: 'space-uid-mapping.json',
-} as const;
+/** @deprecated Use FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE */
+export const BATCH_SIZE = FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE;
+/** @deprecated Use FALLBACK_AM_CHUNK_FILE_SIZE_MB */
+export const CHUNK_FILE_SIZE_MB = FALLBACK_AM_CHUNK_FILE_SIZE_MB;
 
 /**
  * Main process name for Asset Management 2.0 export (single progress bar).

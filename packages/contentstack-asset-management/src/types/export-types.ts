@@ -2,6 +2,9 @@ export type ExportContext = {
   spacesRootPath: string;
   context?: Record<string, unknown>;
   securedAssets?: boolean;
+  /** From export config; AM falls back to package constants when unset. */
+  chunkWriteBatchSize?: number;
+  chunkFileSizeMb?: number;
 };
 
 /**

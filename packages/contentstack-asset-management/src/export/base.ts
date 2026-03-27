@@ -5,8 +5,11 @@ import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack
 import type { AssetManagementAPIConfig } from '../types/asset-management-api';
 import type { ExportContext } from '../types/export-types';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME } from '../constants/index';
-import { BATCH_SIZE, CHUNK_FILE_SIZE_MB } from '../constants/index';
+import {
+  AM_MAIN_PROCESS_NAME,
+  FALLBACK_AM_CHUNK_FILE_SIZE_MB,
+  FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE,
+} from '../constants/index';
 
 export type { ExportContext };
 
@@ -83,17 +86,19 @@ export class AssetManagementExportAdapter extends AssetManagementAdapter {
       await writeFile(pResolve(dir, indexFileName), '{}');
       return;
     }
+    const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
+    const batchSize = this.exportContext.chunkWriteBatchSize ?? FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE;
     const fs = new FsUtility({
       basePath: dir,
       indexFileName,
-      chunkFileSize: CHUNK_FILE_SIZE_MB,
+      chunkFileSize: chunkMb,
       moduleName,
       fileExt: 'json',
       metaPickKeys,
       keepMetadata: true,
     });
-    for (let i = 0; i < items.length; i += BATCH_SIZE) {
-      const batch = items.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
       fs.writeIntoFile(batch as Record<string, string>[], { mapKeyVal: true });
     }
     fs.completeFile(true);

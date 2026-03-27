@@ -5,6 +5,7 @@ import { log } from '@contentstack/cli-utilities';
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
+import { readChunkedJsonItems } from '../utils/chunked-json-read';
 import { runInBatches } from '../utils/concurrent-batch';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
@@ -42,10 +43,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
    */
   private async loadExportedAssetItems(spaceDir: string): Promise<AssetRecord[] | null> {
     const assetsDir = pResolve(spaceDir, 'assets');
-    if (!existsSync(join(assetsDir, 'assets.json'))) {
+    const assetsIndex = this.importContext.assetsFileName ?? 'assets.json';
+    if (!existsSync(join(assetsDir, assetsIndex))) {
       return null;
     }
-    return this.readAllChunkedJson<AssetRecord>(assetsDir, 'assets.json');
+    return readChunkedJsonItems<AssetRecord>(assetsDir, assetsIndex, this.importContext.context);
   }
 
   /**
@@ -95,14 +97,15 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     // 1. Import folders
     // -----------------------------------------------------------------------
     const folderUidMap: Record<string, string> = {};
-    const foldersFilePath = join(assetsDir, 'folders.json');
+    const foldersFileName = this.importContext.foldersFileName ?? 'folders.json';
+    const foldersFilePath = join(assetsDir, foldersFileName);
 
     if (existsSync(foldersFilePath)) {
       let foldersData: unknown;
       try {
         foldersData = JSON.parse(readFileSync(foldersFilePath, 'utf8'));
       } catch (e) {
-        log.debug(`Could not read folders.json: ${e}`, this.importContext.context);
+        log.debug(`Could not read ${foldersFileName}: ${e}`, this.importContext.context);
       }
 
       if (foldersData) {

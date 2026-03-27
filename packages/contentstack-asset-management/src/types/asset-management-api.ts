@@ -147,6 +147,14 @@ export type AssetManagementExportOptions = {
    * can reconstruct old CMA proxy URLs (format: /v3/assets/{apiKey}/{amUid}/...).
    */
   apiKey?: string;
+  /**
+   * Chunked JSON write batch size (items per FsUtility write). From export `modules['asset-management']`.
+   */
+  chunkWriteBatchSize?: number;
+  /**
+   * FsUtility `chunkFileSize` in MB for AM export chunked writes.
+   */
+  chunkFileSizeMb?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -176,6 +184,22 @@ export type ImportContext = {
    * Set from `AssetManagementImportOptions.apiConcurrency`.
    */
   apiConcurrency?: number;
+  /** Relative dir under content dir for AM export root (e.g. `spaces`). */
+  spacesDirName?: string;
+  fieldsDir?: string;
+  assetTypesDir?: string;
+  fieldsFileName?: string;
+  assetTypesFileName?: string;
+  foldersFileName?: string;
+  assetsFileName?: string;
+  fieldsImportInvalidKeys?: string[];
+  assetTypesImportInvalidKeys?: string[];
+  /** `{backupDir}/{mapperRootDir}/{mapperAssetsModuleDir}/` for AM mapper JSON. */
+  mapperRootDir?: string;
+  mapperAssetsModuleDir?: string;
+  mapperUidFileName?: string;
+  mapperUrlFileName?: string;
+  mapperSpaceUidFileName?: string;
 };
 
 /**
@@ -202,6 +226,20 @@ export type AssetManagementImportOptions = {
   backupDir?: string;
   /** Parallel AM API limit; defaults to package constant when omitted. */
   apiConcurrency?: number;
+  spacesDirName?: string;
+  fieldsDir?: string;
+  assetTypesDir?: string;
+  fieldsFileName?: string;
+  assetTypesFileName?: string;
+  foldersFileName?: string;
+  assetsFileName?: string;
+  fieldsImportInvalidKeys?: string[];
+  assetTypesImportInvalidKeys?: string[];
+  mapperRootDir?: string;
+  mapperAssetsModuleDir?: string;
+  mapperUidFileName?: string;
+  mapperUrlFileName?: string;
+  mapperSpaceUidFileName?: string;
 };
 
 /**

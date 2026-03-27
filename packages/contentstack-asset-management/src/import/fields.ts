@@ -4,10 +4,9 @@ import { log } from '@contentstack/cli-utilities';
 
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
-import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+import { FALLBACK_FIELDS_IMPORT_INVALID_KEYS, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import { runInBatches } from '../utils/concurrent-batch';
-
-const STRIP_KEYS = ['created_at', 'created_by', 'updated_at', 'updated_by', 'is_system', 'asset_types_count'];
+import { readChunkedJsonItems } from '../utils/chunked-json-read';
 
 /**
  * Reads shared fields from `spaces/fields/fields.json` and POSTs each to the
@@ -28,8 +27,10 @@ export default class ImportFields extends AssetManagementImportAdapter {
   async start(): Promise<void> {
     await this.init();
 
+    const stripKeys = this.importContext.fieldsImportInvalidKeys ?? [...FALLBACK_FIELDS_IMPORT_INVALID_KEYS];
     const dir = this.getFieldsDir();
-    const items = await this.readAllChunkedJson<Record<string, unknown>>(dir, 'fields.json');
+    const indexName = this.importContext.fieldsFileName ?? 'fields.json';
+    const items = await readChunkedJsonItems<Record<string, unknown>>(dir, indexName, this.importContext.context);
 
     if (items.length === 0) {
       log.debug('No shared fields to import', this.importContext.context);
@@ -64,8 +65,8 @@ export default class ImportFields extends AssetManagementImportAdapter {
 
       const existing = existingByUid.get(uid);
       if (existing) {
-        const exportedClean = omit(field, STRIP_KEYS);
-        const existingClean = omit(existing, STRIP_KEYS);
+        const exportedClean = omit(field, stripKeys);
+        const existingClean = omit(existing, stripKeys);
         if (!isEqual(exportedClean, existingClean)) {
           log.warn(
             `Field "${uid}" already exists in the target org with a different definition. Skipping — to apply the exported definition, delete the field from the target org first.`,
@@ -78,7 +79,7 @@ export default class ImportFields extends AssetManagementImportAdapter {
         continue;
       }
 
-      toCreate.push({ uid, payload: omit(field, STRIP_KEYS) as Record<string, unknown> });
+      toCreate.push({ uid, payload: omit(field, stripKeys) as Record<string, unknown> });
     }
 
     await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
