@@ -1,4 +1,14 @@
 fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    checksum: 90c094faa23d82277ad7d48858147354ad28d11c0f317722a79bd70658b23835
+  - filename: packages/contentstack-branches/src/commands/cm/branches/merge-status.ts
+    checksum: 6e5b959ddcc5ff68e03c066ea185fcf6c6e57b1819069730340af35aad8a93a8
+  - filename: packages/contentstack-branches/README.md
+    checksum: cde5b34e2fb25e1a8ac4a16d079c154a843c733de224969748138e0345b7d674
+  - filename: packages/contentstack-branches/src/utils/create-branch.ts
+    checksum: d0613295ee26f7a77d026e40db0a4ab726fabd0a74965f729f1a66d1ef14768f
+  - filename: packages/contentstack-branches/src/branch/diff-handler.ts
+    checksum: 3cd4d26a2142cab7cbf2094c9251e028467d17d6a1ed6daf22f21975133805f1
+  - filename: packages/contentstack-branches/src/commands/cm/branches/generate-scripts.ts
+    checksum: e549aa68d73241afbad5deff275e9657028bfce5bf4327adf2248018c5461295
+  - filename: packages/contentstack-branches/src/branch/merge-handler.ts
+    checksum: 17aa4048ef4a4a208206c3d6b850c711906323df0d19299f0448dad23305d484
 version: '1.0'

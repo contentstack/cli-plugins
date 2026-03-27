@@ -1,18 +1,19 @@
-import startCase from 'lodash/startCase';
-import camelCase from 'lodash/camelCase';
-import path from 'path';
 import { cliux, managementSDKClient } from '@contentstack/cli-utilities';
+import camelCase from 'lodash/camelCase';
+import startCase from 'lodash/startCase';
+import path from 'path';
+
 import { BranchDiffPayload, MergeSummary } from '../interfaces';
 import {
+  askBaseBranch,
   askCompareBranch,
   askStackAPIKey,
-  askBaseBranch,
-  getbranchConfig,
   branchDiffUtility as branchDiff,
-  writeFile,
   executeMergeRequest,
   getMergeQueueStatus,
+  getbranchConfig,
   readFile,
+  writeFile,
 } from './';
 
 export const prepareMergeRequestPayload = (options) => {
@@ -50,12 +51,12 @@ function validateMergeSummary(mergeSummary: MergeSummary) {
 
 export const setupMergeInputs = async (mergeFlags) => {
   if (mergeFlags['use-merge-summary']) {
-    let mergeSummary: MergeSummary = (await readFile(mergeFlags['use-merge-summary'])) as MergeSummary;
+    const mergeSummary: MergeSummary = (await readFile(mergeFlags['use-merge-summary'])) as MergeSummary;
     validateMergeSummary(mergeSummary);
     mergeFlags.mergeSummary = mergeSummary;
   }
 
-  let { requestPayload: { base_branch = null, compare_branch = null } = {} } = mergeFlags.mergeSummary || {};
+  const { requestPayload: { base_branch = null, compare_branch = null } = {} } = mergeFlags.mergeSummary || {};
 
   if (!mergeFlags['stack-api-key']) {
     mergeFlags['stack-api-key'] = await askStackAPIKey();
@@ -85,12 +86,12 @@ export const setupMergeInputs = async (mergeFlags) => {
 
 export const displayBranchStatus = async (options) => {
   const spinner = cliux.loaderV2('Loading branch differences...');
-  let payload: BranchDiffPayload = {
-    module: '',
+  const payload: BranchDiffPayload = {
     apiKey: options.stackAPIKey,
     baseBranch: options.baseBranch,
     compareBranch: options.compareBranch,
     host: options.host,
+    module: '',
   };
 
   payload.spinner = spinner;
@@ -98,8 +99,8 @@ export const displayBranchStatus = async (options) => {
   const diffData = branchDiff.filterBranchDiffDataByModule(branchDiffData);
   cliux.loaderV2('', spinner);
 
-  let parsedResponse = {};
-  for (let module in diffData) {
+  const parsedResponse = {};
+  for (const module in diffData) {
     const branchModuleData = diffData[module];
     payload.module = module;
     cliux.print(' ');
@@ -125,7 +126,7 @@ export const displayBranchStatus = async (options) => {
 export const displayMergeSummary = (options) => {
   cliux.print(' ');
   cliux.print(`Merge Summary:`, { color: 'yellow' });
-  for (let module in options.compareData) {
+  for (const module in options.compareData) {
     if (options.format === 'compact-text') {
       branchDiff.printCompactTextView(options.compareData[module]);
     } else if (options.format === 'detailed-text') {
@@ -135,6 +136,16 @@ export const displayMergeSummary = (options) => {
   cliux.print(' ');
 };
 
+/**
+ * Executes a merge request and waits for completion with limited polling.
+ * If the merge is in_progress, polls for status with max 10 retries and exponential backoff.
+ * Returns immediately if merge is complete, throws error if failed.
+ *
+ * @param apiKey - Stack API key
+ * @param mergePayload - Merge request payload
+ * @param host - API host
+ * @returns Promise<any> - Merge response with status and details
+ */
 export const executeMerge = async (apiKey, mergePayload, host): Promise<any> => {
   const stackAPIClient = await (await managementSDKClient({ host })).stack({ api_key: apiKey });
   const mergeResponse = await executeMergeRequest(stackAPIClient, { params: mergePayload });
@@ -147,31 +158,61 @@ export const executeMerge = async (apiKey, mergePayload, host): Promise<any> => 
   }
 };
 
-export const fetchMergeStatus = async (stackAPIClient, mergePayload, delay = 5000): Promise<any> => {
-  return new Promise(async (resolve, reject) => {
+/**
+ * Fetches merge status with retry-limited polling (max 10 attempts) and exponential backoff.
+ * Returns a structured response on polling timeout instead of throwing an error.
+ *
+ * @param stackAPIClient - The stack API client for making requests
+ * @param mergePayload - The merge payload containing the UID
+ * @param initialDelay - Initial delay between retries in milliseconds (default: 5000ms)
+ * @param maxRetries - Maximum number of retry attempts (default: 10)
+ * @returns Promise<any> - Merge response object with optional pollingTimeout flag
+ */
+export const fetchMergeStatus = async (
+  stackAPIClient,
+  mergePayload,
+  initialDelay = 5000,
+  maxRetries = 10
+): Promise<any> => {
+  let delayMs = initialDelay;
+  const maxDelayMs = 60000; // Cap delay at 60 seconds
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const mergeStatusResponse = await getMergeQueueStatus(stackAPIClient, { uid: mergePayload.uid });
 
     if (mergeStatusResponse?.queue?.length >= 1) {
       const mergeRequestStatusResponse = mergeStatusResponse.queue[0];
       const mergeStatus = mergeRequestStatusResponse.merge_details?.status;
+
       if (mergeStatus === 'complete') {
-        resolve(mergeRequestStatusResponse);
+        return mergeRequestStatusResponse;
       } else if (mergeStatus === 'in-progress' || mergeStatus === 'in_progress') {
-        setTimeout(async () => {
-          await fetchMergeStatus(stackAPIClient, mergePayload, delay).then(resolve).catch(reject);
-        }, delay);
+        if (attempt < maxRetries) {
+          cliux.print(`Merge in progress... (Attempt ${attempt}/${maxRetries})`, { color: 'grey' });
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          delayMs = Math.min(delayMs + 1000, maxDelayMs);
+        } else {
+          // Polling timeout: return structured response instead of throwing
+          cliux.print(`Merge in progress... (Attempt ${attempt}/${maxRetries})`, { color: 'grey' });
+          return {
+            merge_details: mergeRequestStatusResponse.merge_details,
+            pollingTimeout: true,
+            status: 'in_progress',
+            uid: mergePayload.uid,
+          };
+        }
       } else if (mergeStatus === 'failed') {
         if (mergeRequestStatusResponse?.errors?.length > 0) {
           const errorPath = path.join(process.cwd(), 'merge-error.log');
           await writeFile(errorPath, mergeRequestStatusResponse.errors);
           cliux.print(`\nComplete error log can be found in ${path.resolve(errorPath)}`, { color: 'grey' });
         }
-        return reject(`merge uid: ${mergePayload.uid}`);
+        throw new Error(`merge uid: ${mergePayload.uid}`);
       } else {
-        return reject(`Invalid merge status found with merge ID ${mergePayload.uid}`);
+        throw new Error(`Invalid merge status found with merge ID ${mergePayload.uid}`);
       }
     } else {
-      return reject(`No queue found with merge ID ${mergePayload.uid}`);
+      throw new Error(`No queue found with merge ID ${mergePayload.uid}`);
     }
-  });
+  }
 };
