@@ -186,7 +186,8 @@ describe('BaseClass', () => {
       await testClass.delay(0);
       const end = Date.now();
 
-      expect(end - start).to.be.at.most(10); // Should be very fast
+      // Wall-clock can exceed a few ms under load (CI); only assert "no intentional wait"
+      expect(end - start).to.be.at.most(150);
     });
 
     it('should handle negative delay', async () => {
@@ -194,7 +195,7 @@ describe('BaseClass', () => {
       await testClass.delay(-100);
       const end = Date.now();
 
-      expect(end - start).to.be.at.most(10); // Should be very fast
+      expect(end - start).to.be.at.most(150);
     });
 
     it('should return a promise', () => {

@@ -1,8 +1,9 @@
+import fs from 'fs';
 import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux } from '@contentstack/cli-utilities';
+import { ux, cliux } from '@contentstack/cli-utilities';
 import sinon from 'sinon';
 
 import config from '../../../src/config';
@@ -135,6 +136,21 @@ describe('ComposableStudio', () => {
         expect(cs.environmentUidSet.has('blt_env_dev')).to.be.true;
         expect(cs.environmentUidSet.has('blt_env_prod')).to.be.true;
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('does not load when environments file does not exist', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(__dirname, '..', 'mock', 'invalid_path'),
+            flags: {},
+          }),
+        });
+        await cs.loadEnvironments();
+        expect(cs.environmentUidSet.size).to.equal(0);
+      });
   });
 
   describe('loadLocales method', () => {
@@ -154,6 +170,42 @@ describe('ComposableStudio', () => {
         expect(cs.localeCodeSet.has('en-us')).to.be.true;
         expect(cs.localeCodeSet.has('fr-fr')).to.be.true;
         expect(cs.localeCodeSet.has('de-de')).to.be.true;
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('does not load when master locale file does not exist', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(__dirname, '..', 'mock', 'invalid_path'),
+            flags: {},
+          }),
+        });
+        await cs.loadLocales();
+        expect(cs.localeCodeSet.size).to.equal(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads only master locales when additional locales file does not exist', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(`./test/unit/mock/contents/composable_studio`),
+            flags: {},
+          }),
+        });
+        const localesPath = resolve(cs.config.basePath, 'locales', 'locales.json');
+        const origExists = fs.existsSync;
+        sinon.stub(fs, 'existsSync').callsFake((p: fs.PathLike) => {
+          if (String(p) === localesPath) return false;
+          return origExists.call(fs, p);
+        });
+        await cs.loadLocales();
+        expect(cs.localeCodeSet.size).to.be.greaterThan(0);
       });
   });
 
@@ -295,6 +347,38 @@ describe('ComposableStudio', () => {
           expect(projectWithCTIssue.issues).to.include('contentTypeUid');
         }
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('reportEntry uses undefined for missing issue types (branch coverage)', async () => {
+        const onlyInvalidEnv = [
+          { uid: 'e1', name: 'EnvOnly', contentTypeUid: 'page_1', settings: { configuration: { environment: 'bad_env', locale: 'en-us' } } },
+        ];
+        const origRead = fs.readFileSync;
+        const origExists = fs.existsSync;
+        sinon.stub(fs, 'readFileSync').callsFake((p: fs.PathOrFileDescriptor) => {
+          if (String(p).includes('composable_studio.json')) return JSON.stringify(onlyInvalidEnv);
+          if (String(p).includes('environments.json')) return JSON.stringify([{ uid: 'blt_env_dev' }]);
+          if (String(p).includes('master-locale') || String(p).includes('locales.json')) return JSON.stringify({ 'en-us': { code: 'en-us' } });
+          return origRead.call(fs, p);
+        });
+        sinon.stub(fs, 'existsSync').callsFake((p: fs.PathLike) => {
+          const s = String(p);
+          if (s.includes('composable_studio') || s.includes('environments') || s.includes('locales') || s.includes('master-locale')) return true;
+          return origExists.call(fs, p);
+        });
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: cloneDeep(require('./../mock/contents/composable_studio/ctSchema.json')),
+          config: Object.assign(config, { basePath: resolve(`./test/unit/mock/contents/`), flags: {} }),
+        });
+        const result: any = await cs.run();
+        const envOnly = result.find((r: any) => r.uid === 'e1');
+        expect(envOnly).to.exist;
+        expect(envOnly.content_types).to.be.undefined;
+        expect(envOnly.environment).to.deep.equal(['bad_env']);
+        expect(envOnly.locale).to.be.undefined;
+      });
   });
 
   describe('Empty and edge cases', () => {
@@ -326,5 +410,221 @@ describe('ComposableStudio', () => {
       // When the file exists and has projects with validation issues, it returns an array
       expect(result).to.exist;
     });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns {} when composable studio file does not exist', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: cloneDeep(require('./../mock/contents/composable_studio/ctSchema.json')),
+          config: Object.assign(config, {
+            basePath: resolve(__dirname, '..', 'mock', 'contents', 'content_types'),
+            flags: {},
+          }),
+        });
+        const result = await cs.run();
+        expect(result).to.eql({});
+      });
+  });
+
+  describe('run with valid project (no issues)', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('logs when project has no validation issues', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: cloneDeep(require('./../mock/contents/composable_studio/ctSchema.json')),
+          config: Object.assign(config, {
+            basePath: resolve(`./test/unit/mock/contents/`),
+            flags: {},
+          }),
+        });
+        const result = await cs.run();
+        expect(Array.isArray(result)).to.be.true;
+        expect(cs.composableStudioProjects.length).to.be.greaterThan(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('loads single project object (non-array) and normalizes to array', async () => {
+        const singleProject = { uid: 'only', name: 'Only', contentTypeUid: 'page_1', settings: { configuration: { environment: 'blt_env_dev', locale: 'en-us' } } };
+        const origRead = fs.readFileSync;
+        sinon.stub(fs, 'readFileSync').callsFake((p: fs.PathOrFileDescriptor) => {
+          if (String(p).includes('composable_studio.json')) return JSON.stringify(singleProject);
+          return origRead.call(fs, p);
+        });
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: cloneDeep(require('./../mock/contents/composable_studio/ctSchema.json')),
+          config: Object.assign(config, { basePath: resolve(`./test/unit/mock/contents/`), flags: {} }),
+        });
+        await cs.run();
+        expect(cs.composableStudioProjects).to.have.lengthOf(1);
+        expect(cs.composableStudioProjects[0].uid).to.equal('only');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('when fix true but no issues returns empty array', async () => {
+        const validProject = { uid: 'v1', name: 'Valid', contentTypeUid: 'page_1', settings: { configuration: { environment: 'blt_env_dev', locale: 'en-us' } } };
+        const origRead = fs.readFileSync;
+        const origExists = fs.existsSync;
+        sinon.stub(fs, 'readFileSync').callsFake((p: fs.PathOrFileDescriptor) => {
+          const pathStr = String(p);
+          if (pathStr.includes('composable_studio.json')) return JSON.stringify([validProject]);
+          if (pathStr.includes('environments.json')) return JSON.stringify([{ uid: 'blt_env_dev' }, { uid: 'blt_env_prod' }]);
+          if (pathStr.includes('master-locale') || pathStr.includes('locales.json')) return JSON.stringify({ 'en-us': { code: 'en-us' } });
+          return origRead.call(fs, p);
+        });
+        sinon.stub(fs, 'existsSync').callsFake((p: fs.PathLike) => {
+          const pathStr = String(p);
+          if (pathStr.includes('composable_studio') || pathStr.includes('environments') || pathStr.includes('locales') || pathStr.includes('master-locale')) return true;
+          return origExists.call(fs, p);
+        });
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: cloneDeep(require('./../mock/contents/composable_studio/ctSchema.json')),
+          config: Object.assign(config, { basePath: resolve(`./test/unit/mock/contents/`), flags: {} }),
+          fix: true,
+        });
+        const result: any = await cs.run();
+        expect(Array.isArray(result)).to.be.true;
+        expect(result).to.have.lengthOf(0);
+      });
+  });
+
+  describe('fixComposableStudioProjects', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns early when readFileSync throws', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(`./test/unit/mock/contents/`),
+            flags: {},
+          }),
+          fix: true,
+        });
+        cs.composableStudioPath = resolve(__dirname, '..', 'mock', 'contents', 'composable_studio', 'composable_studio.json');
+        cs.projectsWithIssues = [{ uid: 'p1', name: 'P1' }];
+        sinon.stub(fs, 'readFileSync').callsFake(() => {
+          throw new Error('read failed');
+        });
+        await cs.fixComposableStudioProjects();
+        expect(cs.projectsWithIssues).to.have.lengthOf(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(cliux, 'confirm', async () => true)
+      .stub(fs, 'writeFileSync', () => {})
+      .it('hits needsFix true and logs project was fixed when project has invalid env', async () => {
+        const projectWithInvalidEnv = {
+          uid: 'inv_env',
+          name: 'Invalid Env',
+          contentTypeUid: 'page_1',
+          settings: { configuration: { environment: 'bad_env', locale: 'en-us' } },
+        };
+        sinon.stub(fs, 'readFileSync').callsFake(() => JSON.stringify([projectWithInvalidEnv]));
+        const writeSpy = sinon.stub(fs, 'writeFileSync');
+        sinon.stub(cliux, 'confirm').resolves(true);
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [{ uid: 'page_1', title: 'P1' }] as any,
+          config: Object.assign(config, { basePath: resolve(`./test/unit/mock/contents/`), flags: {} }),
+          fix: true,
+        });
+        cs.ctUidSet = new Set(['page_1']);
+        cs.environmentUidSet = new Set(['blt_env_dev']);
+        cs.localeCodeSet = new Set(['en-us']);
+        cs.composableStudioPath = resolve(__dirname, '..', 'mock', 'contents', 'composable_studio', 'composable_studio.json');
+        await cs.fixComposableStudioProjects();
+        const written = JSON.parse(String(writeSpy.firstCall.args[1]));
+        expect(written[0].settings.configuration.environment).to.be.undefined;
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(cliux, 'confirm', async () => true)
+      .stub(fs, 'writeFileSync', () => {})
+      .it('logs when project did not need fixing', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [{ uid: 'page_1', title: 'Page 1' }] as any,
+          config: Object.assign(config, {
+            basePath: resolve(`./test/unit/mock/contents/`),
+            flags: {},
+          }),
+          fix: true,
+        });
+        cs.ctUidSet = new Set(['page_1']);
+        cs.environmentUidSet = new Set(['blt_env_dev']);
+        cs.localeCodeSet = new Set(['en-us']);
+        cs.composableStudioPath = resolve(__dirname, '..', 'mock', 'contents', 'composable_studio', 'composable_studio.json');
+        cs.projectsWithIssues = [
+          {
+            uid: 'test_project_uid_1',
+            name: 'Test Project 1',
+            contentTypeUid: 'page_1',
+            settings: { configuration: { environment: 'blt_env_dev', locale: 'en-us' } },
+          },
+        ];
+        await cs.fixComposableStudioProjects();
+        expect(cs.projectsWithIssues.length).to.equal(1);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(cliux, 'confirm', async () => true)
+      .stub(fs, 'writeFileSync', () => {})
+      .it('handles single project object (non-array) from file', async () => {
+        const singleProject = { uid: 's1', name: 'Single', contentTypeUid: 'page_1', settings: { configuration: { environment: 'blt_env_dev', locale: 'en-us' } } };
+        sinon.stub(fs, 'readFileSync').callsFake(() => JSON.stringify(singleProject));
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [{ uid: 'page_1', title: 'P1' }] as any,
+          config: Object.assign(config, { basePath: resolve(`./test/unit/mock/contents/`), flags: {} }),
+          fix: true,
+        });
+        cs.ctUidSet = new Set(['page_1']);
+        cs.environmentUidSet = new Set(['blt_env_dev']);
+        cs.localeCodeSet = new Set(['en-us']);
+        cs.composableStudioPath = resolve(__dirname, '..', 'mock', 'contents', 'composable_studio', 'composable_studio.json');
+        cs.projectsWithIssues = [singleProject];
+        await cs.fixComposableStudioProjects();
+        expect(cs.projectsWithIssues).to.have.lengthOf(1);
+      });
+  });
+
+  describe('writeFixContent', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(cliux, 'confirm', async () => false)
+      .it('skips write when user declines confirmation', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, { basePath: resolve(__dirname, '..', 'mock', 'contents'), flags: {} }),
+          fix: true,
+        });
+        const writeSpy = sinon.stub(fs, 'writeFileSync');
+        await cs.writeFixContent([{ uid: 'p1', name: 'P1' }]);
+        expect(writeSpy.callCount).to.equal(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('skips write when fix mode disabled', async () => {
+        const cs = new ComposableStudio({
+          moduleName: 'composable-studio',
+          ctSchema: [],
+          config: Object.assign(config, { basePath: resolve(__dirname, '..', 'mock', 'contents'), flags: {} }),
+          fix: false,
+        });
+        const writeSpy = sinon.stub(fs, 'writeFileSync');
+        await cs.writeFixContent([{ uid: 'p1', name: 'P1' }]);
+        expect(writeSpy.callCount).to.equal(0);
+      });
   });
 });

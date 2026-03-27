@@ -1,7 +1,7 @@
 import { Ora, default as ora } from 'ora';
 import * as path from 'path';
 import inquirer from 'inquirer';
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import * as fs from 'fs';
 import { rimraf } from 'rimraf';
 import { CustomAbortController } from './abort-controller';
@@ -170,7 +170,7 @@ export class CloneHandler {
   }
 
   displayBackOptionMessage(): void {
-    process.stdout.write(chalk.cyan('\nPress shift & left arrow together to undo the operation\n'));
+    process.stdout.write(getChalk().cyan('\nPress shift & left arrow together to undo the operation\n'));
   }
 
   setBackKeyPressHandler(backKeyPressHandler: (...args: any[]) => void): void {
