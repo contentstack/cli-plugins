@@ -1,4 +1,5 @@
 import find from 'lodash/find';
+import omit from 'lodash/omit';
 import { resolve as pResolve } from 'node:path';
 import {
   handleAndLogError,
@@ -43,37 +44,34 @@ export default class ExportStack extends BaseClass {
     try {
       log.debug('Starting stack export process...', this.exportConfig.context);
 
-      // Initial analysis with loading spinner
+      // Initial analysis with loading spinner (skip getStack when using management token — no SDK snapshot)
       const [stackData] = await this.withLoadingSpinner('STACK: Analyzing stack configuration...', async () => {
-        const stackData = isAuthenticated() ? await this.getStack() : null;
+        const stackData =
+          this.exportConfig.management_token || !isAuthenticated() ? null : await this.getStack();
         return [stackData];
       });
 
       // Create nested progress manager
       const progress = this.createNestedProgress(this.currentModuleName);
 
-      // Add processes based on configuration
-      let processCount = 0;
-
-      if (stackData?.org_uid) {
-        log.debug(`Found organization UID: '${stackData.org_uid}'.`, this.exportConfig.context);
-        this.exportConfig.org_uid = stackData.org_uid;
+      const orgUid = stackData?.org_uid ?? stackData?.organization_uid;
+      if (orgUid) {
+        log.debug(`Found organization UID: '${orgUid}'.`, this.exportConfig.context);
+        this.exportConfig.org_uid = orgUid;
         this.exportConfig.sourceStackName = stackData.name;
         log.debug(`Set source stack name: ${stackData.name}`, this.exportConfig.context);
       }
 
       if (!this.exportConfig.management_token) {
         progress.addProcess(PROCESS_NAMES.STACK_SETTINGS, 1);
-        processCount++;
       }
+      progress.addProcess(PROCESS_NAMES.STACK_DETAILS, 1);
 
       if (!this.exportConfig.preserveStackVersion && !this.exportConfig.hasOwnProperty('master_locale')) {
         progress.addProcess(PROCESS_NAMES.STACK_LOCALE, 1);
-        processCount++;
-      } else if (this.exportConfig.preserveStackVersion) {
-        progress.addProcess(PROCESS_NAMES.STACK_DETAILS, 1);
-        processCount++;
       }
+
+      let stackDetailsExportResult: any;
 
       // Execute processes
       if (!this.exportConfig.management_token) {
@@ -85,11 +83,28 @@ export default class ExportStack extends BaseClass {
           );
         await this.exportStackSettings();
         progress.completeProcess(PROCESS_NAMES.STACK_SETTINGS, true);
+
+        progress
+          .startProcess(PROCESS_NAMES.STACK_DETAILS)
+          .updateStatus(
+            PROCESS_STATUS[PROCESS_NAMES.STACK_DETAILS].EXPORTING,
+            PROCESS_NAMES.STACK_DETAILS,
+          );
+        stackDetailsExportResult = await this.exportStack(stackData);
+        progress.completeProcess(PROCESS_NAMES.STACK_DETAILS, true);
       } else {
         log.info(
           'Skipping stack settings export: Operation is not supported when using a management token.',
           this.exportConfig.context,
         );
+        progress
+          .startProcess(PROCESS_NAMES.STACK_DETAILS)
+          .updateStatus(
+            PROCESS_STATUS[PROCESS_NAMES.STACK_DETAILS].EXPORTING,
+            PROCESS_NAMES.STACK_DETAILS,
+          );
+        stackDetailsExportResult = await this.writeStackJsonFromConfigApiKeyOnly();
+        progress.completeProcess(PROCESS_NAMES.STACK_DETAILS, true);
       }
 
       if (!this.exportConfig.preserveStackVersion && !this.exportConfig.hasOwnProperty('master_locale')) {
@@ -110,17 +125,8 @@ export default class ExportStack extends BaseClass {
         this.completeProgress(true);
         return masterLocale;
       } else if (this.exportConfig.preserveStackVersion) {
-        progress
-          .startProcess(PROCESS_NAMES.STACK_DETAILS)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.STACK_DETAILS].EXPORTING,
-            PROCESS_NAMES.STACK_DETAILS,
-          );
-        const stackResult = await this.exportStack();
-        progress.completeProcess(PROCESS_NAMES.STACK_DETAILS, true);
-
         this.completeProgress(true);
-        return stackResult;
+        return stackDetailsExportResult;
       } else {
         log.debug('Locale locale already set, skipping locale fetch', this.exportConfig.context);
       }
@@ -225,33 +231,36 @@ export default class ExportStack extends BaseClass {
       });
   }
 
-  async exportStack(): Promise<any> {
+  /**
+   * Reuse stack snapshot from `getStack()` when present so we do not call `stack.fetch()` twice
+   * (same GET /stacks payload as writing stack.json). Falls back to `this.stack.fetch()` otherwise.
+   */
+  async exportStack(preloadedStack?: Record<string, any> | null): Promise<any> {
     log.debug(`Starting stack export for: '${this.exportConfig.apiKey}'...`, this.exportConfig.context);
 
     await fsUtil.makeDirectory(this.stackFolderPath);
     log.debug(`Created stack directory at: '${this.stackFolderPath}'`, this.exportConfig.context);
 
+    if (this.isStackFetchPayload(preloadedStack)) {
+      log.debug('Reusing stack payload from analysis step (no extra stack.fetch).', this.exportConfig.context);
+      try {
+        return this.persistStackJsonPayload(preloadedStack);
+      } catch (error: any) {
+        this.progressManager?.tick(
+          false,
+          'stack export',
+          error?.message || PROCESS_STATUS[PROCESS_NAMES.STACK_DETAILS].FAILED,
+          PROCESS_NAMES.STACK_DETAILS,
+        );
+        handleAndLogError(error, { ...this.exportConfig.context });
+        return undefined;
+      }
+    }
+
     return this.stack
       .fetch()
       .then((resp: any) => {
-        const stackFilePath = pResolve(this.stackFolderPath, this.stackConfig.fileName);
-        log.debug(`Writing stack data to: '${stackFilePath}'`, this.exportConfig.context);
-        fsUtil.writeFile(stackFilePath, resp);
-
-        // Track progress for stack export completion
-        this.progressManager?.tick(
-          true,
-          `stack: ${this.exportConfig.apiKey}`,
-          null,
-          PROCESS_NAMES.STACK_DETAILS,
-        );
-
-        log.success(
-          `Stack details exported successfully for stack ${this.exportConfig.apiKey}`,
-          this.exportConfig.context,
-        );
-        log.debug('Stack export completed successfully.', this.exportConfig.context);
-        return resp;
+        return this.persistStackJsonPayload(resp);
       })
       .catch((error: any) => {
         log.debug(`Error occurred while exporting stack: ${this.exportConfig.apiKey}`, this.exportConfig.context);
@@ -263,6 +272,65 @@ export default class ExportStack extends BaseClass {
         );
         handleAndLogError(error, { ...this.exportConfig.context });
       });
+  }
+
+  private isStackFetchPayload(data: unknown): data is Record<string, any> {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      !Array.isArray(data) &&
+      ('api_key' in data || 'uid' in data)
+    );
+  }
+
+  /**
+   * Management-token exports cannot use Stack CMA endpoints for full metadata; write api_key from config only.
+   */
+  private async writeStackJsonFromConfigApiKeyOnly(): Promise<{ api_key: string }> {
+    if (!this.exportConfig.apiKey || typeof this.exportConfig.apiKey !== 'string') {
+      throw new Error('Stack API key is required to write stack.json when using a management token.');
+    }
+
+    log.debug('Writing config-based stack.json (api_key only, no stack fetch).', this.exportConfig.context);
+
+    await fsUtil.makeDirectory(this.stackFolderPath);
+    const payload = { api_key: this.exportConfig.apiKey };
+    const stackFilePath = pResolve(this.stackFolderPath, this.stackConfig.fileName);
+    fsUtil.writeFile(stackFilePath, payload);
+
+    this.progressManager?.tick(
+      true,
+      `stack: ${this.exportConfig.apiKey}`,
+      null,
+      PROCESS_NAMES.STACK_DETAILS,
+    );
+
+    log.success(
+      `Stack identifier written to stack.json from config for stack ${this.exportConfig.apiKey}`,
+      this.exportConfig.context,
+    );
+    return payload;
+  }
+
+  private persistStackJsonPayload(resp: Record<string, any>): any {
+    const sanitized = omit(resp, this.stackConfig.invalidKeys ?? []);
+    const stackFilePath = pResolve(this.stackFolderPath, this.stackConfig.fileName);
+    log.debug(`Writing stack data to: '${stackFilePath}'`, this.exportConfig.context);
+    fsUtil.writeFile(stackFilePath, sanitized);
+
+    this.progressManager?.tick(
+      true,
+      `stack: ${this.exportConfig.apiKey}`,
+      null,
+      PROCESS_NAMES.STACK_DETAILS,
+    );
+
+    log.success(
+      `Stack details exported successfully for stack ${this.exportConfig.apiKey}`,
+      this.exportConfig.context,
+    );
+    log.debug('Stack export completed successfully.', this.exportConfig.context);
+    return sanitized;
   }
 
   async exportStackSettings(): Promise<any> {

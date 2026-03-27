@@ -1,0 +1,9 @@
+{
+  "require": [
+    "test/helpers/init.js",
+    "ts-node/register",
+    "test/helpers/mocha-root-hooks.js"
+  ],
+  "recursive": true,
+  "timeout": 10000
+}
