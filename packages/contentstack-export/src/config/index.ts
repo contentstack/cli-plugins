@@ -112,6 +112,10 @@ const config: DefaultConfig = {
       enableDownloadStatus: false,
       includeVersionedAssets: false,
     },
+    'asset-management': {
+      chunkWriteBatchSize: 50,
+      chunkFileSizeMb: 1,
+    },
     content_types: {
       dirName: 'content_types',
       fileName: 'content_types.json',

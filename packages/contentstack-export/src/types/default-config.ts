@@ -96,6 +96,13 @@ export default interface DefaultConfig {
       includeVersionedAssets: boolean;
       dependencies?: Modules[];
     };
+    'asset-management': {
+      /** Batch size for AM 2.0 chunked JSON writes (shared fields / asset types / etc.). */
+      chunkWriteBatchSize: number;
+      /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
+      chunkFileSizeMb: number;
+      dependencies?: Modules[];
+    };
     content_types: {
       dirName: string;
       fileName: string;

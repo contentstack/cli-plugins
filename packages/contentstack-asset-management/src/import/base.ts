@@ -1,9 +1,10 @@
 import { resolve as pResolve } from 'node:path';
-import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME, DEFAULT_AM_API_CONCURRENCY } from '../constants/index';
+import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY } from '../constants/index';
+import { readChunkedJsonItems } from '../utils/chunked-json-read';
 
 export type { ImportContext };
 
@@ -63,39 +64,21 @@ export class AssetManagementImportAdapter extends AssetManagementAdapter {
 
   /** Parallel AM API limit for import batches. */
   protected get apiConcurrency(): number {
-    return this.importContext.apiConcurrency ?? DEFAULT_AM_API_CONCURRENCY;
+    return this.importContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
   }
 
   protected getAssetTypesDir(): string {
-    return pResolve(this.importContext.spacesRootPath, 'asset_types');
+    return pResolve(this.importContext.spacesRootPath, this.importContext.assetTypesDir ?? 'asset_types');
   }
 
   protected getFieldsDir(): string {
-    return pResolve(this.importContext.spacesRootPath, 'fields');
+    return pResolve(this.importContext.spacesRootPath, this.importContext.fieldsDir ?? 'fields');
   }
 
   /**
-   * Reads all items from a FsUtility chunked JSON store (index file + chunk files).
-   * Returns a flat array of all items across all chunks.
+   * Reads all items from a chunked JSON store via {@link readChunkedJsonItems} (FsUtility).
    */
   protected async readAllChunkedJson<T = Record<string, unknown>>(dir: string, indexFileName: string): Promise<T[]> {
-    try {
-      const fs = new FsUtility({ basePath: dir, indexFileName });
-      const indexer = fs.indexFileContent;
-      const items: T[] = [];
-      for (const _ in indexer) {
-        const chunk = await fs.readChunkFiles.next().catch((err: unknown): null => {
-          log.debug(`Error reading chunk: ${err}`, this.importContext.context);
-          return null;
-        });
-        if (chunk) {
-          items.push(...(Object.values(chunk as Record<string, T>)));
-        }
-      }
-      return items;
-    } catch (err) {
-      log.debug(`readAllChunkedJson failed for ${dir}/${indexFileName}: ${err}`, this.importContext.context);
-      return [];
-    }
+    return readChunkedJsonItems<T>(dir, indexFileName, this.importContext.context);
   }
 }

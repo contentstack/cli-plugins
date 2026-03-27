@@ -10,11 +10,7 @@ import type {
   ImportResult,
   SpaceMapping,
 } from '../types/asset-management-api';
-import {
-  AM_MAIN_PROCESS_NAME,
-  IMPORT_ASSETS_MAPPER_DIR_SEGMENTS,
-  IMPORT_ASSETS_MAPPER_FILES,
-} from '../constants/index';
+import { AM_MAIN_PROCESS_NAME } from '../constants/index';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
 import ImportAssetTypes from './asset-types';
 import ImportFields from './fields';
@@ -48,9 +44,23 @@ export class ImportSpaces {
       sourceApiKey,
       context,
       apiConcurrency,
+      spacesDirName,
+      fieldsDir,
+      assetTypesDir,
+      fieldsFileName,
+      assetTypesFileName,
+      foldersFileName,
+      assetsFileName,
+      fieldsImportInvalidKeys,
+      assetTypesImportInvalidKeys,
+      mapperRootDir,
+      mapperAssetsModuleDir,
+      mapperUidFileName,
+      mapperUrlFileName,
+      mapperSpaceUidFileName,
     } = this.options;
 
-    const spacesRootPath = pResolve(contentDir, 'spaces');
+    const spacesRootPath = pResolve(contentDir, spacesDirName ?? 'spaces');
 
     const importContext: ImportContext = {
       spacesRootPath,
@@ -60,6 +70,20 @@ export class ImportSpaces {
       org_uid,
       context,
       apiConcurrency,
+      spacesDirName,
+      fieldsDir,
+      assetTypesDir,
+      fieldsFileName,
+      assetTypesFileName,
+      foldersFileName,
+      assetsFileName,
+      fieldsImportInvalidKeys,
+      assetTypesImportInvalidKeys,
+      mapperRootDir,
+      mapperAssetsModuleDir,
+      mapperUidFileName,
+      mapperUrlFileName,
+      mapperSpaceUidFileName,
     };
 
     const apiConfig: AssetManagementAPIConfig = {
@@ -158,15 +182,16 @@ export class ImportSpaces {
       }
 
       if (this.options.backupDir) {
-        const mapperDir = join(this.options.backupDir, ...IMPORT_ASSETS_MAPPER_DIR_SEGMENTS);
+        const mapperRoot = this.options.mapperRootDir ?? 'mapper';
+        const mapperAssetsMod = this.options.mapperAssetsModuleDir ?? 'assets';
+        const mapperDir = join(this.options.backupDir, mapperRoot, mapperAssetsMod);
         mkdirSync(mapperDir, { recursive: true });
-        await writeFile(join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.UID_MAPPING), JSON.stringify(allUidMap), 'utf8');
-        await writeFile(join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.URL_MAPPING), JSON.stringify(allUrlMap), 'utf8');
-        await writeFile(
-          join(mapperDir, IMPORT_ASSETS_MAPPER_FILES.SPACE_UID_MAPPING),
-          JSON.stringify(allSpaceUidMap),
-          'utf8',
-        );
+        const uidFile = this.options.mapperUidFileName ?? 'uid-mapping.json';
+        const urlFile = this.options.mapperUrlFileName ?? 'url-mapping.json';
+        const spaceUidFile = this.options.mapperSpaceUidFileName ?? 'space-uid-mapping.json';
+        await writeFile(join(mapperDir, uidFile), JSON.stringify(allUidMap), 'utf8');
+        await writeFile(join(mapperDir, urlFile), JSON.stringify(allUrlMap), 'utf8');
+        await writeFile(join(mapperDir, spaceUidFile), JSON.stringify(allSpaceUidMap), 'utf8');
         log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', context);
       }
 
