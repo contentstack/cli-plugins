@@ -1,6 +1,12 @@
 import { Command } from '@contentstack/cli-command';
 import { cliux, flags, isAuthenticated, managementSDKClient } from '@contentstack/cli-utilities';
-import { getMergeStatusWithContentTypes, handleErrorMsg, selectContentMergePreference, selectContentMergeCustomPreferences, generateMergeScripts } from '../../../utils';
+import {
+  getMergeStatusWithContentTypes,
+  handleErrorMsg,
+  selectContentMergePreference,
+  selectContentMergeCustomPreferences,
+  generateMergeScripts,
+} from '../../../utils';
 import os from 'os';
 
 /**
@@ -8,6 +14,7 @@ import os from 'os';
  * Validates that merge is complete before allowing script generation.
  */
 export default class BranchGenerateScriptsCommand extends Command {
+  static readonly aliases: string[] = [];
   static readonly description: string = 'Generate entry migration scripts for a completed merge job';
 
   static readonly examples: string[] = [
@@ -15,21 +22,19 @@ export default class BranchGenerateScriptsCommand extends Command {
     'csdx cm:branches:generate-scripts --stack-api-key bltxxxxxxxx --merge-uid merge_abc123',
   ];
 
-  static readonly usage: string = 'cm:branches:generate-scripts -k <value> --merge-uid <value>';
-
   static readonly flags = {
+    'merge-uid': flags.string({
+      description: 'Merge job UID to generate scripts for.',
+      required: true,
+    }),
     'stack-api-key': flags.string({
       char: 'k',
       description: 'Provide your stack API key.',
       required: true,
     }),
-    'merge-uid': flags.string({
-      description: 'Merge job UID to generate scripts for.',
-      required: true,
-    }),
   };
 
-  static readonly aliases: string[] = [];
+  static readonly usage: string = 'cm:branches:generate-scripts -k <value> --merge-uid <value>';
 
   /**
    * Generates entry migration scripts for a completed merge job.
@@ -47,9 +52,11 @@ export default class BranchGenerateScriptsCommand extends Command {
         handleErrorMsg(err);
       }
 
-      const { 'stack-api-key': stackAPIKey, 'merge-uid': mergeUID } = generateScriptsFlags;
+      const { 'merge-uid': mergeUID, 'stack-api-key': stackAPIKey } = generateScriptsFlags;
 
-      const stackAPIClient = await (await managementSDKClient({ host: this.cmaHost })).stack({
+      const stackAPIClient = await (
+        await managementSDKClient({ host: this.cmaHost })
+      ).stack({
         api_key: stackAPIKey,
       });
 
@@ -70,10 +77,10 @@ export default class BranchGenerateScriptsCommand extends Command {
       const { uid } = mergeStatusResponse;
 
       // Ask user for merge preference
-      let mergePreference = await selectContentMergePreference();
+      const mergePreference = await selectContentMergePreference();
 
       // Get content types data
-      const contentTypes = mergeStatusResponse.content_types ?? { added: [], modified: [], deleted: [] };
+      const contentTypes = mergeStatusResponse.content_types ?? { added: [], deleted: [], modified: [] };
 
       const updateEntryMergeStrategy = (items, mergeStrategy) => {
         items &&
@@ -83,10 +90,10 @@ export default class BranchGenerateScriptsCommand extends Command {
       };
 
       const mergePreferencesMap = {
+        ask_preference: 'custom',
+        existing: 'merge_existing',
         existing_new: 'merge_existing_new',
         new: 'merge_new',
-        existing: 'merge_existing',
-        ask_preference: 'custom',
       };
       const selectedMergePreference = mergePreferencesMap[mergePreference];
 
@@ -120,13 +127,13 @@ export default class BranchGenerateScriptsCommand extends Command {
         );
 
         let migrationCommand: string;
-        const compareBase = mergeStatusResponse.compare_branch ?? mergeStatusResponse.base_branch;
-        const baseBranch = mergeStatusResponse.base_branch ?? 'main';
+        const compareBranch = mergeStatusResponse?.merge_details?.compare_branch;
+        const baseBranch = mergeStatusResponse?.merge_details?.base_branch;
 
         if (os.platform() === 'win32') {
-          migrationCommand = `csdx cm:stacks:migration --multiple --file-path ./${scriptFolderPath} --config compare-branch:${compareBase} file-path:./${scriptFolderPath} --branch ${baseBranch} --stack-api-key ${stackAPIKey}`;
+          migrationCommand = `csdx cm:stacks:migration --multiple --file-path ./${scriptFolderPath} --config compare-branch:${compareBranch} file-path:./${scriptFolderPath} --branch ${baseBranch} --stack-api-key ${stackAPIKey}`;
         } else {
-          migrationCommand = `csdx cm:stacks:migration --multiple --file-path ./${scriptFolderPath} --config {compare-branch:${compareBase},file-path:./${scriptFolderPath}} --branch ${baseBranch} --stack-api-key ${stackAPIKey}`;
+          migrationCommand = `csdx cm:stacks:migration --multiple --file-path ./${scriptFolderPath} --config {compare-branch:${compareBranch},file-path:./${scriptFolderPath}} --branch ${baseBranch} --stack-api-key ${stackAPIKey}`;
         }
 
         cliux.print(
