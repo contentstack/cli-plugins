@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import { ImportConfig, Modules } from '../../../src/types';
 import { configHandler } from '@contentstack/cli-utilities';
 import ModuleImporter from '../../../src/import/module-importer';
+import * as utilsModule from '../../../src/utils';
 
 describe('ModuleImporter', () => {
   let moduleImporter: ModuleImporter;
@@ -93,8 +94,9 @@ describe('ModuleImporter', () => {
     const backupHandlerModule = require('../../../src/utils/backup-handler');
     backupHandlerStub = sandbox.stub(backupHandlerModule, 'default').resolves('/test/backup');
 
-    const masterLocalDetailsModule = require('../../../src/utils/common-helper');
-    masterLocalDetailsStub = sandbox.stub(masterLocalDetailsModule, 'masterLocalDetails').resolves({ code: 'en-us' });
+    // Stub on the same `../utils` barrel ModuleImporter imports from — stubbing `common-helper`
+    // directly can miss the binding CI uses (re-exports), so the real `masterLocalDetails` runs.
+    masterLocalDetailsStub = sandbox.stub(utilsModule, 'masterLocalDetails').resolves({ code: 'en-us' });
 
     const sanitizeStackModule = require('../../../src/utils/common-helper');
     sanitizeStackStub = sandbox.stub(sanitizeStackModule, 'sanitizeStack').resolves();
