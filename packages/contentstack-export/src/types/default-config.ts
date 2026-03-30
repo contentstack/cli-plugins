@@ -147,6 +147,7 @@ export default interface DefaultConfig {
     stack: {
       dirName: string;
       fileName: string;
+      invalidKeys: string[];
       dependencies?: Modules[];
     };
     dependency: {
