@@ -67,6 +67,8 @@ describe('ContentModelSeeder', () => {
   });
 
   test('should automatically proceed when no content types', async () => {
+    ContentstackClient.prototype.getStack = jest.fn().mockResolvedValue({ master_locale: 'en-us' });
+    GitHubClient.prototype.getMasterLocaleFromRepo = jest.fn().mockResolvedValue(null);
     ContentstackClient.prototype.getContentTypeCount = jest.fn().mockResolvedValue(0);
 
     const seeder = new ContentModelSeeder(options);
@@ -76,6 +78,8 @@ describe('ContentModelSeeder', () => {
   });
 
   test('should not proceed when content types exists and user cancels', async () => {
+    ContentstackClient.prototype.getStack = jest.fn().mockResolvedValue({ master_locale: 'en-us' });
+    GitHubClient.prototype.getMasterLocaleFromRepo = jest.fn().mockResolvedValue(null);
     ContentstackClient.prototype.getContentTypeCount = jest.fn().mockResolvedValue(1);
 
     // @ts-ignore
@@ -88,6 +92,8 @@ describe('ContentModelSeeder', () => {
   });
 
   test('should proceed when content types exists and user accepts risk', async () => {
+    ContentstackClient.prototype.getStack = jest.fn().mockResolvedValue({ master_locale: 'en-us' });
+    GitHubClient.prototype.getMasterLocaleFromRepo = jest.fn().mockResolvedValue(null);
     ContentstackClient.prototype.getContentTypeCount = jest.fn().mockResolvedValue(1);
 
     // @ts-ignore
@@ -97,6 +103,19 @@ describe('ContentModelSeeder', () => {
     const proceed = await seeder.shouldProceed(api_key);
 
     expect(proceed).toBe(true);
+  });
+
+  test('should skip confirmation when skipStackConfirmation is true', async () => {
+    ContentstackClient.prototype.getStack = jest.fn().mockResolvedValue({ master_locale: 'en-us' });
+    GitHubClient.prototype.getMasterLocaleFromRepo = jest.fn().mockResolvedValue(null);
+    ContentstackClient.prototype.getContentTypeCount = jest.fn().mockResolvedValue(1);
+
+    const optionsWithSkip = { ...options, skipStackConfirmation: true };
+    const seeder = new ContentModelSeeder(optionsWithSkip);
+    const proceed = await seeder.shouldProceed(api_key);
+
+    expect(proceed).toBe(true);
+    expect(inquireProceed).not.toHaveBeenCalled();
   });
 
   test('should create stack', async () => {
