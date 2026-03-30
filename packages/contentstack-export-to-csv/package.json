@@ -1,12 +1,12 @@
 {
   "name": "@contentstack/cli-cm-export-to-csv",
   "description": "Export entries, taxonomies, terms, or organization users to CSV",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.7.2",
-    "@contentstack/cli-utilities": "~1.17.4",
+    "@contentstack/cli-command": "~1.8.0",
+    "@contentstack/cli-utilities": "~1.18.0",
     "@oclif/core": "^4.8.0",
     "@oclif/plugin-help": "^6.2.32",
     "fast-csv": "^4.3.6",
@@ -65,8 +65,8 @@
   },
   "repository": "https://github.com/contentstack/cli",
   "scripts": {
-    "build": "pnpm compile",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
