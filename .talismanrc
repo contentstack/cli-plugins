@@ -1,12 +1,18 @@
 fileignoreconfig:
-  - filename: packages/contentstack-asset-management/src/import/fields.ts
-    checksum: e46c3eb94bba78ae06af0139a1b0fd4113c3dcfe879ed40cfe77659781526d5c
-  - filename: packages/contentstack-asset-management/src/import/asset-types.ts
-    checksum: 3525703fd2ac0f7ab3e963966c0abfa53d87c09f73dabab0889c7f41a5f1b003
-  - filename: packages/contentstack-import/src/types/default-config.ts
-    checksum: 1c09acba953cfd7058a3e0d63f0a9bfbb8f28e903538eaa015fdc611402bbd4f
-  - filename: packages/contentstack-asset-management/src/types/asset-management-api.ts
-    checksum: 9394e67f4d0dea9ad27a8592adf99441f40731b788335cd7699c78205bdaad58
-  - filename: packages/contentstack-import/src/import/modules/assets.ts
-    checksum: 98cea49283eb5d975168dc51e27b0e2fb541a9ed9b4368206f99b434e104f096
+  - filename: pnpm-lock.yaml
+    checksum: 9c19eb613068c193fac35e72327198fbc86e759968391f07cc876c56b2b1a63d
+  - filename: packages/contentstack-export/test/unit/export/modules/base-class.test.ts
+    checksum: bd2b28305fff90ca26bce56b2c5c61751a62225d310a2553874e9ec009ed78e8
+  - filename: packages/contentstack-export/test/unit/export/modules/assets.test.ts
+    checksum: 73ff01e2d19c8d1384dca2ee7087f8c19e0b1fac6b29c75a02ca523a36b7cb92
+  - filename: packages/contentstack-export/src/types/default-config.ts
+    checksum: a204b00fc47046fd638f952c1326b6d88615dd96e37dc83e4c7e9404dc0435bb
+  - filename: packages/contentstack-export/src/types/index.ts
+    checksum: fa36c236abac338b03bf307102a99f25dddac9afe75b6b34fb82e318e7759799
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 3998e30abaf9838f86025c3422cab085441bc38e958ed9e63084f928dbb7995c
+  - filename: packages/contentstack-export/test/unit/export/modules/stack.test.ts
+    checksum: 79876b8f635037a2d8ba38dac055e7625bf85db6a3cf5729434e6a97e44857d6
+  - filename: packages/contentstack-export/src/export/modules/stack.ts
+    checksum: 375c0c5f58d43430b355050d122d3283083ca91891abe8105a4b4fd9433ece97
 version: '1.0'
