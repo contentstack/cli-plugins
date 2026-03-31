@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import { log } from '@contentstack/cli-utilities';
@@ -6,7 +8,9 @@ import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-man
 import { AssetManagementImportAdapter } from './base';
 import { FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import { runInBatches } from '../utils/concurrent-batch';
-import { readChunkedJsonItems } from '../utils/chunked-json-read';
+import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
+
+type AssetTypeToCreate = { uid: string; payload: Record<string, unknown> };
 
 /**
  * Reads shared asset types from `spaces/asset_types/asset-types.json` and POSTs
@@ -30,15 +34,37 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
     const stripKeys = this.importContext.assetTypesImportInvalidKeys ?? [...FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS];
     const dir = this.getAssetTypesDir();
     const indexName = this.importContext.assetTypesFileName ?? 'asset-types.json';
-    const items = await readChunkedJsonItems<Record<string, unknown>>(dir, indexName, this.importContext.context);
+    const indexPath = join(dir, indexName);
 
-    if (items.length === 0) {
-      log.debug('No shared asset types to import', this.importContext.context);
+    if (!existsSync(indexPath)) {
+      log.debug('No shared asset types to import (index missing)', this.importContext.context);
       return;
     }
 
-    // Fetch existing asset types from the target org keyed by uid for diff comparison.
-    // Asset types are org-level; the spaceUid param in getWorkspaceAssetTypes is unused in the path.
+    const existingByUid = await this.loadExistingAssetTypesMap();
+
+    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+
+    await forEachChunkedJsonStore<Record<string, unknown>>(
+      dir,
+      indexName,
+      {
+        context: this.importContext.context,
+        chunkReadLogLabel: 'asset-types',
+        onOpenError: (e) =>
+          log.debug(`Could not open chunked asset-types index: ${e}`, this.importContext.context),
+        onEmptyIndexer: () =>
+          log.debug('No shared asset types to import (empty indexer)', this.importContext.context),
+      },
+      async (records) => {
+        const toCreate = this.buildAssetTypesToCreate(records, existingByUid, stripKeys);
+        await this.importAssetTypesCreates(toCreate);
+      },
+    );
+  }
+
+  /** Org-level asset types keyed by uid for diff; empty map if list API fails. */
+  private async loadExistingAssetTypesMap(): Promise<Map<string, Record<string, unknown>>> {
     const existingByUid = new Map<string, Record<string, unknown>>();
     try {
       const existing = await this.getWorkspaceAssetTypes('');
@@ -49,11 +75,15 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
     } catch (e) {
       log.debug(`Could not fetch existing asset types, will attempt to create all: ${e}`, this.importContext.context);
     }
+    return existingByUid;
+  }
 
-    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
-
-    type ToCreate = { uid: string; payload: Record<string, unknown> };
-    const toCreate: ToCreate[] = [];
+  private buildAssetTypesToCreate(
+    items: Record<string, unknown>[],
+    existingByUid: Map<string, Record<string, unknown>>,
+    stripKeys: string[],
+  ): AssetTypeToCreate[] {
+    const toCreate: AssetTypeToCreate[] = [];
 
     for (const assetType of items) {
       const uid = assetType.uid as string;
@@ -82,6 +112,10 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
       toCreate.push({ uid, payload: omit(assetType, stripKeys) as Record<string, unknown> });
     }
 
+    return toCreate;
+  }
+
+  private async importAssetTypesCreates(toCreate: AssetTypeToCreate[]): Promise<void> {
     await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createAssetType(payload as any);

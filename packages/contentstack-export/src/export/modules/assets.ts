@@ -79,7 +79,6 @@ export default class ExportAssets extends BaseClass {
           apiKey: this.exportConfig.apiKey,
           context: this.exportConfig.context as unknown as Record<string, unknown>,
           securedAssets: this.exportConfig.securedAssets,
-          chunkWriteBatchSize: assetManagementModuleConfig?.chunkWriteBatchSize,
           chunkFileSizeMb: assetManagementModuleConfig?.chunkFileSizeMb,
         });
         exporter.setParentProgressManager(progress);

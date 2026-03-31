@@ -4,7 +4,6 @@ import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
 import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY } from '../constants/index';
-import { readChunkedJsonItems } from '../utils/chunked-json-read';
 
 export type { ImportContext };
 
@@ -67,18 +66,21 @@ export class AssetManagementImportAdapter extends AssetManagementAdapter {
     return this.importContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
   }
 
+  /** Upload batch size; falls back to {@link apiConcurrency}. */
+  protected get uploadAssetsBatchConcurrency(): number {
+    return this.importContext.uploadAssetsConcurrency ?? this.apiConcurrency;
+  }
+
+  /** Folder creation batch size; falls back to {@link apiConcurrency}. */
+  protected get importFoldersBatchConcurrency(): number {
+    return this.importContext.importFoldersConcurrency ?? this.apiConcurrency;
+  }
+
   protected getAssetTypesDir(): string {
     return pResolve(this.importContext.spacesRootPath, this.importContext.assetTypesDir ?? 'asset_types');
   }
 
   protected getFieldsDir(): string {
     return pResolve(this.importContext.spacesRootPath, this.importContext.fieldsDir ?? 'fields');
-  }
-
-  /**
-   * Reads all items from a chunked JSON store via {@link readChunkedJsonItems} (FsUtility).
-   */
-  protected async readAllChunkedJson<T = Record<string, unknown>>(dir: string, indexFileName: string): Promise<T[]> {
-    return readChunkedJsonItems<T>(dir, indexFileName, this.importContext.context);
   }
 }
