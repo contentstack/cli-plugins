@@ -128,6 +128,7 @@ export interface CustomRoleConfig {
 export interface StackConfig {
   dirName: string;
   fileName: string;
+  invalidKeys: string[];
   dependencies?: Modules[];
   limit?: number;
 }

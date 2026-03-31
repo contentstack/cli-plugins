@@ -1,4 +1,18 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 9ad01ca900e007d8ea4f5ffcef9f166665aba852b3b9a0a5f4506c04fd362138
+    checksum: 9c19eb613068c193fac35e72327198fbc86e759968391f07cc876c56b2b1a63d
+  - filename: packages/contentstack-export/test/unit/export/modules/base-class.test.ts
+    checksum: bd2b28305fff90ca26bce56b2c5c61751a62225d310a2553874e9ec009ed78e8
+  - filename: packages/contentstack-export/test/unit/export/modules/assets.test.ts
+    checksum: 73ff01e2d19c8d1384dca2ee7087f8c19e0b1fac6b29c75a02ca523a36b7cb92
+  - filename: packages/contentstack-export/src/types/default-config.ts
+    checksum: bf399466aae808342ec013c0179fbc24ac2d969c77fdbef47a842b12497d507e
+  - filename: packages/contentstack-export/src/types/index.ts
+    checksum: fa36c236abac338b03bf307102a99f25dddac9afe75b6b34fb82e318e7759799
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 1eb407ee0bd21597d8a4c673fce99d60fafd151ac843c33dac52ffdcc73e8107
+  - filename: packages/contentstack-export/test/unit/export/modules/stack.test.ts
+    checksum: 79876b8f635037a2d8ba38dac055e7625bf85db6a3cf5729434e6a97e44857d6
+  - filename: packages/contentstack-export/src/export/modules/stack.ts
+    checksum: 375c0c5f58d43430b355050d122d3283083ca91891abe8105a4b4fd9433ece97
 version: '1.0'
