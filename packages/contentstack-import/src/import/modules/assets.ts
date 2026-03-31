@@ -15,7 +15,15 @@ import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
-import { formatDate, fsUtil, PROCESS_NAMES, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS } from '../../utils';
+import {
+  buildAssetManagementImportOptions,
+  formatDate,
+  fsUtil,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  MODULE_NAMES,
+  PROCESS_STATUS,
+} from '../../utils';
 import BaseClass, { ApiOptions } from './base-class';
 
 export default class ImportAssets extends BaseClass {
@@ -72,34 +80,7 @@ export default class ImportAssets extends BaseClass {
 
         const progress = this.createNestedProgress(this.currentModuleName);
         try {
-          const assetManagementModuleConfig = this.importConfig.modules['asset-management'];
-          const importer = new ImportSpaces({
-            contentDir: this.importConfig.contentDir,
-            assetManagementUrl,
-            org_uid: this.importConfig.org_uid ?? '',
-            apiKey: this.importConfig.apiKey,
-            host: this.importConfig.region?.cma ?? this.importConfig.host ?? '',
-            sourceApiKey: this.importConfig.source_stack,
-            context: this.importConfig.context as unknown as Record<string, unknown>,
-            backupDir: this.importConfig.backupDir,
-            apiConcurrency: this.importConfig.modules?.apiConcurrency,
-            spacesDirName: assetManagementModuleConfig?.dirName,
-            fieldsDir: assetManagementModuleConfig?.fieldsDir,
-            assetTypesDir: assetManagementModuleConfig?.assetTypesDir,
-            fieldsFileName: assetManagementModuleConfig?.fieldsFileName,
-            assetTypesFileName: assetManagementModuleConfig?.assetTypesFileName,
-            foldersFileName: assetManagementModuleConfig?.foldersFileName,
-            assetsFileName: assetManagementModuleConfig?.assetsFileName,
-            fieldsImportInvalidKeys: assetManagementModuleConfig?.fieldsImportInvalidKeys,
-            assetTypesImportInvalidKeys: assetManagementModuleConfig?.assetTypesImportInvalidKeys,
-            mapperRootDir: assetManagementModuleConfig?.mapperRootDir ?? PATH_CONSTANTS.MAPPER,
-            mapperAssetsModuleDir:
-              assetManagementModuleConfig?.mapperAssetsModuleDir ?? PATH_CONSTANTS.MAPPER_MODULES.ASSETS,
-            mapperUidFileName: assetManagementModuleConfig?.mapperUidFileName ?? PATH_CONSTANTS.FILES.UID_MAPPING,
-            mapperUrlFileName: assetManagementModuleConfig?.mapperUrlFileName ?? PATH_CONSTANTS.FILES.URL_MAPPING,
-            mapperSpaceUidFileName:
-              assetManagementModuleConfig?.mapperSpaceUidFileName ?? PATH_CONSTANTS.FILES.SPACE_UID_MAPPING,
-          });
+          const importer = new ImportSpaces(buildAssetManagementImportOptions(this.importConfig, assetManagementUrl));
           importer.setParentProgressManager(progress);
 
           const { spaceMappings } = await importer.start();

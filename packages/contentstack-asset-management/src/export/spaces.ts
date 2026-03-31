@@ -38,7 +38,6 @@ export class ExportSpaces {
       apiKey,
       context,
       securedAssets,
-      chunkWriteBatchSize,
       chunkFileSizeMb,
     } = this.options;
 
@@ -70,7 +69,6 @@ export class ExportSpaces {
       spacesRootPath,
       context,
       securedAssets,
-      chunkWriteBatchSize,
       chunkFileSizeMb,
     };
 

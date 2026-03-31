@@ -1,12 +1,12 @@
 import { resolve as pResolve, join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
-import { log } from '@contentstack/cli-utilities';
+import { FsUtility, log } from '@contentstack/cli-utilities';
 
 import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementImportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
-import { readChunkedJsonItems } from '../utils/chunked-json-read';
 import { runInBatches } from '../utils/concurrent-batch';
+import { forEachChunkRecordsFromFs } from '../utils/chunked-json-reader';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
 type FolderRecord = {
@@ -26,6 +26,13 @@ type AssetRecord = {
   description?: string;
 };
 
+type UploadJob = {
+  asset: AssetRecord;
+  filePath: string;
+  mappedParentUid: string | undefined;
+  oldUid: string;
+};
+
 /**
  * Imports folders and assets for a single AM space.
  * - Reads `spaces/{spaceUid}/assets/folders.json` → creates folders, builds folderUidMap
@@ -38,16 +45,13 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     super(apiConfig, importContext);
   }
 
-  /**
-   * Loads chunked `assets.json` when present; shared by reuse (identity maps) and upload path.
-   */
-  private async loadExportedAssetItems(spaceDir: string): Promise<AssetRecord[] | null> {
+  private resolveAssetsChunkedLocation(spaceDir: string): { assetsDir: string; indexName: string } | null {
     const assetsDir = pResolve(spaceDir, 'assets');
-    const assetsIndex = this.importContext.assetsFileName ?? 'assets.json';
-    if (!existsSync(join(assetsDir, assetsIndex))) {
+    const indexName = this.importContext.assetsFileName ?? 'assets.json';
+    if (!existsSync(join(assetsDir, indexName))) {
       return null;
     }
-    return readChunkedJsonItems<AssetRecord>(assetsDir, assetsIndex, this.importContext.context);
+    return { assetsDir, indexName };
   }
 
   /**
@@ -60,27 +64,38 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     const uidMap: Record<string, string> = {};
     const urlMap: Record<string, string> = {};
 
-    const assetItems = await this.loadExportedAssetItems(spaceDir);
-    if (!assetItems) {
+    const loc = this.resolveAssetsChunkedLocation(spaceDir);
+    if (!loc) {
       log.debug(
         `No assets.json index in ${pResolve(spaceDir, 'assets')}, identity mappers empty`,
         this.importContext.context,
       );
       return { uidMap, urlMap };
     }
-    log.debug(
-      `Building identity mappers for ${assetItems.length} exported asset(s) (reuse path)`,
-      this.importContext.context,
+
+    const fs = new FsUtility({ basePath: loc.assetsDir, indexFileName: loc.indexName });
+    let totalRows = 0;
+
+    await forEachChunkRecordsFromFs<AssetRecord>(
+      fs,
+      { context: this.importContext.context, chunkReadLogLabel: 'assets' },
+      async (records) => {
+        totalRows += records.length;
+        for (const asset of records) {
+          if (asset.uid) {
+            uidMap[asset.uid] = asset.uid;
+          }
+          if (asset.url) {
+            urlMap[asset.url] = asset.url;
+          }
+        }
+      },
     );
 
-    for (const asset of assetItems) {
-      if (asset.uid) {
-        uidMap[asset.uid] = asset.uid;
-      }
-      if (asset.url) {
-        urlMap[asset.url] = asset.url;
-      }
-    }
+    log.debug(
+      `Built identity mappers for ${totalRows} exported asset row(s) (reuse path, chunked read)`,
+      this.importContext.context,
+    );
 
     return { uidMap, urlMap };
   }
@@ -117,68 +132,85 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     }
 
     // -----------------------------------------------------------------------
-    // 2. Import assets (chunked)
+    // 2. Import assets (chunked on disk — process one chunk file at a time)
     // -----------------------------------------------------------------------
-    const assetItems = await this.loadExportedAssetItems(spaceDir);
-    if (!assetItems) {
+    const loc = this.resolveAssetsChunkedLocation(spaceDir);
+    if (!loc) {
       log.debug(`No assets.json index found in ${assetsDir}, skipping asset upload`, this.importContext.context);
       return { uidMap, urlMap };
     }
+
     this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSETS);
-    log.debug(`Uploading ${assetItems.length} asset(s) for space ${newSpaceUid}`, this.importContext.context);
+    log.debug(
+      `Uploading assets for space ${newSpaceUid} from chunked export (incremental chunks)`,
+      this.importContext.context,
+    );
 
-    type UploadJob = {
-      asset: AssetRecord;
-      filePath: string;
-      mappedParentUid: string | undefined;
-      oldUid: string;
-    };
-    const uploadJobs: UploadJob[] = [];
+    const assetFs = new FsUtility({ basePath: loc.assetsDir, indexFileName: loc.indexName });
+    let exportRowCount = 0;
 
-    for (const asset of assetItems) {
-      const oldUid = asset.uid;
-      const filename = asset.filename ?? asset.file_name ?? 'asset';
-      const filePath = pResolve(assetsDir, 'files', oldUid, filename);
+    await forEachChunkRecordsFromFs<AssetRecord>(
+      assetFs,
+      { context: this.importContext.context, chunkReadLogLabel: 'assets' },
+      async (assetChunk) => {
+        exportRowCount += assetChunk.length;
+        const uploadJobs: UploadJob[] = [];
 
-      if (!existsSync(filePath)) {
-        log.debug(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
-        this.tick(false, `asset: ${oldUid}`, 'File not found on disk', PROCESS_NAMES.AM_IMPORT_ASSETS);
-        continue;
-      }
+        for (const asset of assetChunk) {
+          const oldUid = asset.uid;
+          const filename = asset.filename ?? asset.file_name ?? 'asset';
+          const filePath = pResolve(assetsDir, 'files', oldUid, filename);
 
-      const assetParent = asset.parent_uid && asset.parent_uid !== 'root' ? asset.parent_uid : undefined;
-      const mappedParentUid = assetParent ? folderUidMap[assetParent] ?? undefined : undefined;
+          if (!existsSync(filePath)) {
+            log.debug(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
+            this.tick(false, `asset: ${oldUid}`, 'File not found on disk', PROCESS_NAMES.AM_IMPORT_ASSETS);
+            continue;
+          }
 
-      uploadJobs.push({ asset, filePath, mappedParentUid, oldUid });
-    }
+          const assetParent = asset.parent_uid && asset.parent_uid !== 'root' ? asset.parent_uid : undefined;
+          const mappedParentUid = assetParent ? folderUidMap[assetParent] ?? undefined : undefined;
 
-    await runInBatches(uploadJobs, this.apiConcurrency, async ({ asset, filePath, mappedParentUid, oldUid }) => {
-      const filename = asset.filename ?? asset.file_name ?? 'asset';
-      try {
-        const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
-          title: asset.title ?? filename,
-          description: asset.description,
-          parent_uid: mappedParentUid,
-        });
-
-        uidMap[oldUid] = created.uid;
-
-        if (asset.url && created.url) {
-          urlMap[asset.url] = created.url;
+          uploadJobs.push({ asset, filePath, mappedParentUid, oldUid });
         }
 
-        this.tick(true, `asset: ${oldUid}`, null, PROCESS_NAMES.AM_IMPORT_ASSETS);
-        log.debug(`Uploaded asset ${oldUid} → ${created.uid}`, this.importContext.context);
-      } catch (e) {
-        this.tick(
-          false,
-          `asset: ${oldUid}`,
-          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].FAILED,
-          PROCESS_NAMES.AM_IMPORT_ASSETS,
+        await runInBatches(
+          uploadJobs,
+          this.uploadAssetsBatchConcurrency,
+          async ({ asset, filePath, mappedParentUid, oldUid }) => {
+            const filename = asset.filename ?? asset.file_name ?? 'asset';
+            try {
+              const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
+                title: asset.title ?? filename,
+                description: asset.description,
+                parent_uid: mappedParentUid,
+              });
+
+              uidMap[oldUid] = created.uid;
+
+              if (asset.url && created.url) {
+                urlMap[asset.url] = created.url;
+              }
+
+              this.tick(true, `asset: ${oldUid}`, null, PROCESS_NAMES.AM_IMPORT_ASSETS);
+              log.debug(`Uploaded asset ${oldUid} → ${created.uid}`, this.importContext.context);
+            } catch (e) {
+              this.tick(
+                false,
+                `asset: ${oldUid}`,
+                (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].FAILED,
+                PROCESS_NAMES.AM_IMPORT_ASSETS,
+              );
+              log.debug(`Failed to upload asset ${oldUid}: ${e}`, this.importContext.context);
+            }
+          },
         );
-        log.debug(`Failed to upload asset ${oldUid}: ${e}`, this.importContext.context);
-      }
-    });
+      },
+    );
+
+    log.debug(
+      `Finished asset uploads for space ${newSpaceUid} (${exportRowCount} row(s) read from export chunks)`,
+      this.importContext.context,
+    );
 
     return { uidMap, urlMap };
   }
@@ -212,7 +244,7 @@ export default class ImportAssets extends AssetManagementImportAdapter {
         }
       }
 
-      await runInBatches(ready, this.apiConcurrency, async (folder) => {
+      await runInBatches(ready, this.importFoldersBatchConcurrency, async (folder) => {
         const { parent_uid: parentUid } = folder;
         const isRootParent = !parentUid || parentUid === 'root';
         try {

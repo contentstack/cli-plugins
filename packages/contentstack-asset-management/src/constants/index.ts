@@ -1,5 +1,3 @@
-/** Fallback when export/import do not pass `chunkWriteBatchSize`. */
-export const FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE = 50;
 /** Fallback when export/import do not pass `chunkFileSizeMb`. */
 export const FALLBACK_AM_CHUNK_FILE_SIZE_MB = 1;
 /** Fallback when import does not pass `apiConcurrency`. */
@@ -27,8 +25,6 @@ export const FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS = [
   'category_detail',
 ] as const;
 
-/** @deprecated Use FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE */
-export const BATCH_SIZE = FALLBACK_AM_CHUNK_WRITE_BATCH_SIZE;
 /** @deprecated Use FALLBACK_AM_CHUNK_FILE_SIZE_MB */
 export const CHUNK_FILE_SIZE_MB = FALLBACK_AM_CHUNK_FILE_SIZE_MB;
 

@@ -148,10 +148,6 @@ export type AssetManagementExportOptions = {
    */
   apiKey?: string;
   /**
-   * Chunked JSON write batch size (items per FsUtility write). From export `modules['asset-management']`.
-   */
-  chunkWriteBatchSize?: number;
-  /**
    * FsUtility `chunkFileSize` in MB for AM export chunked writes.
    */
   chunkFileSizeMb?: number;
@@ -180,10 +176,14 @@ export type ImportContext = {
   /** Optional logging context (same shape as ExportConfig.context). */
   context?: Record<string, unknown>;
   /**
-   * Max parallel AM API calls for import (fields, asset types, folders batch, uploads).
+   * Max parallel AM API calls for import (fields, asset types, and default for folders/uploads).
    * Set from `AssetManagementImportOptions.apiConcurrency`.
    */
   apiConcurrency?: number;
+  /** Overrides parallel limit for asset uploads when set (import `modules['asset-management'].uploadAssetsConcurrency`). */
+  uploadAssetsConcurrency?: number;
+  /** Overrides parallel limit for folder creation batches when set (import `modules['asset-management'].importFoldersConcurrency`). */
+  importFoldersConcurrency?: number;
   /** Relative dir under content dir for AM export root (e.g. `spaces`). */
   spacesDirName?: string;
   fieldsDir?: string;
@@ -226,6 +226,8 @@ export type AssetManagementImportOptions = {
   backupDir?: string;
   /** Parallel AM API limit; defaults to package constant when omitted. */
   apiConcurrency?: number;
+  uploadAssetsConcurrency?: number;
+  importFoldersConcurrency?: number;
   spacesDirName?: string;
   fieldsDir?: string;
   assetTypesDir?: string;

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import { log } from '@contentstack/cli-utilities';
@@ -6,7 +8,9 @@ import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-man
 import { AssetManagementImportAdapter } from './base';
 import { FALLBACK_FIELDS_IMPORT_INVALID_KEYS, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import { runInBatches } from '../utils/concurrent-batch';
-import { readChunkedJsonItems } from '../utils/chunked-json-read';
+import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
+
+type FieldToCreate = { uid: string; payload: Record<string, unknown> };
 
 /**
  * Reads shared fields from `spaces/fields/fields.json` and POSTs each to the
@@ -30,15 +34,35 @@ export default class ImportFields extends AssetManagementImportAdapter {
     const stripKeys = this.importContext.fieldsImportInvalidKeys ?? [...FALLBACK_FIELDS_IMPORT_INVALID_KEYS];
     const dir = this.getFieldsDir();
     const indexName = this.importContext.fieldsFileName ?? 'fields.json';
-    const items = await readChunkedJsonItems<Record<string, unknown>>(dir, indexName, this.importContext.context);
+    const indexPath = join(dir, indexName);
 
-    if (items.length === 0) {
-      log.debug('No shared fields to import', this.importContext.context);
+    if (!existsSync(indexPath)) {
+      log.debug('No shared fields to import (index missing)', this.importContext.context);
       return;
     }
 
-    // Fetch existing fields from the target org keyed by uid for diff comparison.
-    // Fields are org-level; the spaceUid param in getWorkspaceFields is unused in the path.
+    const existingByUid = await this.loadExistingFieldsMap();
+
+    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FIELDS);
+
+    await forEachChunkedJsonStore<Record<string, unknown>>(
+      dir,
+      indexName,
+      {
+        context: this.importContext.context,
+        chunkReadLogLabel: 'fields',
+        onOpenError: (e) => log.debug(`Could not open chunked fields index: ${e}`, this.importContext.context),
+        onEmptyIndexer: () => log.debug('No shared fields to import (empty indexer)', this.importContext.context),
+      },
+      async (records) => {
+        const toCreate = this.buildFieldsToCreate(records, existingByUid, stripKeys);
+        await this.importFieldsCreates(toCreate);
+      },
+    );
+  }
+
+  /** Org-level fields keyed by uid for diff; empty map if list API fails. */
+  private async loadExistingFieldsMap(): Promise<Map<string, Record<string, unknown>>> {
     const existingByUid = new Map<string, Record<string, unknown>>();
     try {
       const existing = await this.getWorkspaceFields('');
@@ -49,11 +73,15 @@ export default class ImportFields extends AssetManagementImportAdapter {
     } catch (e) {
       log.debug(`Could not fetch existing fields, will attempt to create all: ${e}`, this.importContext.context);
     }
+    return existingByUid;
+  }
 
-    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FIELDS);
-
-    type ToCreate = { uid: string; payload: Record<string, unknown> };
-    const toCreate: ToCreate[] = [];
+  private buildFieldsToCreate(
+    items: Record<string, unknown>[],
+    existingByUid: Map<string, Record<string, unknown>>,
+    stripKeys: string[],
+  ): FieldToCreate[] {
+    const toCreate: FieldToCreate[] = [];
 
     for (const field of items) {
       const uid = field.uid as string;
@@ -82,6 +110,10 @@ export default class ImportFields extends AssetManagementImportAdapter {
       toCreate.push({ uid, payload: omit(field, stripKeys) as Record<string, unknown> });
     }
 
+    return toCreate;
+  }
+
+  private async importFieldsCreates(toCreate: FieldToCreate[]): Promise<void> {
     await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createField(payload as any);
