@@ -21,7 +21,7 @@ CLI supports content management scripts through which you can perform the follow
 ## Installing CLI
 ### Prerequisites
 Contentstack account
-Node.js version 16 or above
+Node.js version 18 or above
 
 ### Installation
 To install CLI on your system, run the below command in your terminal:
@@ -54,7 +54,7 @@ $ csdx --help
 ## Namespaces
 **auth**: To perform [authentication-related](/packages/contentstack-auth) activities
 
-**cm**: To perform content management activities such as [bulk publish](/packages/contentstack-bulk-publish), [import](/packages/contentstack-import), and [export](/packages/contentstack-export), [export-to-csv] (/packages/contentstack-export-to-csv), [seed] (/packages/contentstack-seed)
+**cm**: To perform content management activities such as [import](/packages/contentstack-import), [export](/packages/contentstack-export), [export-to-csv](/packages/contentstack-export-to-csv), and [seed](/packages/contentstack-seed). For bulk publish commands migrated from CLI 1.x, see [Bulk operations migration](./BULK-OPERATIONS-MIGRATION.md).
 
 **help**: To list the helpful commands in CLI
 

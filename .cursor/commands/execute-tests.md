@@ -9,25 +9,24 @@ description: Run tests by scope, file, or module with intelligent filtering for 
 
 ### Monorepo-Wide Testing
 - `/execute-tests` - Run all tests across all packages
-- `/execute-tests --coverage` - Run all tests with nyc coverage report
+- `/execute-tests --coverage` - Run all tests with coverage reporting
 - `/execute-tests --parallel` - Run package tests in parallel using pnpm
 
 ### Package-Specific Testing
-- `/execute-tests packages/contentstack-audit/` - Run tests for specific package
-- `/execute-tests packages/contentstack-import/` - Run import package tests
-- `/execute-tests packages/contentstack-export/` - Run export package tests
-- `/execute-tests contentstack-migration` - Run tests by package name (shorthand)
+- `/execute-tests contentstack-import` - Run tests for import package
+- `/execute-tests contentstack-export` - Run tests for export package
+- `/execute-tests contentstack-audit` - Run tests for audit package
+- `/execute-tests contentstack-clone` - Run tests for clone package
+- `/execute-tests packages/contentstack-import/` - Run tests using path
 
 ### Scope-Based Testing
 - `/execute-tests unit` - Run unit tests only (`test/unit/**/*.test.ts`)
-- `/execute-tests commands` - Run command tests (`test/commands/**/*.test.ts`)
+- `/execute-tests commands` - Run command tests (`test/unit/commands/**/*.test.ts`)
 - `/execute-tests services` - Run service layer tests
-- `/execute-tests modules` - Run import/export module tests
 
 ### File Pattern Testing
 - `/execute-tests *.test.ts` - Run all TypeScript tests
-- `/execute-tests *.test.js` - Run JavaScript tests (bootstrap package)
-- `/execute-tests test/unit/services/` - Run tests for specific directory
+- `/execute-tests test/unit/commands/` - Run tests for specific directory
 
 ### Watch and Development
 - `/execute-tests --watch` - Run tests in watch mode with file monitoring
@@ -37,10 +36,26 @@ description: Run tests by scope, file, or module with intelligent filtering for 
 ## Intelligent Filtering
 
 ### Repository-Aware Detection
-- **Test patterns**: Primarily `*.test.ts`, some `*.test.js` (bootstrap), rare `*.spec.ts`
-- **Directory structures**: `test/unit/`, `test/lib/`, `test/seed/`, `test/commands/`
-- **Package variations**: Different test layouts per package
+- **Test patterns**: All use `*.test.ts` naming convention
+- **Directory structures**: Standard `test/unit/` layout
+- **Test locations**: `packages/*/test/unit/**/*.test.ts`
 - **Build exclusion**: Ignores `lib/` directories (compiled artifacts)
+
+### Package Structure
+The monorepo contains 11 CLI plugin packages:
+- `contentstack-audit` - Stack audit and fix operations
+- `contentstack-bootstrap` - Seed/bootstrap stacks
+- `contentstack-branches` - Git-based branch management
+- `contentstack-clone` - Clone/duplicate stacks
+- `contentstack-export` - Export stack content
+- `contentstack-export-to-csv` - Export to CSV format
+- `contentstack-import` - Import content to stacks
+- `contentstack-import-setup` - Import setup and validation
+- `contentstack-migration` - Content migration workflows
+- `contentstack-seed` - Seed stacks with data
+- `contentstack-variants` - Manage content variants
+
+For bulk publish workflows removed from this repo, see `BULK-OPERATIONS-MIGRATION.md`.
 
 ### Monorepo Integration
 - **pnpm workspace support**: Uses `pnpm -r --filter` for package targeting
@@ -50,9 +65,9 @@ description: Run tests by scope, file, or module with intelligent filtering for 
 
 ### Framework Detection
 - **Mocha configuration**: Respects `.mocharc.json` files per package
-- **TypeScript compilation**: Handles `pretest: tsc -p test` scripts
-- **Coverage integration**: Works with nyc configuration (`.nycrc.json`)
-- **Test helpers**: Detects and includes test initialization files
+- **TypeScript compilation**: Handles test TypeScript setup
+- **Test setup**: Detects test helper initialization files
+- **Test timeout**: 30 seconds standard (configurable per package)
 
 ## Execution Examples
 
@@ -62,16 +77,16 @@ description: Run tests by scope, file, or module with intelligent filtering for 
 /execute-tests --coverage
 
 # Test specific package during development
-/execute-tests packages/contentstack-import/ --watch
+/execute-tests contentstack-import --watch
 
-# Run only unit tests across all packages
-/execute-tests unit
+# Run only command tests across all packages
+/execute-tests commands
 
-# Test import/export modules specifically
-/execute-tests modules --coverage
+# Run unit tests with detailed output
+/execute-tests --debug
 
-# Debug failing tests in audit package
-/execute-tests packages/contentstack-audit/ --debug --bail
+# Test until first failure (quick feedback)
+/execute-tests --bail
 ```
 
 ### Package-Specific Commands Generated
@@ -79,29 +94,160 @@ description: Run tests by scope, file, or module with intelligent filtering for 
 # For contentstack-import package
 cd packages/contentstack-import && pnpm test
 
-# For all packages with coverage
-pnpm -r --filter './packages/*' run test:coverage
+# For all packages with parallel execution
+pnpm -r run test
 
 # For specific test file
-cd packages/contentstack-export && npx mocha test/unit/export/modules/stack.test.ts
+cd packages/contentstack-import && npx mocha "test/unit/commands/import.test.ts"
+
+# With coverage
+pnpm -r run test:coverage
 ```
 
 ## Configuration Awareness
 
 ### Mocha Integration
 - Respects individual package `.mocharc.json` configurations
-- Handles TypeScript compilation via `ts-node/register`
+- Handles TypeScript compilation via ts-node/register
 - Supports test helpers and initialization files
-- Manages timeout settings per package
+- Manages timeout settings per package (default 30 seconds)
 
-### Coverage Integration
-- Uses nyc for coverage reporting
-- Respects `.nycrc.json` configurations (with typo detection)
-- Generates HTML, text, and lcov reports
-- Handles TypeScript source mapping
+### Test Configuration
+```json
+// .mocharc.json
+{
+  "require": [
+    "test/helpers/init.js",
+    "ts-node/register",
+    "source-map-support/register"
+  ],
+  "recursive": true,
+  "timeout": 30000,
+  "spec": "test/**/*.test.ts"
+}
+```
 
 ### pnpm Workspace Features
 - Leverages workspace dependency resolution
 - Supports filtered execution by package patterns
 - Enables parallel test execution across packages
 - Respects package-specific scripts and configurations
+
+## Test Structure
+
+### Standard Test Organization
+```
+packages/*/
+├── test/
+│   └── unit/
+│       ├── commands/        # Command-specific tests
+│       ├── services/        # Service/business logic tests
+│       └── utils/           # Utility function tests
+└── src/
+    ├── commands/            # CLI commands
+    ├── services/            # Business logic
+    └── utils/               # Utilities
+```
+
+### Test File Naming
+- **Pattern**: `*.test.ts` across all packages
+- **Location**: `test/unit/` directories
+- **Organization**: Mirrors `src/` structure for easy navigation
+
+## Performance Optimization
+
+### Parallel Testing
+```bash
+# Run tests in parallel for faster feedback
+pnpm -r --filter './packages/*' run test
+
+# Watch mode during development
+/execute-tests --watch
+```
+
+### Selective Testing
+- Run only affected packages' tests during development
+- Use `--bail` to stop on first failure for quick iteration
+- Target specific test files for focused debugging
+
+## Troubleshooting
+
+### Common Issues
+
+**Tests not found**
+- Check that files follow `*.test.ts` pattern
+- Verify files are in `test/unit/` directory
+- Ensure `.mocharc.json` has correct spec pattern
+
+**TypeScript compilation errors**
+- Verify `tsconfig.json` in package root
+- Check that `ts-node/register` is in `.mocharc.json` requires
+- Run `pnpm compile` to check TypeScript errors
+
+**Watch mode not detecting changes**
+- Verify `--watch` flag is supported in your Mocha version
+- Check that file paths are correct
+- Ensure no excessive `.gitignore` patterns
+
+**Port conflicts**
+- Tests should not use hard-coded ports
+- Use dynamic port allocation or test isolation
+- Check for process cleanup in `afterEach` hooks
+
+## Best Practices
+
+### Test Execution
+- Run tests before committing: `pnpm test`
+- Use `--bail` during development for quick feedback
+- Run full suite before opening PR
+- Check coverage for critical paths
+
+### Test Organization
+- Keep tests close to source code structure
+- Use descriptive test names
+- Group related tests with `describe` blocks
+- Clean up resources in `afterEach`
+
+### Debugging
+- Use `--debug` flag for detailed output
+- Add `log.debug()` statements in tests
+- Run individual test files for isolation
+- Use `--bail` to stop at first failure
+
+## Integration with CI/CD
+
+### GitHub Actions
+- Runs `pnpm test` on pull requests
+- Enforces test passage before merge
+- May include coverage reporting
+- Runs linting and build verification
+
+### Local Development
+```bash
+# Before committing
+pnpm test
+pnpm run lint
+pnpm run build
+
+# Or use watch mode for faster iteration
+pnpm test --watch
+```
+
+## Coverage Reporting
+
+### Coverage Commands
+```bash
+# Run tests with coverage
+/execute-tests --coverage
+
+# Coverage output location
+coverage/
+├── index.html          # HTML report
+├── coverage-summary.json # JSON summary
+└── lcov.info          # LCOV format
+```
+
+### Coverage Goals
+- **Team aspiration**: 80% minimum coverage
+- **Focus on**: Critical business logic and error paths
+- **Not critical**: Utility functions and edge cases
