@@ -1,0 +1,477 @@
+---
+description: "Contentstack CLI plugin package patterns — commands, services, base-commands, and inter-plugin dependencies"
+globs: ["packages/contentstack-*/src/**/*.ts", "packages/contentstack-*/src/**/*.js"]
+alwaysApply: false
+---
+
+# Contentstack CLI Plugin Standards
+
+## Overview
+
+The **cli-plugins** monorepo contains 11 OCLIF plugin packages under `packages/`:
+- `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-seed`, `contentstack-variants`
+
+Bulk publish previously lived in `contentstack-bulk-publish`; see `BULK-OPERATIONS-MIGRATION.md` for the unified bulk operations migration path.
+
+Each plugin is a self-contained OCLIF package that:
+- **Defines commands** — via `oclif.commands` in `package.json` pointing to `./lib/commands`
+- **Depends on shared libraries** — `@contentstack/cli-command` (Base Command class), `@contentstack/cli-utilities` (shared utils and services)
+- **May depend on other plugins** — e.g., `contentstack-import` depends on `@contentstack/cli-audit` for audit operations
+- **Implements business logic** — in services, modules, and utility classes
+- **Has a local base-command** — extending `@contentstack/cli-command` Command class with plugin-specific initialization and flags
+
+## Architecture
+
+### Package Structure
+
+```
+packages/contentstack-import/
+├── src/
+│   ├── commands/
+│   │   └── cm/
+│   │       └── stacks/
+│   │           └── import.ts
+│   ├── services/
+│   │   ├── import-service.ts
+│   │   └── validation-service.ts
+│   ├── modules/
+│   │   ├── entries.ts
+│   │   ├── assets.ts
+│   │   └── ...
+│   ├── base-command.ts (or import-base-command.ts)
+│   ├── types/
+│   ├── interfaces/
+│   ├── messages/
+│   └── utils/
+├── test/
+│   └── unit/
+│       ├── commands/
+│       ├── services/
+│       └── ...
+├── package.json
+├── tsconfig.json
+└── .mocharc.json
+```
+
+### Package Configuration
+
+Each plugin's `package.json` declares its commands and declares itself as an OCLIF plugin:
+
+```json
+{
+  "name": "@contentstack/cli-cm-import",
+  "oclif": {
+    "commands": "./lib/commands",
+    "topics": {
+      "stacks": {
+        "description": "Manage stacks"
+      }
+    }
+  },
+  "dependencies": {
+    "@contentstack/cli-command": "~2.0.0-beta.5",
+    "@contentstack/cli-utilities": "~2.0.0-beta.5",
+    "@contentstack/cli-audit": "~2.0.0-beta.9"
+  }
+}
+```
+
+## Base Command Pattern
+
+### Plugin-Specific Base Command
+
+Each plugin defines its own `BaseCommand` (or specialized variant like `AuditBaseCommand`):
+
+```typescript
+// ✅ GOOD - packages/contentstack-audit/src/base-command.ts
+import { Command } from '@contentstack/cli-command';
+import { Flags, FlagInput } from '@contentstack/cli-utilities';
+
+export abstract class BaseCommand<T extends typeof Command> extends Command {
+  protected sharedConfig = {
+    basePath: process.cwd(),
+  };
+
+  static baseFlags: FlagInput = {
+    config: Flags.string({
+      char: 'c',
+      description: 'Path to config file',
+    }),
+    'data-dir': Flags.string({
+      char: 'd',
+      description: 'Data directory path',
+    }),
+  };
+
+  public async init(): Promise<void> {
+    await super.init();
+    const { args, flags } = await this.parse({
+      flags: this.ctor.flags,
+      args: this.ctor.args,
+      strict: this.ctor.strict !== false,
+    });
+    this.args = args;
+    this.flags = flags;
+  }
+}
+```
+
+### Specialized Base Commands
+
+Some plugins define specialized versions for specific concerns:
+
+```typescript
+// ✅ GOOD - packages/contentstack-audit/src/audit-base-command.ts
+// Extends BaseCommand with audit-specific logic
+import { BaseCommand } from './base-command';
+
+export abstract class AuditBaseCommand extends BaseCommand {
+  // Audit-specific initialization and helpers
+  protected async runAudit(): Promise<void> {
+    // Common audit logic
+  }
+}
+
+// Usage in commands
+export default class AuditFixCommand extends AuditBaseCommand {
+  async run(): Promise<void> {
+    await this.runAudit();
+  }
+}
+```
+
+## Command Structure
+
+### CM Topic Commands
+
+Commands are organized under the `cm` topic with subtopics for domains:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/src/commands/cm/stacks/import.ts
+import { Flags, FlagInput, cliux } from '@contentstack/cli-utilities';
+import { BaseCommand } from '../../../base-command';
+
+export default class ImportCommand extends BaseCommand {
+  static id = 'cm:stacks:import';
+  static description = 'Import content into a stack';
+  static examples = [
+    '$ csdx cm:stacks:import -k <stack-api-key> -d <data-dir>',
+    '$ csdx cm:stacks:import -k <stack-api-key> -d <data-dir> --content-types entry,asset',
+  ];
+
+  static flags: FlagInput = {
+    'stack-api-key': Flags.string({
+      char: 'k',
+      description: 'Stack API key',
+      required: true,
+    }),
+    'data-dir': Flags.string({
+      char: 'd',
+      description: 'Directory with import data',
+      required: true,
+    }),
+    'content-types': Flags.string({
+      description: 'Content types to import (comma-separated)',
+      default: 'all',
+    }),
+  };
+
+  async run(): Promise<void> {
+    try {
+      const { flags } = this;
+      cliux.loaderV2('Starting import...');
+      
+      // Delegate to service
+      const importService = new ImportService(flags);
+      await importService.import();
+      
+      cliux.success('Import completed');
+    } catch (error) {
+      handleAndLogError(error, {
+        module: 'import',
+        command: this.id,
+      });
+    }
+  }
+}
+```
+
+## Service and Module Patterns
+
+### Service Layer
+
+Services encapsulate business logic and are used by commands:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/src/services/import-service.ts
+import { cliux, log } from '@contentstack/cli-utilities';
+
+export class ImportService {
+  constructor(private flags: any) {}
+
+  async import(): Promise<void> {
+    // Orchestrate import workflow
+    await this.validateInput();
+    await this.loadData();
+    await this.importContent();
+  }
+
+  private async validateInput(): Promise<void> {
+    log.debug('Validating input', { module: 'import-service' });
+    // Validation logic
+  }
+
+  private async loadData(): Promise<void> {
+    // Load data from directory
+  }
+
+  private async importContent(): Promise<void> {
+    // Import content logic
+  }
+}
+```
+
+### Module Pattern
+
+Some plugins use modules for domain-specific operations:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/src/modules/entries.ts
+import isEmpty from 'lodash/isEmpty';
+import { log } from '@contentstack/cli-utilities';
+
+export class Entries {
+  constructor(private client: any, private basePath: string) {}
+
+  async import(entries: any[]): Promise<void> {
+    if (isEmpty(entries)) {
+      log.debug('No entries to import');
+      return;
+    }
+
+    for (const entry of entries) {
+      await this.importEntry(entry);
+    }
+  }
+
+  private async importEntry(entry: any): Promise<void> {
+    // Import individual entry
+  }
+}
+```
+
+## Shared Dependencies
+
+All plugins depend on core libraries:
+
+```json
+{
+  "dependencies": {
+    "@contentstack/cli-command": "~2.0.0-beta.5",
+    "@contentstack/cli-utilities": "~2.0.0-beta.5"
+  }
+}
+```
+
+### Common Utilities Used
+
+```typescript
+// ✅ GOOD - Import and use shared utilities
+import {
+  cliux,           // CLI UI helpers (loaders, tables, success/error)
+  ux,              // OCLIF ux utilities
+  log,             // Structured logging
+  handleAndLogError, // Error handling with context
+  configHandler,   // CLI configuration management
+  sanitizePath,    // Path sanitization
+  managementSDKClient, // Contentstack API client factory
+} from '@contentstack/cli-utilities';
+
+import { Command, Interfaces } from '@contentstack/cli-command';
+```
+
+## Inter-Plugin Dependencies
+
+Plugins can depend on other plugins to share functionality:
+
+```json
+{
+  "dependencies": {
+    "@contentstack/cli-audit": "~2.0.0-beta.9"
+  }
+}
+```
+
+### Using Shared Plugin Code
+
+```typescript
+// ✅ GOOD - Import from other plugin packages
+import { AuditService } from '@contentstack/cli-audit';
+
+export class ImportService {
+  async import(): Promise<void> {
+    // Do import
+    await new AuditService().runAudit();
+  }
+}
+```
+
+## Error Handling
+
+Error handling follows a consistent pattern across plugins:
+
+```typescript
+// ✅ GOOD - Comprehensive error handling
+import { handleAndLogError, CLIError } from '@contentstack/cli-utilities';
+
+async run(): Promise<void> {
+  try {
+    // Business logic
+    const result = await this.importService.import();
+    return result;
+  } catch (error) {
+    // Log error with module/command context
+    handleAndLogError(error, {
+      module: 'import',
+      command: this.id,
+      dataDir: this.flags['data-dir'],
+    });
+    this.exit(1);
+  }
+}
+```
+
+## Build Process
+
+Each plugin builds independently but follows the same pattern:
+
+```bash
+# In package.json scripts
+"build": "pnpm compile && oclif manifest"
+```
+
+### Build Steps
+
+1. **compile** — TypeScript → JavaScript in `lib/`
+2. **oclif manifest** — Generate `oclif.manifest.json` for command discovery
+
+### Build Artifacts
+
+- `lib/` — Compiled commands, services, modules
+- `oclif.manifest.json` — Command registry for this plugin
+- `README.md` — Generated command documentation (optional)
+
+## Configuration and Messaging
+
+### Messages
+
+Plugins store user-facing strings in centralized message files:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/src/messages/index.ts
+export const importMsg = {
+  IMPORT_START: 'Starting import...',
+  IMPORT_SUCCESS: 'Import completed successfully',
+  VALIDATION_ERROR: 'Validation failed: {{reason}}',
+};
+```
+
+### Configuration
+
+Plugin-specific defaults are stored in config files:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/src/config/index.ts
+export default {
+  batchSize: 50,
+  retryAttempts: 3,
+  timeout: 30000,
+  logLevel: 'info',
+};
+```
+
+## Testing Patterns
+
+### Command Testing
+
+Test commands using `@oclif/test`:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/test/unit/commands/import.test.ts
+import { test } from '@oclif/test';
+import { expect } from 'chai';
+
+describe('ImportCommand', () => {
+  test
+    .stdout()
+    .command(['cm:stacks:import', '--help'])
+    .it('shows help message', (ctx) => {
+      expect(ctx.stdout).to.contain('Import content');
+    });
+
+  test
+    .command(['cm:stacks:import', '-k', 'test-key', '-d', '/tmp/data'])
+    .it('runs import command');
+});
+```
+
+### Service Testing
+
+Test services with unit tests:
+
+```typescript
+// ✅ GOOD - packages/contentstack-import/test/unit/services/import-service.test.ts
+import { expect } from 'chai';
+import { ImportService } from '../../../src/services/import-service';
+
+describe('ImportService', () => {
+  let service: ImportService;
+
+  beforeEach(() => {
+    service = new ImportService({
+      'stack-api-key': 'test-key',
+      'data-dir': '/tmp/data',
+    });
+  });
+
+  it('should validate input before import', async () => {
+    // Test validation logic
+  });
+
+  it('should handle import errors', async () => {
+    // Test error handling
+  });
+});
+```
+
+## Best Practices
+
+### Command Design
+- Keep commands thin — delegate to services
+- Validate flags early and fail fast
+- Provide clear error messages with actionable guidance
+- Include command examples in static `examples`
+
+### Service Design
+- Keep services focused on a single domain
+- Make services testable by accepting dependencies via constructor
+- Use modules for complex domain operations
+- Document service public API clearly
+
+### Error Handling
+- Always provide context in error logs (module, command, relevant state)
+- Use structured error types (CLIError) for user-facing errors
+- Include remediation guidance in error messages
+- Log all errors, even those caught and handled
+
+### Testing
+- Test commands with @oclif/test
+- Test services with unit tests and mocks
+- Cover both happy path and error cases
+- Use fixtures for test data, not live APIs
+
+### Dependencies
+- Always use `@contentstack/cli-utilities` for CLI concerns
+- Use `@contentstack/cli-command` as base for commands
+- Depend on other plugins only if truly needed (watch for circular deps)
+- Pin dependency versions to minor (`~` semver) for stability
