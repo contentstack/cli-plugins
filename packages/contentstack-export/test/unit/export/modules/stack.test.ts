@@ -187,6 +187,7 @@ describe('ExportStack', () => {
         stack: {
           dirName: 'stack',
           fileName: 'stack.json',
+          invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid', 'description', 'master_key'],
           limit: 100,
         },
         dependency: {
@@ -424,22 +425,30 @@ describe('ExportStack', () => {
   });
 
   describe('exportStack() method', () => {
-    it('should export stack successfully and write to file', async () => {
+    it('should export stack successfully and write to file omitting invalidKeys', async () => {
       const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       const makeDirectoryStub = FsUtility.prototype.makeDirectory as sinon.SinonStub;
-      const stackData = { name: 'Test Stack', uid: 'stack-uid', org_uid: 'org-123' };
+      const stackData = {
+        name: 'Test Stack',
+        uid: 'stack-uid',
+        org_uid: 'org-123',
+        SYS_ACL: {},
+        user_uids: ['u1'],
+        owner_uid: 'owner-1',
+        description: 'Stack description',
+        master_key: 'secret-master-key',
+      };
+      const expectedWritten = { name: 'Test Stack', uid: 'stack-uid', org_uid: 'org-123' };
       mockStackClient.fetch = sinon.stub().resolves(stackData);
 
       const result = await exportStack.exportStack();
 
       expect(writeFileStub.called).to.be.true;
       expect(makeDirectoryStub.called).to.be.true;
-      // Should return the stack data
-      expect(result).to.deep.equal(stackData);
-      // Verify file was written with correct path
+      expect(result).to.deep.equal(expectedWritten);
       const writeCall = writeFileStub.getCall(0);
       expect(writeCall.args[0]).to.include('stack.json');
-      expect(writeCall.args[1]).to.deep.equal(stackData);
+      expect(writeCall.args[1]).to.deep.equal(expectedWritten);
     });
 
     it('should handle errors when exporting stack without throwing', async () => {
@@ -544,9 +553,11 @@ describe('ExportStack', () => {
       getStackStub.restore();
     });
 
-    it('should skip exportStackSettings when management_token is present', async () => {
-      const getStackStub = sinon.stub(exportStack, 'getStack').resolves({});
+    it('should write stack.json from config api_key only when management_token is present', async () => {
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      const getStackSpy = sinon.spy(exportStack, 'getStack');
       const exportStackSettingsSpy = sinon.spy(exportStack, 'exportStackSettings');
+      const exportStackSpy = sinon.spy(exportStack, 'exportStack');
 
       exportStack.exportConfig.management_token = 'some-token';
       exportStack.exportConfig.preserveStackVersion = false;
@@ -555,11 +566,20 @@ describe('ExportStack', () => {
 
       await exportStack.start();
 
-      // Verify exportStackSettings was NOT called
+      expect(getStackSpy.called).to.be.false;
       expect(exportStackSettingsSpy.called).to.be.false;
+      expect(exportStackSpy.called).to.be.false;
 
-      getStackStub.restore();
+      const stackJsonWrite = writeFileStub.getCalls().find((c) => String(c.args[0]).includes('stack.json'));
+      expect(stackJsonWrite).to.exist;
+      expect(stackJsonWrite!.args[1]).to.deep.equal({ api_key: 'test-api-key' });
+
+      const settingsWrite = writeFileStub.getCalls().find((c) => String(c.args[0]).includes('settings.json'));
+      expect(settingsWrite).to.be.undefined;
+
+      getStackSpy.restore();
       exportStackSettingsSpy.restore();
+      exportStackSpy.restore();
     });
   });
 });
