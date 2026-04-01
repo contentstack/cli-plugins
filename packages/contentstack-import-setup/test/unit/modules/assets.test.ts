@@ -1,10 +1,13 @@
 import { expect } from 'chai';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { stub, restore, SinonStub } from 'sinon';
+import * as amPkg from '@contentstack/cli-asset-management';
 import AssetImportSetup from '../../../src/import/modules/assets';
 import * as loggerModule from '../../../src/utils/logger';
 import * as fsUtilModule from '../../../src/utils/file-helper';
 import { ImportConfig } from '../../../src/types';
-import * as path from 'path';
 import { sanitizePath } from '@contentstack/cli-utilities';
 
 describe('AssetImportSetup', () => {
@@ -136,4 +139,187 @@ describe('AssetImportSetup', () => {
   //     expect(writeFileStub.calledWith((assetSetup as any).duplicateAssetPath)).to.be.true;
   //     // expect(logStub.calledWith(baseConfig, sinon.match.string, 'info')).to.be.true;
   //   });
+});
+
+describe('AssetImportSetup Asset Management export', () => {
+  let mockStackAPIClient: any;
+  let mapperStartStub: SinonStub;
+  let setParentProgressStub: SinonStub;
+  let amContentDir: string;
+  let backupDir: string;
+  let lastMapperParams: Record<string, unknown> | undefined;
+
+  beforeEach(() => {
+    restore();
+
+    amContentDir = path.join(os.tmpdir(), `am-import-setup-${Date.now()}`);
+    backupDir = path.join(os.tmpdir(), `am-import-setup-backup-${Date.now()}`);
+    fs.mkdirSync(amContentDir, { recursive: true });
+    fs.mkdirSync(backupDir, { recursive: true });
+
+    mockStackAPIClient = {
+      asset: stub().returns({
+        query: stub().returnsThis(),
+        find: stub().resolves({ items: [] }),
+      }),
+    };
+
+    stub(loggerModule, 'log');
+    lastMapperParams = undefined;
+    setParentProgressStub = stub(amPkg.ImportSetupAssetMappers.prototype, 'setParentProgressManager');
+    mapperStartStub = stub(amPkg.ImportSetupAssetMappers.prototype, 'start').callsFake(async function (this: {
+      params: Record<string, unknown>;
+    }) {
+      lastMapperParams = this.params;
+      return { kind: 'success' as const };
+    });
+  });
+
+  afterEach(() => {
+    restore();
+    if (fs.existsSync(amContentDir)) {
+      fs.rmSync(amContentDir, { recursive: true, force: true });
+    }
+    if (fs.existsSync(backupDir)) {
+      fs.rmSync(backupDir, { recursive: true, force: true });
+    }
+  });
+
+  const amBaseConfig = (): ImportConfig =>
+    ({
+      contentDir: amContentDir,
+      data: amContentDir,
+      apiKey: 'test-api-key',
+      forceStopMarketplaceAppsPrompt: false,
+      master_locale: { code: 'en-us' },
+      masterLocale: { code: 'en-us' },
+      branchName: '',
+      selectedModules: ['assets'],
+      backupDir,
+      region: {
+        cma: 'https://api.contentstack.io/v3',
+        assetManagementUrl: 'https://am.example.com',
+      },
+      host: 'https://api.contentstack.io/v3',
+      fetchConcurrency: 2,
+      writeConcurrency: 1,
+      assetManagementEnabled: true,
+      org_uid: 'org-uid-test',
+      source_stack: 'source-api-key',
+      context: {},
+      modules: {
+        assets: {
+          fetchConcurrency: 2,
+          dirName: 'assets',
+          fileName: 'assets',
+        },
+      },
+    } as unknown as ImportConfig);
+
+  it('delegates to ImportSetupAssetMappers and completes progress on success', async () => {
+    const assetSetup = new AssetImportSetup({
+      config: amBaseConfig(),
+      stackAPIClient: mockStackAPIClient,
+      dependencies: {} as any,
+    });
+
+    const nested = {
+      addProcess: stub().returnsThis(),
+      startProcess: stub().returnsThis(),
+      updateStatus: stub().returnsThis(),
+      completeProcess: stub().returnsThis(),
+    };
+    stub(assetSetup as any, 'createNestedProgress').returns(nested);
+    const completeStub = stub(assetSetup as any, 'completeProgress');
+
+    await assetSetup.start();
+
+    expect(mapperStartStub.calledOnce).to.be.true;
+    expect(lastMapperParams).to.exist;
+    const params = lastMapperParams!;
+    expect(params.contentDir).to.equal(sanitizePath(amContentDir));
+    expect(params.mapperBaseDir).to.equal(sanitizePath(backupDir));
+    expect(params.assetManagementUrl).to.equal('https://am.example.com');
+    expect(params.org_uid).to.equal('org-uid-test');
+    expect(params.source_stack).to.equal('source-api-key');
+    expect(params.apiKey).to.equal('test-api-key');
+    expect(params.host).to.equal('https://api.contentstack.io/v3');
+    expect(params.fetchConcurrency).to.equal(2);
+    expect(setParentProgressStub.calledOnce).to.be.true;
+    expect(setParentProgressStub.firstCall.args[0]).to.equal(nested);
+    expect(completeStub.calledOnceWithExactly(true)).to.be.true;
+  });
+
+  it('does not run ImportSetupAssetMappers when assetManagementUrl is missing', async () => {
+    const cfg = amBaseConfig();
+    (cfg as any).region = { cma: 'https://api.contentstack.io/v3' };
+
+    const assetSetup = new AssetImportSetup({
+      config: cfg,
+      stackAPIClient: mockStackAPIClient,
+      dependencies: {} as any,
+    });
+
+    stub(assetSetup as any, 'createNestedProgress').returns({
+      addProcess: stub().returnsThis(),
+      startProcess: stub().returnsThis(),
+      updateStatus: stub().returnsThis(),
+      completeProcess: stub().returnsThis(),
+    });
+    const completeStub = stub(assetSetup as any, 'completeProgress');
+
+    await assetSetup.start();
+
+    expect(mapperStartStub.called).to.be.false;
+    expect(setParentProgressStub.called).to.be.false;
+    expect(completeStub.called).to.be.false;
+  });
+
+  it('calls completeProgress(false) when mapper returns error', async () => {
+    mapperStartStub.resolves({ kind: 'error', errorMessage: 'mapper failed' });
+
+    const assetSetup = new AssetImportSetup({
+      config: amBaseConfig(),
+      stackAPIClient: mockStackAPIClient,
+      dependencies: {} as any,
+    });
+
+    stub(assetSetup as any, 'createNestedProgress').returns({
+      addProcess: stub().returnsThis(),
+      startProcess: stub().returnsThis(),
+      updateStatus: stub().returnsThis(),
+      completeProcess: stub().returnsThis(),
+    });
+    const completeStub = stub(assetSetup as any, 'completeProgress');
+
+    await assetSetup.start();
+
+    expect(setParentProgressStub.calledOnce).to.be.true;
+    expect(completeStub.calledOnceWithExactly(false, 'mapper failed')).to.be.true;
+  });
+
+  it('does not run ImportSetupAssetMappers when org_uid is missing', async () => {
+    const cfg = amBaseConfig();
+    delete (cfg as any).org_uid;
+
+    const assetSetup = new AssetImportSetup({
+      config: cfg,
+      stackAPIClient: mockStackAPIClient,
+      dependencies: {} as any,
+    });
+
+    stub(assetSetup as any, 'createNestedProgress').returns({
+      addProcess: stub().returnsThis(),
+      startProcess: stub().returnsThis(),
+      updateStatus: stub().returnsThis(),
+      completeProcess: stub().returnsThis(),
+    });
+    const completeStub = stub(assetSetup as any, 'completeProgress');
+
+    await assetSetup.start();
+
+    expect(mapperStartStub.called).to.be.false;
+    expect(setParentProgressStub.called).to.be.false;
+    expect(completeStub.called).to.be.false;
+  });
 });

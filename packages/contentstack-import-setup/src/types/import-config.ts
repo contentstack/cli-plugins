@@ -48,6 +48,8 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   createBackupDir?: string;
   region: any;
   authenticationMethod?: string;
+  /** Set when export layout is Asset Management (`spaces/` + stack settings key `am_v2`). */
+  assetManagementEnabled?: boolean;
 }
 
 type branch = {

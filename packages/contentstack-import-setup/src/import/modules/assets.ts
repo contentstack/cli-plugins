@@ -1,8 +1,9 @@
-import { log, fsUtil } from '../../utils';
 import { join } from 'path';
-import { AssetRecord, ImportConfig, ModuleClassParams } from '../../types';
 import { isEmpty, orderBy, values } from 'lodash';
+import { ImportSetupAssetMappers } from '@contentstack/cli-asset-management';
 import { formatError, FsUtility, sanitizePath } from '@contentstack/cli-utilities';
+import { buildImportSetupAssetMapperParams, log, fsUtil } from '../../utils';
+import { AssetRecord, ImportConfig, ModuleClassParams } from '../../types';
 import BaseImportSetup from './base-setup';
 import { MODULE_NAMES, MODULE_CONTEXTS, PROCESS_NAMES, PROCESS_STATUS } from '../../utils';
 
@@ -40,8 +41,36 @@ export default class AssetImportSetup extends BaseImportSetup {
    */
   async start() {
     try {
+      if (this.config.assetManagementEnabled) {
+        const assetManagementUrl = this.config.region?.assetManagementUrl;
+        if (!assetManagementUrl) {
+          log(
+            this.config,
+            'Asset Management export detected but region.assetManagementUrl is not configured. Skipping asset mapper setup.',
+            'info',
+          );
+          return;
+        }
+        if (!this.config.org_uid) {
+          log(this.config, 'Cannot run Asset Management import-setup: organization UID is missing.', 'error');
+          return;
+        }
+        const progress = this.createNestedProgress(this.currentModuleName);
+        const mappers = new ImportSetupAssetMappers(
+          buildImportSetupAssetMapperParams(this.config, assetManagementUrl),
+        );
+        mappers.setParentProgressManager(progress);
+        const result = await mappers.start();
+        if (result.kind === 'success') {
+          this.completeProgress(true);
+        } else if (result.kind === 'error') {
+          this.completeProgress(false, result.errorMessage);
+        }
+        return;
+      }
+
       const progress = this.createNestedProgress(this.currentModuleName);
-      
+
       // Analyze to get chunk count
       const indexerCount = await this.withLoadingSpinner('ASSETS: Analyzing import data...', async () => {
         const basePath = this.assetsFolderPath;
@@ -63,10 +92,7 @@ export default class AssetImportSetup extends BaseImportSetup {
       // Create mapper directory
       progress
         .startProcess(PROCESS_NAMES.ASSETS_MAPPER_GENERATION)
-        .updateStatus(
-          PROCESS_STATUS.ASSETS_MAPPER_GENERATION.GENERATING,
-          PROCESS_NAMES.ASSETS_MAPPER_GENERATION,
-        );
+        .updateStatus(PROCESS_STATUS.ASSETS_MAPPER_GENERATION.GENERATING, PROCESS_NAMES.ASSETS_MAPPER_GENERATION);
       fsUtil.makeDirectory(this.mapperDirPath);
       this.progressManager?.tick(true, 'mapper directory created', null, PROCESS_NAMES.ASSETS_MAPPER_GENERATION);
       progress.completeProcess(PROCESS_NAMES.ASSETS_MAPPER_GENERATION, true);
@@ -74,10 +100,7 @@ export default class AssetImportSetup extends BaseImportSetup {
       // Fetch and map assets
       progress
         .startProcess(PROCESS_NAMES.ASSETS_FETCH_AND_MAP)
-        .updateStatus(
-          PROCESS_STATUS.ASSETS_FETCH_AND_MAP.FETCHING,
-          PROCESS_NAMES.ASSETS_FETCH_AND_MAP,
-        );
+        .updateStatus(PROCESS_STATUS.ASSETS_FETCH_AND_MAP.FETCHING, PROCESS_NAMES.ASSETS_FETCH_AND_MAP);
       await this.fetchAndMapAssets();
       progress.completeProcess(PROCESS_NAMES.ASSETS_FETCH_AND_MAP, true);
 

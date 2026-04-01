@@ -8,3 +8,4 @@ export * from './log';
 export * from './common-helper';
 export { setupBranchConfig } from './setup-branch';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
+export { buildImportSetupAssetMapperParams } from './import-setup-asset-mapper-params';

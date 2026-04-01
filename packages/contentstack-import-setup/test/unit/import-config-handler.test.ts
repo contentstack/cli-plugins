@@ -4,6 +4,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import { stub, restore, SinonStub } from 'sinon';
 import * as utilities from '@contentstack/cli-utilities';
+import * as cliAm from '@contentstack/cli-asset-management';
 import setupConfig from '../../src/utils/import-config-handler';
 import * as interactive from '../../src/utils/interactive';
 
@@ -132,5 +133,26 @@ describe('Import Config Handler', () => {
 
     expect(askSelectedModulesStub.calledOnce).to.be.true;
     expect(config.selectedModules).to.deep.equal(['entries']);
+  });
+
+  it('should merge Asset Management export flags from detectAssetManagementExportFromContentDir into config', async () => {
+    const detectStub = stub(cliAm, 'detectAssetManagementExportFromContentDir').returns({
+      assetManagementEnabled: true,
+      source_stack: 'branch-source-key',
+    });
+
+    try {
+      const config = await setupConfig({
+        'data-dir': contentDir,
+        'stack-api-key': 'target-key',
+        module: ['assets'],
+      });
+
+      expect(detectStub.calledOnce).to.be.true;
+      expect(config.assetManagementEnabled).to.equal(true);
+      expect(config.source_stack).to.equal('branch-source-key');
+    } finally {
+      detectStub.restore();
+    }
   });
 });

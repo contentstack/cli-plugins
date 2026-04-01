@@ -1,12 +1,22 @@
 fileignoreconfig:
-  - filename: packages/contentstack-asset-management/src/export/base.ts
-    checksum: 01cb2158fea9cbe05449c04efb42d8d416d24868d411bd7300d8fa99c9a4ab01
-  - filename: packages/contentstack-asset-management/test/unit/export/base.test.ts
-    checksum: 164fc2e5a4337a2739903499b66eecc66a85bb9b50aa2e71079bdd046a195a94
-  - filename: packages/contentstack-asset-management/src/import/fields.ts
-    checksum: 1cd52254ddbfd186d8ade2c73fc799dd1caa0f10bdd3c6b151621c27207ee173
-  - filename: packages/contentstack-import/src/utils/asset-management-import-options.ts
-    checksum: 96b61b683109be2cc2dbab5231e1ded19282fbf176cd8492c75cc4861f2efea0
-  - filename: packages/contentstack-asset-management/src/import/asset-types.ts
-    checksum: fa2aeea704fd259628f9c86eacd3cf9f6f12543b06b387bd65db7df6b6f5fc49
+  - filename: packages/contentstack-asset-management/src/types/asset-management-export-flags.ts
+    checksum: fa2f9e873dd2fdb9170b5526130a855979674c05aca759c5383a432e761b377b
+  - filename: packages/contentstack-import-setup/src/utils/import-setup-asset-mapper-params.ts
+    checksum: 947bfd7d7fc071ddbe4310f59056666d373952fd2b40d478e0c6a260c751b132
+  - filename: packages/contentstack-import-setup/test/unit/import-config-handler.test.ts
+    checksum: 468fc6a83cbbb8c64debdbeec955ba2fcc4c1ef955f78308ff89e3bddbcf1bbb
+  - filename: packages/contentstack-import-setup/src/import/modules/assets.ts
+    checksum: 058d2a93ddaf1922b516781dc5e51e6744b63dd8a7042f64a75428098a3e6215
+  - filename: packages/contentstack-asset-management/src/utils/detect-asset-management-export.ts
+    checksum: 6dd65dd6a9d2124ecc9cd124c032fc7b4f51f664a2b64c7e2b79606c04f9dff1
+  - filename: packages/contentstack-asset-management/test/unit/utils/detect-asset-management-export.test.ts
+    checksum: 049bfc9dfb1104fb5ef439c0fccd8f36c637e2961f76eec1e1d7093f4c848d89
+  - filename: packages/contentstack-asset-management/test/unit/import-setup/import-setup-asset-mappers.test.ts
+    checksum: c8cf31441c637b057bcde9c60e005eb1b23af8125fcff5f28ee733abac4926be
+  - filename: packages/contentstack-asset-management/src/import-setup/import-setup-asset-mappers.ts
+    checksum: e7f624db1db13aeef4e7f53d317d5254aabb427616049cebccf6db75dc5ac102
+  - filename: packages/contentstack-import-setup/test/unit/modules/assets.test.ts
+    checksum: 02e8a857317c22adfec423b849a6c1454a73195e7c5bf888ba4bb9321cf66c48
+  - filename: pnpm-lock.yaml
+    checksum: 848c99284f55d18680d1cf2fe9e0676ffc0ae5a18c7855a8194ce89ac56841ef
 version: '1.0'
