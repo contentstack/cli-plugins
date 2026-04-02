@@ -1,6 +1,6 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 92fd925e53e6d5803c85b8323f042a776aea597198a21b8ed8da542769638a38
+    checksum: f0bc1ecd9132790009fd54318236bf3ded95d3c44132ab7b55fe37f3759cd3ea
   - filename: .cursor/skills/code-review/SKILL.md
     checksum: 29d812ac5c2ed4c55490f8d31e15eb592851601a6a141354cb458b1b9f1daa7a
   - filename: .cursor/rules/oclif-commands.mdc

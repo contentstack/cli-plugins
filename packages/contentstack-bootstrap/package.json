@@ -22,7 +22,7 @@
     "@contentstack/cli-utilities": "~1.18.0",
     "@oclif/core": "^4.3.0",
     "@oclif/plugin-help": "^6.2.37",
-    "inquirer": "^9.3.0",
+    "inquirer": "8.2.7",
     "mkdirp": "^1.0.4",
     "tar": "^7.5.11"
   },
