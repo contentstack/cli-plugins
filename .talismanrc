@@ -1,12 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-asset-management/src/export/base.ts
-    checksum: 01cb2158fea9cbe05449c04efb42d8d416d24868d411bd7300d8fa99c9a4ab01
-  - filename: packages/contentstack-asset-management/test/unit/export/base.test.ts
-    checksum: 164fc2e5a4337a2739903499b66eecc66a85bb9b50aa2e71079bdd046a195a94
-  - filename: packages/contentstack-asset-management/src/import/fields.ts
-    checksum: 1cd52254ddbfd186d8ade2c73fc799dd1caa0f10bdd3c6b151621c27207ee173
-  - filename: packages/contentstack-import/src/utils/asset-management-import-options.ts
-    checksum: 96b61b683109be2cc2dbab5231e1ded19282fbf176cd8492c75cc4861f2efea0
-  - filename: packages/contentstack-asset-management/src/import/asset-types.ts
-    checksum: fa2aeea704fd259628f9c86eacd3cf9f6f12543b06b387bd65db7df6b6f5fc49
+  - filename: packages/contentstack-asset-management/src/import/spaces.ts
+    checksum: e972d66f6a889f72d72ba48112a12f9447de39285cfb568d3b99a4969cf9f5f9
 version: '1.0'

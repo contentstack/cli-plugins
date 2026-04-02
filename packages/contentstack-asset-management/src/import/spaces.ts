@@ -1,13 +1,13 @@
-import { resolve as pResolve, join } from 'node:path';
+import { join, resolve as pResolve } from 'node:path';
 import { mkdirSync, readdirSync, statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
 import type {
   AssetManagementAPIConfig,
-  AssetManagementImportOptions,
   ImportContext,
   ImportResult,
+  ImportSpacesOptions,
   SpaceMapping,
 } from '../types/asset-management-api';
 import { AM_MAIN_PROCESS_NAME } from '../constants/index';
@@ -22,11 +22,11 @@ import ImportWorkspace from './workspaces';
  * Returns combined uidMap, urlMap, and spaceMappings for the bridge module.
  */
 export class ImportSpaces {
-  private readonly options: AssetManagementImportOptions;
+  private readonly options: ImportSpacesOptions;
   private parentProgressManager: CLIProgressManager | null = null;
   private progressManager: CLIProgressManager | null = null;
 
-  constructor(options: AssetManagementImportOptions) {
+  constructor(options: ImportSpacesOptions) {
     this.options = options;
   }
 
@@ -35,63 +35,37 @@ export class ImportSpaces {
   }
 
   async start(): Promise<ImportResult> {
-    const {
-      contentDir,
-      assetManagementUrl,
-      org_uid,
-      apiKey,
-      host,
-      sourceApiKey,
-      context,
-      apiConcurrency,
-      uploadAssetsConcurrency,
-      importFoldersConcurrency,
-      spacesDirName,
-      fieldsDir,
-      assetTypesDir,
-      fieldsFileName,
-      assetTypesFileName,
-      foldersFileName,
-      assetsFileName,
-      fieldsImportInvalidKeys,
-      assetTypesImportInvalidKeys,
-      mapperRootDir,
-      mapperAssetsModuleDir,
-      mapperUidFileName,
-      mapperUrlFileName,
-      mapperSpaceUidFileName,
-    } = this.options;
-
-    const spacesRootPath = pResolve(contentDir, spacesDirName ?? 'spaces');
-
+    const configOptions = this.options;
+    const spacesRootPath = pResolve(configOptions.contentDir, 'spaces');
+    const org_uid = configOptions.org_uid;
+    const context = configOptions.context;
     const importContext: ImportContext = {
       spacesRootPath,
-      sourceApiKey,
-      apiKey,
-      host,
+      sourceApiKey: configOptions.sourceApiKey,
+      apiKey: configOptions.apiKey,
+      host: configOptions.host,
       org_uid,
       context,
-      apiConcurrency,
-      uploadAssetsConcurrency,
-      importFoldersConcurrency,
-      spacesDirName,
-      fieldsDir,
-      assetTypesDir,
-      fieldsFileName,
-      assetTypesFileName,
-      foldersFileName,
-      assetsFileName,
-      fieldsImportInvalidKeys,
-      assetTypesImportInvalidKeys,
-      mapperRootDir,
-      mapperAssetsModuleDir,
-      mapperUidFileName,
-      mapperUrlFileName,
-      mapperSpaceUidFileName,
+      apiConcurrency: configOptions.apiConcurrency,
+      uploadAssetsConcurrency: configOptions.uploadAssetsConcurrency,
+      importFoldersConcurrency: configOptions.importFoldersConcurrency,
+      spacesDirName: configOptions.spacesDirName,
+      fieldsDir: configOptions.fieldsDir,
+      assetTypesDir: configOptions.assetTypesDir,
+      fieldsFileName: configOptions.fieldsFileName,
+      assetTypesFileName: configOptions.assetTypesFileName,
+      foldersFileName: configOptions.foldersFileName,
+      assetsFileName: configOptions.assetsFileName,
+      fieldsImportInvalidKeys: configOptions.fieldsImportInvalidKeys,
+      assetTypesImportInvalidKeys: configOptions.assetTypesImportInvalidKeys,
+      mapperRootDir: configOptions.mapperRootDir,
+      mapperAssetsModuleDir: configOptions.mapperAssetsModuleDir,
+      mapperUidFileName: configOptions.mapperUidFileName,
+      mapperUrlFileName: configOptions.mapperUrlFileName,
+      mapperSpaceUidFileName: configOptions.mapperSpaceUidFileName,
     };
-
     const apiConfig: AssetManagementAPIConfig = {
-      baseURL: assetManagementUrl,
+      baseURL: configOptions.assetManagementUrl,
       headers: { organization_uid: org_uid },
       context,
     };
@@ -186,13 +160,13 @@ export class ImportSpaces {
       }
 
       if (this.options.backupDir) {
-        const mapperRoot = this.options.mapperRootDir ?? 'mapper';
-        const mapperAssetsMod = this.options.mapperAssetsModuleDir ?? 'assets';
+        const mapperRoot = importContext.mapperRootDir ?? 'mapper';
+        const mapperAssetsMod = importContext.mapperAssetsModuleDir ?? 'assets';
         const mapperDir = join(this.options.backupDir, mapperRoot, mapperAssetsMod);
         mkdirSync(mapperDir, { recursive: true });
-        const uidFile = this.options.mapperUidFileName ?? 'uid-mapping.json';
-        const urlFile = this.options.mapperUrlFileName ?? 'url-mapping.json';
-        const spaceUidFile = this.options.mapperSpaceUidFileName ?? 'space-uid-mapping.json';
+        const uidFile = importContext.mapperUidFileName ?? 'uid-mapping.json';
+        const urlFile = importContext.mapperUrlFileName ?? 'url-mapping.json';
+        const spaceUidFile = importContext.mapperSpaceUidFileName ?? 'space-uid-mapping.json';
         await writeFile(join(mapperDir, uidFile), JSON.stringify(allUidMap), 'utf8');
         await writeFile(join(mapperDir, urlFile), JSON.stringify(allUrlMap), 'utf8');
         await writeFile(join(mapperDir, spaceUidFile), JSON.stringify(allSpaceUidMap), 'utf8');

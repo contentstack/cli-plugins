@@ -1,22 +1,23 @@
-import type { AssetManagementImportOptions } from '@contentstack/cli-asset-management';
+import type { ImportSpacesOptions } from '@contentstack/cli-asset-management';
 
 import { PATH_CONSTANTS } from '../constants';
 import type ImportConfig from '../types/import-config';
 
 /**
- * Maps stack import config and resolved AM base URL into options for `ImportSpaces`.
- * Centralizes defaults (`PATH_CONSTANTS`) and field renames so `ImportAssets` stays thin.
+ * Maps stack `ImportConfig` and AM base URL into a single `ImportSpacesOptions` for the AM package
+ * (variants-style: one flat object; `ImportSpaces` splits API vs context internally).
  */
-export function buildAssetManagementImportOptions(
+export function buildImportSpacesOptions(
   importConfig: ImportConfig,
   assetManagementUrl: string,
-): AssetManagementImportOptions {
+): ImportSpacesOptions {
   const am = importConfig.modules['asset-management'];
+  const org_uid = importConfig.org_uid ?? '';
 
   return {
     contentDir: importConfig.contentDir,
     assetManagementUrl,
-    org_uid: importConfig.org_uid ?? '',
+    org_uid,
     apiKey: importConfig.apiKey,
     host: importConfig.region?.cma ?? importConfig.host ?? '',
     sourceApiKey: importConfig.source_stack,
