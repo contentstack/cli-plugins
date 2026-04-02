@@ -36,6 +36,9 @@ export type Space = {
 /** Response shape of GET /api/spaces/{space_uid}. */
 export type SpaceResponse = { space: Space };
 
+/** Response shape of GET /api/spaces (list all spaces in the org). */
+export type SpacesListResponse = { spaces: Space[]; count?: number };
+
 /**
  * Field structure from GET /api/fields (org-level).
  */
@@ -118,10 +121,11 @@ export type AssetManagementAPIConfig = {
  */
 export interface IAssetManagementAdapter {
   init(): Promise<void>;
+  listSpaces(): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
   getWorkspaceFields(spaceUid: string): Promise<FieldsResponse>;
-  getWorkspaceAssets(spaceUid: string): Promise<unknown>;
-  getWorkspaceFolders(spaceUid: string): Promise<unknown>;
+  getWorkspaceAssets(spaceUid: string, workspaceUid?: string): Promise<unknown>;
+  getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
 }
 
@@ -137,4 +141,163 @@ export type AssetManagementExportOptions = {
   context?: Record<string, unknown>;
   /** When true, the AM package will add authtoken to asset download URLs. */
   securedAssets?: boolean;
+  /**
+   * API key of the stack being exported.
+   * Saved to `spaces/export-metadata.json` so that during import the URL mapper
+   * can reconstruct old CMA proxy URLs (format: /v3/assets/{apiKey}/{amUid}/...).
+   */
+  apiKey?: string;
+  /**
+   * FsUtility `chunkFileSize` in MB for AM export chunked writes.
+   */
+  chunkFileSizeMb?: number;
+};
+
+// ---------------------------------------------------------------------------
+// Import types
+// ---------------------------------------------------------------------------
+
+/**
+ * Context passed down to every import adapter class.
+ * Mirrors ExportContext but carries the import-specific fields needed for
+ * URL mapper reconstruction and API calls.
+ */
+export type ImportContext = {
+  /** Absolute path to the root `spaces/` directory inside the backup/content dir. */
+  spacesRootPath: string;
+  /** Source stack API key — used to reconstruct old CMA proxy URLs. */
+  sourceApiKey?: string;
+  /** Target stack API key — used to build new CMA proxy URLs. */
+  apiKey: string;
+  /** Target CMA host (may include /v3), e.g. "https://api.contentstack.io/v3". */
+  host: string;
+  /** Target org UID — required as `x-organization-uid` header when creating spaces. */
+  org_uid: string;
+  /** Optional logging context (same shape as ExportConfig.context). */
+  context?: Record<string, unknown>;
+  /**
+   * Max parallel AM API calls for import (fields, asset types, and default for folders/uploads).
+   * Set from `ImportSpacesOptions.apiConcurrency` (or host wiring).
+   */
+  apiConcurrency?: number;
+  /** Overrides parallel limit for asset uploads when set (import `modules['asset-management'].uploadAssetsConcurrency`). */
+  uploadAssetsConcurrency?: number;
+  /** Overrides parallel limit for folder creation batches when set (import `modules['asset-management'].importFoldersConcurrency`). */
+  importFoldersConcurrency?: number;
+  /** Relative dir under content dir for AM export root (e.g. `spaces`). */
+  spacesDirName?: string;
+  fieldsDir?: string;
+  assetTypesDir?: string;
+  fieldsFileName?: string;
+  assetTypesFileName?: string;
+  foldersFileName?: string;
+  assetsFileName?: string;
+  fieldsImportInvalidKeys?: string[];
+  assetTypesImportInvalidKeys?: string[];
+  /** `{backupDir}/{mapperRootDir}/{mapperAssetsModuleDir}/` for AM mapper JSON. */
+  mapperRootDir?: string;
+  mapperAssetsModuleDir?: string;
+  mapperUidFileName?: string;
+  mapperUrlFileName?: string;
+  mapperSpaceUidFileName?: string;
+};
+
+/**
+ * Single options object for `ImportSpaces` (matches the export-side pattern: one flat shape from the host,
+ * then AM splits API vs context internally like `ExportSpaces`).
+ */
+export type ImportSpacesOptions = {
+  /** Absolute path to the root content / backup directory. */
+  contentDir: string;
+  /** AM 2.0 base URL (e.g. "https://am.contentstack.io"). */
+  assetManagementUrl: string;
+  org_uid: string;
+  apiKey: string;
+  host: string;
+  sourceApiKey?: string;
+  context?: Record<string, unknown>;
+  /** When set, mapper JSON is written after import under `{backupDir}/mapper/...`. */
+  backupDir?: string;
+  apiConcurrency?: number;
+  uploadAssetsConcurrency?: number;
+  importFoldersConcurrency?: number;
+  spacesDirName?: string;
+  fieldsDir?: string;
+  assetTypesDir?: string;
+  fieldsFileName?: string;
+  assetTypesFileName?: string;
+  foldersFileName?: string;
+  assetsFileName?: string;
+  fieldsImportInvalidKeys?: string[];
+  assetTypesImportInvalidKeys?: string[];
+  mapperRootDir?: string;
+  mapperAssetsModuleDir?: string;
+  mapperUidFileName?: string;
+  mapperUrlFileName?: string;
+  mapperSpaceUidFileName?: string;
+};
+
+/**
+ * Maps an old source-org space UID to the newly created target-org space UID.
+ */
+export type SpaceMapping = {
+  oldSpaceUid: string;
+  newSpaceUid: string;
+  /** Workspace identifier inside the space (typically "main"). */
+  workspaceUid: string;
+  isDefault: boolean;
+};
+
+/**
+ * The value returned by `ImportSpaces.start()`.
+ * When `ImportSpacesOptions.backupDir` is set, the AM package also writes these maps under
+ * `mapper/assets/` for `entries.ts` to resolve asset references.
+ */
+export type ImportResult = {
+  uidMap: Record<string, string>;
+  urlMap: Record<string, string>;
+  spaceMappings: SpaceMapping[];
+  /** old space UID → new space UID, written to mapper/assets/space-uid-mapping.json */
+  spaceUidMap: Record<string, string>;
+};
+
+// ---------------------------------------------------------------------------
+// Import payload types (confirmed from Postman collection)
+// ---------------------------------------------------------------------------
+
+export type CreateSpacePayload = {
+  title: string;
+  description?: string;
+};
+
+export type CreateFolderPayload = {
+  title: string;
+  description?: string;
+  parent_uid?: string;
+};
+
+export type CreateAssetMetadata = {
+  title?: string;
+  description?: string;
+  parent_uid?: string;
+};
+
+export type CreateFieldPayload = {
+  uid: string;
+  title: string;
+  display_type?: string;
+  child?: unknown[];
+  is_mandatory?: boolean;
+  is_multiple?: boolean;
+  [key: string]: unknown;
+};
+
+export type CreateAssetTypePayload = {
+  uid: string;
+  title: string;
+  description?: string;
+  content_type?: string;
+  file_extension?: string | string[];
+  fields?: string[];
+  [key: string]: unknown;
 };

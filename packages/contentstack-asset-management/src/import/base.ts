@@ -1,29 +1,27 @@
 import { resolve as pResolve } from 'node:path';
-import { writeFile } from 'node:fs/promises';
-import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig } from '../types/asset-management-api';
-import type { ExportContext } from '../types/export-types';
+import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY } from '../constants/index';
 
-export type { ExportContext };
+export type { ImportContext };
 
 /**
- * Base class for export modules. Extends the API adapter and adds export context,
- * internal progress management, and shared write helpers.
+ * Base class for all AM 2.0 import modules. Mirrors AssetManagementExportAdapter
+ * but carries ImportContext (spacesRootPath, apiKey, host, etc.) instead of ExportContext.
  */
-export class AssetManagementExportAdapter extends AssetManagementAdapter {
+export class AssetManagementImportAdapter extends AssetManagementAdapter {
   protected readonly apiConfig: AssetManagementAPIConfig;
-  protected readonly exportContext: ExportContext;
+  protected readonly importContext: ImportContext;
   protected progressManager: CLIProgressManager | null = null;
   protected parentProgressManager: CLIProgressManager | null = null;
   protected readonly processName: string = AM_MAIN_PROCESS_NAME;
 
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
     super(apiConfig);
     this.apiConfig = apiConfig;
-    this.exportContext = exportContext;
+    this.importContext = importContext;
   }
 
   public setParentProgressManager(parent: CLIProgressManager): void {
@@ -60,39 +58,29 @@ export class AssetManagementExportAdapter extends AssetManagementAdapter {
   }
 
   protected get spacesRootPath(): string {
-    return this.exportContext.spacesRootPath;
+    return this.importContext.spacesRootPath;
+  }
+
+  /** Parallel AM API limit for import batches. */
+  protected get apiConcurrency(): number {
+    return this.importContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
+  }
+
+  /** Upload batch size; falls back to {@link apiConcurrency}. */
+  protected get uploadAssetsBatchConcurrency(): number {
+    return this.importContext.uploadAssetsConcurrency ?? this.apiConcurrency;
+  }
+
+  /** Folder creation batch size; falls back to {@link apiConcurrency}. */
+  protected get importFoldersBatchConcurrency(): number {
+    return this.importContext.importFoldersConcurrency ?? this.apiConcurrency;
   }
 
   protected getAssetTypesDir(): string {
-    return pResolve(this.exportContext.spacesRootPath, 'asset_types');
+    return pResolve(this.importContext.spacesRootPath, this.importContext.assetTypesDir ?? 'asset_types');
   }
 
   protected getFieldsDir(): string {
-    return pResolve(this.exportContext.spacesRootPath, 'fields');
-  }
-
-  protected async writeItemsToChunkedJson(
-    dir: string,
-    indexFileName: string,
-    moduleName: string,
-    metaPickKeys: string[],
-    items: unknown[],
-  ): Promise<void> {
-    if (items.length === 0) {
-      await writeFile(pResolve(dir, indexFileName), '{}');
-      return;
-    }
-    const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
-    const fs = new FsUtility({
-      basePath: dir,
-      indexFileName,
-      chunkFileSize: chunkMb,
-      moduleName,
-      fileExt: 'json',
-      metaPickKeys,
-      keepMetadata: true,
-    });
-    fs.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
-    fs.completeFile(true);
+    return pResolve(this.importContext.spacesRootPath, this.importContext.fieldsDir ?? 'fields');
   }
 }

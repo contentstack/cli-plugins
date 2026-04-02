@@ -96,6 +96,11 @@ export default interface DefaultConfig {
       includeVersionedAssets: boolean;
       dependencies?: Modules[];
     };
+    'asset-management': {
+      /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
+      chunkFileSizeMb: number;
+      dependencies?: Modules[];
+    };
     content_types: {
       dirName: string;
       fileName: string;

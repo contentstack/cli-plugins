@@ -35,8 +35,10 @@ export class ExportSpaces {
       branchName,
       assetManagementUrl,
       org_uid,
+      apiKey,
       context,
       securedAssets,
+      chunkFileSizeMb,
     } = this.options;
 
     if (!linkedWorkspaces.length) {
@@ -54,7 +56,9 @@ export class ExportSpaces {
     const totalSteps = 2 + linkedWorkspaces.length * 4;
     const progress = this.createProgress();
     progress.addProcess(AM_MAIN_PROCESS_NAME, totalSteps);
-    progress.startProcess(AM_MAIN_PROCESS_NAME).updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_FIELDS].FETCHING, AM_MAIN_PROCESS_NAME);
+    progress
+      .startProcess(AM_MAIN_PROCESS_NAME)
+      .updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_FIELDS].FETCHING, AM_MAIN_PROCESS_NAME);
 
     const apiConfig: AssetManagementAPIConfig = {
       baseURL: assetManagementUrl,
@@ -65,6 +69,7 @@ export class ExportSpaces {
       spacesRootPath,
       context,
       securedAssets,
+      chunkFileSizeMb,
     };
 
     const sharedFieldsDir = pResolve(spacesRootPath, 'fields');

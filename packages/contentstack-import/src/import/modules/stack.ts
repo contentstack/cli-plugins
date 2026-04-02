@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { log, handleAndLogError } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 
@@ -59,7 +60,6 @@ export default class ImportStack extends BaseClass {
       await this.importStackSettings();
 
       this.completeProgressWithMessage();
-
     } catch (error) {
       this.completeProgress(false, 'Stack settings import failed');
       handleAndLogError(error, { ...this.importConfig.context });
@@ -68,6 +68,17 @@ export default class ImportStack extends BaseClass {
 
   private async importStackSettings(): Promise<void> {
     log.debug('Processing stack settings for import', this.importConfig.context);
+
+    // Old source-org space UIDs must not be written to the target stack —
+    // the asset-management module will apply the correct am_v2.linked_workspaces.
+    if (existsSync(join(this.importConfig.contentDir, 'spaces'))) {
+      const { am_v2, ...settingsWithoutAm } = this.stackSettings as any;
+      this.stackSettings = settingsWithoutAm;
+      log.debug(
+        'Stripped am_v2 from stack settings; asset-management module will apply it after space creation',
+        this.importConfig.context,
+      );
+    }
 
     // Update environment UID mapping if live preview is configured
     if (this.stackSettings?.live_preview && this.stackSettings?.live_preview['default-env'] !== undefined) {
