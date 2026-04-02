@@ -69,14 +69,17 @@ export default class ExportAssets extends BaseClass {
       this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
       const progress = this.createNestedProgress(this.currentModuleName);
       try {
+        const assetManagementModuleConfig = this.exportConfig.modules['asset-management'];
         const exporter = new ExportSpaces({
           linkedWorkspaces,
           exportDir: this.exportConfig.exportDir,
           branchName: this.exportConfig.branchName || 'main',
           assetManagementUrl,
           org_uid: this.exportConfig.org_uid ?? '',
+          apiKey: this.exportConfig.apiKey,
           context: this.exportConfig.context as unknown as Record<string, unknown>,
           securedAssets: this.exportConfig.securedAssets,
+          chunkFileSizeMb: assetManagementModuleConfig?.chunkFileSizeMb,
         });
         exporter.setParentProgressManager(progress);
         await exporter.start();

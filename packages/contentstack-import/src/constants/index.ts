@@ -20,6 +20,7 @@ export const PATH_CONSTANTS = {
     INDEX: 'index.json',
     FOLDER_MAPPING: 'folder-mapping.json',
     VERSIONED_ASSETS: 'versioned-assets.json',
+    SPACE_UID_MAPPING: 'space-uid-mapping.json',
   },
 
   /** Module subdirectory names within mapper */

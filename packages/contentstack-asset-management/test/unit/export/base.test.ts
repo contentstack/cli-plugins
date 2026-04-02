@@ -206,7 +206,7 @@ describe('AssetManagementExportAdapter (base)', () => {
       fsReal.unlinkSync(path.join(tmpDir, 'test-empty.json'));
     });
 
-    it('should write all items in a single batch and complete the file when count is below BATCH_SIZE', async () => {
+    it('should pass all items to FsUtility.writeIntoFile in one call and complete the file', async () => {
       const writeIntoFileStub = sinon.stub(FsUtility.prototype, 'writeIntoFile');
       const completeFileStub = sinon.stub(FsUtility.prototype, 'completeFile');
 
@@ -214,11 +214,12 @@ describe('AssetManagementExportAdapter (base)', () => {
       const adapter = new TestAdapter(apiConfig, exportContext);
       await adapter.callWriteItemsToChunkedJson('/tmp/dir', 'items.json', 'items', ['uid'], items);
 
+      expect(writeIntoFileStub.callCount).to.equal(1);
       expect(writeIntoFileStub.firstCall.args[0]).to.have.length(3);
       expect(completeFileStub.firstCall.args[0]).to.be.true;
     });
 
-    it('should write items in batches of BATCH_SIZE (50)', async () => {
+    it('should pass large item lists in a single writeIntoFile (FsUtility chunks by file size)', async () => {
       const writeIntoFileStub = sinon.stub(FsUtility.prototype, 'writeIntoFile');
       sinon.stub(FsUtility.prototype, 'completeFile');
 
@@ -226,10 +227,8 @@ describe('AssetManagementExportAdapter (base)', () => {
       const adapter = new TestAdapter(apiConfig, exportContext);
       await adapter.callWriteItemsToChunkedJson('/tmp/dir', 'items.json', 'items', ['uid'], items);
 
-      expect(writeIntoFileStub.callCount).to.equal(3);
-      expect(writeIntoFileStub.firstCall.args[0]).to.have.length(50);
-      expect(writeIntoFileStub.secondCall.args[0]).to.have.length(50);
-      expect(writeIntoFileStub.thirdCall.args[0]).to.have.length(20);
+      expect(writeIntoFileStub.callCount).to.equal(1);
+      expect(writeIntoFileStub.firstCall.args[0]).to.have.length(120);
     });
   });
 });

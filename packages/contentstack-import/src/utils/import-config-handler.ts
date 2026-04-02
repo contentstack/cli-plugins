@@ -1,5 +1,6 @@
 import merge from 'merge';
 import * as path from 'path';
+import { existsSync, readFileSync } from 'node:fs';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
@@ -20,7 +21,6 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // setup the config
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
-
 
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
@@ -124,6 +124,40 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['exclude-global-modules']) {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
+  }
+
+  const spacesDir = path.join(config.contentDir, 'spaces');
+  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+
+  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
+    try {
+      const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
+      if (stackSettings?.am_v2) {
+        config.assetManagementEnabled = true;
+        config.assetManagementUrl = configHandler.get('region')?.assetManagementUrl;
+
+        const branchesJsonCandidates = [
+          path.join(config.contentDir, 'branches.json'),
+          path.join(config.contentDir, '..', 'branches.json'),
+        ];
+        for (const branchesJsonPath of branchesJsonCandidates) {
+          if (existsSync(branchesJsonPath)) {
+            try {
+              const branches = JSON.parse(readFileSync(branchesJsonPath, 'utf8'));
+              const apiKey = branches?.[0]?.stackHeaders?.api_key;
+              if (apiKey) {
+                config.source_stack = apiKey;
+              }
+            } catch {
+              // branches.json unreadable — URL mapping will be skipped
+            }
+            break;
+          }
+        }
+      }
+    } catch {
+      // stack settings unreadable — not an AM 2.0 export we can process
+    }
   }
 
   // Add authentication details to config for context tracking

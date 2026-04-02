@@ -2,6 +2,7 @@ export type ExportContext = {
   spacesRootPath: string;
   context?: Record<string, unknown>;
   securedAssets?: boolean;
+  chunkFileSizeMb?: number;
 };
 
 /**
