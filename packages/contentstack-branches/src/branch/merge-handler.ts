@@ -318,10 +318,6 @@ export default class MergeHandler {
         cliux.print(`  csdx cm:branches:merge-status -k ${this.stackAPIKey} --merge-uid ${mergeResponse.uid}`, {
           color: 'cyan',
         });
-        cliux.print('\nGenerate entry migration scripts (when merge completes successfully):', { color: 'grey' });
-        cliux.print(`  csdx cm:branches:generate-scripts -k ${this.stackAPIKey} --merge-uid ${mergeResponse.uid}`, {
-          color: 'cyan',
-        });
       }
     } catch (error) {
       cliux.loaderV2('', spinner);
