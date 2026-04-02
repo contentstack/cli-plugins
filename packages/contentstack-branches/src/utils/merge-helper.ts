@@ -172,7 +172,7 @@ export const fetchMergeStatus = async (
   stackAPIClient,
   mergePayload,
   initialDelay = 5000,
-  maxRetries = 10
+  maxRetries = 10000, // Temporary making infinite polling to unblock the users
 ): Promise<any> => {
   let delayMs = initialDelay;
   const maxDelayMs = 60000; // Cap delay at 60 seconds
