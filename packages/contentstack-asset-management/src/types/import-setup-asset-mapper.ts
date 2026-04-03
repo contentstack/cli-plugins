@@ -1,6 +1,6 @@
 export type RunAssetMapperImportSetupParams = {
   contentDir: string;
-  /** Parent of `mapper/assets` (typically import-setup `backupDir`). */
+  /** Parent of the assets mapper directory (typically import-setup `backupDir`). */
   mapperBaseDir: string;
   assetManagementUrl?: string;
   org_uid?: string;
@@ -8,7 +8,32 @@ export type RunAssetMapperImportSetupParams = {
   apiKey: string;
   host: string;
   context: Record<string, unknown>;
+  /**
+   * Max parallel AM API calls for list/read paths.
+   * Takes precedence over {@link fetchConcurrency}.
+   */
+  apiConcurrency?: number;
+  /**
+   * @deprecated Use {@link apiConcurrency}.
+   */
   fetchConcurrency?: number;
+  /** Relative dir under content dir for AM export root (default `spaces`). */
+  spacesDirName?: string;
+  fieldsDir?: string;
+  assetTypesDir?: string;
+  fieldsFileName?: string;
+  assetTypesFileName?: string;
+  foldersFileName?: string;
+  assetsFileName?: string;
+  fieldsImportInvalidKeys?: string[];
+  assetTypesImportInvalidKeys?: string[];
+  mapperRootDir?: string;
+  mapperAssetsModuleDir?: string;
+  mapperUidFileName?: string;
+  mapperUrlFileName?: string;
+  mapperSpaceUidFileName?: string;
+  uploadAssetsConcurrency?: number;
+  importFoldersConcurrency?: number;
 };
 
 export type AssetMapperImportSetupResult =

@@ -42,11 +42,11 @@ export default class AssetImportSetup extends BaseImportSetup {
   async start() {
     try {
       if (this.config.assetManagementEnabled) {
-        const assetManagementUrl = this.config.region?.assetManagementUrl;
+        const assetManagementUrl = this.config.assetManagementUrl ?? this.config.region?.assetManagementUrl;
         if (!assetManagementUrl) {
           log(
             this.config,
-            'Asset Management export detected but region.assetManagementUrl is not configured. Skipping asset mapper setup.',
+            'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset mapper setup.',
             'info',
           );
           return;

@@ -139,6 +139,7 @@ describe('Import Config Handler', () => {
     const detectStub = stub(cliAm, 'detectAssetManagementExportFromContentDir').returns({
       assetManagementEnabled: true,
       source_stack: 'branch-source-key',
+      assetManagementUrl: 'https://am.example.com',
     });
 
     try {
@@ -150,6 +151,7 @@ describe('Import Config Handler', () => {
 
       expect(detectStub.calledOnce).to.be.true;
       expect(config.assetManagementEnabled).to.equal(true);
+      expect(config.assetManagementUrl).to.equal('https://am.example.com');
       expect(config.source_stack).to.equal('branch-source-key');
     } finally {
       detectStub.restore();

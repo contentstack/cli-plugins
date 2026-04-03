@@ -4,13 +4,8 @@ import { join, resolve } from 'node:path';
 
 import { formatError, log } from '@contentstack/cli-utilities';
 
-import {
-  IMPORT_ASSETS_MAPPER_DIR_SEGMENTS,
-  IMPORT_ASSETS_MAPPER_FILES,
-  PROCESS_NAMES,
-  PROCESS_STATUS,
-} from '../constants/index';
-import type { AssetManagementAPIConfig } from '../types/asset-management-api';
+import { IMPORT_ASSETS_MAPPER_FILES, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
 import type { AssetMapperImportSetupResult, RunAssetMapperImportSetupParams } from '../types/import-setup-asset-mapper';
 import ImportAssets from '../import/assets';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
@@ -57,6 +52,7 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
   }
 
   async start(): Promise<AssetMapperImportSetupResult> {
+    const p = this.params;
     const {
       contentDir,
       mapperBaseDir,
@@ -66,12 +62,13 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
       apiKey,
       host,
       context,
-      fetchConcurrency,
-    } = this.params;
+    } = p;
+
+    const apiConcurrencyResolved = p.apiConcurrency ?? p.fetchConcurrency;
 
     if (!assetManagementUrl) {
       log.info(
-        'Asset Management export detected but region.assetManagementUrl is not configured. Skipping asset mapper setup.',
+        'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset mapper setup.',
         context,
       );
       return { kind: 'skipped', reason: 'missing_asset_management_url' };
@@ -83,8 +80,14 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
 
     const parentProgressManager = this.resolveParentProgress();
 
-    const spacesRootPath = resolve(contentDir, 'spaces');
-    const mapperDirPath = join(mapperBaseDir, ...IMPORT_ASSETS_MAPPER_DIR_SEGMENTS);
+    const spacesDirSegment = p.spacesDirName ?? 'spaces';
+    const spacesRootPath = resolve(contentDir, spacesDirSegment);
+    const mapperRoot = p.mapperRootDir ?? 'mapper';
+    const mapperAssetsMod = p.mapperAssetsModuleDir ?? 'assets';
+    const mapperDirPath = join(mapperBaseDir, mapperRoot, mapperAssetsMod);
+    const uidFile = p.mapperUidFileName ?? IMPORT_ASSETS_MAPPER_FILES.UID_MAPPING;
+    const urlFile = p.mapperUrlFileName ?? IMPORT_ASSETS_MAPPER_FILES.URL_MAPPING;
+    const spaceUidFile = p.mapperSpaceUidFileName ?? IMPORT_ASSETS_MAPPER_FILES.SPACE_UID_MAPPING;
     const duplicateAssetMapperPath = join(mapperDirPath, IMPORT_ASSETS_MAPPER_FILES.DUPLICATE_ASSETS);
 
     const apiConfig: AssetManagementAPIConfig = {
@@ -93,14 +96,30 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
       context,
     };
 
-    const importContext = {
+    const importContext: ImportContext = {
       spacesRootPath,
       sourceApiKey: source_stack,
       apiKey,
       host,
       org_uid,
       context,
-      apiConcurrency: fetchConcurrency,
+      apiConcurrency: apiConcurrencyResolved,
+      spacesDirName: p.spacesDirName,
+      fieldsDir: p.fieldsDir,
+      assetTypesDir: p.assetTypesDir,
+      fieldsFileName: p.fieldsFileName,
+      assetTypesFileName: p.assetTypesFileName,
+      foldersFileName: p.foldersFileName,
+      assetsFileName: p.assetsFileName,
+      fieldsImportInvalidKeys: p.fieldsImportInvalidKeys,
+      assetTypesImportInvalidKeys: p.assetTypesImportInvalidKeys,
+      uploadAssetsConcurrency: p.uploadAssetsConcurrency,
+      importFoldersConcurrency: p.importFoldersConcurrency,
+      mapperRootDir: mapperRoot,
+      mapperAssetsModuleDir: mapperAssetsMod,
+      mapperUidFileName: uidFile,
+      mapperUrlFileName: urlFile,
+      mapperSpaceUidFileName: spaceUidFile,
     };
 
     try {
@@ -115,7 +134,10 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
 
       const { spaceDirs, readFailed } = this.listExportedSpaceDirectories(spacesRootPath);
       if (spaceDirs.length === 0 && !readFailed) {
-        log.info('No Asset Management space directories (am*) found under spaces/.', context);
+        log.info(
+          `No Asset Management space directories (am*) found under ${spacesDirSegment}/.`,
+          context,
+        );
       }
 
       const allUidMap: Record<string, string> = {};
@@ -146,21 +168,9 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
 
       await mkdir(mapperDirPath, { recursive: true });
 
-      await writeFile(
-        join(mapperDirPath, IMPORT_ASSETS_MAPPER_FILES.UID_MAPPING),
-        JSON.stringify(allUidMap),
-        'utf8',
-      );
-      await writeFile(
-        join(mapperDirPath, IMPORT_ASSETS_MAPPER_FILES.URL_MAPPING),
-        JSON.stringify(allUrlMap),
-        'utf8',
-      );
-      await writeFile(
-        join(mapperDirPath, IMPORT_ASSETS_MAPPER_FILES.SPACE_UID_MAPPING),
-        JSON.stringify(spaceUidMap),
-        'utf8',
-      );
+      await writeFile(join(mapperDirPath, uidFile), JSON.stringify(allUidMap), 'utf8');
+      await writeFile(join(mapperDirPath, urlFile), JSON.stringify(allUrlMap), 'utf8');
+      await writeFile(join(mapperDirPath, spaceUidFile), JSON.stringify(spaceUidMap), 'utf8');
 
       await writeFile(duplicateAssetMapperPath, JSON.stringify({}), 'utf8');
 
