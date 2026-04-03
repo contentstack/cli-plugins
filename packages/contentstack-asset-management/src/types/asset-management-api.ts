@@ -177,7 +177,7 @@ export type ImportContext = {
   context?: Record<string, unknown>;
   /**
    * Max parallel AM API calls for import (fields, asset types, and default for folders/uploads).
-   * Set from `AssetManagementImportOptions.apiConcurrency`.
+   * Set from `ImportSpacesOptions.apiConcurrency` (or host wiring).
    */
   apiConcurrency?: number;
   /** Overrides parallel limit for asset uploads when set (import `modules['asset-management'].uploadAssetsConcurrency`). */
@@ -203,28 +203,21 @@ export type ImportContext = {
 };
 
 /**
- * Options accepted by the top-level `ImportSpaces` class.
+ * Single options object for `ImportSpaces` (matches the export-side pattern: one flat shape from the host,
+ * then AM splits API vs context internally like `ExportSpaces`).
  */
-export type AssetManagementImportOptions = {
+export type ImportSpacesOptions = {
   /** Absolute path to the root content / backup directory. */
   contentDir: string;
   /** AM 2.0 base URL (e.g. "https://am.contentstack.io"). */
   assetManagementUrl: string;
-  /** Target organisation UID. */
   org_uid: string;
-  /** Target stack API key. */
   apiKey: string;
-  /** Target CMA host. */
   host: string;
-  /** Source stack API key — used for old CMA proxy URL reconstruction. */
   sourceApiKey?: string;
-  /** Optional logging context. */
   context?: Record<string, unknown>;
-  /**
-   * When set, mapper files are written under `{backupDir}/mapper/assets/` after import.
-   */
+  /** When set, mapper JSON is written after import under `{backupDir}/mapper/...`. */
   backupDir?: string;
-  /** Parallel AM API limit; defaults to package constant when omitted. */
   apiConcurrency?: number;
   uploadAssetsConcurrency?: number;
   importFoldersConcurrency?: number;
@@ -257,7 +250,7 @@ export type SpaceMapping = {
 
 /**
  * The value returned by `ImportSpaces.start()`.
- * When `backupDir` is set on options, the AM package also writes these maps under
+ * When `ImportSpacesOptions.backupDir` is set, the AM package also writes these maps under
  * `mapper/assets/` for `entries.ts` to resolve asset references.
  */
 export type ImportResult = {

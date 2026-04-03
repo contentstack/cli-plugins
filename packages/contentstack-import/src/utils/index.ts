@@ -1,9 +1,9 @@
 export { setupBranchConfig } from './setup-branch';
-export { 
+export {
   selectBranchFromDirectory,
   resolveImportPath,
   updateImportConfigWithResolvedPath,
-  executeImportPathLogic
+  executeImportPathLogic,
 } from './import-path-resolver';
 export * as interactive from './interactive';
 export { default as setupImportConfig } from './import-config-handler';
@@ -33,4 +33,4 @@ export {
 export * from './common-helper';
 export { lookUpTaxonomy, lookUpTerms } from './taxonomies-helper';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
-export { buildAssetManagementImportOptions } from './asset-management-import-options';
+export { buildImportSpacesOptions } from './build-import-spaces-options';
