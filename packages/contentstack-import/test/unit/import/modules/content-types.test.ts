@@ -131,6 +131,7 @@ describe('ImportContentTypes', () => {
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
       writeConcurrency: 2,
+      fetchConcurrency: 5,
       context: {
         command: 'cm:stacks:import',
         module: 'content-types',
@@ -146,7 +147,6 @@ describe('ImportContentTypes', () => {
         'content-types': {
           dirName: 'content_types',
           validKeys: ['title', 'uid', 'schema'],
-          apiConcurrency: 5,
           writeConcurrency: 3,
           fileName: 'content_types.json',
           limit: 100,
@@ -154,7 +154,6 @@ describe('ImportContentTypes', () => {
         'global-fields': {
           dirName: 'global_fields',
           validKeys: ['title', 'uid', 'schema'],
-          apiConcurrency: 5,
           writeConcurrency: 1,
           fileName: 'globalfields.json',
           limit: 100,
