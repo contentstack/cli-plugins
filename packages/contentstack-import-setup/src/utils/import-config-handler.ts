@@ -12,7 +12,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'import-setup');
 
-  let config: ImportConfig = merge({}, defaultConfig);
+  const config: ImportConfig = merge({}, defaultConfig);
   // setup the config
   // if (importCmdFlags['config']) {
   //   let externalConfig = await readFile(importCmdFlags['config']);
@@ -73,6 +73,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
   if (assetManagementExport.assetManagementEnabled) {
     config.assetManagementEnabled = true;
+    config.assetManagementUrl = assetManagementExport.assetManagementUrl;
     if (assetManagementExport.source_stack) {
       config.source_stack = assetManagementExport.source_stack;
     }

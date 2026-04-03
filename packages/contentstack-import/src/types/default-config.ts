@@ -10,7 +10,6 @@ export default interface DefaultConfig {
   extensionHost: string;
   developerHubUrls: Record<string, string>;
   modules: {
-    apiConcurrency: number;
     types: Modules[];
     locales: {
       dirName: string;

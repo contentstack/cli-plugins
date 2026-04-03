@@ -50,9 +50,10 @@ export default class ImportSetup {
    * @returns {Promise<Array<void | string>>}
    */
   protected async generateDependencyTree() {
-    type ModulesKey = keyof typeof this.config.modules;
     const visited: Set<string> = new Set();
     const assignedDependencies: Set<string> = new Set(); // Track assigned dependencies
+
+    type ModulesKey = keyof typeof this.config.modules;
 
     const getAllDependencies = (module: ModulesKey): Modules[] => {
       if (visited.has(module)) return [];

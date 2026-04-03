@@ -26,7 +26,6 @@ const config: DefaultConfig = {
     'https://gcp-eu-api.contentstack.com': 'https://gcp-eu-developerhub-api.contentstack.com',
   },
   modules: {
-    apiConcurrency: 5,
     types: [
       'locales',
       'environments',

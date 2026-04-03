@@ -9,6 +9,7 @@ import * as loggerModule from '../../../src/utils/logger';
 import * as fsUtilModule from '../../../src/utils/file-helper';
 import { ImportConfig } from '../../../src/types';
 import { sanitizePath } from '@contentstack/cli-utilities';
+import defaultConfig from '../../../src/config';
 
 describe('AssetImportSetup', () => {
   let assetSetup: AssetImportSetup;
@@ -31,6 +32,7 @@ describe('AssetImportSetup', () => {
     fetchConcurrency: 2,
     writeConcurrency: 1,
     modules: {
+      ...defaultConfig.modules,
       assets: {
         fetchConcurrency: 2,
         dirName: 'assets',
@@ -208,6 +210,7 @@ describe('AssetImportSetup Asset Management export', () => {
       source_stack: 'source-api-key',
       context: {},
       modules: {
+        ...defaultConfig.modules,
         assets: {
           fetchConcurrency: 2,
           dirName: 'assets',
@@ -217,8 +220,9 @@ describe('AssetImportSetup Asset Management export', () => {
     } as unknown as ImportConfig);
 
   it('delegates to ImportSetupAssetMappers and completes progress on success', async () => {
+    const cfg = amBaseConfig();
     const assetSetup = new AssetImportSetup({
-      config: amBaseConfig(),
+      config: cfg,
       stackAPIClient: mockStackAPIClient,
       dependencies: {} as any,
     });
@@ -244,7 +248,7 @@ describe('AssetImportSetup Asset Management export', () => {
     expect(params.source_stack).to.equal('source-api-key');
     expect(params.apiKey).to.equal('test-api-key');
     expect(params.host).to.equal('https://api.contentstack.io/v3');
-    expect(params.fetchConcurrency).to.equal(2);
+    expect(params.apiConcurrency).to.equal(cfg.fetchConcurrency);
     expect(setParentProgressStub.calledOnce).to.be.true;
     expect(setParentProgressStub.firstCall.args[0]).to.equal(nested);
     expect(completeStub.calledOnceWithExactly(true)).to.be.true;
