@@ -65,7 +65,6 @@ class ModuleExporter {
     try {
       this.exportConfig.branchName = targetBranch.uid;
       this.stackAPIClient.stackHeaders.branch = targetBranch.uid;
-      this.exportConfig.branchDir = this.exportConfig.exportDir;
 
       // Initialize progress manager for the target branch
       CLIProgressManager.clearGlobalSummary();

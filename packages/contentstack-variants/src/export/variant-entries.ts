@@ -31,7 +31,7 @@ export default class VariantEntries extends VariantAdapter<VariantHttpClient<Exp
     };
     super(Object.assign(config, conf));
     this.entriesDirPath = resolve(
-      sanitizePath(config.branchDir ?? config.exportDir),
+      sanitizePath(config.exportDir),
       sanitizePath(config.modules.entries.dirName),
     );
     if (this.config && this.config.context) {

@@ -15,7 +15,7 @@ describe('ModuleExporter exportByBranches', () => {
     sandbox.restore();
   });
 
-  it('should set branchDir to exportDir when no branch specified (default main)', async () => {
+  it('should select main branch and call export when no branch specified', async () => {
     const branches = [
       { uid: 'main', source: '', name: 'main' },
       { uid: 'dev', source: 'main', name: 'dev' },
@@ -41,12 +41,11 @@ describe('ModuleExporter exportByBranches', () => {
 
     await exporter.exportByBranches();
 
-    expect(exportConfig.branchDir).to.equal(exportDir);
     expect(exportConfig.branchName).to.equal('main');
     expect(exportStub.calledOnce).to.be.true;
   });
 
-  it('should set branchDir to exportDir when branch is specified via branchName', async () => {
+  it('should select branch from branchName and call export', async () => {
     const branches = [
       { uid: 'main', source: '', name: 'main' },
       { uid: 'dev', source: 'main', name: 'dev' },
@@ -73,7 +72,6 @@ describe('ModuleExporter exportByBranches', () => {
 
     await exporter.exportByBranches();
 
-    expect(exportConfig.branchDir).to.equal(exportDir);
     expect(exportConfig.branchName).to.equal('dev');
     expect(exportStub.calledOnce).to.be.true;
   });
