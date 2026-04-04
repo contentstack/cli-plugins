@@ -254,9 +254,8 @@ describe('ExportMarketplaceApps', () => {
       configHandlerGetStub.restore();
     });
 
-    // Skipped: path uses module dirName (e.g. marketplace-apps), not marketplace_assets; branchDir flow drift.
-    it.skip('should use export path directly when branchDir is set (content at path, no branch subfolder)', async () => {
-      mockExportConfig.branchDir = '/test/export';
+    // Skipped: path uses module dirName (e.g. marketplace-apps), not marketplace_assets; export path drift.
+    it.skip('should use export path directly (content at path, no branch subfolder)', async () => {
       mockExportConfig.branchName = 'main';
       exportMarketplaceApps = new ExportMarketplaceApps({
         exportConfig: mockExportConfig,

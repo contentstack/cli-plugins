@@ -22,7 +22,7 @@ export default class ExportEvents extends PersonalizationAdapter<ExportConfig> {
     this.personalizeConfig = exportConfig.modules.personalize;
     this.eventsConfig = exportConfig.modules.events;
     this.eventsFolderPath = pResolve(
-      sanitizePath(exportConfig.branchDir ?? exportConfig.exportDir),
+      sanitizePath(exportConfig.exportDir),
       sanitizePath(this.personalizeConfig.dirName),
       sanitizePath(this.eventsConfig.dirName),
     );

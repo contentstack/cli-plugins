@@ -25,14 +25,13 @@ describe('Variant Entries Export', () => {
   });
 
   describe('path construction', () => {
-    test.it('should use branchDir as base path when set (no branch segment in path)', () => {
-      const configWithBranchDir = {
+    test.it('should use exportDir as base path (no branch segment in path)', () => {
+      const configWithExportDir = {
         ...config,
         exportDir: '/base/export',
         branchName: 'dev',
-        branchDir: '/base/export',
       } as ExportConfig;
-      const instance = new Export.VariantEntries(configWithBranchDir);
+      const instance = new Export.VariantEntries(configWithExportDir);
       expect(instance.entriesDirPath).to.not.include('dev');
       expect(instance.entriesDirPath).to.include('entries');
     });

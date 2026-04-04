@@ -450,8 +450,7 @@ describe('ExportLabels', () => {
       expect(exportLabels.labelsFolderPath).to.include('labels');
     });
 
-    it('should use export path directly when branchDir is set (content at path, no branch subfolder)', async () => {
-      mockExportConfig.branchDir = '/test/export';
+    it('should use export path directly (content at path, no branch subfolder)', async () => {
       mockExportConfig.branchName = 'main';
       exportLabels = new ExportLabels({
         exportConfig: mockExportConfig,

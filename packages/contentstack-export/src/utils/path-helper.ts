@@ -5,5 +5,5 @@ import { ExportConfig } from '../types';
  * Content is always written directly under this path (no branch subfolder).
  */
 export function getExportBasePath(exportConfig: ExportConfig): string {
-  return exportConfig.branchDir ?? exportConfig.exportDir;
+  return exportConfig.exportDir;
 }
