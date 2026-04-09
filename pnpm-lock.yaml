@@ -43,7 +43,7 @@ importers:
         specifier: ^11.3.0
         version: 11.3.4
       lodash:
-        specifier: 4.18.1
+        specifier: ^4.18.1
         version: 4.18.1
       uuid:
         specifier: ^9.0.1
@@ -201,7 +201,7 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       lodash:
-        specifier: 4.18.1
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@contentstack/cli-dev-dependencies':
@@ -274,8 +274,8 @@ importers:
         specifier: 12.11.1
         version: 12.11.1(@types/node@18.19.130)
       lodash:
-        specifier: ^4.17.23
-        version: 4.17.23
+        specifier: ^4.18.1
+        version: 4.18.1
       merge:
         specifier: ^2.1.1
         version: 2.1.1
@@ -362,8 +362,8 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2
       lodash:
-        specifier: ^4.17.23
-        version: 4.17.23
+        specifier: ^4.18.1
+        version: 4.18.1
       merge:
         specifier: ^2.1.1
         version: 2.1.1
@@ -550,7 +550,7 @@ importers:
         specifier: ^11.3.3
         version: 11.3.4
       lodash:
-        specifier: 4.18.1
+        specifier: ^4.18.1
         version: 4.18.1
       marked:
         specifier: ^4.3.0
@@ -650,7 +650,7 @@ importers:
         specifier: ^11.3.0
         version: 11.3.4
       lodash:
-        specifier: 4.18.1
+        specifier: ^4.18.1
         version: 4.18.1
       merge:
         specifier: ^2.1.1
@@ -902,7 +902,7 @@ importers:
         specifier: ^6.2.28
         version: 6.2.40
       lodash:
-        specifier: 4.18.1
+        specifier: ^4.18.1
         version: 4.18.1
       mkdirp:
         specifier: ^1.0.4
@@ -4910,9 +4910,6 @@ packages:
 
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
-
-  lodash@4.17.23:
-    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -12682,8 +12679,6 @@ snapshots:
   lodash.padend@4.6.1: {}
 
   lodash.uniq@4.5.0: {}
-
-  lodash@4.17.23: {}
 
   lodash@4.18.1: {}
 
