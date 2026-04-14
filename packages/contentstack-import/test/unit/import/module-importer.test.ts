@@ -509,7 +509,7 @@ describe('ModuleImporter', () => {
 
         await importer.start();
 
-        expect(importer['stackAPIClient'].locale.calledOnce).to.be.true;
+        expect(masterLocalDetailsStub.calledOnce).to.be.true;
         expect(importer['importConfig'].master_locale).to.deep.equal({ code: 'en-us' });
         expect(importer['importConfig'].masterLocale).to.deep.equal({ code: 'en-us' });
       });
@@ -534,13 +534,7 @@ describe('ModuleImporter', () => {
 
       it('should set both master_locale and masterLocale', async () => {
         mockImportConfig.master_locale = undefined;
-
-        const localeMock = {
-          query: sandbox.stub().returnsThis(),
-          find: sandbox.stub().resolves({ items: [{ code: 'de-de' }] }),
-        };
-        mockStackClient.locale = sandbox.stub().returns(localeMock);
-        mockStackClient._localeMock = localeMock;
+        masterLocalDetailsStub.resolves({ code: 'de-de' });
 
         const importer = new ModuleImporter(mockManagementClient as any, mockImportConfig);
 
@@ -552,13 +546,7 @@ describe('ModuleImporter', () => {
 
       it('should handle error when masterLocalDetails fails', async () => {
         mockImportConfig.master_locale = undefined;
-
-        const localeMock = {
-          query: sandbox.stub().returnsThis(),
-          find: sandbox.stub().rejects(new Error('Master locale fetch failed')),
-        };
-        mockStackClient.locale = sandbox.stub().returns(localeMock);
-        mockStackClient._localeMock = localeMock;
+        masterLocalDetailsStub.rejects(new Error('Master locale fetch failed'));
 
         const importer = new ModuleImporter(mockManagementClient as any, mockImportConfig);
 
