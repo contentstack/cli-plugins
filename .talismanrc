@@ -1,12 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-import-setup/src/types/default-config.ts
-    checksum: 415cfa0e70dec18ca933534c8663fa7f5454c59123f8d3c74a8da38f50a91741
-  - filename: packages/contentstack-asset-management/src/types/import-setup-asset-mapper.ts
-    checksum: 410afe12a9decf2051d488e8dd5740c7d0f19ff88cc2c4258fa57b9283bc7e57
-  - filename: packages/contentstack-import-setup/src/import/import-setup.ts
-    checksum: 1927d72dde473f93b976096282742122bef2f6c2178611781d9ba2c210527566
-  - filename: packages/contentstack-import-setup/src/utils/import-setup-asset-mapper-params.ts
-    checksum: b646e603db48d86067e4ed29f5d699d52b4c45ded9cbe992e29167b839aa2575
-  - filename: packages/contentstack-asset-management/src/import-setup/import-setup-asset-mappers.ts
-    checksum: 944b033c4edc4b4b7a0cfe19b372af87b2243f58bdf3528c544c863600b204b6
+  - filename: pnpm-lock.yaml
+    checksum: 8b5a2f43585d3191cdc71ad611f50c94b6d13fb7442cf4218ee0851a068af178
 version: '1.0'
