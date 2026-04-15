@@ -64,6 +64,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     const uidMap: Record<string, string> = {};
     const urlMap: Record<string, string> = {};
 
+    log.debug(
+      `Building identity mappers from export (reuse path, spaceDir=${spaceDir})`,
+      this.importContext.context,
+    );
+
     const loc = this.resolveAssetsChunkedLocation(spaceDir);
     if (!loc) {
       log.debug(
@@ -72,6 +77,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
       );
       return { uidMap, urlMap };
     }
+
+    log.debug(
+      `Reading chunked assets for identity map: ${loc.assetsDir} (index: ${loc.indexName})`,
+      this.importContext.context,
+    );
 
     const fs = new FsUtility({ basePath: loc.assetsDir, indexFileName: loc.indexName });
     let totalRows = 0;
@@ -93,7 +103,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     );
 
     log.debug(
-      `Built identity mappers for ${totalRows} exported asset row(s) (reuse path, chunked read)`,
+      `Built identity mappers for ${totalRows} exported asset row(s): ${Object.keys(uidMap).length} uid entries, ${Object.keys(urlMap).length} url entries`,
+      this.importContext.context,
+    );
+    log.info(
+      `Prepared identity uid/url mappers from ${totalRows} exported asset row(s) (reuse existing space)`,
       this.importContext.context,
     );
 
@@ -108,6 +122,10 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     const uidMap: Record<string, string> = {};
     const urlMap: Record<string, string> = {};
 
+    log.debug(`Starting assets and folders import for space ${newSpaceUid}`, this.importContext.context);
+    log.info(`Importing folders and assets into space ${newSpaceUid}`, this.importContext.context);
+    log.debug(`Assets directory: ${assetsDir}`, this.importContext.context);
+
     // -----------------------------------------------------------------------
     // 1. Import folders
     // -----------------------------------------------------------------------
@@ -115,19 +133,35 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     const foldersFileName = this.importContext.foldersFileName ?? 'folders.json';
     const foldersFilePath = join(assetsDir, foldersFileName);
 
+    if (!existsSync(foldersFilePath)) {
+      log.debug(`No ${foldersFileName} at ${foldersFilePath}, skipping folder import`, this.importContext.context);
+    }
+
     if (existsSync(foldersFilePath)) {
       let foldersData: unknown;
       try {
         foldersData = JSON.parse(readFileSync(foldersFilePath, 'utf8'));
       } catch (e) {
-        log.debug(`Could not read ${foldersFileName}: ${e}`, this.importContext.context);
+        log.warn(`Could not read ${foldersFileName}: ${e}`, this.importContext.context);
       }
 
       if (foldersData) {
+        log.debug(`Reading folders from ${foldersFilePath}`, this.importContext.context);
         const folders = getArrayFromResponse(foldersData, 'folders') as FolderRecord[];
         this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FOLDERS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FOLDERS);
-        log.debug(`Importing ${folders.length} folder(s) for space ${newSpaceUid}`, this.importContext.context);
+        log.debug(
+          `Importing ${folders.length} folder(s) for space ${newSpaceUid} (concurrency=${this.importFoldersBatchConcurrency})`,
+          this.importContext.context,
+        );
         await this.importFolders(newSpaceUid, folders, folderUidMap);
+        log.debug(
+          `Folder import phase complete: ${Object.keys(folderUidMap).length} exported folder uid(s) mapped to target`,
+          this.importContext.context,
+        );
+        log.info(
+          `Finished importing ${Object.keys(folderUidMap).length} folder(s) for space ${newSpaceUid}`,
+          this.importContext.context,
+        );
       }
     }
 
@@ -136,18 +170,25 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     // -----------------------------------------------------------------------
     const loc = this.resolveAssetsChunkedLocation(spaceDir);
     if (!loc) {
+      log.info(
+        `No asset metadata index in ${assetsDir}; skipping file uploads for space ${newSpaceUid}`,
+        this.importContext.context,
+      );
       log.debug(`No assets.json index found in ${assetsDir}, skipping asset upload`, this.importContext.context);
       return { uidMap, urlMap };
     }
 
     this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSETS);
     log.debug(
-      `Uploading assets for space ${newSpaceUid} from chunked export (incremental chunks)`,
+      `Uploading assets for space ${newSpaceUid} from ${loc.assetsDir} (index: ${loc.indexName}, concurrency=${this.uploadAssetsBatchConcurrency})`,
       this.importContext.context,
     );
 
     const assetFs = new FsUtility({ basePath: loc.assetsDir, indexFileName: loc.indexName });
     let exportRowCount = 0;
+    let uploadOk = 0;
+    let uploadFail = 0;
+    let missingFiles = 0;
 
     await forEachChunkRecordsFromFs<AssetRecord>(
       assetFs,
@@ -162,7 +203,8 @@ export default class ImportAssets extends AssetManagementImportAdapter {
           const filePath = pResolve(assetsDir, 'files', oldUid, filename);
 
           if (!existsSync(filePath)) {
-            log.debug(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
+            missingFiles += 1;
+            log.warn(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
             this.tick(false, `asset: ${oldUid}`, 'File not found on disk', PROCESS_NAMES.AM_IMPORT_ASSETS);
             continue;
           }
@@ -172,6 +214,12 @@ export default class ImportAssets extends AssetManagementImportAdapter {
 
           uploadJobs.push({ asset, filePath, mappedParentUid, oldUid });
         }
+
+        const skippedInChunk = assetChunk.length - uploadJobs.length;
+        log.debug(
+          `Asset chunk: ${assetChunk.length} row(s), ${uploadJobs.length} upload job(s)${skippedInChunk ? `, ${skippedInChunk} missing on disk` : ''}`,
+          this.importContext.context,
+        );
 
         await runInBatches(
           uploadJobs,
@@ -192,8 +240,10 @@ export default class ImportAssets extends AssetManagementImportAdapter {
               }
 
               this.tick(true, `asset: ${oldUid}`, null, PROCESS_NAMES.AM_IMPORT_ASSETS);
-              log.debug(`Uploaded asset ${oldUid} → ${created.uid}`, this.importContext.context);
+              uploadOk += 1;
+              log.debug(`Uploaded asset ${oldUid} → ${created.uid} (${filePath})`, this.importContext.context);
             } catch (e) {
+              uploadFail += 1;
               this.tick(
                 false,
                 `asset: ${oldUid}`,
@@ -208,7 +258,13 @@ export default class ImportAssets extends AssetManagementImportAdapter {
     );
 
     log.debug(
-      `Finished asset uploads for space ${newSpaceUid} (${exportRowCount} row(s) read from export chunks)`,
+      `Finished asset uploads for space ${newSpaceUid}: rows=${exportRowCount}, ok=${uploadOk}, failed=${uploadFail}, missingFile=${missingFiles}`,
+      this.importContext.context,
+    );
+    log.info(
+      uploadFail === 0 && missingFiles === 0
+        ? `Finished importing ${uploadOk} asset file(s) for space ${newSpaceUid}`
+        : `Finished importing assets for space ${newSpaceUid}: ${uploadOk} uploaded, ${uploadFail} failed, ${missingFiles} missing on disk`,
       this.importContext.context,
     );
 
@@ -226,8 +282,10 @@ export default class ImportAssets extends AssetManagementImportAdapter {
   ): Promise<void> {
     let remaining = [...folders];
     let prevLength = -1;
+    let pass = 0;
 
     while (remaining.length > 0 && remaining.length !== prevLength) {
+      pass += 1;
       prevLength = remaining.length;
       const ready: FolderRecord[] = [];
       const nextPass: FolderRecord[] = [];
@@ -243,6 +301,11 @@ export default class ImportAssets extends AssetManagementImportAdapter {
           ready.push(folder);
         }
       }
+
+      log.debug(
+        `Folder import pass ${pass}: creating ${ready.length} folder(s), ${nextPass.length} blocked on parent (${remaining.length} total remaining before this pass)`,
+        this.importContext.context,
+      );
 
       await runInBatches(ready, this.importFoldersBatchConcurrency, async (folder) => {
         const { parent_uid: parentUid } = folder;
@@ -270,8 +333,13 @@ export default class ImportAssets extends AssetManagementImportAdapter {
       remaining = nextPass;
     }
 
+    log.debug(
+      `Folder import passes finished for space ${newSpaceUid} after ${pass} pass(es); ${Object.keys(folderUidMap).length} folder uid(s) mapped`,
+      this.importContext.context,
+    );
+
     if (remaining.length > 0) {
-      log.debug(
+      log.warn(
         `${remaining.length} folder(s) could not be imported (unresolved parent UIDs)`,
         this.importContext.context,
       );

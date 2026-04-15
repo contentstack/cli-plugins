@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { FsUtility, getDirectories } from '@contentstack/cli-utilities';
+import { ExportSpaces } from '@contentstack/cli-asset-management';
 import ExportAssets from '../../../../src/export/modules/assets';
 import { ExportConfig } from '../../../../src/types';
 import { mockData, assetsMetaData } from '../../mock/assets';
@@ -135,6 +136,11 @@ describe('ExportAssets', () => {
           displayExecutionTime: false,
           enableDownloadStatus: false,
           includeVersionedAssets: false,
+        },
+        'asset-management': {
+          chunkFileSizeMb: 1,
+          apiConcurrency: 5,
+          downloadAssetsConcurrency: 5,
         },
         content_types: {
           dirName: 'content_types',
@@ -301,7 +307,8 @@ describe('ExportAssets', () => {
         completeProcess: sinon.stub(),
         tick: sinon.stub(),
       } as any);
-      sinon.stub(exportAssets as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
+      sinon.stub(exportAssets as any, 'withLoadingSpinner').callsFake(async (...args: unknown[]) => {
+        const fn = args[1] as () => Promise<unknown>;
         return await fn();
       });
       sinon.stub(exportAssets as any, 'completeProgress');
@@ -324,6 +331,31 @@ describe('ExportAssets', () => {
       expect(getAssetsFoldersStub.calledOnce).to.be.true;
       expect(getAssetsStub.calledOnce).to.be.true;
       expect(downloadAssetsStub.calledOnce).to.be.true;
+    });
+
+    it('should forward AM export concurrency options to ExportSpaces', async () => {
+      mockExportConfig.linkedWorkspaces = [{ uid: 'ws-1', space_uid: 'am-space-1', is_default: true }];
+      mockExportConfig.region.assetManagementUrl = 'https://am.example.com';
+      mockExportConfig.org_uid = 'org-from-config';
+      mockExportConfig.modules['asset-management'].chunkFileSizeMb = 2;
+      mockExportConfig.modules['asset-management'].apiConcurrency = 7;
+      mockExportConfig.modules['asset-management'].downloadAssetsConcurrency = 3;
+
+      const progressManager = { addProcess: sinon.stub(), startProcess: sinon.stub(), updateStatus: sinon.stub() };
+      ((exportAssets as any).createNestedProgress as sinon.SinonStub).returns(progressManager as any);
+      sinon.stub(exportAssets as any, 'completeProgressWithMessage');
+      const setParentStub = sinon.stub(ExportSpaces.prototype, 'setParentProgressManager');
+      const startStub = sinon.stub(ExportSpaces.prototype, 'start').resolves();
+
+      await exportAssets.start();
+
+      expect(setParentStub.calledOnceWith(progressManager as any)).to.be.true;
+      expect(startStub.calledOnce).to.be.true;
+      const forwardedOptions = (startStub.thisValues[0] as any).options;
+      expect(forwardedOptions.chunkFileSizeMb).to.equal(2);
+      expect(forwardedOptions.apiConcurrency).to.equal(7);
+      expect(forwardedOptions.downloadAssetsConcurrency).to.equal(3);
+      expect(forwardedOptions.org_uid).to.equal('org-from-config');
     });
 
     it('should export versioned assets when enabled', async () => {
