@@ -1,7 +1,7 @@
 import { join, resolve as pResolve } from 'node:path';
 import { mkdirSync, readdirSync, statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
-import { log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type {
   AssetManagementAPIConfig,
@@ -70,6 +70,8 @@ export class ImportSpaces {
       context,
     };
 
+    log.debug('Starting Asset Management import process...', context);
+
     // Discover space directories
     let spaceDirs: string[] = [];
     try {
@@ -81,7 +83,7 @@ export class ImportSpaces {
         }
       });
     } catch (e) {
-      log.debug(`Could not read spaces root path ${spacesRootPath}: ${e}`, context);
+      log.warn(`Could not read spaces root path ${spacesRootPath}: ${e}`, context);
     }
 
     const totalSteps = 2 + spaceDirs.length * 2;
@@ -94,6 +96,8 @@ export class ImportSpaces {
     const allSpaceUidMap: Record<string, string> = {};
     const spaceMappings: SpaceMapping[] = [];
     let hasFailures = false;
+    let spacesSucceeded = 0;
+    let spacesFailed = 0;
 
     // Space UIDs already present in the target org — reuse when export dir name matches a uid here.
     const existingSpaceUids = new Set<string>();
@@ -110,6 +114,8 @@ export class ImportSpaces {
     }
 
     try {
+      log.info('Started Asset Management import', context);
+
       // 1. Import shared fields
       progress.updateStatus(`Importing shared fields...`, AM_MAIN_PROCESS_NAME);
       const fieldsImporter = new ImportFields(apiConfig, importContext);
@@ -147,15 +153,17 @@ export class ImportSpaces {
           });
 
           log.debug(`Imported space ${spaceUid} → ${result.newSpaceUid}`, context);
+          spacesSucceeded += 1;
         } catch (err) {
           hasFailures = true;
+          spacesFailed += 1;
           progress.tick(
             false,
             `space: ${spaceUid}`,
             (err as Error)?.message ?? 'Failed to import space',
             AM_MAIN_PROCESS_NAME,
           );
-          log.debug(`Failed to import space ${spaceUid}: ${err}`, context);
+          log.warn(`Failed to import space ${spaceUid}: ${err}`, context);
         }
       }
 
@@ -174,9 +182,14 @@ export class ImportSpaces {
       }
 
       progress.completeProcess(AM_MAIN_PROCESS_NAME, !hasFailures);
+      log.info(
+        `Asset Management import finished: ${spacesSucceeded} space(s) succeeded, ${spacesFailed} failed, ${spaceDirs.length} attempted.`,
+        context,
+      );
       log.debug('Asset Management 2.0 import completed', context);
     } catch (err) {
       progress.completeProcess(AM_MAIN_PROCESS_NAME, false);
+      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management import failed');
       throw err;
     }
 

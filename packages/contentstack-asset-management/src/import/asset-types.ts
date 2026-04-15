@@ -31,19 +31,24 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
   async start(): Promise<void> {
     await this.init();
 
+    log.debug('Starting shared asset types import process...', this.importContext.context);
+
     const stripKeys = this.importContext.assetTypesImportInvalidKeys ?? [...FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS];
     const dir = this.getAssetTypesDir();
     const indexName = this.importContext.assetTypesFileName ?? 'asset-types.json';
     const indexPath = join(dir, indexName);
 
     if (!existsSync(indexPath)) {
-      log.debug('No shared asset types to import (index missing)', this.importContext.context);
+      log.info('No shared asset types to import (index missing)', this.importContext.context);
       return;
     }
 
     const existingByUid = await this.loadExistingAssetTypesMap();
 
-    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+    this.updateStatus(
+      PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING,
+      PROCESS_NAMES.AM_IMPORT_ASSET_TYPES,
+    );
 
     await forEachChunkedJsonStore<Record<string, unknown>>(
       dir,
@@ -51,10 +56,8 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
       {
         context: this.importContext.context,
         chunkReadLogLabel: 'asset-types',
-        onOpenError: (e) =>
-          log.debug(`Could not open chunked asset-types index: ${e}`, this.importContext.context),
-        onEmptyIndexer: () =>
-          log.debug('No shared asset types to import (empty indexer)', this.importContext.context),
+        onOpenError: (e) => log.warn(`Could not open chunked asset-types index: ${e}`, this.importContext.context),
+        onEmptyIndexer: () => log.debug('No shared asset types to import (empty indexer)', this.importContext.context),
       },
       async (records) => {
         const toCreate = this.buildAssetTypesToCreate(records, existingByUid, stripKeys);
@@ -103,7 +106,10 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
             this.importContext.context,
           );
         } else {
-          log.debug(`Asset type "${uid}" already exists with matching definition, skipping`, this.importContext.context);
+          log.debug(
+            `Asset type "${uid}" already exists with matching definition, skipping`,
+            this.importContext.context,
+          );
         }
         this.tick(true, `asset-type: ${uid} (skipped, already exists)`, null, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
         continue;

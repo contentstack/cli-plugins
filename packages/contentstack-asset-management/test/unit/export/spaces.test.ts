@@ -75,6 +75,26 @@ describe('ExportSpaces', () => {
       expect(fieldsStub.firstCall.args[0]).to.equal('space-1');
     });
 
+    it('should run shared asset types and fields exports in parallel', async () => {
+      const atStub = ExportAssetTypes.prototype.start as sinon.SinonStub;
+      const fieldsStub = ExportFields.prototype.start as sinon.SinonStub;
+      let resolveAssetTypes!: () => void;
+      const assetTypesGate = new Promise<void>((resolve) => {
+        resolveAssetTypes = resolve;
+      });
+      atStub.callsFake(async () => assetTypesGate);
+
+      const exporter = new ExportSpaces(baseOptions);
+      const startPromise = exporter.start();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(atStub.calledOnce).to.be.true;
+      expect(fieldsStub.calledOnce).to.be.true;
+
+      resolveAssetTypes();
+      await startPromise;
+    });
+
     it('should iterate over all workspaces in order', async () => {
       const exporter = new ExportSpaces(baseOptions);
       await exporter.start();
@@ -104,6 +124,20 @@ describe('ExportSpaces', () => {
         expect.fail('should have thrown');
       } catch (err: any) {
         expect(err.message).to.equal('workspace-error');
+      }
+
+      expect(fakeProgress.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, false]);
+    });
+
+    it('should mark progress as failed and re-throw when shared bootstrap export errors', async () => {
+      (ExportFields.prototype.start as sinon.SinonStub).rejects(new Error('shared-bootstrap-error'));
+
+      const exporter = new ExportSpaces(baseOptions);
+      try {
+        await exporter.start();
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.equal('shared-bootstrap-error');
       }
 
       expect(fakeProgress.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, false]);

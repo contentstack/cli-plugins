@@ -151,6 +151,14 @@ export type AssetManagementExportOptions = {
    * FsUtility `chunkFileSize` in MB for AM export chunked writes.
    */
   chunkFileSizeMb?: number;
+  /**
+   * Max parallel AM API/export tasks for export (shared module bootstrap default).
+   */
+  apiConcurrency?: number;
+  /**
+   * Max parallel asset file downloads per workspace.
+   */
+  downloadAssetsConcurrency?: number;
 };
 
 // ---------------------------------------------------------------------------
