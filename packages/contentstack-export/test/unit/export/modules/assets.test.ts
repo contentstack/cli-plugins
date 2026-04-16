@@ -139,11 +139,8 @@ describe('ExportAssets', () => {
         },
         'asset-management': {
           chunkFileSizeMb: 1,
-<<<<<<< HEAD
           apiConcurrency: 5,
           downloadAssetsConcurrency: 5,
-=======
->>>>>>> feat/AM2.0
         },
         content_types: {
           dirName: 'content_types',
@@ -226,7 +223,7 @@ describe('ExportAssets', () => {
           dirName: 'composable_studio',
           fileName: 'composable_studio.json',
           apiBaseUrl: 'https://api.contentstack.io',
-          apiVersion: 'v3'
+          apiVersion: 'v3',
         },
       },
     } as ExportConfig;
