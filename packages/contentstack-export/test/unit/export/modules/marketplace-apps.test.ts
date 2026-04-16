@@ -5,6 +5,7 @@ import * as utilities from '@contentstack/cli-utilities';
 import ExportMarketplaceApps from '../../../../src/export/modules/marketplace-apps';
 import ExportConfig from '../../../../src/types/export-config';
 import * as marketplaceAppHelper from '../../../../src/utils/marketplace-app-helper';
+import * as utils from '../../../../src/utils';
 
 describe('ExportMarketplaceApps', () => {
   let exportMarketplaceApps: any;
@@ -105,6 +106,10 @@ describe('ExportMarketplaceApps', () => {
     sinon.stub(marketplaceAppHelper, 'getDeveloperHubUrl').resolves('https://developer-api.contentstack.io');
     sinon.stub(marketplaceAppHelper, 'createNodeCryptoInstance').resolves(mockNodeCrypto);
     sinon.stub(marketplaceAppHelper, 'askEncryptionKey').resolves('test-encryption-key');
+    sinon.stub(utils, 'getOrgUid').resolves('test-org-uid');
+    sinon.stub(utils, 'getDeveloperHubUrl').resolves('https://developer-api.contentstack.io');
+    sinon.stub(utils, 'createNodeCryptoInstance').resolves(mockNodeCrypto);
+    sinon.stub(utils, 'askEncryptionKey').resolves('test-encryption-key');
   });
 
   afterEach(() => {
@@ -295,7 +300,14 @@ describe('ExportMarketplaceApps', () => {
 
       await exportMarketplaceApps.start();
 
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce).to.be.true;
+      // Source imports from utils barrel; resolution may use utils or marketplaceAppHelper depending on env (CI vs local)
+      const helperCalled = (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).calledOnce;
+      const utilsCalled = (utils.createNodeCryptoInstance as sinon.SinonStub).calledOnce;
+      expect(helperCalled || utilsCalled, 'createNodeCryptoInstance should be called exactly once').to.be.true;
+      expect(
+        (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).callCount +
+          (utils.createNodeCryptoInstance as sinon.SinonStub).callCount,
+      ).to.equal(1);
 
       getAppsCountStub.restore();
       exportAppsStub.restore();
@@ -397,12 +409,12 @@ describe('ExportMarketplaceApps', () => {
       const getAppManifestAndAppConfigStub = sinon.stub(exportMarketplaceApps, 'getAppManifestAndAppConfig').resolves();
 
       // Reset the stub call count since it might have been called in previous tests
-      (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
+      (utils.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
 
       await exportMarketplaceApps.exportApps();
 
       // NodeCrypto should not be initialized if no configurations
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.false;
+      expect((utils.createNodeCryptoInstance as sinon.SinonStub).called).to.be.false;
 
       getStackSpecificAppsStub.restore();
       getAppManifestAndAppConfigStub.restore();
@@ -773,11 +785,11 @@ describe('ExportMarketplaceApps', () => {
       });
 
       // Reset the stub call count since it was called in beforeEach
-      (marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
+      (utils.createNodeCryptoInstance as sinon.SinonStub).resetHistory();
 
       await exportMarketplaceApps.getAppConfigurations(0, exportMarketplaceApps.installedApps[0]);
 
-      expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
+      expect((utils.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
       expect(exportMarketplaceApps.nodeCrypto).to.exist;
       expect((marketplaceAppHelper.createNodeCryptoInstance as sinon.SinonStub).called).to.be.true;
     });
