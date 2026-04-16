@@ -57,6 +57,8 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   region: Region;
   personalizeProjectName?: string;
   'exclude-global-modules': false;
+  // New memory optimization properties
+  forceBackup?: boolean;
   context: Context;
 }
 
