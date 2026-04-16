@@ -1,6 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-asset-management/src/import/spaces.ts
-    checksum: e972d66f6a889f72d72ba48112a12f9447de39285cfb568d3b99a4969cf9f5f9
   - filename: pnpm-lock.yaml
-    checksum: 8b36c85c5be8e48fb34f600b0e5631ab9c6640ad115825a11a7f2bd161141b74
+    checksum: 8b5a2f43585d3191cdc71ad611f50c94b6d13fb7442cf4218ee0851a068af178
 version: '1.0'

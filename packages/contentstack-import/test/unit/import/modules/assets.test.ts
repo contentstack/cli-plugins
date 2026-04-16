@@ -39,6 +39,8 @@ describe('ImportAssets', () => {
       region: 'us',
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
+      fetchConcurrency: 5,
+      writeConcurrency: 1,
       context: {
         command: 'cm:stacks:import',
         module: 'assets',
@@ -55,7 +57,6 @@ describe('ImportAssets', () => {
           dirName: 'assets',
           validKeys: ['title', 'filename', 'content_type', 'parent_uid', 'description', 'tags'],
           folderValidKeys: ['name', 'parent_uid'],
-          apiConcurrency: 5,
           importFoldersConcurrency: 3,
           uploadAssetsConcurrency: 5,
           includeVersionedAssets: true,
