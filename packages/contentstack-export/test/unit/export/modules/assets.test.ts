@@ -139,8 +139,11 @@ describe('ExportAssets', () => {
         },
         'asset-management': {
           chunkFileSizeMb: 1,
+<<<<<<< HEAD
           apiConcurrency: 5,
           downloadAssetsConcurrency: 5,
+=======
+>>>>>>> feat/AM2.0
         },
         content_types: {
           dirName: 'content_types',
