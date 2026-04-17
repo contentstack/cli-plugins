@@ -1,4 +1,34 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
     checksum: 78b7fca30ae03e2570a384c5432c10f0e6b023f492b68929795adcb4613e8673
+  - filename: packages/contentstack-export/test/unit/export/modules/assets.test.ts
+    checksum: 73ff01e2d19c8d1384dca2ee7087f8c19e0b1fac6b29c75a02ca523a36b7cb92
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 1eb407ee0bd21597d8a4c673fce99d60fafd151ac843c33dac52ffdcc73e8107
+  - filename: packages/contentstack-export/src/types/default-config.ts
+    checksum: bf399466aae808342ec013c0179fbc24ac2d969c77fdbef47a842b12497d507e
+  - filename: packages/contentstack-export/test/unit/export/modules/base-class.test.ts
+    checksum: bd2b28305fff90ca26bce56b2c5c61751a62225d310a2553874e9ec009ed78e8
+  - filename: packages/contentstack-export/src/types/index.ts
+    checksum: 0b637d20d7b6f434aff7cf0a92ea8d27f8750dca0d1e46ca3f35511e5740ad80
+  - filename: packages/contentstack-export/test/unit/export/modules/stack.test.ts
+    checksum: 436c099888888297bcdae4d55e71af388b512871f2e3814f6ec5689b5f20bff9
+  - filename: packages/contentstack-export/src/export/modules/stack.ts
+    checksum: f222d6864ac24faaa6585a003536b9ec1eae0d53e8fddf2bdc783790376d85bc
+  - filename: .cursor/skills/code-review/SKILL.md
+    checksum: 29d812ac5c2ed4c55490f8d31e15eb592851601a6a141354cb458b1b9f1daa7a
+  - filename: .cursor/commands/code-review.md
+    checksum: c8dda58c774d037aaab01c3bc9b76cfcbaf9a3a70097e88ab6e54e42474be734
+  - filename: .cursor/skills/testing/references/testing-patterns.md
+    checksum: 0a6cb66f27eda46b40508517063a2f43fea1b4b8df878e7ddff404ab7fc126f8
+  - filename: .cursor/skills/contentstack-cli/references/contentstack-patterns.md
+    checksum: 9888d481b6a1ae8c7102d9efed0fdbae2b7592f582a62c8bff6deccf03fdf341
+  - filename: .cursor/skills/code-review/references/code-review-checklist.md
+    checksum: bdf7453f08d7209deaee411f47a1132ee872b28f0eb082563dfe20aa56eab057
+  - filename: .cursor/skills/contentstack-cli/SKILL.md
+    checksum: 45f0d0c81086eaee850311e0caae198cf6dd2a7bc73bd1340b320b15047c6dae
+  - filename: .cursor/rules/oclif-commands.mdc
+    checksum: 8e269309cbfc9687e4a889c4a7983f145e77066d515dae53968d7553ae726b41
+  - filename: .cursor/rules/contentstack-plugin.mdc
+    checksum: 45a57178d1b7d59d69540e49594a452e663e719c14423be33a393e313eba1ad0
 version: '1.0'
