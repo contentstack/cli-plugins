@@ -20,6 +20,7 @@ import {
 import BaseClass from './base-class';
 import {
   fsUtil,
+  getExportBasePath,
   getOrgUid,
   createNodeCryptoInstance,
   getDeveloperHubUrl,
@@ -118,8 +119,7 @@ export default class ExportMarketplaceApps extends BaseClass {
 
   async setupPaths(): Promise<void> {
     this.marketplaceAppPath = pResolve(
-      this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
+      getExportBasePath(this.exportConfig),
       this.marketplaceAppConfig.dirName,
     );
     log.debug(`Marketplace apps folder path: '${this.marketplaceAppPath}'`, this.exportConfig.context);
