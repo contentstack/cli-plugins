@@ -52,7 +52,6 @@ USAGE
 * [`csdx cm:branches:create`](#csdx-cmbranchescreate)
 * [`csdx cm:branches:delete [-uid <value>] [-k <value>]`](#csdx-cmbranchesdelete--uid-value--k-value)
 * [`csdx cm:branches:diff [--base-branch <value>] [--compare-branch <value>] [-k <value>][--module <value>] [--format <value>] [--csv-path <value>]`](#csdx-cmbranchesdiff---base-branch-value---compare-branch-value--k-value--module-value---format-value---csv-path-value)
-* [`csdx cm:branches:generate-scripts -k <value> --merge-uid <value>`](#csdx-cmbranchesgenerate-scripts--k-value---merge-uid-value)
 * [`csdx cm:branches:merge [-k <value>][--compare-branch <value>] [--no-revert] [--export-summary-path <value>] [--use-merge-summary <value>] [--comment <value>] [--base-branch <value>]`](#csdx-cmbranchesmerge--k-value--compare-branch-value---no-revert---export-summary-path-value---use-merge-summary-value---comment-value---base-branch-value)
 * [`csdx cm:branches:merge-status -k <value> --merge-uid <value>`](#csdx-cmbranchesmerge-status--k-value---merge-uid-value)
 
@@ -193,29 +192,6 @@ EXAMPLES
 ```
 
 _See code: [src/commands/cm/branches/diff.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/diff.ts)_
-
-## `csdx cm:branches:generate-scripts -k <value> --merge-uid <value>`
-
-Generate entry migration scripts for a completed merge job
-
-```
-USAGE
-  $ csdx cm:branches:generate-scripts -k <value> --merge-uid <value>
-
-FLAGS
-  -k, --stack-api-key=<value>  (required) Provide your stack API key.
-      --merge-uid=<value>      (required) Merge job UID to generate scripts for.
-
-DESCRIPTION
-  Generate entry migration scripts for a completed merge job
-
-EXAMPLES
-  $ csdx cm:branches:generate-scripts -k bltxxxxxxxx --merge-uid merge_abc123
-
-  $ csdx cm:branches:generate-scripts --stack-api-key bltxxxxxxxx --merge-uid merge_abc123
-```
-
-_See code: [src/commands/cm/branches/generate-scripts.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/generate-scripts.ts)_
 
 ## `csdx cm:branches:merge [-k <value>][--compare-branch <value>] [--no-revert] [--export-summary-path <value>] [--use-merge-summary <value>] [--comment <value>] [--base-branch <value>]`
 
