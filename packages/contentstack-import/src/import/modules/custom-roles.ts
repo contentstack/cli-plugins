@@ -15,6 +15,7 @@ export default class ImportCustomRoles extends BaseClass {
   private customRolesUidMapperPath: string;
   private envUidMapperFolderPath: string;
   private entriesUidMapperFolderPath: string;
+  private assetsUidMapperFolderPath: string;
   private createdCustomRolesPath: string;
   private customRolesFailsPath: string;
   private customRolesConfig: CustomRoleConfig;
@@ -26,6 +27,8 @@ export default class ImportCustomRoles extends BaseClass {
   private environmentsUidMap: Record<string, unknown>;
   private entriesUidMap: Record<string, unknown>;
   private localesUidMap: Record<string, unknown>;
+  private assetsUidMap: Record<string, unknown>;
+  private assetsFolderUidMap: Record<string, unknown>;
   public targetLocalesMap: Record<string, unknown>;
   public sourceLocalesMap: Record<string, unknown>;
 
@@ -61,6 +64,8 @@ export default class ImportCustomRoles extends BaseClass {
     this.environmentsUidMap = {};
     this.entriesUidMap = {};
     this.localesUidMap = {};
+    this.assetsUidMap = {};
+    this.assetsFolderUidMap = {};
   }
 
   /**
