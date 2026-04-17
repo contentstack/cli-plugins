@@ -1,38 +1,39 @@
-import os from 'os';
-import path from 'path';
-import forEach from 'lodash/forEach';
 import { cliux } from '@contentstack/cli-utilities';
 import chalk from 'chalk';
+import forEach from 'lodash/forEach';
+import os from 'os';
+import path from 'path';
+
 import { MergeInputOptions, MergeSummary } from '../interfaces';
 import {
-  selectMergeStrategy,
-  selectMergeStrategySubOptions,
-  selectMergeExecution,
-  prepareMergeRequestPayload,
-  displayMergeSummary,
   askExportMergeSummaryPath,
   askMergeComment,
-  writeFile,
+  displayMergeSummary,
   executeMerge,
   generateMergeScripts,
-  selectCustomPreferences,
-  selectContentMergePreference,
+  prepareMergeRequestPayload,
   selectContentMergeCustomPreferences,
+  selectContentMergePreference,
+  selectCustomPreferences,
+  selectMergeExecution,
+  selectMergeStrategy,
+  selectMergeStrategySubOptions,
+  writeFile,
 } from '../utils';
 
 export default class MergeHandler {
-  private strategy: string;
-  private strategySubOption?: string;
   private branchCompareData: any;
-  private mergeSettings: any;
-  private executeOption?: string;
   private displayFormat: string;
+  private enableEntryExp: boolean;
+  private executeOption?: string;
   private exportSummaryPath: string;
+  private host: string;
+  private mergeSettings: any;
   private mergeSummary: MergeSummary;
   private stackAPIKey: string;
+  private strategy: string;
+  private strategySubOption?: string;
   private userInputs: MergeInputOptions;
-  private host: string;
-  private enableEntryExp: boolean;
 
   constructor(options: MergeInputOptions) {
     this.stackAPIKey = options.stackAPIKey;
@@ -45,8 +46,8 @@ export default class MergeHandler {
     this.mergeSummary = options.mergeSummary;
     this.userInputs = options;
     this.mergeSettings = {
-      baseBranch: options.baseBranch, // UID of the base branch, where the changes will be merged into
-      compareBranch: options.compareBranch, // UID of the branch to merge
+      baseBranch: options.baseBranch,
+      compareBranch: options.compareBranch,
       mergeComment: options.mergeComment,
       mergeContent: {},
       noRevert: options.noRevert,
@@ -55,29 +56,67 @@ export default class MergeHandler {
     this.enableEntryExp = options.enableEntryExp;
   }
 
-  async start() {
-    if (this.mergeSummary) {
-      this.loadMergeSettings();
-      await this.displayMergeSummary();
-      return await this.executeMerge(this.mergeSummary.requestPayload);
+  /**
+   * Checks whether the selection of modules in the compare branch data is empty.
+   *
+   * This method evaluates the branch compare data and determines if there are any changes
+   * (added, modified, or deleted) in the modules based on the merge strategy defined in the
+   * merge settings. It categorizes the status of each module as either existing and empty or
+   * not empty.
+   *
+   * @returns An object containing:
+   * - `allEmpty`: A boolean indicating whether all modules are either non-existent or empty.
+   * - `moduleStatus`: A record mapping module types (`contentType` and `globalField`) to their
+   *   respective statuses, which include:
+   *   - `exists`: A boolean indicating whether the module exists in the branch comparison data.
+   *   - `empty`: A boolean indicating whether the module has no changes (added, modified, or deleted).
+   */
+  checkEmptySelection(): {
+    allEmpty: boolean;
+    moduleStatus: Record<string, { empty: boolean; exists: boolean }>;
+  } {
+    const strategy = this.mergeSettings.strategy;
+
+    const useMergeContent = new Set(['custom_preferences', 'ignore']);
+    const modifiedOnlyStrategies = new Set(['merge_modified_only_prefer_base', 'merge_modified_only_prefer_compare']);
+    const addedOnlyStrategies = new Set(['merge_new_only']);
+
+    const moduleStatus: Record<string, { empty: boolean; exists: boolean }> = {
+      contentType: { empty: true, exists: false },
+      globalField: { empty: true, exists: false },
+    };
+
+    for (const module in this.branchCompareData) {
+      const content = useMergeContent.has(strategy)
+        ? this.mergeSettings.mergeContent[module]
+        : this.branchCompareData[module];
+
+      if (!content) continue;
+
+      const isGlobalField = module === 'global_fields';
+      const type = isGlobalField ? 'globalField' : 'contentType';
+      moduleStatus[type].exists = true;
+
+      let hasChanges = false;
+      if (modifiedOnlyStrategies.has(strategy)) {
+        hasChanges = Array.isArray(content.modified) && content.modified.length > 0;
+      } else if (addedOnlyStrategies.has(strategy)) {
+        hasChanges = Array.isArray(content.added) && content.added.length > 0;
+      } else {
+        hasChanges =
+          (Array.isArray(content.modified) && content.modified.length > 0) ||
+          (Array.isArray(content.added) && content.added.length > 0) ||
+          (Array.isArray(content.deleted) && content.deleted.length > 0);
+      }
+
+      if (hasChanges) {
+        moduleStatus[type].empty = false;
+      }
     }
-    await this.collectMergeSettings();
-    const mergePayload = prepareMergeRequestPayload(this.mergeSettings);
-    if (this.executeOption === 'execute') {
-      await this.exportSummary(mergePayload);
-      await this.executeMerge(mergePayload);
-    } else if (this.executeOption === 'export') {
-      await this.exportSummary(mergePayload);
-    } else if (this.executeOption === 'merge_n_scripts') {
-      this.enableEntryExp = true;
-      await this.executeMerge(mergePayload);
-    } else if (this.executeOption === 'summary_n_scripts') {
-      this.enableEntryExp = true;
-      await this.exportSummary(mergePayload);
-    } else {
-      await this.exportSummary(mergePayload);
-      await this.executeMerge(mergePayload);
-    }
+
+    const allEmpty = Object.values(moduleStatus).every((status) => !status.exists || status.empty);
+
+    return { allEmpty, moduleStatus };
   }
 
   async collectMergeSettings() {
@@ -101,11 +140,11 @@ export default class MergeHandler {
     }
     if (this.strategy === 'custom_preferences') {
       this.mergeSettings.itemMergeStrategies = [];
-      for (let module in this.branchCompareData) {
+      for (const module in this.branchCompareData) {
         this.mergeSettings.mergeContent[module] = {
           added: [],
-          modified: [],
           deleted: [],
+          modified: [],
         };
         const selectedItems = await selectCustomPreferences(module, this.branchCompareData[module]);
         if (selectedItems?.length) {
@@ -138,22 +177,22 @@ export default class MergeHandler {
 
     const { allEmpty, moduleStatus } = this.checkEmptySelection();
     const strategyName = this.mergeSettings.strategy;
-    
+
     if (allEmpty) {
       cliux.print(chalk.red(`No items selected according to the '${strategyName}' strategy.`));
       process.exit(1);
     }
-    
-    for (const [type, { exists, empty }] of Object.entries(moduleStatus)) {
+
+    for (const [type, { empty, exists }] of Object.entries(moduleStatus)) {
       if (exists && empty) {
         const readable = type === 'contentType' ? 'Content Types' : 'Global fields';
-        cliux.print('\n')
+        cliux.print('\n');
         cliux.print(chalk.yellow(`Note: No ${readable} selected according to the '${strategyName}' strategy.`));
       }
     }
-    
+
     this.displayMergeSummary();
-  
+
     if (!this.executeOption) {
       const executionResponse = await selectMergeExecution();
       if (executionResponse === 'previous') {
@@ -171,160 +210,22 @@ export default class MergeHandler {
     }
   }
 
-  /**
-   * Checks whether the selection of modules in the compare branch data is empty.
-   *
-   * This method evaluates the branch compare data and determines if there are any changes
-   * (added, modified, or deleted) in the modules based on the merge strategy defined in the
-   * merge settings. It categorizes the status of each module as either existing and empty or
-   * not empty.
-   *
-   * @returns An object containing:
-   * - `allEmpty`: A boolean indicating whether all modules are either non-existent or empty.
-   * - `moduleStatus`: A record mapping module types (`contentType` and `globalField`) to their
-   *   respective statuses, which include:
-   *   - `exists`: A boolean indicating whether the module exists in the branch comparison data.
-   *   - `empty`: A boolean indicating whether the module has no changes (added, modified, or deleted).
-   */
-  checkEmptySelection(): {
-    allEmpty: boolean;
-    moduleStatus: Record<string, { exists: boolean; empty: boolean }>;
-  } {
-    const strategy = this.mergeSettings.strategy;
-  
-    const useMergeContent = new Set(['custom_preferences', 'ignore']);
-    const modifiedOnlyStrategies = new Set(['merge_modified_only_prefer_base', 'merge_modified_only_prefer_compare']);
-    const addedOnlyStrategies = new Set(['merge_new_only']);
-  
-    const moduleStatus: Record<string, { exists: boolean; empty: boolean }> = {
-      contentType: { exists: false, empty: true },
-      globalField: { exists: false, empty: true },
-    };
-  
-    for (const module in this.branchCompareData) {
-      const content = useMergeContent.has(strategy)
-        ? this.mergeSettings.mergeContent[module]
-        : this.branchCompareData[module];
-  
-      if (!content) continue;
-  
-      const isGlobalField = module === 'global_fields';
-      const type = isGlobalField ? 'globalField' : 'contentType';
-      moduleStatus[type].exists = true;
-  
-      let hasChanges = false;
-      if (modifiedOnlyStrategies.has(strategy)) {
-        hasChanges = Array.isArray(content.modified) && content.modified.length > 0;
-      } else if (addedOnlyStrategies.has(strategy)) {
-        hasChanges = Array.isArray(content.added) && content.added.length > 0;
-      } else {
-        hasChanges =
-          (Array.isArray(content.modified) && content.modified.length > 0) ||
-          (Array.isArray(content.added) && content.added.length > 0) ||
-          (Array.isArray(content.deleted) && content.deleted.length > 0);
-      }
-  
-      if (hasChanges) {
-        moduleStatus[type].empty = false;
-      }
-    }
-  
-    const allEmpty = Object.values(moduleStatus).every(
-      (status) => !status.exists || status.empty
-    );
-  
-    return { allEmpty, moduleStatus };
-  }
-  
   displayMergeSummary() {
     if (this.mergeSettings.strategy !== 'ignore') {
-      for (let module in this.branchCompareData) {
+      for (const module in this.branchCompareData) {
         this.mergeSettings.mergeContent[module] = {};
         this.filterBranchCompareData(module, this.branchCompareData[module]);
       }
     }
     displayMergeSummary({
-      format: this.displayFormat,
       compareData: this.mergeSettings.mergeContent,
+      format: this.displayFormat,
     });
-  }
-
-  filterBranchCompareData(module, moduleBranchCompareData) {
-    const { strategy, mergeContent } = this.mergeSettings;
-    switch (strategy) {
-      case 'merge_prefer_base':
-        mergeContent[module].added = moduleBranchCompareData.added;
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        mergeContent[module].deleted = moduleBranchCompareData.deleted;
-        break;
-      case 'merge_prefer_compare':
-        mergeContent[module].added = moduleBranchCompareData.added;
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        mergeContent[module].deleted = moduleBranchCompareData.deleted;
-        break;
-      case 'merge_new_only':
-        mergeContent[module].added = moduleBranchCompareData.added;
-        break;
-      case 'merge_modified_only_prefer_base':
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        break;
-      case 'merge_modified_only_prefer_compare':
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        break;
-      case 'merge_modified_only_prefer_compare':
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        break;
-      case 'overwrite_with_compare':
-        mergeContent[module].added = moduleBranchCompareData.added;
-        mergeContent[module].modified = moduleBranchCompareData.modified;
-        mergeContent[module].deleted = moduleBranchCompareData.deleted;
-        break;
-      default:
-        cliux.error(`Error: Invalid strategy '${strategy}'`);
-        process.exit(1);
-    }
-  }
-
-  async exportSummary(mergePayload) {
-    if (!this.exportSummaryPath) {
-      this.exportSummaryPath = await askExportMergeSummaryPath();
-    }
-    const summary: MergeSummary = {
-      requestPayload: mergePayload,
-    };
-    await writeFile(path.join(this.exportSummaryPath, 'merge-summary.json'), summary);
-    cliux.success('Exported the summary successfully');
-
-    if (this.enableEntryExp) {
-      this.executeEntryExpFlow(this.stackAPIKey, mergePayload);
-    }
-  }
-
-  async executeMerge(mergePayload) {
-    let spinner;
-    try {
-      if (!this.mergeSettings.mergeComment) {
-        this.mergeSettings.mergeComment = await askMergeComment();
-        mergePayload.merge_comment = this.mergeSettings.mergeComment;
-      }
-
-      spinner = cliux.loaderV2('Merging the changes...');
-      const mergeResponse = await executeMerge(this.stackAPIKey, mergePayload, this.host);
-      cliux.loaderV2('', spinner);
-      cliux.success(`Merged the changes successfully. Merge UID: ${mergeResponse.uid}`);
-
-      if (this.enableEntryExp) {
-        this.executeEntryExpFlow(mergeResponse.uid, mergePayload);
-      }
-    } catch (error) {
-      cliux.loaderV2('', spinner);
-      cliux.error('Failed to merge the changes', error.message || error);
-    }
   }
 
   async executeEntryExpFlow(mergeJobUID: string, mergePayload) {
     const { mergeContent } = this.mergeSettings;
-    let mergePreference = await selectContentMergePreference();
+    const mergePreference = await selectContentMergePreference();
 
     const updateEntryMergeStrategy = (items, mergeStrategy) => {
       items &&
@@ -334,10 +235,10 @@ export default class MergeHandler {
     };
 
     const mergePreferencesMap = {
+      ask_preference: 'custom',
+      existing: 'merge_existing',
       existing_new: 'merge_existing_new',
       new: 'merge_new',
-      existing: 'merge_existing',
-      ask_preference: 'custom',
     };
     const selectedMergePreference = mergePreferencesMap[mergePreference];
 
@@ -346,8 +247,8 @@ export default class MergeHandler {
         const selectedMergeItems = await selectContentMergeCustomPreferences(mergeContent.content_types);
         mergeContent.content_types = {
           added: [],
-          modified: [],
           deleted: [],
+          modified: [],
         };
 
         selectedMergeItems?.forEach((item) => {
@@ -362,7 +263,7 @@ export default class MergeHandler {
       process.exit(1);
     }
 
-    let scriptFolderPath = generateMergeScripts(mergeContent.content_types, mergeJobUID);
+    const scriptFolderPath = generateMergeScripts(mergeContent.content_types, mergeJobUID);
 
     if (scriptFolderPath !== undefined) {
       cliux.success(`\nSuccess! We have generated entry migration files in the folder ${scriptFolderPath}`);
@@ -385,6 +286,102 @@ export default class MergeHandler {
     }
   }
 
+  /**
+   * Executes the merge operation with improved polling.
+   * Handles polling timeout gracefully by returning merge UID for later status checking.
+   * If enableEntryExp is true and merge is complete, generates scripts.
+   *
+   * @param mergePayload - Merge request payload with branch info
+   */
+  async executeMerge(mergePayload) {
+    let spinner;
+    try {
+      if (!this.mergeSettings.mergeComment) {
+        this.mergeSettings.mergeComment = await askMergeComment();
+        mergePayload.merge_comment = this.mergeSettings.mergeComment;
+      }
+
+      spinner = cliux.loaderV2('Merging the changes...');
+      const mergeResponse = await executeMerge(this.stackAPIKey, mergePayload, this.host);
+      cliux.loaderV2('', spinner);
+
+      if (mergeResponse.merge_details?.status === 'complete') {
+        cliux.success(`Merged the changes successfully. Merge UID: ${mergeResponse.uid}`);
+
+        if (this.enableEntryExp) {
+          await this.executeEntryExpFlow(mergeResponse.uid, mergePayload);
+        }
+      } else if (mergeResponse.pollingTimeout) {
+        cliux.success(`Merge job initiated successfully. Merge UID: ${mergeResponse.uid}`);
+        cliux.print('\n⏱  The merge is still processing in the background...', { color: 'yellow' });
+        cliux.print('\nCheck status later using:', { color: 'grey' });
+        cliux.print(`  csdx cm:branches:merge-status -k ${this.stackAPIKey} --merge-uid ${mergeResponse.uid}`, {
+          color: 'cyan',
+        });
+      }
+    } catch (error) {
+      cliux.loaderV2('', spinner);
+      cliux.error('Failed to merge the changes', error.message || error);
+    }
+  }
+
+  async exportSummary(mergePayload) {
+    if (!this.exportSummaryPath) {
+      this.exportSummaryPath = await askExportMergeSummaryPath();
+    }
+    const summary: MergeSummary = {
+      requestPayload: mergePayload,
+    };
+    await writeFile(path.join(this.exportSummaryPath, 'merge-summary.json'), summary);
+    cliux.success('Exported the summary successfully');
+
+    if (this.enableEntryExp) {
+      await this.executeEntryExpFlow(this.stackAPIKey, mergePayload);
+    }
+  }
+
+  filterBranchCompareData(module, moduleBranchCompareData) {
+    const { mergeContent, strategy } = this.mergeSettings;
+    switch (strategy) {
+      case 'merge_prefer_base':
+        mergeContent[module].added = moduleBranchCompareData.added;
+        mergeContent[module].modified = moduleBranchCompareData.modified;
+        mergeContent[module].deleted = moduleBranchCompareData.deleted;
+        break;
+      case 'merge_prefer_compare':
+        mergeContent[module].added = moduleBranchCompareData.added;
+        mergeContent[module].modified = moduleBranchCompareData.modified;
+        mergeContent[module].deleted = moduleBranchCompareData.deleted;
+        break;
+      case 'merge_new_only':
+        mergeContent[module].added = moduleBranchCompareData.added;
+        break;
+      case 'merge_modified_only_prefer_base':
+        mergeContent[module].modified = moduleBranchCompareData.modified;
+        break;
+      case 'merge_modified_only_prefer_compare':
+        mergeContent[module].modified = moduleBranchCompareData.modified;
+        break;
+      case 'overwrite_with_compare':
+        mergeContent[module].added = moduleBranchCompareData.added;
+        mergeContent[module].modified = moduleBranchCompareData.modified;
+        mergeContent[module].deleted = moduleBranchCompareData.deleted;
+        break;
+      default:
+        cliux.error(`Error: Invalid strategy '${strategy}'`);
+        process.exit(1);
+    }
+  }
+
+  loadMergeSettings() {
+    this.mergeSettings.baseBranch = this.mergeSummary.requestPayload.base_branch;
+    this.mergeSettings.compareBranch = this.mergeSummary.requestPayload.compare_branch;
+    this.mergeSettings.strategy = this.mergeSummary.requestPayload.default_merge_strategy;
+    this.mergeSettings.itemMergeStrategies = this.mergeSummary.requestPayload.item_merge_strategies;
+    this.mergeSettings.noRevert = this.mergeSummary.requestPayload.no_revert;
+    this.mergeSettings.mergeComment = this.mergeSummary.requestPayload.merge_comment;
+  }
+
   async restartMergeProcess() {
     if (!this.userInputs.strategy) {
       this.strategy = null;
@@ -404,12 +401,29 @@ export default class MergeHandler {
     await this.start();
   }
 
-  loadMergeSettings() {
-    this.mergeSettings.baseBranch = this.mergeSummary.requestPayload.base_branch;
-    this.mergeSettings.compareBranch = this.mergeSummary.requestPayload.compare_branch;
-    this.mergeSettings.strategy = this.mergeSummary.requestPayload.default_merge_strategy;
-    this.mergeSettings.itemMergeStrategies = this.mergeSummary.requestPayload.item_merge_strategies;
-    this.mergeSettings.noRevert = this.mergeSummary.requestPayload.no_revert;
-    this.mergeSettings.mergeComment = this.mergeSummary.requestPayload.merge_comment;
+  async start() {
+    if (this.mergeSummary) {
+      this.loadMergeSettings();
+      await this.displayMergeSummary();
+      return await this.executeMerge(this.mergeSummary.requestPayload);
+    }
+    await this.collectMergeSettings();
+    const mergePayload = prepareMergeRequestPayload(this.mergeSettings);
+    if (this.executeOption === 'execute') {
+      await this.exportSummary(mergePayload);
+      await this.executeMerge(mergePayload);
+    } else if (this.executeOption === 'export') {
+      await this.exportSummary(mergePayload);
+    } else if (this.executeOption === 'merge_n_scripts') {
+      this.enableEntryExp = true;
+      await this.executeMerge(mergePayload);
+    } else if (this.executeOption === 'summary_n_scripts') {
+      this.enableEntryExp = true;
+      await this.exportSummary(mergePayload);
+    } else {
+      await this.exportSummary(mergePayload);
+      await this.executeMerge(mergePayload);
+      this.enableEntryExp = true;
+    }
   }
 }
