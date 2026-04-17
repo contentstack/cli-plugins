@@ -14,7 +14,6 @@ describe('Backup Handler', () => {
   let cliuxStub: any;
   let tempDir: string;
   let sourceDir: string;
-  let backupDir: string;
   let originalCwd: string;
   let processCwdStub: sinon.SinonStub;
 
@@ -27,7 +26,6 @@ describe('Backup Handler', () => {
     // In CI, os.tmpdir() returns a safe temp directory that's cleaned up automatically
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'backup-handler-test-'));
     sourceDir = path.join(tempDir, 'source');
-    backupDir = path.join(tempDir, 'backup');
 
     // Stub process.cwd() to return tempDir so backups are created there, not in actual working directory
     // This is critical for CI - prevents creating files in the workspace during tests
@@ -47,7 +45,6 @@ describe('Backup Handler', () => {
         module: 'all',
       },
       masterLocale: { code: 'en-us' },
-      backupDir: backupDir,
       region: 'us',
       modules: {} as any,
       host: 'https://api.contentstack.io',
@@ -132,25 +129,7 @@ describe('Backup Handler', () => {
       expect(logStub.debug.calledWith(`Using existing backup directory: ${existingBackupPath}`)).to.be.true;
     });
 
-    it('should use branchDir over contentDir when both are provided', async () => {
-      const branchDir = path.join(tempDir, 'branch');
-      fs.mkdirSync(branchDir);
-      fs.writeFileSync(path.join(branchDir, 'branch-file.json'), '{}');
-
-      const config = {
-        ...mockImportConfig,
-        branchDir: branchDir,
-        contentDir: sourceDir,
-      };
-
-      const result = await backupHandler(config);
-
-      expect(result).to.be.a('string');
-      expect(fs.existsSync(result)).to.be.true;
-      expect(logStub.debug.called).to.be.true;
-    });
-
-    it('should use contentDir when branchDir is not provided', async () => {
+    it('should copy from contentDir', async () => {
       const config = {
         ...mockImportConfig,
         contentDir: sourceDir,

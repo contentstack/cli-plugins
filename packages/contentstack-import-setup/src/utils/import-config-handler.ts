@@ -11,7 +11,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'import-setup');
 
-  let config: ImportConfig = merge({}, defaultConfig);
+  const config: ImportConfig = merge({}, defaultConfig);
   // setup the config
   // if (importCmdFlags['config']) {
   //   let externalConfig = await readFile(importCmdFlags['config']);
@@ -76,10 +76,12 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['branch']) {
     config.branchName = importCmdFlags['branch'];
+    config.branchDir = config.contentDir;
   }
 
   if (importCmdFlags['branch-alias']) {
     config.branchAlias = importCmdFlags['branch-alias'];
+    config.branchDir = config.contentDir;
   }
 
   config.selectedModules = importCmdFlags['module'] || [await askSelectedModules()];
