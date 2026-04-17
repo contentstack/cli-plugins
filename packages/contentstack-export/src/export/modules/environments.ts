@@ -5,7 +5,7 @@ import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilit
 
 import BaseClass from './base-class';
 import { EnvironmentConfig, ModuleClassParams } from '../../types';
-import { fsUtil, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
+import { fsUtil, getExportBasePath, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
 
 export default class ExportEnvironments extends BaseClass {
   private environments: Record<string, unknown>;
@@ -32,8 +32,7 @@ export default class ExportEnvironments extends BaseClass {
       // Setup with loading spinner
       const [totalCount] = await this.withLoadingSpinner('ENVIRONMENTS: Analyzing environments...', async () => {
         this.environmentsFolderPath = pResolve(
-          this.exportConfig.exportDir,
-          this.exportConfig.branchName || '',
+          getExportBasePath(this.exportConfig),
           this.environmentConfig.dirName,
         );
         await fsUtil.makeDirectory(this.environmentsFolderPath);

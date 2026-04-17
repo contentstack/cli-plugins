@@ -9,7 +9,7 @@ import {
   authenticationHandler,
 } from '@contentstack/cli-utilities';
 
-import { fsUtil, getOrgUid } from '../../utils';
+import { fsUtil, getExportBasePath, getOrgUid } from '../../utils';
 import { ModuleClassParams, ComposableStudioConfig, ExportConfig, ComposableStudioProject } from '../../types';
 
 export default class ExportComposableStudio {
@@ -41,8 +41,7 @@ export default class ExportComposableStudio {
     }
 
     this.composableStudioPath = pResolve(
-      this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
+      getExportBasePath(this.exportConfig),
       this.composableStudioConfig.dirName,
     );
     log.debug(`Studio folder path: ${this.composableStudioPath}`, this.exportConfig.context);
