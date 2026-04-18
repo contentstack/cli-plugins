@@ -136,6 +136,9 @@ describe('ExportAssets', () => {
           enableDownloadStatus: false,
           includeVersionedAssets: false,
         },
+        'asset-management': {
+          chunkFileSizeMb: 1,
+        },
         content_types: {
           dirName: 'content_types',
           fileName: 'content_types.json',

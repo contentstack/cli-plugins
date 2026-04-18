@@ -23,7 +23,7 @@ export function buildImportSpacesOptions(
     sourceApiKey: importConfig.source_stack,
     context: importConfig.context as unknown as Record<string, unknown>,
     backupDir: importConfig.backupDir,
-    apiConcurrency: importConfig.modules?.apiConcurrency ?? importConfig.fetchConcurrency,
+    apiConcurrency: importConfig.fetchConcurrency,
     uploadAssetsConcurrency: am?.uploadAssetsConcurrency,
     importFoldersConcurrency: am?.importFoldersConcurrency,
     spacesDirName: am?.dirName,
