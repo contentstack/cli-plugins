@@ -1,5 +1,5 @@
 import { join, resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { FsUtility, sanitizePath, log } from '@contentstack/cli-utilities';
 import { ConfigType, ContentTypeStruct, CtConstructorParam, ModuleConstructorParam } from '../types';
 import { keys, values } from 'lodash';
@@ -46,10 +46,25 @@ export default class ModuleDataReader {
         break;
       case 'assets': {
         log.debug(`Counting assets`, this.config.auditContext);
-        const assetsPath = join(this.folderPath, 'assets');
-        log.debug(`Assets path: ${assetsPath}`, this.config.auditContext);
-        count = (await this.readEntryAssetsModule(assetsPath, 'assets')) || 0;
-        log.debug(`Assets count: ${count}`, this.config.auditContext);
+        const spacesDir = join(this.folderPath, 'spaces');
+        if (existsSync(spacesDir)) {
+          log.debug(`Multi-space structure detected at: ${spacesDir}`, this.config.auditContext);
+          const spaceDirs = readdirSync(spacesDir, { withFileTypes: true }).filter(
+            (entry) => entry.isDirectory() && existsSync(join(spacesDir, entry.name, 'assets')),
+          );
+          for (const spaceDir of spaceDirs) {
+            const spaceAssetsPath = join(spacesDir, spaceDir.name, 'assets');
+            log.debug(`Counting assets in space: ${spaceDir.name} at ${spaceAssetsPath}`, this.config.auditContext);
+            const spaceCount = (await this.readEntryAssetsModule(spaceAssetsPath, 'assets')) || 0;
+            log.debug(`Space ${spaceDir.name} asset count: ${spaceCount}`, this.config.auditContext);
+            count += spaceCount;
+          }
+        } else {
+          const assetsPath = join(this.folderPath, 'assets');
+          log.debug(`Flat structure detected, assets path: ${assetsPath}`, this.config.auditContext);
+          count = (await this.readEntryAssetsModule(assetsPath, 'assets')) || 0;
+        }
+        log.debug(`Total assets count: ${count}`, this.config.auditContext);
         break;
       }
       case 'entries':

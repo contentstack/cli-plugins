@@ -1,12 +1,7 @@
 import { join, resolve } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { FsUtility, sanitizePath, cliux, log } from '@contentstack/cli-utilities';
-import {
-  ContentTypeStruct,
-  CtConstructorParam,
-  ModuleConstructorParam,
-  EntryStruct,
-} from '../types';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
+import { FsUtility, sanitizePath, cliux, log, configHandler } from '@contentstack/cli-utilities';
+import { ContentTypeStruct, CtConstructorParam, ModuleConstructorParam, EntryStruct } from '../types';
 import auditConfig from '../config';
 import { $t, auditFixMsg, auditMsg, commonMsg } from '../messages';
 import values from 'lodash/values';
@@ -28,6 +23,7 @@ export default class Assets extends BaseClass {
   protected missingEnvLocales: Record<string, any> = {};
   public moduleName: keyof typeof auditConfig.moduleConfig;
   private fixOverwriteConfirmed: boolean | null = null;
+  private resolvedBasePaths: Array<{ path: string; spaceId: string | null }> = [];
 
   constructor({ fix, config, moduleName }: ModuleConstructorParam & CtConstructorParam) {
     super({ config });
@@ -62,7 +58,8 @@ export default class Assets extends BaseClass {
       log.debug(`Data directory: ${this.folderPath}`, this.config.auditContext);
       log.debug(`Fix mode: ${this.fix}`, this.config.auditContext);
 
-      if (!existsSync(this.folderPath)) {
+      const spacesDir = join(this.config.basePath, 'spaces');
+      if (!existsSync(this.folderPath) && !existsSync(spacesDir)) {
         log.debug(`Skipping ${this.moduleName} audit - path does not exist`, this.config.auditContext);
         log.warn(`Skipping ${this.moduleName} audit`, this.config.auditContext);
         cliux.print($t(auditMsg.NOT_VALID_PATH, { path: this.folderPath }), { color: 'yellow' });
@@ -80,26 +77,32 @@ export default class Assets extends BaseClass {
         progress.updateStatus('Validating asset references...');
       }
 
+      this.resolvedBasePaths = this.resolveAssetBasePaths();
+      log.debug(`Resolved ${this.resolvedBasePaths.length} asset base path(s)`, this.config.auditContext);
+
       log.debug('Starting asset Reference, Environment and Locale validation', this.config.auditContext);
       await this.lookForReference();
 
-    if (returnFixSchema) {
-      log.debug(`Returning fixed schema with ${this.schema?.length || 0} items`, this.config.auditContext);
-      return this.schema;
-    }
+      if (returnFixSchema) {
+        log.debug(`Returning fixed schema with ${this.schema?.length || 0} items`, this.config.auditContext);
+        return this.schema;
+      }
 
-    log.debug('Cleaning up empty missing environment/locale references', this.config.auditContext);
-    for (let propName in this.missingEnvLocales) {
-      if (Array.isArray(this.missingEnvLocales[propName])) {
-        if (!this.missingEnvLocales[propName].length) {
-          delete this.missingEnvLocales[propName];
+      log.debug('Cleaning up empty missing environment/locale references', this.config.auditContext);
+      for (let propName in this.missingEnvLocales) {
+        if (Array.isArray(this.missingEnvLocales[propName])) {
+          if (!this.missingEnvLocales[propName].length) {
+            delete this.missingEnvLocales[propName];
+          }
         }
       }
-    }
 
       const totalIssues = Object.keys(this.missingEnvLocales).length;
-      log.debug(`${this.moduleName} audit completed. Found ${totalIssues} assets with missing environment/locale references`, this.config.auditContext);
-      
+      log.debug(
+        `${this.moduleName} audit completed. Found ${totalIssues} assets with missing environment/locale references`,
+        this.config.auditContext,
+      );
+
       this.completeProgress(true);
       return this.missingEnvLocales;
     } catch (error: any) {
@@ -120,11 +123,11 @@ export default class Assets extends BaseClass {
     const localesFolderPath = resolve(this.config.basePath, this.config.moduleConfig.locales.dirName);
     const localesPath = join(localesFolderPath, this.config.moduleConfig.locales.fileName);
     const masterLocalesPath = join(localesFolderPath, 'master-locale.json');
-    
+
     log.debug(`Loading locales from: ${localesFolderPath}`, this.config.auditContext);
     log.debug(`Master locales path: ${masterLocalesPath}`, this.config.auditContext);
     log.debug(`Locales path: ${localesPath}`, this.config.auditContext);
-    
+
     this.locales = existsSync(masterLocalesPath) ? values(JSON.parse(readFileSync(masterLocalesPath, 'utf8'))) : [];
     log.debug(`Loaded ${this.locales.length} locales from master-locale.json`, this.config.auditContext);
 
@@ -139,17 +142,51 @@ export default class Assets extends BaseClass {
     this.locales = this.locales.map((locale: any) => locale.code);
     log.debug(`Total locales loaded: ${this.locales.length}`, this.config.auditContext);
     log.debug(`Locale codes: ${this.locales.join(', ')}`, this.config.auditContext);
-    
+
     const environmentPath = resolve(
       this.config.basePath,
       this.config.moduleConfig.environments.dirName,
       this.config.moduleConfig.environments.fileName,
     );
     log.debug(`Loading environments from: ${environmentPath}`, this.config.auditContext);
-    
+
     this.environments = existsSync(environmentPath) ? keys(JSON.parse(readFileSync(environmentPath, 'utf8'))) : [];
     log.debug(`Total environments loaded: ${this.environments.length}`, this.config.auditContext);
     log.debug(`Environment names: ${this.environments.join(', ')}`, this.config.auditContext);
+  }
+
+  /**
+   * Detects whether the export uses the old flat structure (<basePath>/assets/) or the new
+   * multi-space structure (<basePath>/spaces/<space-id>/assets/) and returns a list of resolved
+   * asset base paths paired with their space IDs (null for old structure).
+   */
+  private resolveAssetBasePaths(): Array<{ path: string; spaceId: string | null }> {
+    const spacesDir = join(this.config.basePath, 'spaces');
+
+    if (!existsSync(spacesDir)) {
+      log.debug('No spaces/ directory found — using flat asset structure', this.config.auditContext);
+      return [{ path: this.folderPath, spaceId: null }];
+    }
+
+    log.debug(`Multi-space directory found: ${spacesDir}`, this.config.auditContext);
+    const spaceDirs = readdirSync(spacesDir, { withFileTypes: true }).filter(
+      (entry) => entry.isDirectory() && existsSync(join(spacesDir, entry.name, 'assets')),
+    );
+
+    if (spaceDirs.length === 0) {
+      log.debug(
+        'spaces/ directory exists but contains no valid space directories with assets/',
+        this.config.auditContext,
+      );
+      return [];
+    }
+
+    const paths = spaceDirs.map((entry) => ({
+      path: join(spacesDir, entry.name, 'assets'),
+      spaceId: entry.name,
+    }));
+    log.debug(`Resolved ${paths.length} space(s): ${paths.map((p) => p.spaceId).join(', ')}`, this.config.auditContext);
+    return paths;
   }
 
   /**
@@ -169,7 +206,10 @@ export default class Assets extends BaseClass {
         canWrite = this.fixOverwriteConfirmed;
         log.debug(`Using cached overwrite confirmation: ${canWrite}`, this.config.auditContext);
       } else {
-        log.debug(`Asking user for confirmation to write fix content (--yes flag: ${this.config.flags.yes})`, this.config.auditContext);
+        log.debug(
+          `Asking user for confirmation to write fix content (--yes flag: ${this.config.flags.yes})`,
+          this.config.auditContext,
+        );
         this.completeProgress(true);
         canWrite = await cliux.confirm(commonMsg.FIX_CONFIRMATION);
         this.fixOverwriteConfirmed = canWrite;
@@ -188,85 +228,126 @@ export default class Assets extends BaseClass {
   }
 
   /**
-   * This function traverses over the publish details of the assets and removes the publish details where the locale or environment does not exist
+   * This function traverses over the publish details of the assets and removes the publish details where the locale or environment does not exist.
+   * Supports both the old flat structure (<basePath>/assets/) and the new multi-space structure
+   * (<basePath>/spaces/<space-id>/assets/) via this.resolvedBasePaths.
    */
   async lookForReference(): Promise<void> {
     log.debug('Starting asset reference validation', this.config.auditContext);
-    let basePath = join(this.folderPath);
-    log.debug(`Assets base path: ${basePath}`, this.config.auditContext);
-    
-    let fsUtility = new FsUtility({ basePath, indexFileName: 'assets.json' });
-    let indexer = fsUtility.indexFileContent;
-    log.debug(`Found ${Object.keys(indexer).length} asset files to process`, this.config.auditContext);
-    
-    for (const fileIndex in indexer) {
-      log.debug(`Processing asset file: ${indexer[fileIndex]}`, this.config.auditContext);
-      const assets = (await fsUtility.readChunkFiles.next()) as Record<string, EntryStruct>;
-      this.assets = assets;
-      log.debug(`Loaded ${Object.keys(assets).length} assets from file`, this.config.auditContext);
-      
-      for (const assetUid in assets) {
-        log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
-        
-        if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
-          log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
-          cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
-          this.assets[assetUid].publish_details = [];
-        }
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
 
-        const publishDetails = this.assets[assetUid]?.publish_details;
-        log.debug(`Asset ${assetUid} has ${publishDetails?.length || 0} publish details`, this.config.auditContext);
+    for (const { path: spacePath, spaceId } of this.resolvedBasePaths) {
+      log.debug(`Processing asset path: ${spacePath} (spaceId=${spaceId ?? 'none'})`, this.config.auditContext);
 
-        if (Array.isArray(this.assets[assetUid].publish_details)) {
-        this.assets[assetUid].publish_details = this.assets[assetUid].publish_details.filter((pd: any) => {
-          log.debug(`Checking publish detail: locale=${pd?.locale}, environment=${pd?.environment}`, this.config.auditContext);
-          
-          if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
-            log.debug(`Publish detail valid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
-            return true;
-          } else {
-            log.debug(`Publish detail invalid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`, this.config.auditContext);
-            cliux.print(
-              $t(auditMsg.SCAN_ASSET_WARN_MSG, { uid: assetUid, locale: pd.locale, environment: pd.environment }),
-              { color: 'yellow' },
-            );
-            if (!Object.keys(this.missingEnvLocales).includes(assetUid)) {
-              log.debug(`Creating new missing reference entry for asset ${assetUid}`, this.config.auditContext);
-              this.missingEnvLocales[assetUid] = [
-                { asset_uid: assetUid, publish_locale: pd.locale, publish_environment: pd.environment },
-              ];
-            } else {
-              log.debug(`Adding to existing missing reference entry for asset ${assetUid}`, this.config.auditContext);
-              this.missingEnvLocales[assetUid].push({
-                asset_uid: assetUid,
-                publish_locale: pd.locale,
-                publish_environment: pd.environment,
-              });
-            }
-            return false;
+      // Log UX: print a space header so output is clearly separated per space
+      if (showConsoleLogs && spaceId !== null) {
+        cliux.print('');
+        cliux.print($t(auditMsg.AUDITING_SPACE, { spaceId }), { color: 'cyan' });
+      }
+
+      // Progress bar UX: update status label to reflect the current space
+      this.progressManager?.updateStatus?.(spaceId ? `Space: ${spaceId}` : 'Scanning assets...');
+
+      let fsUtility = new FsUtility({ basePath: spacePath, indexFileName: 'assets.json' });
+      let indexer = fsUtility.indexFileContent;
+      log.debug(`Found ${Object.keys(indexer).length} asset files to process`, this.config.auditContext);
+
+      for (const fileIndex in indexer) {
+        log.debug(`Processing asset file: ${indexer[fileIndex]}`, this.config.auditContext);
+        const assets = (await fsUtility.readChunkFiles.next()) as Record<string, EntryStruct>;
+        this.assets = assets;
+        log.debug(`Loaded ${Object.keys(assets).length} assets from file`, this.config.auditContext);
+
+        for (const assetUid in assets) {
+          log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
+
+          if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
+            log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
+            cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
+            this.assets[assetUid].publish_details = [];
           }
-        });
-        }
-        log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
-        const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
-        log.debug(`Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`, this.config.auditContext);
-        
-        // Track progress for each asset processed
-        if (this.progressManager) {
-          this.progressManager.tick(true, `asset: ${assetUid}`, null);
+
+          const publishDetails = this.assets[assetUid]?.publish_details;
+          log.debug(`Asset ${assetUid} has ${publishDetails?.length || 0} publish details`, this.config.auditContext);
+
+          if (Array.isArray(this.assets[assetUid].publish_details)) {
+            this.assets[assetUid].publish_details = this.assets[assetUid].publish_details.filter((pd: any) => {
+              log.debug(
+                `Checking publish detail: locale=${pd?.locale}, environment=${pd?.environment}`,
+                this.config.auditContext,
+              );
+
+              if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
+                log.debug(
+                  `Publish detail valid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`,
+                  this.config.auditContext,
+                );
+                return true;
+              } else {
+                log.debug(
+                  `Publish detail invalid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`,
+                  this.config.auditContext,
+                );
+                cliux.print(
+                  $t(auditMsg.SCAN_ASSET_WARN_MSG, { uid: assetUid, locale: pd.locale, environment: pd.environment }),
+                  { color: 'yellow' },
+                );
+                if (!Object.keys(this.missingEnvLocales).includes(assetUid)) {
+                  log.debug(`Creating new missing reference entry for asset ${assetUid}`, this.config.auditContext);
+                  this.missingEnvLocales[assetUid] = [
+                    {
+                      asset_uid: assetUid,
+                      publish_locale: pd.locale,
+                      publish_environment: pd.environment,
+                      space_id: spaceId,
+                    },
+                  ];
+                } else {
+                  log.debug(
+                    `Adding to existing missing reference entry for asset ${assetUid}`,
+                    this.config.auditContext,
+                  );
+                  this.missingEnvLocales[assetUid].push({
+                    asset_uid: assetUid,
+                    publish_locale: pd.locale,
+                    publish_environment: pd.environment,
+                    space_id: spaceId,
+                  });
+                }
+                return false;
+              }
+            });
+          }
+
+          log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
+          const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
+          log.debug(
+            `Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`,
+            this.config.auditContext,
+          );
+
+          if (this.progressManager) {
+            this.progressManager.tick(true, `asset: ${assetUid}`, null);
+          }
+
+          if (this.fix) {
+            log.debug(`Fixing asset ${assetUid}`, this.config.auditContext);
+            log.info($t(auditFixMsg.ASSET_FIX, { uid: assetUid }), this.config.auditContext);
+          }
         }
 
         if (this.fix) {
-          log.debug(`Fixing asset ${assetUid}`, this.config.auditContext);
-          log.info($t(auditFixMsg.ASSET_FIX, { uid: assetUid }), this.config.auditContext);
+          await this.writeFixContent(`${spacePath}/${indexer[fileIndex]}`, this.assets);
         }
       }
-
-      if (this.fix) {
-        await this.writeFixContent(`${basePath}/${indexer[fileIndex]}`, this.assets);
-      }
     }
-    
-    log.debug(`Asset reference validation completed. Processed ${Object.keys(this.missingEnvLocales).length} assets with issues`, this.config.auditContext);
+
+    log.debug(
+      `Asset reference validation completed. Processed ${
+        Object.keys(this.missingEnvLocales).length
+      } assets with issues`,
+      this.config.auditContext,
+    );
   }
 }
