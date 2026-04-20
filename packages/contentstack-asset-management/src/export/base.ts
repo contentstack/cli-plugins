@@ -5,7 +5,7 @@ import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack
 import type { AssetManagementAPIConfig } from '../types/asset-management-api';
 import type { ExportContext } from '../types/export-types';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
 
 export type { ExportContext };
 
@@ -61,6 +61,16 @@ export class AssetManagementExportAdapter extends AssetManagementAdapter {
 
   protected get spacesRootPath(): string {
     return this.exportContext.spacesRootPath;
+  }
+
+  /** Parallel AM export limit for bootstrap and default batch operations. */
+  protected get apiConcurrency(): number {
+    return this.exportContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
+  }
+
+  /** Asset download batch size; falls back to {@link apiConcurrency}. */
+  protected get downloadAssetsBatchConcurrency(): number {
+    return this.exportContext.downloadAssetsConcurrency ?? this.apiConcurrency;
   }
 
   protected getAssetTypesDir(): string {

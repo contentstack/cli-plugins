@@ -31,13 +31,15 @@ export default class ImportFields extends AssetManagementImportAdapter {
   async start(): Promise<void> {
     await this.init();
 
+    log.debug('Starting shared fields import process...', this.importContext.context);
+
     const stripKeys = this.importContext.fieldsImportInvalidKeys ?? [...FALLBACK_FIELDS_IMPORT_INVALID_KEYS];
     const dir = this.getFieldsDir();
     const indexName = this.importContext.fieldsFileName ?? 'fields.json';
     const indexPath = join(dir, indexName);
 
     if (!existsSync(indexPath)) {
-      log.debug('No shared fields to import (index missing)', this.importContext.context);
+      log.info('No shared fields to import (index missing)', this.importContext.context);
       return;
     }
 
@@ -51,7 +53,7 @@ export default class ImportFields extends AssetManagementImportAdapter {
       {
         context: this.importContext.context,
         chunkReadLogLabel: 'fields',
-        onOpenError: (e) => log.debug(`Could not open chunked fields index: ${e}`, this.importContext.context),
+        onOpenError: (e) => log.warn(`Could not open chunked fields index: ${e}`, this.importContext.context),
         onEmptyIndexer: () => log.debug('No shared fields to import (empty indexer)', this.importContext.context),
       },
       async (records) => {
