@@ -20,7 +20,7 @@
     "@contentstack/cli-command": "~1.8.0",
     "@contentstack/cli-config": "~1.20.1",
     "@contentstack/cli-utilities": "~1.18.1",
-    "@oclif/core": "^4.3.0",
+    "@oclif/core": "^4.10.5",
     "@oclif/plugin-help": "^6.2.37",
     "inquirer": "8.2.7",
     "mkdirp": "^2.1.6",
