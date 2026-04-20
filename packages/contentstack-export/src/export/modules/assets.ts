@@ -80,6 +80,8 @@ export default class ExportAssets extends BaseClass {
           context: this.exportConfig.context as unknown as Record<string, unknown>,
           securedAssets: this.exportConfig.securedAssets,
           chunkFileSizeMb: assetManagementModuleConfig?.chunkFileSizeMb,
+          apiConcurrency: assetManagementModuleConfig?.apiConcurrency,
+          downloadAssetsConcurrency: assetManagementModuleConfig?.downloadAssetsConcurrency,
         });
         exporter.setParentProgressManager(progress);
         await exporter.start();

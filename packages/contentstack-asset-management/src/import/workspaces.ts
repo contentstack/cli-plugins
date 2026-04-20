@@ -30,13 +30,15 @@ export default class ImportWorkspace extends AssetManagementImportAdapter {
   ): Promise<WorkspaceResult> {
     await this.init();
 
+    log.debug(`Starting import for AM space directory ${oldSpaceUid}`, this.importContext.context);
+
     // Read exported metadata
     const metadataPath = join(spaceDir, 'metadata.json');
     let metadata: Record<string, unknown> = {};
     try {
       metadata = JSON.parse(readFileSync(metadataPath, 'utf8')) as Record<string, unknown>;
     } catch (e) {
-      log.debug(`Could not read metadata.json for space ${oldSpaceUid}: ${e}`, this.importContext.context);
+      log.warn(`Could not read ${metadataPath} for space ${oldSpaceUid}: ${e}`, this.importContext.context);
     }
 
     const exportedTitle = (metadata.title as string) ?? oldSpaceUid;

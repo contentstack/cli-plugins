@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
-import { HttpClient, log, authenticationHandler } from '@contentstack/cli-utilities';
+import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type {
   AssetManagementAPIConfig,
@@ -93,7 +93,11 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
       this.apiClient.headers(this.config.headers ? { ...authHeader, ...this.config.headers } : authHeader);
       log.debug('Asset Management adapter initialization completed', this.config.context);
     } catch (error: unknown) {
-      log.debug(`Asset Management adapter initialization failed: ${error}`, this.config.context);
+      handleAndLogError(
+        error as Error,
+        this.config.context ? { ...(this.config.context as Record<string, unknown>) } : {},
+        'Asset Management adapter initialization failed',
+      );
       throw error;
     }
   }
