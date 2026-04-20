@@ -1,22 +1,14 @@
 fileignoreconfig:
-- filename: pnpm-lock.yaml
-  checksum: e4c0b8eff5a2fbb954e207e1b341b6fa9e7c838695ccf829158f7203df91e56a
-- filename: .cursor/skills/contentstack-cli/SKILL.md
-  checksum: 45f0d0c81086eaee850311e0caae198cf6dd2a7bc73bd1340b320b15047c6dae
-- filename: .cursor/skills/code-review/SKILL.md
-  checksum: 29d812ac5c2ed4c55490f8d31e15eb592851601a6a141354cb458b1b9f1daa7a
-- filename: .cursor/skills/testing/references/testing-patterns.md
-  checksum: 0a6cb66f27eda46b40508517063a2f43fea1b4b8df878e7ddff404ab7fc126f8
-- filename: .cursor/skills/code-review/references/code-review-checklist.md
-  checksum: bdf7453f08d7209deaee411f47a1132ee872b28f0eb082563dfe20aa56eab057
-- filename: .cursor/skills/contentstack-cli/references/contentstack-patterns.md
-  checksum: 9888d481b6a1ae8c7102d9efed0fdbae2b7592f582a62c8bff6deccf03fdf341
-- filename: .cursor/rules/dev-workflow.md
-  checksum: 3c3a483b44901bb440b4ce311a40d6e8c11decf9795f6d2d1d3a3787aa9981c3
-- filename: .cursor/commands/code-review.md
-  checksum: a2737c43d58de842cf48c06b0471648a7c38b5fa8854d7c30f3d9258cd8b48f9
-- filename: .cursor/rules/contentstack-plugin.mdc
-  checksum: 4d41211088c2302a533559bb1e7e80fe69e6980f23c9a2e90b8ea9d03ba3f040
-- filename: .cursor/rules/oclif-commands.mdc
-  checksum: 8e269309cbfc9687e4a889c4a7983f145e77066d515dae53968d7553ae726b41
+  - filename: pnpm-lock.yaml
+    checksum: ad974018ebd0f3c362e59fc802735c0197bc1472605d8ef3121a9ce160da5b54
+  - filename: skills/testing/SKILL.md
+    checksum: 78719d06b5fb82b53e8b61e5569496e50cb87f6be358d24e30c68d5c0695da18
+  - filename: skills/framework/SKILL.md
+    checksum: 3c29a941b64d0cd8b7a893d4bd8121d7eedbeec41579803e61ef9698cd3b222f
+  - filename: skills/contentstack-cli/SKILL.md
+    checksum: 3ff07b7bb8a80cd9eeb3c3ef8410bd705e430fcb99998df11d8c9f30e2dd8f4d
+  - filename: skills/code-review/SKILL.md
+    checksum: a8b6da36c93bb0019e9a1cb8ece84279f2e4dc9a4daa5bb774e4b6ee0bad269a
+  - filename: skills/dev-workflow/SKILL.md
+    checksum: 0181865f509fb5bf4ae0bea827581674617b552f7c03dd18ab9a077cf7d9d8a2
 version: "1.0"
