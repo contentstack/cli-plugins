@@ -237,6 +237,10 @@ export default class Assets extends BaseClass {
     const logConfig = configHandler.get('log') || {};
     const showConsoleLogs = logConfig.showConsoleLogs ?? false;
 
+    if (!this.resolvedBasePaths.length) {
+      this.resolvedBasePaths = this.resolveAssetBasePaths();
+    }
+
     for (const { path: spacePath, spaceId } of this.resolvedBasePaths) {
       log.debug(`Processing asset path: ${spacePath} (spaceId=${spaceId ?? 'none'})`, this.config.auditContext);
 
