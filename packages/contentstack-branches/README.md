@@ -37,7 +37,7 @@ $ npm install -g @contentstack/cli-cm-branches
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-branches/1.7.1 darwin-arm64 node-v22.13.1
+@contentstack/cli-cm-branches/1.8.0 darwin-arm64 node-v24.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -53,6 +53,7 @@ USAGE
 * [`csdx cm:branches:delete [-uid <value>] [-k <value>]`](#csdx-cmbranchesdelete--uid-value--k-value)
 * [`csdx cm:branches:diff [--base-branch <value>] [--compare-branch <value>] [-k <value>][--module <value>] [--format <value>] [--csv-path <value>]`](#csdx-cmbranchesdiff---base-branch-value---compare-branch-value--k-value--module-value---format-value---csv-path-value)
 * [`csdx cm:branches:merge [-k <value>][--compare-branch <value>] [--no-revert] [--export-summary-path <value>] [--use-merge-summary <value>] [--comment <value>] [--base-branch <value>]`](#csdx-cmbranchesmerge--k-value--compare-branch-value---no-revert---export-summary-path-value---use-merge-summary-value---comment-value---base-branch-value)
+* [`csdx cm:branches:merge-status -k <value> --merge-uid <value>`](#csdx-cmbranchesmerge-status--k-value---merge-uid-value)
 
 ## `csdx cm:branches`
 
@@ -230,4 +231,27 @@ EXAMPLES
 ```
 
 _See code: [src/commands/cm/branches/merge.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/merge.ts)_
+
+## `csdx cm:branches:merge-status -k <value> --merge-uid <value>`
+
+Check the status of a branch merge job
+
+```
+USAGE
+  $ csdx cm:branches:merge-status -k <value> --merge-uid <value>
+
+FLAGS
+  -k, --stack-api-key=<value>  (required) Provide your stack API key.
+      --merge-uid=<value>      (required) Merge job UID to check status for.
+
+DESCRIPTION
+  Check the status of a branch merge job
+
+EXAMPLES
+  $ csdx cm:branches:merge-status -k bltxxxxxxxx --merge-uid merge_abc123
+
+  $ csdx cm:branches:merge-status --stack-api-key bltxxxxxxxx --merge-uid merge_abc123
+```
+
+_See code: [src/commands/cm/branches/merge-status.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/merge-status.ts)_
 <!-- commandsstop -->
