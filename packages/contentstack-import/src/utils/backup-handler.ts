@@ -13,9 +13,9 @@ export default async function backupHandler(importConfig: ImportConfig): Promise
     return importConfig.useBackedupDir;
   }
 
-  const sourceDir = importConfig.branchDir || importConfig.contentDir;
+  const sourceDir = importConfig.contentDir;
   log.debug(
-    `Using source directory for backup: ${sourceDir} (branchDir: ${importConfig.branchDir}, contentDir: ${importConfig.contentDir})`,
+    `Using source directory for backup: ${sourceDir}, contentDir: ${importConfig.contentDir})`,
   );
 
   let backupDirPath: string;
