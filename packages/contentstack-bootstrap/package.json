@@ -27,7 +27,7 @@
     "tar": "^7.5.11"
   },
   "devDependencies": {
-    "@oclif/test": "^4.1.13",
+    "@oclif/test": "^4.1.18",
     "@types/inquirer": "^9.0.8",
     "@types/mkdirp": "^1.0.2",
     "@types/node": "^18.11.9",

@@ -21,10 +21,10 @@
     "mkdirp": "^1.0.4",
     "promise-limit": "^2.7.0",
     "uuid": "^9.0.1",
-    "winston": "^3.17.0"
+    "winston": "^3.19.0"
   },
   "devDependencies": {
-    "@oclif/test": "^4.1.16",
+    "@oclif/test": "^4.1.18",
     "@types/big-json": "^3.2.5",
     "@types/bluebird": "^3.5.42",
     "@types/fs-extra": "^11.0.4",

@@ -1,7 +1,8 @@
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import { cliux, log, sanitizePath } from '@contentstack/cli-utilities';
-import { BranchDiffVerboseRes, CSVRow, ModifiedFieldsInput, ContentTypeItem, AddCSVRowParams, FIELD_TYPES, CSV_HEADER } from '../interfaces';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
+
+import { AddCSVRowParams, BranchDiffVerboseRes, CSV_HEADER, CSVRow, ContentTypeItem, FIELD_TYPES, ModifiedFieldsInput } from '../interfaces';
 
 /**
  * Get display name for a field with special handling for system fields
@@ -95,7 +96,7 @@ export function formatValue(value: any): string {
  * @param path - Array of path segments
  * @returns The value at the path, or undefined if not found
  */
-export function extractValueFromPath(obj: any, path: (string | number)[]): any {
+export function extractValueFromPath(obj: any, path: (number | string)[]): any {
   if (!obj || !path || path.length === 0) return undefined;
   
   try {
@@ -179,11 +180,11 @@ function addContentTypeRows(
     const contentTypeName = item?.title || item?.uid || 'Unknown';
     
     addCSVRow(csvRows, {
-      srNo: getSrNo(),
       contentTypeName,
       fieldName: 'Content Type',
       fieldType: operation,
       sourceValue: 'N/A',
+      srNo: getSrNo(),
       targetValue: 'N/A'
     });
   }
@@ -227,12 +228,12 @@ export function generateCSVDataFromVerbose(verboseRes: BranchDiffVerboseRes): CS
  */
 function addCSVRow(csvRows: CSVRow[], params: AddCSVRowParams): void {
   csvRows.push({
-    srNo: params.srNo,
     contentTypeName: params.contentTypeName,
     fieldName: params.fieldName,
     fieldPath: 'N/A',
     operation: params.fieldType,
     sourceBranchValue: params.sourceValue,
+    srNo: params.srNo,
     targetBranchValue: params.targetValue,
   });
 }
@@ -261,21 +262,21 @@ function addFieldChangesToCSV(csvRows: CSVRow[], params: {
       if (field.propertyChanges?.length > 0) {
         field.propertyChanges.forEach(propertyChange => {
           addCSVRow(csvRows, {
-            srNo: srNo++,
             contentTypeName: params.contentTypeName,
             fieldName,
             fieldType,
             sourceValue: formatValue(propertyChange.newValue),
+            srNo: srNo++,
             targetValue: formatValue(propertyChange.oldValue)
           });
         });
       } else {
         addCSVRow(csvRows, {
-          srNo: srNo++,
           contentTypeName: params.contentTypeName,
           fieldName,
           fieldType,
           sourceValue: fieldType === 'added' ? 'N/A' : formatValue(field),
+          srNo: srNo++,
           targetValue: fieldType === 'deleted' ? 'N/A' : formatValue(field)
         });
       }
