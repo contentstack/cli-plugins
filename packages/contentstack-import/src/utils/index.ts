@@ -1,6 +1,5 @@
 export { setupBranchConfig } from './setup-branch';
-export { 
-  selectBranchFromDirectory,
+export {
   resolveImportPath,
   updateImportConfigWithResolvedPath,
   executeImportPathLogic
