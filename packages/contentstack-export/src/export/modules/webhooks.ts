@@ -1,28 +1,57 @@
-import { handleAndLogError, log, messageHandler } from '@contentstack/cli-utilities';
-import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
+import isEmpty from 'lodash/isEmpty';
 import { resolve as pResolve } from 'node:path';
+import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilities';
 
-import { ModuleClassParams, WebhookConfig } from '../../types';
-import { fsUtil } from '../../utils';
 import BaseClass from './base-class';
+import { fsUtil } from '../../utils';
+import { WebhookConfig, ModuleClassParams } from '../../types';
 
 export default class ExportWebhooks extends BaseClass {
+  private webhooks: Record<string, Record<string, string>>;
+  private webhookConfig: WebhookConfig;
   public webhooksFolderPath: string;
   private qs: {
-    asc: string;
     include_count: boolean;
     skip?: number;
+    asc: string;
   };
-  private webhookConfig: WebhookConfig;
-  private webhooks: Record<string, Record<string, string>>;
 
   constructor({ exportConfig, stackAPIClient }: ModuleClassParams) {
     super({ exportConfig, stackAPIClient });
     this.webhooks = {};
     this.webhookConfig = exportConfig.modules.webhooks;
-    this.qs = { asc: 'updated_at', include_count: true };
+    this.qs = { include_count: true, asc: 'updated_at' };
     this.exportConfig.context.module = 'webhooks';
+  }
+
+  async start(): Promise<void> {
+    log.debug('Starting webhooks export process...', this.exportConfig.context);
+
+    this.webhooksFolderPath = pResolve(
+      this.exportConfig.data,
+      this.exportConfig.branchName || '',
+      this.webhookConfig.dirName,
+    );
+    log.debug(`Webhooks folder path: ${this.webhooksFolderPath}`, this.exportConfig.context);
+
+    await fsUtil.makeDirectory(this.webhooksFolderPath);
+    log.debug('Created webhooks directory', this.exportConfig.context);
+
+    await this.getWebhooks();
+    log.debug(`Retrieved ${Object.keys(this.webhooks).length} webhooks`, this.exportConfig.context);
+
+    if (this.webhooks === undefined || isEmpty(this.webhooks)) {
+      log.info(messageHandler.parse('WEBHOOK_NOT_FOUND'), this.exportConfig.context);
+    } else {
+      const webhooksFilePath = pResolve(this.webhooksFolderPath, this.webhookConfig.fileName);
+      log.debug(`Writing webhooks to: ${webhooksFilePath}`, this.exportConfig.context);
+      fsUtil.writeFile(webhooksFilePath, this.webhooks);
+      log.success(
+        messageHandler.parse('WEBHOOK_EXPORT_COMPLETE', Object.keys(this.webhooks).length),
+        this.exportConfig.context,
+      );
+    }
   }
 
   async getWebhooks(skip = 0): Promise<void> {
@@ -32,16 +61,16 @@ export default class ExportWebhooks extends BaseClass {
     } else {
       log.debug('Fetching webhooks with initial query', this.exportConfig.context);
     }
-    
+
     log.debug(`Query parameters: ${JSON.stringify(this.qs)}`, this.exportConfig.context);
 
     await this.stack
       .webhook()
       .fetchAll(this.qs)
       .then(async (data: any) => {
-        const { count, items } = data;
+        const { items, count } = data;
         log.debug(`Fetched ${items?.length || 0} webhooks out of total ${count}`, this.exportConfig.context);
-        
+
         if (items?.length) {
           log.debug(`Processing ${items.length} webhooks`, this.exportConfig.context);
           this.sanitizeAttribs(items);
@@ -64,45 +93,19 @@ export default class ExportWebhooks extends BaseClass {
 
   sanitizeAttribs(webhooks: Record<string, string>[]) {
     log.debug(`Sanitizing ${webhooks.length} webhooks`, this.exportConfig.context);
-    
+
     for (let index = 0; index < webhooks?.length; index++) {
       const webhookUid = webhooks[index].uid;
       const webhookName = webhooks[index]?.name;
       log.debug(`Processing webhook: ${webhookName} (${webhookUid})`, this.exportConfig.context);
-      
+
       this.webhooks[webhookUid] = omit(webhooks[index], ['SYS_ACL']);
       log.success(messageHandler.parse('WEBHOOK_EXPORT_SUCCESS', webhookName), this.exportConfig.context);
     }
-    
-    log.debug(`Sanitization complete. Total webhooks processed: ${Object.keys(this.webhooks).length}`, this.exportConfig.context);
-  }
 
-  async start(): Promise<void> {
-    log.debug('Starting webhooks export process...', this.exportConfig.context);
-    
-    this.webhooksFolderPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.webhookConfig.dirName,
+    log.debug(
+      `Sanitization complete. Total webhooks processed: ${Object.keys(this.webhooks).length}`,
+      this.exportConfig.context,
     );
-    log.debug(`Webhooks folder path: ${this.webhooksFolderPath}`, this.exportConfig.context);
-
-    await fsUtil.makeDirectory(this.webhooksFolderPath);
-    log.debug('Created webhooks directory', this.exportConfig.context);
-    
-    await this.getWebhooks();
-    log.debug(`Retrieved ${Object.keys(this.webhooks).length} webhooks`, this.exportConfig.context);
-    
-    if (this.webhooks === undefined || isEmpty(this.webhooks)) {
-      log.info(messageHandler.parse('WEBHOOK_NOT_FOUND'), this.exportConfig.context);
-    } else {
-      const webhooksFilePath = pResolve(this.webhooksFolderPath, this.webhookConfig.fileName);
-      log.debug(`Writing webhooks to: ${webhooksFilePath}`, this.exportConfig.context);
-      fsUtil.writeFile(webhooksFilePath, this.webhooks);
-      log.success(
-        messageHandler.parse('WEBHOOK_EXPORT_COMPLETE', Object.keys(this.webhooks).length),
-        this.exportConfig.context,
-      );
-    }
   }
 }

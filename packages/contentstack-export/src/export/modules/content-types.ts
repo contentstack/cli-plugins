@@ -1,47 +1,41 @@
-import {
-  ContentstackClient,
-  handleAndLogError,
-  log,
-  messageHandler,
-  sanitizePath,
-} from '@contentstack/cli-utilities';
 import * as path from 'path';
+import { ContentstackClient, handleAndLogError, messageHandler, log, sanitizePath } from '@contentstack/cli-utilities';
 
-import { ExportConfig, ModuleClassParams } from '../../types';
-import { executeTask, fsUtil } from '../../utils';
 import BaseClass from './base-class';
+import { fsUtil, executeTask } from '../../utils';
+import { ExportConfig, ModuleClassParams } from '../../types';
 
 export default class ContentTypesExport extends BaseClass {
+  private stackAPIClient: ReturnType<ContentstackClient['stack']>;
   public exportConfig: ExportConfig;
-  private contentTypes: Record<string, unknown>[];
-  private contentTypesConfig: {
-    dirName?: string;
-    fetchConcurrency?: number;
-    fileName?: string;
-    limit?: number;
-    validKeys?: string[];
-    writeConcurrency?: number;
-  };
-  private contentTypesDirPath: string;
   private qs: {
-    asc: string;
     include_count: boolean;
-    include_global_field_schema: boolean;
-    limit?: number;
+    asc: string;
     skip?: number;
+    limit?: number;
+    include_global_field_schema: boolean;
     uid?: Record<string, string[]>;
   };
-  private stackAPIClient: ReturnType<ContentstackClient['stack']>;
+  private contentTypesConfig: {
+    dirName?: string;
+    fileName?: string;
+    validKeys?: string[];
+    fetchConcurrency?: number;
+    writeConcurrency?: number;
+    limit?: number;
+  };
+  private contentTypesDirPath: string;
+  private contentTypes: Record<string, unknown>[];
 
   constructor({ exportConfig, stackAPIClient }: ModuleClassParams) {
     super({ exportConfig, stackAPIClient });
     this.stackAPIClient = stackAPIClient;
     this.contentTypesConfig = exportConfig.modules['content-types'];
     this.qs = {
-      asc: 'updated_at',
       include_count: true,
-      include_global_field_schema: true,
+      asc: 'updated_at',
       limit: this.contentTypesConfig.limit,
+      include_global_field_schema: true,
     };
 
     // If content type id is provided then use it as part of query
@@ -61,6 +55,21 @@ export default class ContentTypesExport extends BaseClass {
     this.exportConfig.context.module = 'content-types';
   }
 
+  async start() {
+    try {
+      log.debug('Starting content types export process...', this.exportConfig.context);
+      await fsUtil.makeDirectory(this.contentTypesDirPath);
+      log.debug(`Created directory at: '${this.contentTypesDirPath}'.`, this.exportConfig.context);
+
+      await this.getContentTypes();
+      await this.writeContentTypes(this.contentTypes);
+
+      log.success(messageHandler.parse('CONTENT_TYPE_EXPORT_COMPLETE'), this.exportConfig.context);
+    } catch (error) {
+      handleAndLogError(error, { ...this.exportConfig.context });
+    }
+  }
+
   async getContentTypes(skip = 0): Promise<any> {
     if (skip) {
       this.qs.skip = skip;
@@ -71,7 +80,9 @@ export default class ContentTypesExport extends BaseClass {
     const contentTypeSearchResponse = await this.stackAPIClient.contentType().query(this.qs).find();
 
     log.debug(
-      `Fetched ${contentTypeSearchResponse.items?.length || 0} content types out of total ${contentTypeSearchResponse.count}`,
+      `Fetched ${contentTypeSearchResponse.items?.length || 0} content types out of total ${
+        contentTypeSearchResponse.count
+      }`,
       this.exportConfig.context,
     );
 
@@ -103,21 +114,6 @@ export default class ContentTypesExport extends BaseClass {
       updatedContentTypes.push(contentType);
     });
     return updatedContentTypes;
-  }
-
-  async start() {
-    try {
-      log.debug('Starting content types export process...', this.exportConfig.context);
-      await fsUtil.makeDirectory(this.contentTypesDirPath);
-      log.debug(`Created directory at: '${this.contentTypesDirPath}'.`, this.exportConfig.context);
-
-      await this.getContentTypes();
-      await this.writeContentTypes(this.contentTypes);
-
-      log.success(messageHandler.parse('CONTENT_TYPE_EXPORT_COMPLETE'), this.exportConfig.context);
-    } catch (error) {
-      handleAndLogError(error, { ...this.exportConfig.context });
-    }
   }
 
   async writeContentTypes(contentTypes: Record<string, unknown>[]) {

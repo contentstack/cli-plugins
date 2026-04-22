@@ -5,23 +5,10 @@ interface AnyProperty {
 }
 
 export default interface DefaultConfig {
-  apis: {
-    assets: string;
-    content_types: string;
-    entries: string;
-    environments: string;
-    extension: string;
-    globalfields: string;
-    labels: string;
-    locales: string;
-    stacks: string;
-    userSession: string;
-    users: string;
-    webhooks: string;
-  };
-  cdn?: string;
   contentVersion: number;
-  developerHubBaseUrl: string;
+  versioning: boolean;
+  host: string;
+  cdn?: string;
   developerHubUrls: any;
   // use below hosts for eu region
   // host:'https://eu-api.contentstack.com/v3',
@@ -30,203 +17,216 @@ export default interface DefaultConfig {
   // use below hosts for gcp-na region
   // host: 'https://gcp-na-api.contentstack.com'
   // use below hosts for gcp-eu region
-  fetchConcurrency: number;
-  host: string;
-  languagesCode: string[];
-  marketplaceAppEncryptionKey: string;
   // host: 'https://gcp-eu-api.contentstack.com'
   modules: {
-    assets: {
-      assetsMetaKeys: string[]; // Default keys ['uid', 'url', 'filename']
-      // This is the total no. of asset objects fetched in each 'get assets' call
-      batchLimit: number;
-      // no of asset version files (of a single asset) that'll be downloaded parallel
-      chunkFileSize: number; // measured on Megabits (5mb)
+    types: Modules[];
+    locales: {
+      dirName: string;
+      fileName: string;
+      requiredKeys: string[];
       dependencies?: Modules[];
-      dirName: string;
-      displayExecutionTime: boolean;
-      downloadLimit: number;
-      enableDownloadStatus: boolean;
-      fetchConcurrency: number;
-      fileName: string;
-      host: string;
-      includeVersionedAssets: boolean;
-      invalidKeys: string[];
-      securedAssets: boolean;
-    };
-    attributes: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-    };
-    audiences: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-    };
-    'composable-studio': {
-      apiBaseUrl: string;
-      apiVersion: string;
-      dirName: string;
-      fileName: string;
-    };
-    content_types: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      // total no of content types fetched in each 'get content types' call
-      limit: number;
-      validKeys: string[];
-    };
-    'content-types': {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      // total no of content types fetched in each 'get content types' call
-      limit: number;
-      validKeys: string[];
-    };
-    'custom-roles': {
-      customRolesLocalesFileName: string;
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
     };
     customRoles: {
-      customRolesLocalesFileName: string;
-      dependencies?: Modules[];
       dirName: string;
       fileName: string;
+      customRolesLocalesFileName: string;
+      dependencies?: Modules[];
+    };
+    'custom-roles': {
+      dirName: string;
+      fileName: string;
+      customRolesLocalesFileName: string;
+      dependencies?: Modules[];
+    };
+    environments: {
+      dirName: string;
+      fileName: string;
+      dependencies?: Modules[];
+    };
+    labels: {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+    };
+    webhooks: {
+      dirName: string;
+      fileName: string;
+      dependencies?: Modules[];
+    };
+    releases: {
+      dirName: string;
+      fileName: string;
+      releasesList: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+    };
+    workflows: {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+    };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+      limit?: number;
+    };
+    globalfields: {
+      dirName: string;
+      fileName: string;
+      validKeys: string[];
+      dependencies?: Modules[];
+    };
+    'global-fields': {
+      dirName: string;
+      fileName: string;
+      validKeys: string[];
+      dependencies?: Modules[];
+    };
+    assets: {
+      dirName: string;
+      fileName: string;
+      // This is the total no. of asset objects fetched in each 'get assets' call
+      batchLimit: number;
+      host: string;
+      invalidKeys: string[];
+      // no of asset version files (of a single asset) that'll be downloaded parallel
+      chunkFileSize: number; // measured on Megabits (5mb)
+      downloadLimit: number;
+      fetchConcurrency: number;
+      assetsMetaKeys: string[]; // Default keys ['uid', 'url', 'filename']
+      securedAssets: boolean;
+      displayExecutionTime: boolean;
+      enableDownloadStatus: boolean;
+      includeVersionedAssets: boolean;
+      dependencies?: Modules[];
+    };
+    content_types: {
+      dirName: string;
+      fileName: string;
+      validKeys: string[];
+      // total no of content types fetched in each 'get content types' call
+      limit: number;
+      dependencies?: Modules[];
+    };
+    'content-types': {
+      dirName: string;
+      fileName: string;
+      validKeys: string[];
+      // total no of content types fetched in each 'get content types' call
+      limit: number;
+      dependencies?: Modules[];
+    };
+    entries: {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      batchLimit: number;
+      downloadLimit: number;
+      // total no of entries fetched in each content type in a single call
+      limit: number;
+      dependencies?: Modules[];
+      exportVersions: boolean;
+    };
+    personalize: {
+      dirName: string;
+      baseURL: Record<string, string>;
+    } & AnyProperty;
+    variantEntry: {
+      dirName: string;
+      fileName: string;
+      chunkFileSize: number;
+      query: {
+        skip: number;
+        limit: number;
+        include_variant: boolean;
+        include_count: boolean;
+        include_publish_details: boolean;
+      } & AnyProperty;
+    } & AnyProperty;
+    extensions: {
+      dirName: string;
+      fileName: string;
+      dependencies?: Modules[];
+    };
+    stack: {
+      dirName: string;
+      fileName: string;
+      dependencies?: Modules[];
     };
     dependency: {
       entries: string[];
     };
-    entries: {
-      batchLimit: number;
-      dependencies?: Modules[];
-      dirName: string;
-      downloadLimit: number;
-      exportVersions: boolean;
-      fileName: string;
-      invalidKeys: string[];
-      // total no of entries fetched in each content type in a single call
-      limit: number;
-    };
-    environments: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-    };
-    events: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-    };
-    extensions: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-    };
-    'global-fields': {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      validKeys: string[];
-    };
-    globalfields: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      validKeys: string[];
-    };
-    labels: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-    };
-    locales: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      requiredKeys: string[];
-    };
     marketplace_apps: {
-      dependencies?: Modules[];
       dirName: string;
       fileName: string;
+      dependencies?: Modules[];
     };
     'marketplace-apps': {
-      dependencies?: Modules[];
       dirName: string;
       fileName: string;
+      dependencies?: Modules[];
+    };
+    'composable-studio': {
+      dirName: string;
+      fileName: string;
+      apiBaseUrl: string;
+      apiVersion: string;
     };
     masterLocale: {
       dirName: string;
       fileName: string;
       requiredKeys: string[];
     };
-    personalize: {
-      baseURL: Record<string, string>;
-      dirName: string;
-    } & AnyProperty;
-    'publishing-rules': {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-      limit?: number;
-    };
-    releases: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-      releasesList: string;
-    };
-    stack: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-    };
     taxonomies: {
-      dependencies?: Modules[];
       dirName: string;
       fileName: string;
       invalidKeys: string[];
+      dependencies?: Modules[];
       limit: number;
     };
-    types: Modules[];
-    variantEntry: {
-      chunkFileSize: number;
-      dirName: string;
-      fileName: string;
-      query: {
-        include_count: boolean;
-        include_publish_details: boolean;
-        include_variant: boolean;
-        limit: number;
-        skip: number;
-      } & AnyProperty;
-    } & AnyProperty;
-    webhooks: {
-      dependencies?: Modules[];
-      dirName: string;
-      fileName: string;
-    };
-    workflows: {
-      dependencies?: Modules[];
+    events: {
       dirName: string;
       fileName: string;
       invalidKeys: string[];
+      dependencies?: Modules[];
+    };
+    audiences: {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+    };
+    attributes: {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
     };
   };
-  onlyTSModules: string[];
-  personalizationEnabled: boolean;
+  languagesCode: string[];
+  apis: {
+    userSession: string;
+    globalfields: string;
+    locales: string;
+    labels: string;
+    environments: string;
+    assets: string;
+    content_types: string;
+    entries: string;
+    users: string;
+    extension: string;
+    webhooks: string;
+    stacks: string;
+  };
   preserveStackVersion: boolean;
-  versioning: boolean;
+  personalizationEnabled: boolean;
+  fetchConcurrency: number;
   writeConcurrency: number;
+  developerHubBaseUrl: string;
+  marketplaceAppEncryptionKey: string;
+  onlyTSModules: string[];
 }

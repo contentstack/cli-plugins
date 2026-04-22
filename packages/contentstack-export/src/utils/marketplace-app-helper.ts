@@ -1,4 +1,10 @@
-import { NodeCrypto, cliux, createDeveloperHubUrl, handleAndLogError, managementSDKClient } from '@contentstack/cli-utilities';
+import {
+  cliux,
+  handleAndLogError,
+  NodeCrypto,
+  managementSDKClient,
+  createDeveloperHubUrl,
+} from '@contentstack/cli-utilities';
 
 import { ExportConfig } from '../types';
 
@@ -12,7 +18,7 @@ export async function getOrgUid(config: ExportConfig): Promise<string> {
     .stack({ api_key: config.source_stack })
     .fetch()
     .catch((error: any) => {
-      handleAndLogError(error, {...config.context});
+      handleAndLogError(error, { ...config.context });
     });
 
   return tempStackData?.org_uid;
@@ -25,15 +31,15 @@ export async function createNodeCryptoInstance(config: ExportConfig): Promise<No
     cryptoArgs['encryptionKey'] = config.marketplaceAppEncryptionKey;
   } else {
     cryptoArgs['encryptionKey'] = await cliux.inquire({
-      default: config.marketplaceAppEncryptionKey,
-      message: 'Enter Marketplace app configurations encryption key',
-      name: 'name',
       type: 'input',
+      name: 'name',
+      default: config.marketplaceAppEncryptionKey,
       validate: (url: any) => {
         if (!url) return "Encryption key can't be empty.";
 
         return true;
       },
+      message: 'Enter Marketplace app configurations encryption key',
     });
   }
 

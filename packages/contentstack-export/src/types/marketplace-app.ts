@@ -1,35 +1,35 @@
 type AppLocation =
-  | 'cs.cm.stack.asset_sidebar'
   | 'cs.cm.stack.config'
-  | 'cs.cm.stack.custom_field'
   | 'cs.cm.stack.dashboard'
-  | 'cs.cm.stack.rte'
   | 'cs.cm.stack.sidebar'
+  | 'cs.cm.stack.custom_field'
+  | 'cs.cm.stack.rte'
+  | 'cs.cm.stack.asset_sidebar'
   | 'cs.org.config';
 
 interface ExtensionMeta {
-  blur?: boolean;
-  data_type?: string;
-  default_width?: 'full' | 'half';
-  description?: string;
-  enabled?: boolean;
-  extension_uid?: string;
+  uid?: string;
   name?: string;
+  description?: string;
   path?: string;
   signed: boolean;
-  uid?: string;
+  extension_uid?: string;
+  data_type?: string;
+  enabled?: boolean;
   width?: number;
+  blur?: boolean;
+  default_width?: 'full' | 'half';
 }
 
 interface Extension {
-  meta: ExtensionMeta[];
   type: AppLocation;
+  meta: ExtensionMeta[];
 }
 
 interface LocationConfiguration {
+  signed: boolean;
   base_url: string;
   locations: Extension[];
-  signed: boolean;
 }
 
 interface AnyProperty {
@@ -37,29 +37,29 @@ interface AnyProperty {
 }
 
 type Manifest = {
-  description: string;
-  framework_version?: string;
-  hosting?: any;
-  icon?: string;
-  name: string;
-  oauth?: any;
-  organization_uid: string;
-  target_type: 'organization' | 'stack';
-  ui_location: LocationConfiguration;
   uid: string;
+  name: string;
+  icon?: string;
+  hosting?: any;
   version?: number;
-  visibility: 'private' | 'public' | 'public_unlisted';
+  description: string;
+  organization_uid: string;
+  framework_version?: string;
+  oauth?: any;
   webhook?: any;
+  ui_location: LocationConfiguration;
+  target_type: 'stack' | 'organization';
+  visibility: 'private' | 'public' | 'public_unlisted';
 } & AnyProperty;
 
 type Installation = {
-  configuration: any;
-  manifest: Manifest;
-  server_configuration: any;
+  uid: string;
   status: string;
+  manifest: Manifest;
+  configuration: any;
+  server_configuration: any;
   target: { type: string; uid: string };
   ui_location: LocationConfiguration;
-  uid: string;
 } & AnyProperty;
 
 export { Installation, Manifest };

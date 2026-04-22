@@ -7,8 +7,7 @@
  * MIT Licensed
  */
 
-import { authHandler, log, managementSDKClient } from '@contentstack/cli-utilities';
-
+import { log, managementSDKClient, authHandler } from '@contentstack/cli-utilities';
 import { ExternalConfig } from '../types';
 
 const login = async (config: ExternalConfig): Promise<any> => {
@@ -17,18 +16,16 @@ const login = async (config: ExternalConfig): Promise<any> => {
     const response = await client.login({ email: config.email, password: config.password }).catch(Promise.reject);
     if (response?.user?.authtoken) {
       config.headers = {
-        'X-User-Agent': 'contentstack-export/v',
-        access_token: config.access_token,
         api_key: config.source_stack,
+        access_token: config.access_token,
         authtoken: response.user.authtoken,
+        'X-User-Agent': 'contentstack-export/v',
       };
       await authHandler.setConfigData('basicAuth', response.user);
       log.success(`Contentstack account authenticated successfully!`, config.context);
       return config;
     } else {
       log.error(`Failed to log in!`, config.context);
-      // CLI: exit after unrecoverable auth failure (same behavior as before lint pass)
-      // eslint-disable-next-line n/no-process-exit -- intentional CLI termination
       process.exit(1);
     }
   } else if (!config.email && !config.password && config.source_stack && config.access_token) {
@@ -41,9 +38,9 @@ const login = async (config: ExternalConfig): Promise<any> => {
       config.context,
     );
     config.headers = {
-      'X-User-Agent': 'contentstack-export/v',
-      access_token: config.access_token,
       api_key: config.source_stack,
+      access_token: config.access_token,
+      'X-User-Agent': 'contentstack-export/v',
     };
     return config;
   }

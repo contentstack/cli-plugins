@@ -1,5 +1,4 @@
 import { handleAndLogError } from '@contentstack/cli-utilities';
-
 import { ModuleClassParams } from '../../types';
 
 export default async function startModuleExport(modulePayload: ModuleClassParams) {
@@ -12,7 +11,7 @@ export default async function startModuleExport(modulePayload: ModuleClassParams
       ...modulePayload.exportConfig.context,
       module: modulePayload.moduleName,
     });
-    throw error; 
+    throw error;
   }
 }
 
