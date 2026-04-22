@@ -1,8 +1,5 @@
-import * as path from 'path';
-import { sanitizePath } from '@contentstack/cli-utilities';
-
 import { ExportConfig } from '../types';
-import { writeFileSync, makeDirectory } from './file-helper';
+import { makeDirectory } from './file-helper';
 
 const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
   if (typeof config !== 'object') {
@@ -40,9 +37,6 @@ const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
   }
 
   makeDirectory(config.exportDir);
-  // create branch info file
-  writeFileSync(path.join(sanitizePath(config.exportDir), 'branches.json'), branches);
-  // add branches list in the
   config.branches = branches;
 };
 

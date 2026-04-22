@@ -7,6 +7,7 @@ import { handleAndLogError, messageHandler, log, sanitizePath } from '@contentst
 import BaseClass from './base-class';
 import {
   fsUtil,
+  getExportBasePath,
   PROCESS_NAMES,
   MODULE_CONTEXTS,
   PROCESS_STATUS,
@@ -43,8 +44,7 @@ export default class ExportTaxonomies extends BaseClass {
     this.exportConfig.context.module = MODULE_CONTEXTS.TAXONOMIES;
     this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.TAXONOMIES];
     this.localesFilePath = pResolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(getExportBasePath(exportConfig)),
       sanitizePath(exportConfig.modules.locales.dirName),
       sanitizePath(exportConfig.modules.locales.fileName),
     );
@@ -98,8 +98,7 @@ export default class ExportTaxonomies extends BaseClass {
   private async initializeExport(): Promise<number> {
     return this.withLoadingSpinner('TAXONOMIES: Analyzing taxonomy structure...', async () => {
       this.taxonomiesFolderPath = pResolve(
-        this.exportConfig.exportDir,
-        this.exportConfig.branchName || '',
+        getExportBasePath(this.exportConfig),
         this.taxonomiesConfig.dirName,
       );
       log.debug(`Taxonomies folder path: '${this.taxonomiesFolderPath}'`, this.exportConfig.context);

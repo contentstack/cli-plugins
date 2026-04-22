@@ -60,6 +60,16 @@ describe('ExportAssets', () => {
   });
 
   describe('start method', () => {
+    it('should use fallback download concurrency when not configured', () => {
+      const exporter = new ExportAssets(apiConfig, exportContext);
+      expect((exporter as any).downloadAssetsBatchConcurrency).to.equal(5);
+    });
+
+    it('should use configured download concurrency when provided', () => {
+      const exporter = new ExportAssets(apiConfig, { ...exportContext, downloadAssetsConcurrency: 2 });
+      expect((exporter as any).downloadAssetsBatchConcurrency).to.equal(2);
+    });
+
     it('should fetch folders and assets using the workspace space_uid', async () => {
       const foldersStub = sinon.stub(ExportAssets.prototype, 'getWorkspaceFolders').resolves(foldersData);
       const assetsStub = sinon.stub(ExportAssets.prototype, 'getWorkspaceAssets').resolves(emptyAssetsResponse);

@@ -1,12 +1,22 @@
 fileignoreconfig:
-  - filename: packages/contentstack-import-setup/src/types/default-config.ts
-    checksum: 415cfa0e70dec18ca933534c8663fa7f5454c59123f8d3c74a8da38f50a91741
-  - filename: packages/contentstack-asset-management/src/types/import-setup-asset-mapper.ts
-    checksum: 410afe12a9decf2051d488e8dd5740c7d0f19ff88cc2c4258fa57b9283bc7e57
-  - filename: packages/contentstack-import-setup/src/import/import-setup.ts
-    checksum: 1927d72dde473f93b976096282742122bef2f6c2178611781d9ba2c210527566
-  - filename: packages/contentstack-import-setup/src/utils/import-setup-asset-mapper-params.ts
-    checksum: b646e603db48d86067e4ed29f5d699d52b4c45ded9cbe992e29167b839aa2575
-  - filename: packages/contentstack-asset-management/src/import-setup/import-setup-asset-mappers.ts
-    checksum: 944b033c4edc4b4b7a0cfe19b372af87b2243f58bdf3528c544c863600b204b6
+  - filename: packages/contentstack-export/src/export/modules/environments.ts
+    checksum: a92c5de7ed8e80f08f911727973a66e0416b4a52265c275d1d25c3095f912811
+  - filename: packages/contentstack-import/src/utils/backup-handler.ts
+    checksum: 9a892b5c4b5aac230fb5969e7f34afdac0b6f96208e64bf9d1195468c935c66c
+  - filename: packages/contentstack-import/test/unit/utils/backup-handler.test.ts
+    checksum: 69860727e9b3099d8e1e95db2af17fc8b161684f675477981d27877cd8e1b3bb
+  - filename: packages/contentstack-export/test/unit/export/module-exporter.test.ts
+    checksum: 67b70c93ed679ccb2c61d0c277380676e33c91da8a423f948e81937e5d1d9479
+  - filename: packages/contentstack-export/test/unit/export/modules/marketplace-apps.test.ts
+    checksum: 299b8f60cce1f64be7c20786d6a7c9c370474b97b06d1846114a76a70ec20cf7
+  - filename: skills/contentstack-cli/SKILL.md
+    checksum: 36762d43bbacedd0b344f9d4f1179a88e3dbc7e2467341ba42198dcd1bf9e40c
+  - filename: skills/code-review/SKILL.md
+    checksum: 29673e16f6b41fcec7fa236912e7f72b920ed4a3d9a66a89308b4a058b247f3e
+  - filename: skills/testing/SKILL.md
+    checksum: ee1c82f1bb51860cb26fb9f112a53df0127e316fcb22a094034024741251fa3c
+  - filename: pnpm-lock.yaml
+    checksum: ee02fe945dcc49e5755198d7eb815f03aa8ba0ea9e269e2df396632a7f80212a
+  - filename: packages/contentstack-asset-management/src/import/assets.ts
+    checksum: ed6af5d798282808c09643e1dcd1eaede89ce2b09bd0425998af64849b4f3f61
 version: '1.0'

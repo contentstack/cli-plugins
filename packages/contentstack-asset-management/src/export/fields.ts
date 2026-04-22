@@ -13,13 +13,17 @@ export default class ExportFields extends AssetManagementExportAdapter {
 
   async start(spaceUid: string): Promise<void> {
     await this.init();
+
+    log.debug('Starting shared fields export process...', this.exportContext.context);
+
     const fieldsData = await this.getWorkspaceFields(spaceUid);
     const items = getArrayFromResponse(fieldsData, 'fields');
     const dir = this.getFieldsDir();
-    log.debug(
-      items.length === 0 ? 'No field items, wrote empty fields' : `Writing ${items.length} shared fields`,
-      this.exportContext.context,
-    );
+    if (items.length === 0) {
+      log.info('No field items to export, writing empty fields', this.exportContext.context);
+    } else {
+      log.debug(`Writing ${items.length} shared fields`, this.exportContext.context);
+    }
     await this.writeItemsToChunkedJson(dir, 'fields.json', 'fields', ['uid', 'title', 'display_type'], items);
     this.tick(true, PROCESS_NAMES.AM_FIELDS, null);
   }

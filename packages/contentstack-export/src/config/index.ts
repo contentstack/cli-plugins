@@ -114,6 +114,8 @@ const config: DefaultConfig = {
     },
     'asset-management': {
       chunkFileSizeMb: 1,
+      apiConcurrency: 5,
+      downloadAssetsConcurrency: 5,
     },
     content_types: {
       dirName: 'content_types',

@@ -26,6 +26,7 @@ describe('ImportLocales', () => {
       management_token: 'test-token',
       contentDir: tempDir,
       modules: {
+        apiConcurrency: 5,
         types: [],
         locales: {
           dirName: 'locales',
@@ -60,6 +61,24 @@ describe('ImportLocales', () => {
           host: 'https://api.contentstack.io',
           folderValidKeys: ['uid', 'name'],
           validKeys: ['uid', 'title'],
+        },
+        'asset-management': {
+          dirName: 'spaces',
+          fieldsDir: 'fields',
+          assetTypesDir: 'asset_types',
+          fieldsFileName: 'fields.json',
+          assetTypesFileName: 'asset-types.json',
+          foldersFileName: 'folders.json',
+          assetsFileName: 'assets.json',
+          fieldsImportInvalidKeys: [],
+          assetTypesImportInvalidKeys: [],
+          mapperRootDir: 'mapper',
+          mapperAssetsModuleDir: 'assets',
+          mapperUidFileName: 'uid-mapping.json',
+          mapperUrlFileName: 'url-mapping.json',
+          mapperSpaceUidFileName: 'space-uid-mapping.json',
+          uploadAssetsConcurrency: 1,
+          importFoldersConcurrency: 1,
         },
         'assets-old': {
           dirName: 'assets',
