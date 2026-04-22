@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import { ImportConfig, Modules } from '../../../src/types';
 import { configHandler } from '@contentstack/cli-utilities';
 import ModuleImporter from '../../../src/import/module-importer';
+import * as utilsModule from '../../../src/utils';
 
 describe('ModuleImporter', () => {
   let moduleImporter: ModuleImporter;
@@ -93,8 +94,9 @@ describe('ModuleImporter', () => {
     const backupHandlerModule = require('../../../src/utils/backup-handler');
     backupHandlerStub = sandbox.stub(backupHandlerModule, 'default').resolves('/test/backup');
 
-    const masterLocalDetailsModule = require('../../../src/utils/common-helper');
-    masterLocalDetailsStub = sandbox.stub(masterLocalDetailsModule, 'masterLocalDetails').resolves({ code: 'en-us' });
+    // Stub on the same `../utils` barrel ModuleImporter imports from — stubbing `common-helper`
+    // directly can miss the binding CI uses (re-exports), so the real `masterLocalDetails` runs.
+    masterLocalDetailsStub = sandbox.stub(utilsModule, 'masterLocalDetails').resolves({ code: 'en-us' });
 
     const sanitizeStackModule = require('../../../src/utils/common-helper');
     sanitizeStackStub = sandbox.stub(sanitizeStackModule, 'sanitizeStack').resolves();
@@ -509,7 +511,8 @@ describe('ModuleImporter', () => {
 
         await importer.start();
 
-        expect(importer['stackAPIClient'].locale.calledOnce).to.be.true;
+        expect(masterLocalDetailsStub.calledOnce).to.be.true;
+        expect(masterLocalDetailsStub.firstCall.args[0]).to.equal(importer['stackAPIClient']);
         expect(importer['importConfig'].master_locale).to.deep.equal({ code: 'en-us' });
         expect(importer['importConfig'].masterLocale).to.deep.equal({ code: 'en-us' });
       });
@@ -534,13 +537,7 @@ describe('ModuleImporter', () => {
 
       it('should set both master_locale and masterLocale', async () => {
         mockImportConfig.master_locale = undefined;
-
-        const localeMock = {
-          query: sandbox.stub().returnsThis(),
-          find: sandbox.stub().resolves({ items: [{ code: 'de-de' }] }),
-        };
-        mockStackClient.locale = sandbox.stub().returns(localeMock);
-        mockStackClient._localeMock = localeMock;
+        masterLocalDetailsStub.resolves({ code: 'de-de' });
 
         const importer = new ModuleImporter(mockManagementClient as any, mockImportConfig);
 
@@ -552,23 +549,19 @@ describe('ModuleImporter', () => {
 
       it('should handle error when masterLocalDetails fails', async () => {
         mockImportConfig.master_locale = undefined;
-
-        const localeMock = {
-          query: sandbox.stub().returnsThis(),
-          find: sandbox.stub().rejects(new Error('Master locale fetch failed')),
-        };
-        mockStackClient.locale = sandbox.stub().returns(localeMock);
-        mockStackClient._localeMock = localeMock;
+        masterLocalDetailsStub.rejects(new Error('Master locale fetch failed'));
 
         const importer = new ModuleImporter(mockManagementClient as any, mockImportConfig);
 
+        let caught: unknown;
         try {
           await importer.start();
-          expect.fail('Should have thrown an error');
-        } catch (error: any) {
-          expect(error).to.be.an('error');
-          expect(error.message).to.equal('Master locale fetch failed');
+        } catch (e) {
+          caught = e;
         }
+
+        expect(caught).to.be.instanceOf(Error);
+        expect((caught as Error).message).to.equal('Master locale fetch failed');
       });
     });
 
