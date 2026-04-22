@@ -1,15 +1,16 @@
+import { cliux, formatDate, formatTime } from '@contentstack/cli-utilities';
 import fs from 'fs';
-import { cliux, formatTime, formatDate } from '@contentstack/cli-utilities';
-import { entryCreateScript } from './entry-create-script';
-import { entryUpdateScript } from './entry-update-script';
-import { entryCreateUpdateScript } from './entry-create-update-script';
+
 import { assetFolderCreateScript } from './asset-folder-create-script';
+import { entryCreateScript } from './entry-create-script';
+import { entryCreateUpdateScript } from './entry-create-update-script';
+import { entryUpdateScript } from './entry-update-script';
 
 type CreateMergeScriptsProps = {
-  uid: string;
   entry_merge_strategy?: string;
-  type?: string;
   status?: string;
+  type?: string;
+  uid: string;
 };
 
 export function generateMergeScripts(mergeSummary, mergeJobUID) {
@@ -28,8 +29,8 @@ export function generateMergeScripts(mergeSummary, mergeJobUID) {
 
     const mergeStrategies = {
       asset_create_folder: assetFolderCreateScript,
-      merge_existing_new: entryCreateUpdateScript,
       merge_existing: entryUpdateScript,
+      merge_existing_new: entryCreateUpdateScript,
       merge_new: entryCreateScript,
     };
 
@@ -45,7 +46,7 @@ export function generateMergeScripts(mergeSummary, mergeJobUID) {
       }
     };
 
-    processContentType({ type: 'assets', uid: '', entry_merge_strategy: '' }, mergeStrategies['asset_create_folder']);
+    processContentType({ entry_merge_strategy: '', type: 'assets', uid: '' }, mergeStrategies['asset_create_folder']);
     processContentTypes(mergeSummary.modified, 'Modified');
     processContentTypes(mergeSummary.added, 'New');
 
@@ -90,7 +91,7 @@ export function createMergeScripts(contentType: CreateMergeScriptsProps, mergeJo
         fs.mkdirSync(fullPath);
       }
       let filePath: string;
-      let milliSeconds = date.getMilliseconds().toString().padStart(3, '0');
+      const milliSeconds = date.getMilliseconds().toString().padStart(3, '0');
       if (contentType.type === 'assets') {
         filePath = `${fullPath}/${fileCreatedAt}${milliSeconds}_create_assets_folder.js`;
       } else {
