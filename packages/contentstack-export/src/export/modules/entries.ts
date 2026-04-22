@@ -10,7 +10,7 @@ import {
 } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 import { Export, ExportProjects } from '@contentstack/cli-variants';
-import { fsUtil, PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
+import { fsUtil, getExportBasePath, PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
 import BaseClass, { ApiOptions } from './base-class';
 import { ExportConfig, ModuleClassParams } from '../../types';
 
@@ -41,20 +41,18 @@ export default class EntriesExport extends BaseClass {
     this.stackAPIClient = stackAPIClient;
     this.exportConfig = exportConfig;
     this.entriesConfig = exportConfig.modules.entries;
+    const basePath = getExportBasePath(exportConfig);
     this.entriesDirPath = path.resolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(basePath),
       sanitizePath(this.entriesConfig.dirName),
     );
     this.localesFilePath = path.resolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(basePath),
       sanitizePath(exportConfig.modules.locales.dirName),
       sanitizePath(exportConfig.modules.locales.fileName),
     );
     this.contentTypesDirPath = path.resolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(basePath),
       sanitizePath(exportConfig.modules.content_types.dirName),
     );
     this.projectInstance = new ExportProjects(this.exportConfig);
