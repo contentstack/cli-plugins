@@ -332,7 +332,7 @@ describe('Import Config Handler', () => {
       expect(result.branchAlias).to.equal('my-branch');
     });
 
-    it('should set branchName and branchDir from branch flag', async () => {
+    it('should set branchName from branch flag', async () => {
       const importCmdFlags = {
         data: '/test/content',
         branch: 'my-branch',
@@ -341,7 +341,7 @@ describe('Import Config Handler', () => {
       const result = await setupConfig(importCmdFlags);
 
       expect(result.branchName).to.equal('my-branch');
-      expect(result.branchDir).to.equal(path.resolve('/test/content'));
+      expect(result.contentDir).to.equal(path.resolve('/test/content'));
     });
 
     it('should set moduleName and singleModuleImport from module flag', async () => {

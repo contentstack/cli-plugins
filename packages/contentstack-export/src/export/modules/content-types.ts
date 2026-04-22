@@ -4,7 +4,7 @@ import { PATH_CONSTANTS } from '../../constants';
 
 import BaseClass from './base-class';
 import { ExportConfig, ModuleClassParams } from '../../types';
-import { fsUtil, executeTask, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
+import { fsUtil, executeTask, getExportBasePath, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
 
 export default class ContentTypesExport extends BaseClass {
   private stackAPIClient: ReturnType<ContentstackClient['stack']>;
@@ -48,8 +48,7 @@ export default class ContentTypesExport extends BaseClass {
     this.applyQueryFilters(this.qs, 'content-types');
 
     this.contentTypesDirPath = path.resolve(
-      sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(getExportBasePath(exportConfig)),
       sanitizePath(this.contentTypesConfig.dirName),
     );
     this.contentTypes = [];

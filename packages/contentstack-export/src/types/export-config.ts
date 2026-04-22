@@ -16,7 +16,6 @@ export default interface ExportConfig extends DefaultConfig {
   contentTypes?: string[];
   branches?: branch[];
   branchEnabled?: boolean;
-  branchDir?: string;
   singleModuleExport?: boolean;
   moduleName?: Modules;
   master_locale: masterLocale;
