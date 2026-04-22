@@ -75,6 +75,7 @@
       "cm:branches:delete": "BRDEL",
       "cm:branches:diff": "BRDIF",
       "cm:branches:merge": "BRMRG",
+      "cm:branches:merge-status": "BRMST",
       "cm:branches": "BRLS"
     }
   },
