@@ -26,7 +26,6 @@ describe('ImportLocales', () => {
       management_token: 'test-token',
       contentDir: tempDir,
       modules: {
-        apiConcurrency: 5,
         types: [],
         locales: {
           dirName: 'locales',

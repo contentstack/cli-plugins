@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { stub, restore, SinonStub } from 'sinon';
 import ImportSetup, { ImportSetupDeps } from '../../src/import/import-setup';
+import defaultConfig from '../../src/config';
 import { ImportConfig, Modules } from '../../src/types';
 
 describe('ImportSetup', () => {
@@ -31,6 +32,7 @@ describe('ImportSetup', () => {
     backupDir: '',
     region: 'us',
     modules: {
+      ...defaultConfig.modules,
       extensions: {
         dirName: 'extensions',
         fileName: 'extensions',
