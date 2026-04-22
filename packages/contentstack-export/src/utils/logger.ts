@@ -4,12 +4,12 @@
  * MIT Licensed
  */
 
-import { redactObject, sanitizePath } from '@contentstack/cli-utilities';
-import mkdirp from 'mkdirp';
-import * as path from 'path';
 import * as winston from 'winston';
-
+import * as path from 'path';
+import mkdirp from 'mkdirp';
 import { ExportConfig } from '../types';
+import { sanitizePath, redactObject } from '@contentstack/cli-utilities';
+const slice = Array.prototype.slice;
 
 const ansiRegexPattern = [
   '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
@@ -39,17 +39,17 @@ function returnString(args: unknown[]) {
   return returnStr;
 }
 const myCustomLevels = {
+  levels: {
+    warn: 1,
+    info: 2,
+    debug: 3,
+  },
   colors: {
-    debug: 'green',
-    error: 'red',
     //colors aren't being used anywhere as of now, we're using chalk to add colors while logging
     info: 'blue',
+    debug: 'green',
     warn: 'yellow',
-  },
-  levels: {
-    debug: 3,
-    info: 2,
-    warn: 1,
+    error: 'red',
   },
 };
 
@@ -67,66 +67,70 @@ function init(_logPath: string) {
 
     successTransport = {
       filename: path.join(sanitizePath(logsDir), 'success.log'),
-      level: 'info',
       maxFiles: 20,
       maxsize: 1000000,
       tailable: true,
+      level: 'info',
     };
 
     errorTransport = {
       filename: path.join(sanitizePath(logsDir), 'error.log'),
-      level: 'error',
       maxFiles: 20,
       maxsize: 1000000,
       tailable: true,
+      level: 'error',
     };
 
     logger = winston.createLogger({
-      levels: myCustomLevels.levels,
       transports: [
         new winston.transports.File(successTransport),
         new winston.transports.Console({ format: winston.format.simple() }),
       ],
+      levels: myCustomLevels.levels,
     });
 
     errorLogger = winston.createLogger({
-      levels: { error: 0 },
       transports: [
         new winston.transports.File(errorTransport),
         new winston.transports.Console({
+          level: 'error',
           format: winston.format.combine(
             winston.format.colorize({ all: true, colors: { error: 'red' } }),
             winston.format.simple(),
           ),
-          level: 'error',
         }),
       ],
+      levels: { error: 0 },
     });
   }
 
   return {
-    debug: function (...args: unknown[]) {
-      const logString = returnString(args);
-      if (logString) {
-        logger.log('debug', logString);
-      }
-    },
-    error: function (...args: unknown[]) {
-      const logString = returnString(args);
-      if (logString) {
-        errorLogger.log('error', logString);
-      }
-    },
-    log: function (...args: unknown[]) {
+    log: function (message: any) {
+      const args = slice.call(arguments);
       const logString = returnString(args);
       if (logString) {
         logger.log('info', logString);
       }
     },
-    warn: function (...args: unknown[]) {
+    warn: function () {
+      const args = slice.call(arguments);
       const logString = returnString(args);
       if (logString) {
         logger.log('warn', logString);
+      }
+    },
+    error: function (message: any) {
+      const args = slice.call(arguments);
+      const logString = returnString(args);
+      if (logString) {
+        errorLogger.log('error', logString);
+      }
+    },
+    debug: function () {
+      const args = slice.call(arguments);
+      const logString = returnString(args);
+      if (logString) {
+        logger.log('debug', logString);
       }
     },
   };

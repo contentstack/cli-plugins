@@ -1,5 +1,4 @@
 import { ContentstackClient } from '@contentstack/cli-utilities';
-
 import ExportConfig from './export-config';
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -16,147 +15,144 @@ export interface PrintOptions {
 }
 
 export interface InquirePayload {
-  choices?: Array<any>;
-  message: string;
-  name: string;
-  transformer?: (value: string, answers: Record<string, unknown>) => boolean | string;
   type: string;
+  name: string;
+  message: string;
+  choices?: Array<any>;
+  transformer?: Function;
 }
 
 export interface User {
-  authtoken: string;
   email: string;
+  authtoken: string;
 }
 
 export interface Region {
-  cda: string;
-  cma: string;
   name: string;
+  cma: string;
+  cda: string;
   uiHost: string;
 }
 
 export type Modules =
+  | 'stack'
   | 'assets'
-  | 'composable-studio'
-  | 'content-types'
-  | 'custom-roles'
-  | 'entries'
+  | 'locales'
   | 'environments'
   | 'extensions'
-  | 'global-fields'
-  | 'labels'
-  | 'locales'
-  | 'marketplace-apps'
-  | 'personalize'
-  | 'publishing-rules'
-  | 'stack'
-  | 'taxonomies'
   | 'webhooks'
-  | 'workflows';
+  | 'global-fields'
+  | 'entries'
+  | 'content-types'
+  | 'custom-roles'
+  | 'workflows'
+  | 'publishing-rules'
+  | 'labels'
+  | 'marketplace-apps'
+  | 'taxonomies'
+  | 'personalize'
+  | 'composable-studio';
 
 export type ModuleClassParams = {
+  stackAPIClient: ReturnType<ContentstackClient['stack']>;
   exportConfig: ExportConfig;
   moduleName: Modules;
-  stackAPIClient: ReturnType<ContentstackClient['stack']>;
 };
 
 export interface ExternalConfig extends ExportConfig {
-  branchName: string;
-  data: string;
-  email?: string;
-  fetchConcurrency: number;
   master_locale: {
-    code: string;
     name: string;
+    code: string;
   };
-  moduleName: Modules;
-  password?: string;
-  securedAssets: boolean;
   source_stack?: string;
+  data: string;
+  branchName: string;
+  moduleName: Modules;
+  fetchConcurrency: number;
   writeConcurrency: number;
+  securedAssets: boolean;
+  email?: string;
+  password?: string;
 }
 
 export interface ExtensionsConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface MarketplaceAppsConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  dependencies?: Modules[];
 }
 
 export interface EnvironmentConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface LabelConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
   invalidKeys: string[];
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface WebhookConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface WorkflowConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
   invalidKeys: string[];
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface PublishingRulesConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
   invalidKeys: string[];
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface CustomRoleConfig {
-  customRolesLocalesFileName: string;
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  customRolesLocalesFileName: string;
+  dependencies?: Modules[];
 }
 
 export interface StackConfig {
-  dependencies?: Modules[];
   dirName: string;
   fileName: string;
+  dependencies?: Modules[];
   limit?: number;
 }
 
 export interface ComposableStudioConfig {
-  apiBaseUrl: string;
-  apiVersion: string;
   dirName: string;
   fileName: string;
+  apiBaseUrl: string;
+  apiVersion: string;
 }
 
 export interface ComposableStudioProject {
+  name: string;
+  description: string;
   canvasUrl: string;
   connectedStackApiKey: string;
   contentTypeUid: string;
-  createdAt: string;
-  createdBy: string;
-  deletedAt: boolean;
-  description: string;
-  name: string;
   organizationUid: string;
   settings: {
     configuration: {
@@ -164,9 +160,12 @@ export interface ComposableStudioProject {
       locale: string;
     };
   };
-  uid: string;
-  updatedAt: string;
+  createdBy: string;
   updatedBy: string;
+  deletedAt: boolean;
+  createdAt: string;
+  updatedAt: string;
+  uid: string;
 }
 export interface Context {
   module: string;

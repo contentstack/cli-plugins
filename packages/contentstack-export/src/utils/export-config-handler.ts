@@ -1,13 +1,12 @@
-import { cliux, configHandler,isAuthenticated, log, sanitizePath } from '@contentstack/cli-utilities';
-import { filter, includes } from 'lodash';
 import merge from 'merge';
 import * as path from 'path';
-
+import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
-import { ExportConfig } from '../types';
-import login from './basic-login';
 import { readFile } from './file-helper';
-import { askAPIKey, askExportDir } from './interactive';
+import { askExportDir, askAPIKey } from './interactive';
+import login from './basic-login';
+import { filter, includes } from 'lodash';
+import { ExportConfig } from '../types';
 
 const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   let config = merge({}, defaultConfig);
@@ -44,7 +43,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
   if (managementTokenAlias) {
     log.debug('Using management token alias', { alias: managementTokenAlias });
-    const { apiKey, token } = configHandler.get(`tokens.${managementTokenAlias}`) || {};
+    const { token, apiKey } = configHandler.get(`tokens.${managementTokenAlias}`) || {};
     config.management_token = token;
     config.apiKey = apiKey;
     authenticationMethod = 'Management Token';
@@ -98,7 +97,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
   if (exportCmdFlags['branch-alias']) {
     config.branchAlias = exportCmdFlags['branch-alias'];
-  } 
+  }
   if (exportCmdFlags['branch']) {
     config.branchName = exportCmdFlags['branch'];
   }
@@ -134,7 +133,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
     }
   }
 
-    // Add authentication details to config for context tracking
+  // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Export configuration setup completed.', { ...config });
 

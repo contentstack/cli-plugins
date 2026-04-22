@@ -1,40 +1,77 @@
+import map from 'lodash/map';
+import has from 'lodash/has';
+import find from 'lodash/find';
+import omitBy from 'lodash/omitBy';
+import entries from 'lodash/entries';
+import isEmpty from 'lodash/isEmpty';
+import { resolve as pResolve } from 'node:path';
 import { Command } from '@contentstack/cli-command';
 import {
-  ContentstackMarketplaceClient,
-  NodeCrypto,
   cliux,
-  handleAndLogError,
+  NodeCrypto,
   isAuthenticated,
-  log,
   marketplaceSDKClient,
+  ContentstackMarketplaceClient,
+  log,
   messageHandler,
+  handleAndLogError,
 } from '@contentstack/cli-utilities';
-import entries from 'lodash/entries';
-import find from 'lodash/find';
-import has from 'lodash/has';
-import isEmpty from 'lodash/isEmpty';
-import map from 'lodash/map';
-import omitBy from 'lodash/omitBy';
-import { resolve as pResolve } from 'node:path';
 
-import { ExportConfig, Installation, Manifest, MarketplaceAppsConfig, ModuleClassParams } from '../../types';
-import { createNodeCryptoInstance, fsUtil, getDeveloperHubUrl, getOrgUid } from '../../utils';
+import { fsUtil, getOrgUid, createNodeCryptoInstance, getDeveloperHubUrl } from '../../utils';
+import { ModuleClassParams, MarketplaceAppsConfig, ExportConfig, Installation, Manifest } from '../../types';
 
 export default class ExportMarketplaceApps {
-  public appSdk: ContentstackMarketplaceClient;
-  public command: Command;
-  public developerHubBaseUrl: string;
-  public exportConfig: ExportConfig;
-  protected installedApps: Installation[] = [];
   protected marketplaceAppConfig: MarketplaceAppsConfig;
+  protected installedApps: Installation[] = [];
+  public developerHubBaseUrl: string;
   public marketplaceAppPath: string;
   public nodeCrypto: NodeCrypto;
+  public appSdk: ContentstackMarketplaceClient;
+  public exportConfig: ExportConfig;
+  public command: Command;
   public query: Record<string, any>;
 
-  constructor({ exportConfig }: Omit<ModuleClassParams, 'moduleName' | 'stackAPIClient'>) {
+  constructor({ exportConfig }: Omit<ModuleClassParams, 'stackAPIClient' | 'moduleName'>) {
     this.exportConfig = exportConfig;
     this.marketplaceAppConfig = exportConfig.modules.marketplace_apps;
     this.exportConfig.context.module = 'marketplace-apps';
+  }
+
+  async start(): Promise<void> {
+    log.debug('Starting export process for Marketplace Apps...', this.exportConfig.context);
+
+    if (!isAuthenticated()) {
+      cliux.print(
+        'WARNING!!! To export Marketplace apps, you must be logged in. Please check csdx auth:login --help to log in',
+        { color: 'yellow' },
+      );
+      return Promise.resolve();
+    }
+
+    this.marketplaceAppPath = pResolve(
+      this.exportConfig.data,
+      this.exportConfig.branchName || '',
+      this.marketplaceAppConfig.dirName,
+    );
+    log.debug(`Marketplace apps folder path: '${this.marketplaceAppPath}'`, this.exportConfig.context);
+
+    await fsUtil.makeDirectory(this.marketplaceAppPath);
+    log.debug('Created Marketplace Apps directory.', this.exportConfig.context);
+
+    this.developerHubBaseUrl = this.exportConfig.developerHubBaseUrl || (await getDeveloperHubUrl(this.exportConfig));
+    log.debug(`Developer Hub base URL: '${this.developerHubBaseUrl}'`, this.exportConfig.context);
+
+    this.exportConfig.org_uid = await getOrgUid(this.exportConfig);
+    this.query = { target_uids: this.exportConfig.source_stack };
+    log.debug(`Organization UID: '${this.exportConfig.org_uid}'.`, this.exportConfig.context);
+
+    // NOTE init marketplace app sdk
+    const host = this.developerHubBaseUrl.split('://').pop();
+    log.debug(`Initializing Marketplace SDK with host: '${host}'...`, this.exportConfig.context);
+    this.appSdk = await marketplaceSDKClient({ host });
+
+    await this.exportApps();
+    log.debug('Marketplace apps export process completed.', this.exportConfig.context);
   }
 
   /**
@@ -53,10 +90,10 @@ export default class ExportMarketplaceApps {
         this.query.installation_uids = externalQuery.installation_uid?.$in?.join(',');
       }
     }
-    
+
     await this.getStackSpecificApps();
     log.debug(`Retrieved ${this.installedApps.length} stack-specific apps.`, this.exportConfig.context);
-    
+
     await this.getAppManifestAndAppConfig();
     log.debug('Completed app manifest and configuration processing.', this.exportConfig.context);
 
@@ -72,8 +109,86 @@ export default class ExportMarketplaceApps {
       }
       return app;
     });
-    
+
     log.debug(`Processed ${this.installedApps.length} Marketplace Apps.`, this.exportConfig.context);
+  }
+
+  /**
+   * The function `getAppManifestAndAppConfig` exports the manifest and configurations of installed
+   * marketplace apps.
+   */
+  async getAppManifestAndAppConfig(): Promise<void> {
+    if (isEmpty(this.installedApps)) {
+      log.info(messageHandler.parse('MARKETPLACE_APPS_NOT_FOUND'), this.exportConfig.context);
+    } else {
+      log.debug(`Processing ${this.installedApps.length} installed apps...`, this.exportConfig.context);
+
+      for (const [index, app] of entries(this.installedApps)) {
+        if (app.manifest.visibility === 'private') {
+          log.debug(`Processing private app manifest: '${app.manifest.name}'...`, this.exportConfig.context);
+          await this.getPrivateAppsManifest(+index, app);
+        }
+      }
+
+      for (const [index, app] of entries(this.installedApps)) {
+        log.debug(
+          `Processing app configurations for: '${app.manifest?.name || app.uid}'...`,
+          this.exportConfig.context,
+        );
+        await this.getAppConfigurations(+index, app);
+      }
+
+      const marketplaceAppsFilePath = pResolve(this.marketplaceAppPath, this.marketplaceAppConfig.fileName);
+      log.debug(`Writing Marketplace Apps to: '${marketplaceAppsFilePath}'`, this.exportConfig.context);
+      fsUtil.writeFile(marketplaceAppsFilePath, this.installedApps);
+
+      log.success(
+        messageHandler.parse('MARKETPLACE_APPS_EXPORT_COMPLETE', Object.keys(this.installedApps).length),
+        this.exportConfig.context,
+      );
+    }
+  }
+
+  /**
+   * The function `getPrivateAppsManifest` fetches the manifest of a private app and assigns it to the
+   * `manifest` property of the corresponding installed app.
+   * @param {number} index - The `index` parameter is a number that represents the position of the app
+   * in an array or list. It is used to identify the specific app in the `installedApps` array.
+   * @param {App} appInstallation - The `appInstallation` parameter is an object that represents the
+   * installation details of an app. It contains information such as the UID (unique identifier) of the
+   * app's manifest.
+   */
+  async getPrivateAppsManifest(index: number, appInstallation: Installation) {
+    log.debug(
+      `Fetching private app manifest for: '${appInstallation.manifest.name}' (UID: ${appInstallation.manifest.uid})...`,
+      this.exportConfig.context,
+    );
+
+    const manifest = await this.appSdk
+      .marketplace(this.exportConfig.org_uid)
+      .app(appInstallation.manifest.uid)
+      .fetch({ include_oauth: true })
+      .catch((error) => {
+        log.debug(
+          `Failed to fetch private app manifest for: '${appInstallation.manifest.name}'.`,
+          this.exportConfig.context,
+        );
+        handleAndLogError(
+          error,
+          {
+            ...this.exportConfig.context,
+          },
+          messageHandler.parse('MARKETPLACE_APP_MANIFEST_EXPORT_FAILED', appInstallation.manifest.name),
+        );
+      });
+
+    if (manifest) {
+      log.debug(
+        `Successfully fetched private app manifest for: '${appInstallation.manifest.name}'.`,
+        this.exportConfig.context,
+      );
+      this.installedApps[index].manifest = manifest as unknown as Manifest;
+    }
   }
 
   /**
@@ -102,7 +217,7 @@ export default class ExportMarketplaceApps {
 
         if (has(data, 'server_configuration') || has(data, 'configuration')) {
           log.debug(`Found configuration data for app: '${app}'.`, this.exportConfig.context);
-          
+
           if (!this.nodeCrypto && (has(data, 'server_configuration') || has(data, 'configuration'))) {
             log.debug(`Initializing NodeCrypto for app: '${app}'...`, this.exportConfig.context);
             this.nodeCrypto = await createNodeCryptoInstance(this.exportConfig);
@@ -144,72 +259,6 @@ export default class ExportMarketplaceApps {
   }
 
   /**
-   * The function `getAppManifestAndAppConfig` exports the manifest and configurations of installed
-   * marketplace apps.
-   */
-  async getAppManifestAndAppConfig(): Promise<void> {
-    if (isEmpty(this.installedApps)) {
-      log.info(messageHandler.parse('MARKETPLACE_APPS_NOT_FOUND'), this.exportConfig.context);
-    } else {
-      log.debug(`Processing ${this.installedApps.length} installed apps...`, this.exportConfig.context);
-      
-      for (const [index, app] of entries(this.installedApps)) {
-        if (app.manifest.visibility === 'private') {
-          log.debug(`Processing private app manifest: '${app.manifest.name}'...`, this.exportConfig.context);
-          await this.getPrivateAppsManifest(+index, app);
-        }
-      }
-
-      for (const [index, app] of entries(this.installedApps)) {
-        log.debug(`Processing app configurations for: '${app.manifest?.name || app.uid}'...`, this.exportConfig.context);
-        await this.getAppConfigurations(+index, app);
-      }
-
-      const marketplaceAppsFilePath = pResolve(this.marketplaceAppPath, this.marketplaceAppConfig.fileName);
-      log.debug(`Writing Marketplace Apps to: '${marketplaceAppsFilePath}'`, this.exportConfig.context);
-      fsUtil.writeFile(marketplaceAppsFilePath, this.installedApps);
-
-      log.success(
-        messageHandler.parse('MARKETPLACE_APPS_EXPORT_COMPLETE', Object.keys(this.installedApps).length),
-        this.exportConfig.context,
-      );
-    }
-  }
-
-  /**
-   * The function `getPrivateAppsManifest` fetches the manifest of a private app and assigns it to the
-   * `manifest` property of the corresponding installed app.
-   * @param {number} index - The `index` parameter is a number that represents the position of the app
-   * in an array or list. It is used to identify the specific app in the `installedApps` array.
-   * @param {App} appInstallation - The `appInstallation` parameter is an object that represents the
-   * installation details of an app. It contains information such as the UID (unique identifier) of the
-   * app's manifest.
-   */
-  async getPrivateAppsManifest(index: number, appInstallation: Installation) {
-    log.debug(`Fetching private app manifest for: '${appInstallation.manifest.name}' (UID: ${appInstallation.manifest.uid})...`, this.exportConfig.context);
-    
-    const manifest = await this.appSdk
-      .marketplace(this.exportConfig.org_uid)
-      .app(appInstallation.manifest.uid)
-      .fetch({ include_oauth: true })
-      .catch((error) => {
-        log.debug(`Failed to fetch private app manifest for: '${appInstallation.manifest.name}'.`, this.exportConfig.context);
-        handleAndLogError(
-          error,
-          {
-            ...this.exportConfig.context,
-          },
-          messageHandler.parse('MARKETPLACE_APP_MANIFEST_EXPORT_FAILED', appInstallation.manifest.name),
-        );
-      });
-
-    if (manifest) {
-      log.debug(`Successfully fetched private app manifest for: '${appInstallation.manifest.name}'.`, this.exportConfig.context);
-      this.installedApps[index].manifest = manifest as unknown as Manifest;
-    }
-  }
-
-  /**
    * The function `getStackSpecificApps` retrieves a collection of marketplace apps specific to a stack
    * and stores them in the `installedApps` array.
    * @param [skip=0] - The `skip` parameter is used to determine the number of items to skip in the API
@@ -217,7 +266,7 @@ export default class ExportMarketplaceApps {
    * the API. In this code, it is initially set to 0, indicating that no items should be skipped in
    */
   async getStackSpecificApps(skip = 0) {
-    log.debug(`Fetching stack-specific apps with skip: ${skip}`, this.exportConfig.context);  
+    log.debug(`Fetching stack-specific apps with skip: ${skip}`, this.exportConfig.context);
     const collection = await this.appSdk
       .marketplace(this.exportConfig.org_uid)
       .installation()
@@ -230,9 +279,9 @@ export default class ExportMarketplaceApps {
       });
 
     if (collection) {
-      const { count, items: apps } = collection;
+      const { items: apps, count } = collection;
       log.debug(`Fetched ${apps?.length || 0} apps out of ${count}.`, this.exportConfig.context);
-      
+
       // NOTE Remove all the chain functions
       const installation = map(apps, (app) =>
         omitBy(app, (val, _key) => {
@@ -240,7 +289,7 @@ export default class ExportMarketplaceApps {
           return false;
         }),
       ) as unknown as Installation[];
-      
+
       log.debug(`Processed ${installation.length} app installations.`, this.exportConfig.context);
       this.installedApps = this.installedApps.concat(installation);
 
@@ -251,42 +300,5 @@ export default class ExportMarketplaceApps {
         log.debug('Completed fetching all stack-specific apps.', this.exportConfig.context);
       }
     }
-  }
-
-  async start(): Promise<void> {
-    log.debug('Starting export process for Marketplace Apps...', this.exportConfig.context);
-    
-    if (!isAuthenticated()) {
-      cliux.print(
-        'WARNING!!! To export Marketplace apps, you must be logged in. Please check csdx auth:login --help to log in',
-        { color: 'yellow' },
-      );
-      return Promise.resolve();
-    }
-
-    this.marketplaceAppPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.marketplaceAppConfig.dirName,
-    );
-    log.debug(`Marketplace apps folder path: '${this.marketplaceAppPath}'`, this.exportConfig.context);
-    
-    await fsUtil.makeDirectory(this.marketplaceAppPath);
-    log.debug('Created Marketplace Apps directory.', this.exportConfig.context);
-    
-    this.developerHubBaseUrl = this.exportConfig.developerHubBaseUrl || (await getDeveloperHubUrl(this.exportConfig));
-    log.debug(`Developer Hub base URL: '${this.developerHubBaseUrl}'`, this.exportConfig.context);
-    
-    this.exportConfig.org_uid = await getOrgUid(this.exportConfig);
-    this.query = { target_uids: this.exportConfig.source_stack };
-    log.debug(`Organization UID: '${this.exportConfig.org_uid}'.`, this.exportConfig.context);
-
-    // NOTE init marketplace app sdk
-    const host = this.developerHubBaseUrl.split('://').pop();
-    log.debug(`Initializing Marketplace SDK with host: '${host}'...`, this.exportConfig.context);
-    this.appSdk = await marketplaceSDKClient({ host });
-
-    await this.exportApps();
-    log.debug('Marketplace apps export process completed.', this.exportConfig.context);
   }
 }

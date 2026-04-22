@@ -1,30 +1,17 @@
 import { DefaultConfig } from '../types';
 
 const config: DefaultConfig = {
-  apis: {
-    assets: '/assets/',
-    content_types: '/content_types/',
-    entries: '/entries/',
-    environments: '/environments/',
-    extension: '/extensions',
-    globalfields: '/global_fields/',
-    labels: '/labels/',
-    locales: '/locales/',
-    stacks: '/stacks/',
-    userSession: '/user-session/',
-    users: '/stacks',
-    webhooks: '/webhooks/',
-  },
   contentVersion: 2,
-  developerHubBaseUrl: '',
+  versioning: false,
+  host: 'https://api.contentstack.io/v3',
   developerHubUrls: {
     // NOTE CDA url used as developer-hub url mapper to avoid conflict if user used any custom name
     'https://api.contentstack.io': 'https://developerhub-api.contentstack.com',
-    'https://azure-eu-api.contentstack.com': 'https://azure-eu-developerhub-api.contentstack.com',
-    'https://azure-na-api.contentstack.com': 'https://azure-na-developerhub-api.contentstack.com',
     'https://eu-api.contentstack.com': 'https://eu-developerhub-api.contentstack.com',
-    'https://gcp-eu-api.contentstack.com': 'https://gcp-eu-developerhub-api.contentstack.com',
+    'https://azure-na-api.contentstack.com': 'https://azure-na-developerhub-api.contentstack.com',
+    'https://azure-eu-api.contentstack.com': 'https://azure-eu-developerhub-api.contentstack.com',
     'https://gcp-na-api.contentstack.com': 'https://gcp-na-developerhub-api.contentstack.com',
+    'https://gcp-eu-api.contentstack.com': 'https://gcp-eu-developerhub-api.contentstack.com',
   },
   // use below hosts for eu region
   // host:'https://eu-api.contentstack.com/v3',
@@ -35,8 +22,256 @@ const config: DefaultConfig = {
   // use below hosts for gcp-na region
   // host: 'https://gcp-na-api.contentstack.com'
   // use below hosts for gcp-eu region
-  fetchConcurrency: 5,
-  host: 'https://api.contentstack.io/v3',
+  // host: 'https://gcp-eu-api.contentstack.com'
+  modules: {
+    types: [
+      'stack',
+      'assets',
+      'locales',
+      'environments',
+      'extensions',
+      'webhooks',
+      'taxonomies',
+      'global-fields',
+      'content-types',
+      'custom-roles',
+      'workflows',
+      'publishing-rules',
+      'personalize',
+      'entries',
+      'labels',
+      'marketplace-apps',
+      'composable-studio',
+    ],
+    locales: {
+      dirName: 'locales',
+      fileName: 'locales.json',
+      requiredKeys: ['code', 'uid', 'name', 'fallback_locale'],
+    },
+    masterLocale: {
+      dirName: 'locales',
+      fileName: 'master-locale.json',
+      requiredKeys: ['code', 'uid', 'name'],
+    },
+    customRoles: {
+      dirName: 'custom-roles',
+      fileName: 'custom-roles.json',
+      customRolesLocalesFileName: 'custom-roles-locales.json',
+    },
+    'custom-roles': {
+      dirName: 'custom-roles',
+      fileName: 'custom-roles.json',
+      customRolesLocalesFileName: 'custom-roles-locales.json',
+    },
+    environments: {
+      dirName: 'environments',
+      fileName: 'environments.json',
+    },
+    labels: {
+      dirName: 'labels',
+      fileName: 'labels.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
+    webhooks: {
+      dirName: 'webhooks',
+      fileName: 'webhooks.json',
+    },
+    releases: {
+      dirName: 'releases',
+      fileName: 'releases.json',
+      releasesList: 'releasesList.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
+    workflows: {
+      dirName: 'workflows',
+      fileName: 'workflows.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
+    'publishing-rules': {
+      dirName: 'workflows',
+      fileName: 'publishing-rules.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
+    globalfields: {
+      dirName: 'global_fields',
+      fileName: 'globalfields.json',
+      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+    },
+    'global-fields': {
+      dirName: 'global_fields',
+      fileName: 'globalfields.json',
+      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+    },
+    assets: {
+      dirName: 'assets',
+      fileName: 'assets.json',
+      // This is the total no. of asset objects fetched in each 'get assets' call
+      batchLimit: 20,
+      host: 'https://images.contentstack.io',
+      invalidKeys: ['created_at', 'updated_at', 'created_by', 'updated_by', '_metadata', 'published'],
+      // no of asset version files (of a single asset) that'll be downloaded parallel
+      chunkFileSize: 1, // measured on Megabits (5mb)
+      downloadLimit: 5,
+      fetchConcurrency: 5,
+      assetsMetaKeys: [], // Default keys ['uid', 'url', 'filename']
+      securedAssets: false,
+      displayExecutionTime: false,
+      enableDownloadStatus: false,
+      includeVersionedAssets: false,
+    },
+    content_types: {
+      dirName: 'content_types',
+      fileName: 'content_types.json',
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
+      // total no of content types fetched in each 'get content types' call
+      limit: 100,
+    },
+    'content-types': {
+      dirName: 'content_types',
+      fileName: 'content_types.json',
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
+      // total no of content types fetched in each 'get content types' call
+      limit: 100,
+    },
+    entries: {
+      dirName: 'entries',
+      fileName: 'entries.json',
+      invalidKeys: [
+        'stackHeaders',
+        'content_type_uid',
+        'urlPath',
+        'created_at',
+        'updated_at',
+        'created_by',
+        'updated_by',
+        '_metadata',
+        'published',
+      ],
+      batchLimit: 20,
+      downloadLimit: 5,
+      // total no of entries fetched in each content type in a single call
+      limit: 100,
+      dependencies: ['locales', 'content-types'],
+      exportVersions: false,
+    },
+    personalize: {
+      baseURL: {
+        'AWS-NA': 'https://personalize-api.contentstack.com',
+        'AWS-EU': 'https://eu-personalize-api.contentstack.com',
+        'AWS-AU': 'https://au-personalize-api.contentstack.com',
+        'AZURE-NA': 'https://azure-na-personalize-api.contentstack.com',
+        'AZURE-EU': 'https://azure-eu-personalize-api.contentstack.com',
+        'GCP-NA': 'https://gcp-na-personalize-api.contentstack.com',
+        'GCP-EU': 'https://gcp-eu-personalize-api.contentstack.com',
+      },
+      dirName: 'personalize',
+      exportOrder: ['attributes', 'audiences', 'events', 'experiences'],
+      projects: {
+        dirName: 'projects',
+        fileName: 'projects.json',
+      },
+      attributes: {
+        dirName: 'attributes',
+        fileName: 'attributes.json',
+      },
+      audiences: {
+        dirName: 'audiences',
+        fileName: 'audiences.json',
+      },
+      events: {
+        dirName: 'events',
+        fileName: 'events.json',
+      },
+      experiences: {
+        dirName: 'experiences',
+        fileName: 'experiences.json',
+      },
+    },
+    variantEntry: {
+      serveMockData: false,
+      dirName: 'variants',
+      fileName: 'index.json',
+      chunkFileSize: 1,
+      query: {
+        skip: 0,
+        limit: 100,
+        include_variant: false,
+        include_count: true,
+        include_publish_details: true,
+      },
+      mockDataPath: './variant-mock-data.json',
+    },
+    extensions: {
+      dirName: 'extensions',
+      fileName: 'extensions.json',
+    },
+    stack: {
+      dirName: 'stack',
+      fileName: 'stack.json',
+    },
+    dependency: {
+      entries: ['stack', 'locales', 'content-types'],
+    },
+    marketplace_apps: {
+      dirName: 'marketplace_apps',
+      fileName: 'marketplace_apps.json',
+    },
+    'marketplace-apps': {
+      dirName: 'marketplace_apps',
+      fileName: 'marketplace_apps.json',
+    },
+    'composable-studio': {
+      dirName: 'composable_studio',
+      fileName: 'composable_studio.json',
+      apiBaseUrl: 'https://composable-studio-api.contentstack.com',
+      apiVersion: 'v1',
+    },
+    taxonomies: {
+      dirName: 'taxonomies',
+      fileName: 'taxonomies.json',
+      invalidKeys: ['updated_at', 'created_by', 'updated_by', 'stackHeaders', 'urlPath', 'created_at'],
+      limit: 100,
+    },
+    events: {
+      dirName: 'events',
+      fileName: 'events.json',
+      invalidKeys: [
+        'updatedAt',
+        'createdBy',
+        'updatedBy',
+        '_id',
+        'createdAt',
+        'createdByUserName',
+        'updatedByUserName',
+      ],
+    },
+    audiences: {
+      dirName: 'audiences',
+      fileName: 'audiences.json',
+      invalidKeys: [
+        'updatedAt',
+        'createdBy',
+        'updatedBy',
+        '_id',
+        'createdAt',
+        'createdByUserName',
+        'updatedByUserName',
+      ],
+    },
+    attributes: {
+      dirName: 'attributes',
+      fileName: 'attributes.json',
+      invalidKeys: [
+        'updatedAt',
+        'createdBy',
+        'updatedBy',
+        '_id',
+        'createdAt',
+        'createdByUserName',
+        'updatedByUserName',
+      ],
+    },
+  },
   languagesCode: [
     'af-za',
     'sq-al',
@@ -247,262 +482,27 @@ const config: DefaultConfig = {
     'xh',
     'zu',
   ],
-  marketplaceAppEncryptionKey: 'nF2ejRQcTv',
-  // host: 'https://gcp-eu-api.contentstack.com'
-  modules: {
-    assets: {
-      assetsMetaKeys: [], // Default keys ['uid', 'url', 'filename']
-      // This is the total no. of asset objects fetched in each 'get assets' call
-      batchLimit: 20,
-      // no of asset version files (of a single asset) that'll be downloaded parallel
-      chunkFileSize: 1, // measured on Megabits (5mb)
-      dirName: 'assets',
-      displayExecutionTime: false,
-      downloadLimit: 5,
-      enableDownloadStatus: false,
-      fetchConcurrency: 5,
-      fileName: 'assets.json',
-      host: 'https://images.contentstack.io',
-      includeVersionedAssets: false,
-      invalidKeys: ['created_at', 'updated_at', 'created_by', 'updated_by', '_metadata', 'published'],
-      securedAssets: false,
-    },
-    attributes: {
-      dirName: 'attributes',
-      fileName: 'attributes.json',
-      invalidKeys: [
-        'updatedAt',
-        'createdBy',
-        'updatedBy',
-        '_id',
-        'createdAt',
-        'createdByUserName',
-        'updatedByUserName',
-      ],
-    },
-    audiences: {
-      dirName: 'audiences',
-      fileName: 'audiences.json',
-      invalidKeys: [
-        'updatedAt',
-        'createdBy',
-        'updatedBy',
-        '_id',
-        'createdAt',
-        'createdByUserName',
-        'updatedByUserName',
-      ],
-    },
-    'composable-studio': {
-      apiBaseUrl: 'https://composable-studio-api.contentstack.com',
-      apiVersion: 'v1',
-      dirName: 'composable_studio',
-      fileName: 'composable_studio.json',
-    },
-    content_types: {
-      dirName: 'content_types',
-      fileName: 'content_types.json',
-      // total no of content types fetched in each 'get content types' call
-      limit: 100,
-      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
-    },
-    'content-types': {
-      dirName: 'content_types',
-      fileName: 'content_types.json',
-      // total no of content types fetched in each 'get content types' call
-      limit: 100,
-      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
-    },
-    'custom-roles': {
-      customRolesLocalesFileName: 'custom-roles-locales.json',
-      dirName: 'custom-roles',
-      fileName: 'custom-roles.json',
-    },
-    customRoles: {
-      customRolesLocalesFileName: 'custom-roles-locales.json',
-      dirName: 'custom-roles',
-      fileName: 'custom-roles.json',
-    },
-    dependency: {
-      entries: ['stack', 'locales', 'content-types'],
-    },
-    entries: {
-      batchLimit: 20,
-      dependencies: ['locales', 'content-types'],
-      dirName: 'entries',
-      downloadLimit: 5,
-      exportVersions: false,
-      fileName: 'entries.json',
-      invalidKeys: [
-        'stackHeaders',
-        'content_type_uid',
-        'urlPath',
-        'created_at',
-        'updated_at',
-        'created_by',
-        'updated_by',
-        '_metadata',
-        'published',
-      ],
-      // total no of entries fetched in each content type in a single call
-      limit: 100,
-    },
-    environments: {
-      dirName: 'environments',
-      fileName: 'environments.json',
-    },
-    events: {
-      dirName: 'events',
-      fileName: 'events.json',
-      invalidKeys: [
-        'updatedAt',
-        'createdBy',
-        'updatedBy',
-        '_id',
-        'createdAt',
-        'createdByUserName',
-        'updatedByUserName',
-      ],
-    },
-    extensions: {
-      dirName: 'extensions',
-      fileName: 'extensions.json',
-    },
-    'global-fields': {
-      dirName: 'global_fields',
-      fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
-    },
-    globalfields: {
-      dirName: 'global_fields',
-      fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
-    },
-    labels: {
-      dirName: 'labels',
-      fileName: 'labels.json',
-      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
-    },
-    locales: {
-      dirName: 'locales',
-      fileName: 'locales.json',
-      requiredKeys: ['code', 'uid', 'name', 'fallback_locale'],
-    },
-    marketplace_apps: {
-      dirName: 'marketplace_apps',
-      fileName: 'marketplace_apps.json',
-    },
-    'marketplace-apps': {
-      dirName: 'marketplace_apps',
-      fileName: 'marketplace_apps.json',
-    },
-    masterLocale: {
-      dirName: 'locales',
-      fileName: 'master-locale.json',
-      requiredKeys: ['code', 'uid', 'name'],
-    },
-    personalize: {
-      attributes: {
-        dirName: 'attributes',
-        fileName: 'attributes.json',
-      },
-      audiences: {
-        dirName: 'audiences',
-        fileName: 'audiences.json',
-      },
-      baseURL: {
-        'AWS-AU': 'https://au-personalize-api.contentstack.com',
-        'AWS-EU': 'https://eu-personalize-api.contentstack.com',
-        'AWS-NA': 'https://personalize-api.contentstack.com',
-        'AZURE-EU': 'https://azure-eu-personalize-api.contentstack.com',
-        'AZURE-NA': 'https://azure-na-personalize-api.contentstack.com',
-        'GCP-EU': 'https://gcp-eu-personalize-api.contentstack.com',
-        'GCP-NA': 'https://gcp-na-personalize-api.contentstack.com',
-      },
-      dirName: 'personalize',
-      events: {
-        dirName: 'events',
-        fileName: 'events.json',
-      },
-      experiences: {
-        dirName: 'experiences',
-        fileName: 'experiences.json',
-      },
-      exportOrder: ['attributes', 'audiences', 'events', 'experiences'],
-      projects: {
-        dirName: 'projects',
-        fileName: 'projects.json',
-      },
-    },
-    'publishing-rules': {
-      dirName: 'workflows',
-      fileName: 'publishing-rules.json',
-      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
-    },
-    releases: {
-      dirName: 'releases',
-      fileName: 'releases.json',
-      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
-      releasesList: 'releasesList.json',
-    },
-    stack: {
-      dirName: 'stack',
-      fileName: 'stack.json',
-    },
-    taxonomies: {
-      dirName: 'taxonomies',
-      fileName: 'taxonomies.json',
-      invalidKeys: ['updated_at', 'created_by', 'updated_by', 'stackHeaders', 'urlPath', 'created_at'],
-      limit: 100,
-    },
-    types: [
-      'stack',
-      'assets',
-      'locales',
-      'environments',
-      'extensions',
-      'webhooks',
-      'taxonomies',
-      'global-fields',
-      'content-types',
-      'custom-roles',
-      'workflows',
-      'publishing-rules',
-      'personalize',
-      'entries',
-      'labels',
-      'marketplace-apps',
-      'composable-studio',
-    ],
-    variantEntry: {
-      chunkFileSize: 1,
-      dirName: 'variants',
-      fileName: 'index.json',
-      mockDataPath: './variant-mock-data.json',
-      query: {
-        include_count: true,
-        include_publish_details: true,
-        include_variant: false,
-        limit: 100,
-        skip: 0,
-      },
-      serveMockData: false,
-    },
-    webhooks: {
-      dirName: 'webhooks',
-      fileName: 'webhooks.json',
-    },
-    workflows: {
-      dirName: 'workflows',
-      fileName: 'workflows.json',
-      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
-    },
+  apis: {
+    userSession: '/user-session/',
+    globalfields: '/global_fields/',
+    locales: '/locales/',
+    labels: '/labels/',
+    environments: '/environments/',
+    assets: '/assets/',
+    content_types: '/content_types/',
+    entries: '/entries/',
+    users: '/stacks',
+    extension: '/extensions',
+    webhooks: '/webhooks/',
+    stacks: '/stacks/',
   },
-  onlyTSModules: ['taxonomies'],
-  personalizationEnabled: false,
   preserveStackVersion: false,
-  versioning: false,
+  personalizationEnabled: false,
+  fetchConcurrency: 5,
   writeConcurrency: 5,
+  developerHubBaseUrl: '',
+  marketplaceAppEncryptionKey: 'nF2ejRQcTv',
+  onlyTSModules: ['taxonomies'],
 };
 
 export default config;

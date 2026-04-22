@@ -1,8 +1,8 @@
-import { sanitizePath } from '@contentstack/cli-utilities';
 import * as path from 'path';
+import { sanitizePath } from '@contentstack/cli-utilities';
 
 import { ExportConfig } from '../types';
-import { makeDirectory, writeFileSync } from './file-helper';
+import { writeFileSync, makeDirectory } from './file-helper';
 
 const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
   if (typeof config !== 'object') {
@@ -15,7 +15,6 @@ const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
     const result = await stackAPIClient
       .branch(config.branchName)
       .fetch()
-      // eslint-disable-next-line @typescript-eslint/no-empty-function -- ignore branch fetch failure; handled below
       .catch((_err: Error) => {});
     if (result && typeof result === 'object') {
       branches.push(result);
@@ -28,7 +27,6 @@ const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
         .branch()
         .query()
         .find()
-        // eslint-disable-next-line @typescript-eslint/no-empty-function -- ignore list fetch failure; handled below
         .catch((_err: Error) => {});
       if (result && result.items && Array.isArray(result.items) && result.items.length > 0) {
         branches = result.items;

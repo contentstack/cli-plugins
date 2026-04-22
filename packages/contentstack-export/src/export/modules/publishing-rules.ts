@@ -1,11 +1,11 @@
-import { handleAndLogError, log } from '@contentstack/cli-utilities';
-import isEmpty from 'lodash/isEmpty';
 import omit from 'lodash/omit';
+import isEmpty from 'lodash/isEmpty';
 import { resolve as pResolve } from 'node:path';
+import { handleAndLogError, log } from '@contentstack/cli-utilities';
 
-import { ModuleClassParams, PublishingRulesConfig } from '../../types';
-import { fsUtil } from '../../utils';
 import BaseClass from './base-class';
+import { fsUtil } from '../../utils';
+import { PublishingRulesConfig, ModuleClassParams } from '../../types';
 
 export default class ExportPublishingRules extends BaseClass {
   private readonly publishingRules: Record<string, Record<string, unknown>> = {};
@@ -52,7 +52,7 @@ export default class ExportPublishingRules extends BaseClass {
         this.qs.skip = skip;
       }
 
-      const data: { count?: number; items?: Record<string, unknown>[] } = await this.stack
+      const data: { items?: Record<string, unknown>[]; count?: number } = await this.stack
         .workflow()
         .publishRule()
         .fetchAll(this.qs);
@@ -68,10 +68,7 @@ export default class ExportPublishingRules extends BaseClass {
       for (const rule of items) {
         const uid = rule.uid as string | undefined;
         if (uid) {
-          this.publishingRules[uid] = omit(rule, this.publishingRulesConfig.invalidKeys) as Record<
-            string,
-            unknown
-          >;
+          this.publishingRules[uid] = omit(rule, this.publishingRulesConfig.invalidKeys) as Record<string, unknown>;
         }
       }
 
