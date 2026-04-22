@@ -1,30 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-export/src/export/modules/environments.ts
-    checksum: 3b606a0cab740e20fbda0a9d25d76dc7971f264b447da9b135ad1e7749b314d2
-  - filename: packages/contentstack-export/src/export/modules/webhooks.ts
-    checksum: 11ca5c4e0e1887ea1629ae4a1a762dc47a0e01f5d0f8096ee36e61183a959107
-  - filename: packages/contentstack-export/src/utils/export-config-handler.ts
-    checksum: 94e83a42ad4150ccfb6c02f6f4fac59e9fd6f58a31988b919a6ff6e027afa805
-  - filename: packages/contentstack-export/src/export/modules/workflows.ts
-    checksum: ef3d6e36cc07eca762f94c5f7f68c5c0d49e884b6099e81a1830249cac24a287
-  - filename: packages/contentstack-export/src/types/default-config.ts
-    checksum: 0cc62919207384ec710ea3f8a3445d6e5bd78cc2c5306b9e74aaeec688eb028d
-  - filename: packages/contentstack-export/src/export/modules/custom-roles.ts
-    checksum: 8a0cdd00b048fb6c5c8990cc881a324229e225970ec78ce5861da63fb3a875b4
-  - filename: packages/contentstack-export/src/export/modules/assets.ts
-    checksum: 7d64a43878f19da561da4159271873035752587a016eb7af0bb8a5592740da9d
-  - filename: packages/contentstack-export/src/export/modules/publishing-rules.ts
-    checksum: 4a4278d29878fc3627f216ee168a0896cca7644bc06f4e983f4ae0b25fefabb7
-  - filename: packages/contentstack-export/src/config/index.ts
-    checksum: 2c811d2bd7b6657b567fd120cfaf05306ca751109c070bf7b49c18d06b211764
-  - filename: packages/contentstack-export/src/export/modules/locales.ts
-    checksum: 7226915d3e9f69111bf6f3a669edd28f55167fdc86a3b1d7583e3986825aa0e5
-  - filename: packages/contentstack-export/src/export/modules/labels.ts
-    checksum: 1c970c204c6ff78fe66151352263cbb24eb86d2c7cb2e0050d1734dd002425ef
-  - filename: packages/contentstack-export/src/export/modules/extensions.ts
-    checksum: a08f2f63a13e9c41bac3c84ca52ea3ca1a147ca548e4e66ed682c320b7a830a8
-  - filename: packages/contentstack-export/src/export/modules/entries.ts
-    checksum: 691df8e31ba2a2a719ea46f1b3a0e7abe0b90355f4e91f211956189dd12aa403
-  - filename: packages/contentstack-export/src/export/modules/stack.ts
-    checksum: 316c172556694cc5421c0aca1c9470c3aaa588a87922812322a85d11816a1c90
+  - filename: pnpm-lock.yaml
+    checksum: 48a1b9aca69c8decfed0f5333c8f4a8fa4689f1cb9c00a91dd18532418ea910f
 version: '1.0'
