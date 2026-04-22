@@ -1,34 +1,34 @@
 export interface BranchOptions {
-  compareBranch: string;
-  stackAPIKey: string;
-  module: string;
-  format: string;
-  baseBranch?: string;
   authToken?: string;
-  host?: string;
+  baseBranch?: string;
+  compareBranch: string;
   csvPath?: string;
+  format: string;
+  host?: string;
+  module: string;
+  stackAPIKey: string;
 }
 
 export interface BranchDiffRes {
-  uid: string;
+  merge_strategy?: string;
+  status: string;
   title: string;
   type: string;
-  status: string;
-  merge_strategy?: string;
+  uid: string;
 }
 
 export interface BranchDiffSummary {
   base: string;
-  compare: string;
   base_only: number;
+  compare: string;
   compare_only: number;
   modified: number;
 }
 
 export interface BranchCompactTextRes {
-  modified?: BranchDiffRes[];
   added?: BranchDiffRes[];
   deleted?: BranchDiffRes[];
+  modified?: BranchDiffRes[];
 }
 
 export interface MergeSummary {
@@ -40,61 +40,61 @@ type MergeSummaryRequestPayload = {
   compare_branch: string;
   default_merge_strategy: string;
   item_merge_strategies?: any[];
-  no_revert?: boolean;
   merge_comment?: string;
+  no_revert?: boolean;
 };
 export interface MergeInputOptions {
+  baseBranch: string;
+  branchCompareData: any;
   compareBranch: string;
+  enableEntryExp: boolean;
+  executeOption?: string;
+  exportSummaryPath?: string;
+  format?: string;
+  host: string;
+  mergeComment?: string;
+  mergeSummary?: MergeSummary;
+  noRevert?: boolean;
+  stackAPIKey: string;
   strategy: string;
   strategySubOption: string;
-  branchCompareData: any;
-  mergeComment?: string;
-  executeOption?: string;
-  noRevert?: boolean;
-  baseBranch: string;
-  format?: string;
-  exportSummaryPath?: string;
-  mergeSummary?: MergeSummary;
-  stackAPIKey: string;
-  host: string;
-  enableEntryExp: boolean;
 }
 
 export interface ModifiedFieldsType {
-  uid: string;
-  displayName: string;
-  path: string;
-  field: string;
-  propertyChanges?: PropertyChange[];
   changeCount?: number;
   changeDetails?: string;
-  oldValue?: any;
+  displayName: string;
+  field: string;
   newValue?: any;
+  oldValue?: any;
+  path: string;
+  propertyChanges?: PropertyChange[];
+  uid: string;
 }
 
 export interface PropertyChange {
-  property: string;
-  changeType: 'modified' | 'added' | 'deleted';
-  oldValue?: any;
+  changeType: 'added' | 'deleted' | 'modified';
   newValue?: any;
+  oldValue?: any;
+  property: string;
 }
 
 export interface CSVRow {
-  srNo: number;
   contentTypeName: string;
   fieldName: string;
   fieldPath: string;
   operation: string;
   sourceBranchValue: string;
+  srNo: number;
   targetBranchValue: string;
 }
 
 export interface AddCSVRowParams {
-  srNo: number;
   contentTypeName: string;
   fieldName: string;
   fieldType: string;
   sourceValue: string;
+  srNo: number;
   targetValue: string;
 }
 
@@ -108,43 +108,43 @@ export interface ContentTypeItem {
 }
 
 export interface ModifiedFieldsInput {
-  modified?: ModifiedFieldsType[];
   added?: ModifiedFieldsType[];
   deleted?: ModifiedFieldsType[];
+  modified?: ModifiedFieldsType[];
 }
 
 export interface BranchModifiedDetails {
-  moduleDetails: BranchDiffRes;
   modifiedFields: ModifiedFieldsInput;
+  moduleDetails: BranchDiffRes;
 }
 
 export interface BranchDiffVerboseRes {
-  modified?: BranchModifiedDetails[];
   added?: BranchDiffRes[];
-  deleted?: BranchDiffRes[];
   csvData?: CSVRow[]; // Pre-processed CSV data
+  deleted?: BranchDiffRes[];
+  modified?: BranchModifiedDetails[];
 }
 
 export interface BranchDiffPayload {
-  module: string;
   apiKey: string;
   baseBranch: string;
   compareBranch: string;
   filter?: string;
   host?: string;
-  uid?: string;
+  module: string;
   spinner?: any;
+  uid?: string;
   url?: string;
 }
 
 export type MergeStrategy =
-  | 'merge_prefer_base'
-  | 'merge_prefer_compare'
-  | 'overwrite_with_compare'
-  | 'merge_new_only'
+  | 'ignore'
   | 'merge_modified_only_prefer_base'
   | 'merge_modified_only_prefer_compare'
-  | 'ignore';
+  | 'merge_new_only'
+  | 'merge_prefer_base'
+  | 'merge_prefer_compare'
+  | 'overwrite_with_compare';
 
 export interface MergeParams {
   base_branch: string;
@@ -152,4 +152,34 @@ export interface MergeParams {
   default_merge_strategy: MergeStrategy;
   merge_comment: string;
   no_revert?: boolean;
+}
+
+export interface MergeStatusOptions {
+  host?: string;
+  mergeUID: string;
+  stackAPIKey: string;
+}
+
+export interface GenerateScriptsOptions {
+  host?: string;
+  mergeUID: string;
+  stackAPIKey: string;
+}
+
+export interface MergeJobStatusResponse {
+  errors?: Array<{ details?: string; field?: string; message: string }>;
+  merge_details: {
+    completed_at?: string;
+    completion_percentage?: number;
+    created_at: string;
+    status: string;
+    updated_at: string;
+  };
+  merge_summary: {
+    content_types: { added: number; deleted: number; modified: number };
+    global_fields: { added: number; deleted: number; modified: number };
+  };
+  pollingTimeout?: boolean;
+  status: 'complete' | 'failed' | 'in_progress' | 'unknown';
+  uid: string;
 }
