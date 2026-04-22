@@ -1,5 +1,5 @@
 const config = {
-  skip: 0,
-  limit: 100
+  limit: 100,
+  skip: 0
 };
 export default config;
