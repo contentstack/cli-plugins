@@ -26,7 +26,14 @@ import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
 import { ExportSpaces } from '@contentstack/cli-asset-management';
-import { PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES, getOrgUid } from '../../utils';
+import {
+  getExportBasePath,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  PROCESS_STATUS,
+  MODULE_NAMES,
+  getOrgUid,
+} from '../../utils';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -80,6 +87,8 @@ export default class ExportAssets extends BaseClass {
           context: this.exportConfig.context as unknown as Record<string, unknown>,
           securedAssets: this.exportConfig.securedAssets,
           chunkFileSizeMb: assetManagementModuleConfig?.chunkFileSizeMb,
+          apiConcurrency: assetManagementModuleConfig?.apiConcurrency,
+          downloadAssetsConcurrency: assetManagementModuleConfig?.downloadAssetsConcurrency,
         });
         exporter.setParentProgressManager(progress);
         await exporter.start();
@@ -96,7 +105,7 @@ export default class ExportAssets extends BaseClass {
     this.assetsRootPath = pResolve(
       this.exportConfig.exportDir,
       this.exportConfig.branchName || '',
-      this.assetConfig.dirName,
+      (this.assetsRootPath = pResolve(getExportBasePath(this.exportConfig), this.assetConfig.dirName)),
     );
     log.debug(`Assets root path resolved to: ${this.assetsRootPath}`, this.exportConfig.context);
     log.debug('Fetching assets and folders count...', this.exportConfig.context);

@@ -20,7 +20,6 @@ export default class ExportProjects extends PersonalizationAdapter<ExportConfig>
     this.personalizeConfig = exportConfig.modules.personalize;
     this.projectsFolderPath = pResolve(
       sanitizePath(exportConfig.exportDir),
-      sanitizePath(exportConfig.branchName || ''),
       sanitizePath(this.personalizeConfig.dirName),
       'projects',
     );

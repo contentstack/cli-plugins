@@ -1,6 +1,6 @@
 import { resolve as pResolve } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type { AssetManagementExportOptions, AssetManagementAPIConfig } from '../types/asset-management-api';
 import type { ExportContext } from '../types/export-types';
@@ -46,6 +46,8 @@ export class ExportSpaces {
       return;
     }
 
+    log.debug('Starting Asset Management export process...', context);
+    log.info('Started Asset Management export', context);
     log.debug(`Exporting Asset Management 2.0 (${linkedWorkspaces.length} space(s))`, context);
     log.debug(`Spaces: ${linkedWorkspaces.map((ws) => ws.space_uid).join(', ')}`, context);
 
@@ -70,6 +72,8 @@ export class ExportSpaces {
       context,
       securedAssets,
       chunkFileSizeMb,
+      apiConcurrency: this.options.apiConcurrency,
+      downloadAssetsConcurrency: this.options.downloadAssetsConcurrency,
     };
 
     const sharedFieldsDir = pResolve(spacesRootPath, 'fields');
@@ -81,11 +85,9 @@ export class ExportSpaces {
     try {
       const exportAssetTypes = new ExportAssetTypes(apiConfig, exportContext);
       exportAssetTypes.setParentProgressManager(progress);
-      await exportAssetTypes.start(firstSpaceUid);
-
       const exportFields = new ExportFields(apiConfig, exportContext);
       exportFields.setParentProgressManager(progress);
-      await exportFields.start(firstSpaceUid);
+      await Promise.all([exportAssetTypes.start(firstSpaceUid), exportFields.start(firstSpaceUid)]);
 
       for (const ws of linkedWorkspaces) {
         progress.updateStatus(`Exporting space: ${ws.space_uid}...`, AM_MAIN_PROCESS_NAME);
@@ -109,9 +111,11 @@ export class ExportSpaces {
       }
 
       progress.completeProcess(AM_MAIN_PROCESS_NAME, true);
+      log.info('Asset Management export completed successfully', context);
       log.debug('Asset Management 2.0 export completed', context);
     } catch (err) {
       progress.completeProcess(AM_MAIN_PROCESS_NAME, false);
+      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management export failed');
       throw err;
     }
   }

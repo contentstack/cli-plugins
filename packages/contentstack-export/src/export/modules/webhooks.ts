@@ -5,7 +5,7 @@ import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilit
 
 import BaseClass from './base-class';
 import { WebhookConfig, ModuleClassParams } from '../../types';
-import { fsUtil, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
+import { fsUtil, getExportBasePath, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
 
 export default class ExportWebhooks extends BaseClass {
   private webhooks: Record<string, Record<string, string>>;
@@ -33,8 +33,7 @@ export default class ExportWebhooks extends BaseClass {
       // Setup with loading spinner
       const [totalCount] = await this.withLoadingSpinner('WEBHOOKS: Analyzing webhooks...', async () => {
         this.webhooksFolderPath = pResolve(
-          this.exportConfig.exportDir,
-          this.exportConfig.branchName || '',
+          getExportBasePath(this.exportConfig),
           this.webhookConfig.dirName,
         );
 

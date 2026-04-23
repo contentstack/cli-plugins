@@ -13,15 +13,17 @@ export default class ExportAssetTypes extends AssetManagementExportAdapter {
 
   async start(spaceUid: string): Promise<void> {
     await this.init();
+
+    log.debug('Starting shared asset types export process...', this.exportContext.context);
+
     const assetTypesData = await this.getWorkspaceAssetTypes(spaceUid);
     const items = getArrayFromResponse(assetTypesData, 'asset_types');
     const dir = this.getAssetTypesDir();
-    log.debug(
-      items.length === 0
-        ? 'No asset types, wrote empty asset-types'
-        : `Writing ${items.length} shared asset types`,
-      this.exportContext.context,
-    );
+    if (items.length === 0) {
+      log.info('No asset types to export, writing empty asset-types', this.exportContext.context);
+    } else {
+      log.debug(`Writing ${items.length} shared asset types`, this.exportContext.context);
+    }
     await this.writeItemsToChunkedJson(dir, 'asset-types.json', 'asset_types', ['uid', 'title', 'category', 'file_extension'], items);
     this.tick(true, PROCESS_NAMES.AM_ASSET_TYPES, null);
   }
