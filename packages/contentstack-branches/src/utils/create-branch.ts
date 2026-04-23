@@ -1,6 +1,6 @@
 import { cliux, managementSDKClient } from '@contentstack/cli-utilities';
 
-export async function createBranch(host: string, apiKey: string, branch: { uid: string; source: string }) {
+export async function createBranch(host: string, apiKey: string, branch: { source: string; uid: string }) {
   const managementAPIClient = await managementSDKClient({ host });
   managementAPIClient
     .stack({ api_key: apiKey })
@@ -11,7 +11,7 @@ export async function createBranch(host: string, apiKey: string, branch: { uid: 
         'Branch creation in progress. Once ready, it will show in the results of the branch list command `csdx cm:branches`',
       ),
     )
-    .catch((err: { errorCode: number; errorMessage: string, errors:any }) => {
+    .catch((err: { errorCode: number; errorMessage: string, errors: any }) => {
       if (err.errorCode === 910)
         cliux.error(`error : Branch with UID '${branch.uid}' already exists, please enter a unique branch UID`);
       else if (err.errorCode === 903){
