@@ -22,6 +22,7 @@ export default class ExportTaxonomies extends BaseClass {
   private isLocaleBasedExportSupported: boolean = true; // Flag to track if locale-based export is supported
   private qs: {
     include_count: boolean;
+    include_publish_details: boolean;
     skip: number;
     asc?: string;
     limit: number;
@@ -29,6 +30,7 @@ export default class ExportTaxonomies extends BaseClass {
     branch?: string;
     include_fallback?: boolean;
     fallback_locale?: string;
+    query?: Record<string, unknown>;
   };
   public taxonomiesFolderPath: string;
   private localesFilePath: string;
@@ -38,7 +40,12 @@ export default class ExportTaxonomies extends BaseClass {
     this.taxonomies = {};
     this.taxonomiesByLocale = {};
     this.taxonomiesConfig = exportConfig.modules.taxonomies;
-    this.qs = { include_count: true, limit: this.taxonomiesConfig.limit || 100, skip: 0 };
+    this.qs = {
+      include_count: true,
+      include_publish_details: true,
+      limit: this.taxonomiesConfig.limit || 100,
+      skip: 0,
+    };
 
     this.applyQueryFilters(this.qs, 'taxonomies');
     this.exportConfig.context.module = MODULE_CONTEXTS.TAXONOMIES;
