@@ -3,6 +3,8 @@ export type ExportContext = {
   context?: Record<string, unknown>;
   securedAssets?: boolean;
   chunkFileSizeMb?: number;
+  apiConcurrency?: number;
+  downloadAssetsConcurrency?: number;
 };
 
 /**

@@ -109,6 +109,32 @@ export const readdir = function (dirPath: string): any {
   }
 };
 
+/**
+ * Returns true if the path exists, is a directory, and contains at least one entry.
+ */
+export function isDirectoryNonEmpty(absolutePath: string): boolean {
+  if (!absolutePath || !fs.existsSync(absolutePath)) {
+    return false;
+  }
+
+  let stat: fs.Stats;
+  try {
+    stat = fs.statSync(absolutePath);
+  } catch {
+    return false;
+  }
+
+  if (!stat.isDirectory()) {
+    return false;
+  }
+
+  try {
+    return fs.readdirSync(absolutePath).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 exports.fileExistsSync = function (path: string) {
   return fs.existsSync(path);
 };
