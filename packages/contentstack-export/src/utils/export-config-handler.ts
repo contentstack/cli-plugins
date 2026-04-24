@@ -1,6 +1,6 @@
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated,cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
@@ -97,7 +97,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
   if (exportCmdFlags['branch-alias']) {
     config.branchAlias = exportCmdFlags['branch-alias'];
-  } 
+  }
   if (exportCmdFlags['branch']) {
     config.branchName = exportCmdFlags['branch'];
   }
@@ -133,7 +133,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
     }
   }
 
-    // Add authentication details to config for context tracking
+  // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Export configuration setup completed.', { ...config });
 

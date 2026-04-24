@@ -24,7 +24,7 @@ function returnString(args: unknown[]) {
         if (item && typeof item === 'object') {
           try {
             const redactedObject = redactObject(item);
-            if(redactedObject && typeof redactedObject === 'object') {
+            if (redactedObject && typeof redactedObject === 'object') {
               return JSON.stringify(redactedObject);
             }
           } catch (error) {}
