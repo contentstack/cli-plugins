@@ -1,5 +1,6 @@
 import { Command } from '@contentstack/cli-command';
 import { messageHandler, flags, isAuthenticated } from '@contentstack/cli-utilities';
+import path from 'path';
 import { createBranch } from '../../../utils/create-branch';
 import { interactive, handleErrorMsg } from '../../../utils';
 
@@ -27,6 +28,11 @@ export default class BranchCreateCommand extends Command {
   static aliases: string[] = []; // Note: alternative usage if any
 
   async run(): Promise<any> {
+    if (messageHandler.isEmptyMessages()) {
+      messageHandler.init({
+        messageFilePath: path.join(__dirname, '..', '..', '..', 'messages', 'index.json'),
+      });
+    }
     const { flags: branchCreateFlags } = await this.parse(BranchCreateCommand);
     let apiKey = branchCreateFlags['stack-api-key'];
     let branch = {

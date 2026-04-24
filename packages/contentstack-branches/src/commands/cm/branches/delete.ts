@@ -1,5 +1,6 @@
 import { Command } from '@contentstack/cli-command';
 import { messageHandler, flags, cliux, isAuthenticated } from '@contentstack/cli-utilities';
+import path from 'path';
 import { deleteBranch } from '../../../utils/delete-branch';
 import { interactive, handleErrorMsg } from '../../../utils';
 
@@ -30,6 +31,11 @@ export default class BranchDeleteCommand extends Command {
   static aliases: string[] = []; // Note: alternative usage if any
 
   async run(): Promise<any> {
+    if (messageHandler.isEmptyMessages()) {
+      messageHandler.init({
+        messageFilePath: path.join(__dirname, '..', '..', '..', 'messages', 'index.json'),
+      });
+    }
     const { flags: branchDeleteFlags } = await this.parse(BranchDeleteCommand);
     let apiKey = branchDeleteFlags['stack-api-key'];
     if (!isAuthenticated()) {

@@ -7,6 +7,7 @@ import {
   isAuthenticated,
   TableHeader,
 } from '@contentstack/cli-utilities';
+import path from 'path';
 import { getbranchesList, getbranchConfig, interactive, handleErrorMsg } from '../../../utils/index';
 import chalk from 'chalk';
 export default class BranchListCommand extends Command {
@@ -25,6 +26,11 @@ export default class BranchListCommand extends Command {
 
   async run(): Promise<any> {
     try {
+      if (messageHandler.isEmptyMessages()) {
+        messageHandler.init({
+          messageFilePath: path.join(__dirname, '..', '..', '..', 'messages', 'index.json'),
+        });
+      }
       const managementAPIClient = await managementSDKClient({ host: this.cmaHost });
       const { flags: branchListFlags } = await this.parse(BranchListCommand);
       let stackApiKey = branchListFlags['stack-api-key'];

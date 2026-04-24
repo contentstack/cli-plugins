@@ -54,11 +54,11 @@ export default class ImportSetupCommand extends Command {
       description:
         "The name of the branch where you want to import your content. If you don't mention the branch name, then by default the content will be imported to the main branch.",
       parse: printFlagDeprecation(['-B'], ['--branch']),
-      exclusive: ['branch-alias']
+      exclusive: ['branch-alias'],
     }),
     'branch-alias': flags.string({
       description:
-        "Specify the branch alias where you want to import your content. If not specified, the content is imported into the main branch by default.",
+        'Specify the branch alias where you want to import your content. If not specified, the content is imported into the main branch by default.',
       exclusive: ['branch'],
     }),
   };
@@ -69,17 +69,22 @@ export default class ImportSetupCommand extends Command {
 
   async run(): Promise<void> {
     try {
+      if (messageHandler.isEmptyMessages()) {
+        messageHandler.init({
+          messageFilePath: path.join(__dirname, '..', '..', '..', '..', 'messages', 'index.json'),
+        });
+      }
       const { flags } = await this.parse(ImportSetupCommand);
       let importSetupConfig = await setupImportConfig(flags);
       // Prepare the context object
       createLogContext(
         this.context?.info?.command || 'cm:stacks:import-setup',
         importSetupConfig.apiKey,
-        configHandler.get('authenticationMethod')
+        configHandler.get('authenticationMethod'),
       );
-      
+
       importSetupConfig.context = { module: '' };
-      
+
       // Note setting host to create cma client
       importSetupConfig.host = this.cmaHost;
       importSetupConfig.region = this.region;
@@ -99,5 +104,4 @@ export default class ImportSetupCommand extends Command {
       handleAndLogError(error);
     }
   }
-
 }
