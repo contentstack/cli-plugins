@@ -16,6 +16,8 @@ import {
   createLogContext,
 } from '@contentstack/cli-utilities';
 
+import path from 'path';
+
 import { ModuleExporter } from '../../../export';
 import { ExportConfig } from '../../../types';
 import { setupExportConfig, writeExportMetaFile } from '../../../utils';
@@ -117,6 +119,12 @@ export default class ExportCommand extends Command {
   static aliases: string[] = ['cm:export'];
 
   async run(): Promise<void> {
+    if (messageHandler.isEmptyMessages()) {
+      messageHandler.init({
+        messageFilePath: path.join(__dirname, '..', '..', '..', '..', 'messages', 'index.json'),
+      });
+    }
+
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);

@@ -1,5 +1,6 @@
 import { Command } from '@contentstack/cli-command';
 import { messageHandler, flags, isAuthenticated } from '@contentstack/cli-utilities';
+import path from 'path';
 import { BranchOptions } from '../../../interfaces/index';
 import { BranchDiffHandler } from '../../../branch';
 import { handleErrorMsg } from '../../../utils';
@@ -58,6 +59,11 @@ export default class BranchDiffCommand extends Command {
 
   async run(): Promise<any> {
     try {
+      if (messageHandler.isEmptyMessages()) {
+        messageHandler.init({
+          messageFilePath: path.join(__dirname, '..', '..', '..', 'messages', 'index.json'),
+        });
+      }
       const { flags: branchDiffFlags } = await this.parse(BranchDiffCommand);
       let options: BranchOptions = {
         baseBranch: branchDiffFlags['base-branch'],

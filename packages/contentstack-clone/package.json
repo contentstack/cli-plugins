@@ -9,7 +9,7 @@
     "@contentstack/cli-cm-export": "~1.25.0",
     "@contentstack/cli-cm-import": "~1.33.0",
     "@contentstack/cli-command": "~1.8.1",
-    "@contentstack/cli-utilities": "~1.18.2",
+    "@contentstack/cli-utilities": "~1.18.3",
     "@oclif/core": "^4.10.5",
     "@oclif/plugin-help": "^6.2.28",
     "chalk": "^4.1.2",
