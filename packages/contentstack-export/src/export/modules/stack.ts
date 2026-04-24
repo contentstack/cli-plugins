@@ -77,7 +77,10 @@ export default class ExportStack extends BaseClass {
       .stack({ api_key: this.exportConfig.source_stack })
       .fetch()
       .then((data: any) => {
-        log.debug(`Successfully fetched stack data for: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
+        log.debug(
+          `Successfully fetched stack data for: '${this.exportConfig.source_stack}'.`,
+          this.exportConfig.context,
+        );
         return data;
       })
       .catch((error: any) => {
@@ -168,7 +171,10 @@ export default class ExportStack extends BaseClass {
         return resp;
       })
       .catch((error: any) => {
-        log.debug(`An error occurred while exporting stack: '${this.exportConfig.source_stack}'.`, this.exportConfig.context);
+        log.debug(
+          `An error occurred while exporting stack: '${this.exportConfig.source_stack}'.`,
+          this.exportConfig.context,
+        );
         handleAndLogError(error, { ...this.exportConfig.context });
       });
   }

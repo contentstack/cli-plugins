@@ -46,6 +46,7 @@ export type Modules =
   | 'content-types'
   | 'custom-roles'
   | 'workflows'
+  | 'publishing-rules'
   | 'labels'
   | 'marketplace-apps'
   | 'taxonomies'
@@ -89,6 +90,12 @@ export interface WebhookConfig {
 }
 
 export interface WorkflowConfig {
+  dirName: string;
+  fileName: string;
+  invalidKeys: string[];
+}
+
+export interface PublishingRulesConfig {
   dirName: string;
   fileName: string;
   invalidKeys: string[];

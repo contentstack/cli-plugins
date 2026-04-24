@@ -39,7 +39,7 @@ export default class ExportMarketplaceApps {
 
   async start(): Promise<void> {
     log.debug('Starting export process for Marketplace Apps...', this.exportConfig.context);
-    
+
     if (!isAuthenticated()) {
       cliux.print(
         'WARNING!!! To export Marketplace apps, you must be logged in. Please check csdx auth:login --help to log in',
@@ -54,13 +54,13 @@ export default class ExportMarketplaceApps {
       this.marketplaceAppConfig.dirName,
     );
     log.debug(`Marketplace apps folder path: '${this.marketplaceAppPath}'`, this.exportConfig.context);
-    
+
     await fsUtil.makeDirectory(this.marketplaceAppPath);
     log.debug('Created Marketplace Apps directory.', this.exportConfig.context);
-    
+
     this.developerHubBaseUrl = this.exportConfig.developerHubBaseUrl || (await getDeveloperHubUrl(this.exportConfig));
     log.debug(`Developer Hub base URL: '${this.developerHubBaseUrl}'`, this.exportConfig.context);
-    
+
     this.exportConfig.org_uid = await getOrgUid(this.exportConfig);
     this.query = { target_uids: this.exportConfig.source_stack };
     log.debug(`Organization UID: '${this.exportConfig.org_uid}'.`, this.exportConfig.context);
@@ -90,10 +90,10 @@ export default class ExportMarketplaceApps {
         this.query.installation_uids = externalQuery.installation_uid?.$in?.join(',');
       }
     }
-    
+
     await this.getStackSpecificApps();
     log.debug(`Retrieved ${this.installedApps.length} stack-specific apps.`, this.exportConfig.context);
-    
+
     await this.getAppManifestAndAppConfig();
     log.debug('Completed app manifest and configuration processing.', this.exportConfig.context);
 
@@ -109,7 +109,7 @@ export default class ExportMarketplaceApps {
       }
       return app;
     });
-    
+
     log.debug(`Processed ${this.installedApps.length} Marketplace Apps.`, this.exportConfig.context);
   }
 
@@ -122,7 +122,7 @@ export default class ExportMarketplaceApps {
       log.info(messageHandler.parse('MARKETPLACE_APPS_NOT_FOUND'), this.exportConfig.context);
     } else {
       log.debug(`Processing ${this.installedApps.length} installed apps...`, this.exportConfig.context);
-      
+
       for (const [index, app] of entries(this.installedApps)) {
         if (app.manifest.visibility === 'private') {
           log.debug(`Processing private app manifest: '${app.manifest.name}'...`, this.exportConfig.context);
@@ -131,7 +131,10 @@ export default class ExportMarketplaceApps {
       }
 
       for (const [index, app] of entries(this.installedApps)) {
-        log.debug(`Processing app configurations for: '${app.manifest?.name || app.uid}'...`, this.exportConfig.context);
+        log.debug(
+          `Processing app configurations for: '${app.manifest?.name || app.uid}'...`,
+          this.exportConfig.context,
+        );
         await this.getAppConfigurations(+index, app);
       }
 
@@ -156,14 +159,20 @@ export default class ExportMarketplaceApps {
    * app's manifest.
    */
   async getPrivateAppsManifest(index: number, appInstallation: Installation) {
-    log.debug(`Fetching private app manifest for: '${appInstallation.manifest.name}' (UID: ${appInstallation.manifest.uid})...`, this.exportConfig.context);
-    
+    log.debug(
+      `Fetching private app manifest for: '${appInstallation.manifest.name}' (UID: ${appInstallation.manifest.uid})...`,
+      this.exportConfig.context,
+    );
+
     const manifest = await this.appSdk
       .marketplace(this.exportConfig.org_uid)
       .app(appInstallation.manifest.uid)
       .fetch({ include_oauth: true })
       .catch((error) => {
-        log.debug(`Failed to fetch private app manifest for: '${appInstallation.manifest.name}'.`, this.exportConfig.context);
+        log.debug(
+          `Failed to fetch private app manifest for: '${appInstallation.manifest.name}'.`,
+          this.exportConfig.context,
+        );
         handleAndLogError(
           error,
           {
@@ -174,7 +183,10 @@ export default class ExportMarketplaceApps {
       });
 
     if (manifest) {
-      log.debug(`Successfully fetched private app manifest for: '${appInstallation.manifest.name}'.`, this.exportConfig.context);
+      log.debug(
+        `Successfully fetched private app manifest for: '${appInstallation.manifest.name}'.`,
+        this.exportConfig.context,
+      );
       this.installedApps[index].manifest = manifest as unknown as Manifest;
     }
   }
@@ -205,7 +217,7 @@ export default class ExportMarketplaceApps {
 
         if (has(data, 'server_configuration') || has(data, 'configuration')) {
           log.debug(`Found configuration data for app: '${app}'.`, this.exportConfig.context);
-          
+
           if (!this.nodeCrypto && (has(data, 'server_configuration') || has(data, 'configuration'))) {
             log.debug(`Initializing NodeCrypto for app: '${app}'...`, this.exportConfig.context);
             this.nodeCrypto = await createNodeCryptoInstance(this.exportConfig);
@@ -254,7 +266,7 @@ export default class ExportMarketplaceApps {
    * the API. In this code, it is initially set to 0, indicating that no items should be skipped in
    */
   async getStackSpecificApps(skip = 0) {
-    log.debug(`Fetching stack-specific apps with skip: ${skip}`, this.exportConfig.context);  
+    log.debug(`Fetching stack-specific apps with skip: ${skip}`, this.exportConfig.context);
     const collection = await this.appSdk
       .marketplace(this.exportConfig.org_uid)
       .installation()
@@ -269,7 +281,7 @@ export default class ExportMarketplaceApps {
     if (collection) {
       const { items: apps, count } = collection;
       log.debug(`Fetched ${apps?.length || 0} apps out of ${count}.`, this.exportConfig.context);
-      
+
       // NOTE Remove all the chain functions
       const installation = map(apps, (app) =>
         omitBy(app, (val, _key) => {
@@ -277,7 +289,7 @@ export default class ExportMarketplaceApps {
           return false;
         }),
       ) as unknown as Installation[];
-      
+
       log.debug(`Processed ${installation.length} app installations.`, this.exportConfig.context);
       this.installedApps = this.installedApps.concat(installation);
 

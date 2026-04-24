@@ -27,7 +27,7 @@ export default class ExportWebhooks extends BaseClass {
 
   async start(): Promise<void> {
     log.debug('Starting webhooks export process...', this.exportConfig.context);
-    
+
     this.webhooksFolderPath = pResolve(
       this.exportConfig.data,
       this.exportConfig.branchName || '',
@@ -37,10 +37,10 @@ export default class ExportWebhooks extends BaseClass {
 
     await fsUtil.makeDirectory(this.webhooksFolderPath);
     log.debug('Created webhooks directory', this.exportConfig.context);
-    
+
     await this.getWebhooks();
     log.debug(`Retrieved ${Object.keys(this.webhooks).length} webhooks`, this.exportConfig.context);
-    
+
     if (this.webhooks === undefined || isEmpty(this.webhooks)) {
       log.info(messageHandler.parse('WEBHOOK_NOT_FOUND'), this.exportConfig.context);
     } else {
@@ -61,7 +61,7 @@ export default class ExportWebhooks extends BaseClass {
     } else {
       log.debug('Fetching webhooks with initial query', this.exportConfig.context);
     }
-    
+
     log.debug(`Query parameters: ${JSON.stringify(this.qs)}`, this.exportConfig.context);
 
     await this.stack
@@ -70,7 +70,7 @@ export default class ExportWebhooks extends BaseClass {
       .then(async (data: any) => {
         const { items, count } = data;
         log.debug(`Fetched ${items?.length || 0} webhooks out of total ${count}`, this.exportConfig.context);
-        
+
         if (items?.length) {
           log.debug(`Processing ${items.length} webhooks`, this.exportConfig.context);
           this.sanitizeAttribs(items);
@@ -93,16 +93,19 @@ export default class ExportWebhooks extends BaseClass {
 
   sanitizeAttribs(webhooks: Record<string, string>[]) {
     log.debug(`Sanitizing ${webhooks.length} webhooks`, this.exportConfig.context);
-    
+
     for (let index = 0; index < webhooks?.length; index++) {
       const webhookUid = webhooks[index].uid;
       const webhookName = webhooks[index]?.name;
       log.debug(`Processing webhook: ${webhookName} (${webhookUid})`, this.exportConfig.context);
-      
+
       this.webhooks[webhookUid] = omit(webhooks[index], ['SYS_ACL']);
       log.success(messageHandler.parse('WEBHOOK_EXPORT_SUCCESS', webhookName), this.exportConfig.context);
     }
-    
-    log.debug(`Sanitization complete. Total webhooks processed: ${Object.keys(this.webhooks).length}`, this.exportConfig.context);
+
+    log.debug(
+      `Sanitization complete. Total webhooks processed: ${Object.keys(this.webhooks).length}`,
+      this.exportConfig.context,
+    );
   }
 }
