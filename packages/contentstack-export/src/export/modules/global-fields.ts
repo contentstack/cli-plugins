@@ -1,11 +1,5 @@
 import * as path from 'path';
-import {
-  ContentstackClient,
-  handleAndLogError,
-  messageHandler,
-  log,
-  sanitizePath,
-} from '@contentstack/cli-utilities';
+import { ContentstackClient, handleAndLogError, messageHandler, log, sanitizePath } from '@contentstack/cli-utilities';
 
 import { fsUtil } from '../../utils';
 import { ExportConfig, ModuleClassParams } from '../../types';
@@ -56,17 +50,17 @@ export default class GlobalFieldsExport extends BaseClass {
   async start() {
     try {
       log.debug('Starting export process for global fields...', this.exportConfig.context);
-      log.debug(`Global fields directory path: '${this.globalFieldsDirPath}'`, this.exportConfig.context); 
+      log.debug(`Global fields directory path: '${this.globalFieldsDirPath}'`, this.exportConfig.context);
       await fsUtil.makeDirectory(this.globalFieldsDirPath);
       log.debug('Created global fields directory.', this.exportConfig.context);
-      
+
       await this.getGlobalFields();
       log.debug(`Retrieved ${this.globalFields.length} global fields.`, this.exportConfig.context);
-      
+
       const globalFieldsFilePath = path.join(this.globalFieldsDirPath, this.globalFieldsConfig.fileName);
       log.debug(`Writing global fields to: '${globalFieldsFilePath}'`, this.exportConfig.context);
       fsUtil.writeFile(globalFieldsFilePath, this.globalFields);
-      
+
       log.success(
         messageHandler.parse('GLOBAL_FIELDS_EXPORT_COMPLETE', this.globalFields.length),
         this.exportConfig.context,
@@ -83,11 +77,16 @@ export default class GlobalFieldsExport extends BaseClass {
       log.debug(`Fetching global fields with skip: ${skip}.`, this.exportConfig.context);
     }
     log.debug(`Query parameters: ${JSON.stringify(this.qs)}.`, this.exportConfig.context);
-    
+
     let globalFieldsFetchResponse = await this.stackAPIClient.globalField({ api_version: '3.2' }).query(this.qs).find();
-    
-    log.debug(`Fetched ${globalFieldsFetchResponse.items?.length || 0} global fields out of ${globalFieldsFetchResponse.count}.`, this.exportConfig.context);
-    
+
+    log.debug(
+      `Fetched ${globalFieldsFetchResponse.items?.length || 0} global fields out of ${
+        globalFieldsFetchResponse.count
+      }.`,
+      this.exportConfig.context,
+    );
+
     if (Array.isArray(globalFieldsFetchResponse.items) && globalFieldsFetchResponse.items.length > 0) {
       log.debug(`Processing ${globalFieldsFetchResponse.items.length} global fields...`, this.exportConfig.context);
       this.sanitizeAttribs(globalFieldsFetchResponse.items);
@@ -105,10 +104,10 @@ export default class GlobalFieldsExport extends BaseClass {
 
   sanitizeAttribs(globalFields: Record<string, string>[]) {
     log.debug(`Sanitizing ${globalFields.length} global fields...`, this.exportConfig.context);
-    
+
     globalFields.forEach((globalField: Record<string, string>) => {
       log.debug(`Processing global field: '${globalField.uid || 'unknown'}'...`, this.exportConfig.context);
-      
+
       for (let key in globalField) {
         if (this.globalFieldsConfig.validKeys.indexOf(key) === -1) {
           delete globalField[key];
@@ -116,7 +115,10 @@ export default class GlobalFieldsExport extends BaseClass {
       }
       this.globalFields.push(globalField);
     });
-    
-    log.debug(`Sanitization complete. Total global fields processed: ${this.globalFields.length}.`, this.exportConfig.context);
+
+    log.debug(
+      `Sanitization complete. Total global fields processed: ${this.globalFields.length}.`,
+      this.exportConfig.context,
+    );
   }
 }

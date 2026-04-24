@@ -35,7 +35,7 @@ export default class ExportEnvironments extends BaseClass {
 
     await fsUtil.makeDirectory(this.environmentsFolderPath);
     log.debug('Environments directory created.', this.exportConfig.context);
-    
+
     await this.getEnvironments();
     log.debug(`Retrieved ${Object.keys(this.environments).length} environments.`, this.exportConfig.context);
 
@@ -59,9 +59,9 @@ export default class ExportEnvironments extends BaseClass {
     } else {
       log.debug('Fetching environments with initial query...', this.exportConfig.context);
     }
-    
+
     log.debug(`Query parameters: ${JSON.stringify(this.qs)}`, this.exportConfig.context);
-    
+
     await this.stack
       .environment()
       .query(this.qs)
@@ -69,7 +69,7 @@ export default class ExportEnvironments extends BaseClass {
       .then(async (data: any) => {
         const { items, count } = data;
         log.debug(`Fetched ${items?.length || 0} environments out of ${count} total.`, this.exportConfig.context);
-        
+
         if (items?.length) {
           log.debug(`Processing ${items.length} environments.`, this.exportConfig.context);
           this.sanitizeAttribs(items);
@@ -92,16 +92,19 @@ export default class ExportEnvironments extends BaseClass {
 
   sanitizeAttribs(environments: Record<string, string>[]) {
     log.debug(`Sanitizing ${environments.length} environments...`, this.exportConfig.context);
-    
+
     for (let index = 0; index < environments?.length; index++) {
       const extUid = environments[index].uid;
       const envName = environments[index]?.name;
       log.debug(`Processing environment: ${envName} (${extUid})`, this.exportConfig.context);
-      
+
       this.environments[extUid] = omit(environments[index], ['ACL']);
-      log.success(messageHandler.parse('ENVIRONMENT_EXPORT_SUCCESS', envName ), this.exportConfig.context);
+      log.success(messageHandler.parse('ENVIRONMENT_EXPORT_SUCCESS', envName), this.exportConfig.context);
     }
-    
-    log.debug(`Sanitization complete. Total environments processed: ${Object.keys(this.environments).length}`, this.exportConfig.context);
+
+    log.debug(
+      `Sanitization complete. Total environments processed: ${Object.keys(this.environments).length}`,
+      this.exportConfig.context,
+    );
   }
 }

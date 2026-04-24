@@ -1,11 +1,5 @@
 import * as path from 'path';
-import {
-  ContentstackClient,
-  handleAndLogError,
-  messageHandler,
-  log,
-  sanitizePath,
-} from '@contentstack/cli-utilities';
+import { ContentstackClient, handleAndLogError, messageHandler, log, sanitizePath } from '@contentstack/cli-utilities';
 
 import BaseClass from './base-class';
 import { fsUtil, executeTask } from '../../utils';
@@ -86,7 +80,9 @@ export default class ContentTypesExport extends BaseClass {
     const contentTypeSearchResponse = await this.stackAPIClient.contentType().query(this.qs).find();
 
     log.debug(
-      `Fetched ${contentTypeSearchResponse.items?.length || 0} content types out of total ${contentTypeSearchResponse.count}`,
+      `Fetched ${contentTypeSearchResponse.items?.length || 0} content types out of total ${
+        contentTypeSearchResponse.count
+      }`,
       this.exportConfig.context,
     );
 

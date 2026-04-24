@@ -1,4 +1,10 @@
-import { cliux, handleAndLogError, NodeCrypto, managementSDKClient, createDeveloperHubUrl } from '@contentstack/cli-utilities';
+import {
+  cliux,
+  handleAndLogError,
+  NodeCrypto,
+  managementSDKClient,
+  createDeveloperHubUrl,
+} from '@contentstack/cli-utilities';
 
 import { ExportConfig } from '../types';
 
@@ -12,7 +18,7 @@ export async function getOrgUid(config: ExportConfig): Promise<string> {
     .stack({ api_key: config.source_stack })
     .fetch()
     .catch((error: any) => {
-      handleAndLogError(error, {...config.context});
+      handleAndLogError(error, { ...config.context });
     });
 
   return tempStackData?.org_uid;
