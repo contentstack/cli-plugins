@@ -112,6 +112,11 @@ const config: DefaultConfig = {
       enableDownloadStatus: false,
       includeVersionedAssets: false,
     },
+    'asset-management': {
+      chunkFileSizeMb: 1,
+      apiConcurrency: 5,
+      downloadAssetsConcurrency: 5,
+    },
     content_types: {
       dirName: 'content_types',
       fileName: 'content_types.json',
