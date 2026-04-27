@@ -30,10 +30,10 @@ importers:
         version: 1.18.2(@types/node@20.19.39)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.28
-        version: 6.2.44
+        version: 6.2.45
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -55,7 +55,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/chai':
         specifier: ^4.3.20
         version: 4.3.20
@@ -79,7 +79,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@5.9.3)
+        version: 6.0.160(eslint@8.57.1)(typescript@5.9.3)
       eslint-config-oclif-typescript:
         specifier: ^3.1.14
         version: 3.1.14(eslint@8.57.1)(typescript@5.9.3)
@@ -108,7 +108,7 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~1.15.2
+        specifier: ~1.15.1
         version: link:../contentstack-seed
       '@contentstack/cli-command':
         specifier: ~1.8.1
@@ -121,10 +121,10 @@ importers:
         version: 1.18.2(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.37
-        version: 6.2.44
+        version: 6.2.45
       inquirer:
         specifier: 8.2.7
         version: 8.2.7(@types/node@14.18.63)
@@ -137,7 +137,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/inquirer':
         specifier: ^9.0.8
         version: 9.0.9
@@ -158,7 +158,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       eslint-config-oclif-typescript:
         specifier: ^3.1.14
         version: 3.1.14(eslint@8.57.1)(typescript@4.9.5)
@@ -191,10 +191,10 @@ importers:
         version: 1.18.2(@types/node@22.19.17)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.28
-        version: 6.2.44
+        version: 6.2.45
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -225,7 +225,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       mocha:
         specifier: 10.8.2
         version: 10.8.2
@@ -258,10 +258,10 @@ importers:
         version: 1.18.2(@types/node@22.19.17)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.44
-        version: 6.2.44
+        version: 6.2.45
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -280,7 +280,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       chai:
         specifier: ^4.5.0
         version: 4.5.0
@@ -289,7 +289,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@5.9.3)
+        version: 6.0.160(eslint@8.57.1)(typescript@5.9.3)
       mocha:
         specifier: ^10.8.2
         version: 10.8.2
@@ -306,10 +306,10 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@contentstack/cli-cm-export':
-        specifier: ~1.25.0
+        specifier: ~1.24.2
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
-        specifier: ~1.33.0
+        specifier: ~1.32.2
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~1.8.1
@@ -319,10 +319,10 @@ importers:
         version: 1.18.2(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.28
-        version: 6.2.44
+        version: 6.2.45
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -347,7 +347,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/chai':
         specifier: ^4.3.0
         version: 4.3.20
@@ -371,7 +371,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       mocha:
         specifier: ^10.8.2
         version: 10.8.2
@@ -404,7 +404,7 @@ importers:
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       async:
         specifier: ^3.2.6
         version: 3.2.6
@@ -447,10 +447,10 @@ importers:
         version: 1.3.1
       '@oclif/plugin-help':
         specifier: ^6.2.28
-        version: 6.2.44
+        version: 6.2.45
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/big-json':
         specifier: ^3.2.5
         version: 3.2.5
@@ -483,7 +483,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.68
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       mocha:
         specifier: 10.8.2
         version: 10.8.2
@@ -516,10 +516,10 @@ importers:
         version: 1.18.2(@types/node@20.19.39)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.32
-        version: 6.2.44
+        version: 6.2.45
       fast-csv:
         specifier: ^4.3.6
         version: 4.3.6
@@ -535,7 +535,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/chai':
         specifier: ^4.3.20
         version: 4.3.20
@@ -559,7 +559,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@5.9.3)
+        version: 6.0.160(eslint@8.57.1)(typescript@5.9.3)
       eslint-config-oclif-typescript:
         specifier: ^3.1.14
         version: 3.1.14(eslint@8.57.1)(typescript@5.9.3)
@@ -601,7 +601,7 @@ importers:
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       big-json:
         specifier: ^3.2.0
         version: 3.2.0
@@ -641,7 +641,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/big-json':
         specifier: ^3.2.5
         version: 3.2.5
@@ -677,7 +677,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.89
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       mocha:
         specifier: ^10.8.2
         version: 10.8.2
@@ -707,7 +707,7 @@ importers:
         version: 1.18.2(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       big-json:
         specifier: ^3.2.0
         version: 3.2.0
@@ -771,7 +771,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       mocha:
         specifier: ^10.8.2
         version: 10.8.2
@@ -804,10 +804,10 @@ importers:
         version: 1.18.2(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.44
-        version: 6.2.44
+        version: 6.2.45
       async:
         specifier: ^3.2.6
         version: 3.2.6
@@ -832,7 +832,7 @@ importers:
     devDependencies:
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/mocha':
         specifier: ^8.2.3
         version: 8.2.3
@@ -847,7 +847,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.62
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       jsdoc-to-markdown:
         specifier: ^8.0.3
         version: 8.0.3
@@ -879,7 +879,7 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-        specifier: ~1.33.0
+        specifier: ~1.32.1
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~1.8.1
@@ -926,7 +926,7 @@ importers:
         version: 8.57.1
       eslint-config-oclif:
         specifier: ^6.0.137
-        version: 6.0.159(eslint@8.57.1)(typescript@4.9.5)
+        version: 6.0.160(eslint@8.57.1)(typescript@4.9.5)
       eslint-config-oclif-typescript:
         specifier: ^3.1.14
         version: 3.1.14(eslint@8.57.1)(typescript@4.9.5)
@@ -953,10 +953,10 @@ importers:
         version: 1.18.2(@types/node@20.19.39)
       '@oclif/core':
         specifier: ^4.10.5
-        version: 4.10.5
+        version: 4.10.6
       '@oclif/plugin-help':
         specifier: ^6.2.44
-        version: 6.2.44
+        version: 6.2.45
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -972,7 +972,7 @@ importers:
         version: 1.3.1
       '@oclif/test':
         specifier: ^4.1.18
-        version: 4.1.18(@oclif/core@4.10.5)
+        version: 4.1.18(@oclif/core@4.10.6)
       '@types/node':
         specifier: ^20.19.39
         version: 20.19.39
@@ -1345,8 +1345,8 @@ packages:
   '@contentstack/cli-utilities@1.18.2':
     resolution: {integrity: sha512-FgfIXgpFTOePa9V6obnKJDhJcpcn4Jr1wCz5n3owsnzkxiMpR3BPyXQBh1CCatcdj5a/HICEmppDqfPbFkEikw==}
 
-  '@contentstack/management@1.30.1':
-    resolution: {integrity: sha512-rwceQJ78/yRORDwlq+vO5ge5C02YIfiHvCPxpJXA/UJwHTuwehkMH6wQzFdBHnWItQU+ymT4oN9lX1uA31V52A==}
+  '@contentstack/management@1.30.2':
+    resolution: {integrity: sha512-DPr/4N35dbclU/PAugB3PGom5MSxYOqicIgP7TPnOlO6TY7r76VIPiycu8yXck71RH+Dmeni1+cMwMlIfzrYOQ==}
     engines: {node: '>=8.0.0'}
 
   '@contentstack/marketplace-sdk@1.5.1':
@@ -1934,24 +1934,24 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@oclif/core@4.10.5':
-    resolution: {integrity: sha512-qcdCF7NrdWPfme6Kr34wwljRCXbCVpL1WVxiNy0Ep6vbWKjxAjFQwuhqkoyL0yjI+KdwtLcOCGn5z2yzdijc8w==}
+  '@oclif/core@4.10.6':
+    resolution: {integrity: sha512-ySCOYnPKZE3KACT1V9It99hWG9b8E5MpagbRdWxPNRO3beMqmbr4SLUQoFtZ9XRtW++kks1ZVwZOdpnR8rpb9A==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/core@4.9.0':
     resolution: {integrity: sha512-k/ntRgDcUprTT+aaNoF+whk3cY3f9fRD2lkF6ul7JeCUg2MaMXVXZXfbRhJCfsiX51X8/5Pqo0LGdO9SLYXNHg==}
     engines: {node: '>=18.0.0'}
 
-  '@oclif/plugin-help@6.2.44':
-    resolution: {integrity: sha512-x03Se2LtlOOlGfTuuubt5C4Z8NHeR4zKXtVnfycuLU+2VOMu2WpsGy9nbs3nYuInuvsIY1BizjVaTjUz060Sig==}
+  '@oclif/plugin-help@6.2.45':
+    resolution: {integrity: sha512-avWOKYmjANtyu8ipju/kopIIrSrbS/scJjiZTpBp/HKEHNm46v5riOo5LQj6MZ4bYJVQEoyHPg/2Seig5Ilkjw==}
     engines: {node: '>=18.0.0'}
 
-  '@oclif/plugin-not-found@3.2.80':
-    resolution: {integrity: sha512-yTLjWvR1r/Rd/cO2LxHdMCDoL5sQhBYRUcOMCmxZtWVWhx4rAZ8KVUPDVsb+SvjJDV5ADTDBgt1H52fFx7YWqg==}
+  '@oclif/plugin-not-found@3.2.81':
+    resolution: {integrity: sha512-M88tLONBH36hLAbkFbmCo1hoZPSdU5l8Px1xEIlIgSmGMam+CoAzx4kGqpLbokgfpaHeP8/Jx3QJ18u9ef/2Qw==}
     engines: {node: '>=18.0.0'}
 
-  '@oclif/plugin-warn-if-update-available@3.1.60':
-    resolution: {integrity: sha512-cRKBZm14IuA6G8W84dfd3iXj3BTAoxQ5o3pUE8DKEQ4n/tVha20t5nkVeD+ISC68e0Fuw5koTMvRwXb1lJSnzg==}
+  '@oclif/plugin-warn-if-update-available@3.1.61':
+    resolution: {integrity: sha512-4XcrTxcCs+brR/eZ0BPeuiREiH3USlJiaHbUqPhnIBuyxhhUSYVd8ZO6s5MQN7AXJq4SMQ+B5zLaHq+ep/afIw==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/test@4.1.18':
@@ -2752,8 +2752,8 @@ packages:
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
 
-  ajv@8.18.0:
-    resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
+  ajv@8.20.0:
+    resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==}
 
   ansi-colors@4.1.3:
     resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
@@ -2969,8 +2969,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  baseline-browser-mapping@2.10.21:
-    resolution: {integrity: sha512-Q+rUQ7Uz8AHM7DEaNdwvfFCTq7a43lNTzuS94eiWqwyxfV/wJv+oUivef51T91mmRY4d4A1u9rcSvkeufCVXlA==}
+  baseline-browser-mapping@2.10.23:
+    resolution: {integrity: sha512-xwVXGqevyKPsiuQdLj+dZMVjidjJV508TBqexND5HrF89cGdCYCJFB3qhcxRHSeMctdCfbR1jrxBajhDy7o29g==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -3081,8 +3081,8 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
-  caniuse-lite@1.0.30001790:
-    resolution: {integrity: sha512-bOoxfJPyYo+ds6W0YfptaCWbFnJYjh2Y1Eow5lRv+vI2u8ganPZqNm1JwNh0t2ELQCqIWg4B3dWEusgAmsoyOw==}
+  caniuse-lite@1.0.30001791:
+    resolution: {integrity: sha512-yk0l/YSrOnFZk3UROpDLQD9+kC1l4meK/wed583AXrzoarMGJcbRi2Q4RaUYbKxYAsZ8sWmaSa/DsLmdBeI1vQ==}
 
   capital-case@1.0.4:
     resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
@@ -3641,8 +3641,8 @@ packages:
     resolution: {integrity: sha512-NNTyyolSmKJicgxtoWZ/hoy2Rw56WIoWCFxgnBkXqDgi9qPKMwZs2Nx2b6SHLJvCiWWhZhWr5V46CFPo3PSPag==}
     engines: {node: '>=18.0.0'}
 
-  eslint-config-oclif@6.0.159:
-    resolution: {integrity: sha512-tzfcFO1kYLJeuSgM4QOVW/GJROeAcd5Nwzx5dwonK4FECoKAArjZQ5ZY7Z+uK/nAABIym5ihxWgdkSrgqbJARg==}
+  eslint-config-oclif@6.0.160:
+    resolution: {integrity: sha512-ObWYOTSLk60UdQkJNTDzh7vVQpPtysz8O4Wwf6Ui7+DJErVjCdaYB0F5qAaOoUr2Jq3hnukO0Hh0PY6rAfG9yw==}
     engines: {node: '>=18.18.0'}
 
   eslint-config-xo-space@0.35.0:
@@ -7292,8 +7292,8 @@ snapshots:
     dependencies:
       '@contentstack/cli-command': 1.8.1(@types/node@22.19.17)
       '@contentstack/cli-utilities': 1.18.2(@types/node@22.19.17)
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       otplib: 12.0.1
     transitivePeerDependencies:
       - '@types/node'
@@ -7302,8 +7302,8 @@ snapshots:
   '@contentstack/cli-command@1.8.1(@types/node@14.18.63)':
     dependencies:
       '@contentstack/cli-utilities': 1.18.2(@types/node@14.18.63)
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       contentstack: 3.27.0
     transitivePeerDependencies:
       - '@types/node'
@@ -7312,8 +7312,8 @@ snapshots:
   '@contentstack/cli-command@1.8.1(@types/node@14.18.63)(debug@4.4.3)':
     dependencies:
       '@contentstack/cli-utilities': 1.18.2(@types/node@14.18.63)(debug@4.4.3)
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       contentstack: 3.27.0
     transitivePeerDependencies:
       - '@types/node'
@@ -7322,8 +7322,8 @@ snapshots:
   '@contentstack/cli-command@1.8.1(@types/node@20.19.39)':
     dependencies:
       '@contentstack/cli-utilities': 1.18.2(@types/node@20.19.39)
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       contentstack: 3.27.0
     transitivePeerDependencies:
       - '@types/node'
@@ -7332,8 +7332,8 @@ snapshots:
   '@contentstack/cli-command@1.8.1(@types/node@22.19.17)':
     dependencies:
       '@contentstack/cli-utilities': 1.18.2(@types/node@22.19.17)
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       contentstack: 3.27.0
     transitivePeerDependencies:
       - '@types/node'
@@ -7344,8 +7344,8 @@ snapshots:
       '@contentstack/cli-command': 1.8.1(@types/node@14.18.63)
       '@contentstack/cli-utilities': 1.18.2(@types/node@14.18.63)
       '@contentstack/utils': 1.9.1
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       lodash: 4.18.1
     transitivePeerDependencies:
       - '@types/node'
@@ -7356,8 +7356,8 @@ snapshots:
       '@contentstack/cli-command': 1.8.1(@types/node@22.19.17)
       '@contentstack/cli-utilities': 1.18.2(@types/node@22.19.17)
       '@contentstack/utils': 1.9.1
-      '@oclif/core': 4.10.5
-      '@oclif/plugin-help': 6.2.44
+      '@oclif/core': 4.10.6
+      '@oclif/plugin-help': 6.2.45
       lodash: 4.18.1
     transitivePeerDependencies:
       - '@types/node'
@@ -7365,8 +7365,8 @@ snapshots:
 
   '@contentstack/cli-dev-dependencies@1.3.1':
     dependencies:
-      '@oclif/core': 4.10.5
-      '@oclif/test': 4.1.18(@oclif/core@4.10.5)
+      '@oclif/core': 4.10.6
+      '@oclif/test': 4.1.18(@oclif/core@4.10.6)
       fancy-test: 2.0.42
       lodash: 4.18.1
     transitivePeerDependencies:
@@ -7374,9 +7374,9 @@ snapshots:
 
   '@contentstack/cli-utilities@1.18.2(@types/node@14.18.63)':
     dependencies:
-      '@contentstack/management': 1.30.1(debug@4.4.3)
+      '@contentstack/management': 1.30.2(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.1(debug@4.4.3)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       axios: 1.15.0(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
@@ -7409,9 +7409,9 @@ snapshots:
 
   '@contentstack/cli-utilities@1.18.2(@types/node@14.18.63)(debug@4.4.3)':
     dependencies:
-      '@contentstack/management': 1.30.1(debug@4.4.3)
+      '@contentstack/management': 1.30.2(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.1(debug@4.4.3)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       axios: 1.15.0(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
@@ -7444,9 +7444,9 @@ snapshots:
 
   '@contentstack/cli-utilities@1.18.2(@types/node@20.19.39)':
     dependencies:
-      '@contentstack/management': 1.30.1(debug@4.4.3)
+      '@contentstack/management': 1.30.2(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.1(debug@4.4.3)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       axios: 1.15.0(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
@@ -7479,9 +7479,9 @@ snapshots:
 
   '@contentstack/cli-utilities@1.18.2(@types/node@22.19.17)':
     dependencies:
-      '@contentstack/management': 1.30.1(debug@4.4.3)
+      '@contentstack/management': 1.30.2(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.1(debug@4.4.3)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       axios: 1.15.0(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
@@ -7512,7 +7512,7 @@ snapshots:
       - '@types/node'
       - debug
 
-  '@contentstack/management@1.30.1(debug@4.4.3)':
+  '@contentstack/management@1.30.2(debug@4.4.3)':
     dependencies:
       '@contentstack/utils': 1.9.1
       assert: 2.1.0
@@ -8442,7 +8442,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@oclif/core@4.10.5':
+  '@oclif/core@4.10.6':
     dependencies:
       ansi-escapes: 4.3.2
       ansis: 3.17.0
@@ -8484,40 +8484,40 @@ snapshots:
       wordwrap: 1.0.0
       wrap-ansi: 7.0.0
 
-  '@oclif/plugin-help@6.2.44':
+  '@oclif/plugin-help@6.2.45':
     dependencies:
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
 
-  '@oclif/plugin-not-found@3.2.80(@types/node@14.18.63)':
+  '@oclif/plugin-not-found@3.2.81(@types/node@14.18.63)':
     dependencies:
       '@inquirer/prompts': 7.10.1(@types/node@14.18.63)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       ansis: 3.17.0
       fast-levenshtein: 3.0.0
     transitivePeerDependencies:
       - '@types/node'
 
-  '@oclif/plugin-not-found@3.2.80(@types/node@20.19.39)':
+  '@oclif/plugin-not-found@3.2.81(@types/node@20.19.39)':
     dependencies:
       '@inquirer/prompts': 7.10.1(@types/node@20.19.39)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       ansis: 3.17.0
       fast-levenshtein: 3.0.0
     transitivePeerDependencies:
       - '@types/node'
 
-  '@oclif/plugin-not-found@3.2.80(@types/node@22.19.17)':
+  '@oclif/plugin-not-found@3.2.81(@types/node@22.19.17)':
     dependencies:
       '@inquirer/prompts': 7.10.1(@types/node@22.19.17)
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       ansis: 3.17.0
       fast-levenshtein: 3.0.0
     transitivePeerDependencies:
       - '@types/node'
 
-  '@oclif/plugin-warn-if-update-available@3.1.60':
+  '@oclif/plugin-warn-if-update-available@3.1.61':
     dependencies:
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       ansis: 3.17.0
       debug: 4.4.3(supports-color@8.1.1)
       http-call: 5.3.0
@@ -8526,9 +8526,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@oclif/test@4.1.18(@oclif/core@4.10.5)':
+  '@oclif/test@4.1.18(@oclif/core@4.10.6)':
     dependencies:
-      '@oclif/core': 4.10.5
+      '@oclif/core': 4.10.6
       ansis: 3.17.0
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -9705,9 +9705,9 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1(ajv@8.18.0):
+  ajv-formats@2.1.1(ajv@8.20.0):
     optionalDependencies:
-      ajv: 8.18.0
+      ajv: 8.20.0
 
   ajv@6.15.0:
     dependencies:
@@ -9716,7 +9716,7 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  ajv@8.18.0:
+  ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-uri: 3.1.0
@@ -9953,7 +9953,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  baseline-browser-mapping@2.10.21: {}
+  baseline-browser-mapping@2.10.23: {}
 
   big-json@3.2.0:
     dependencies:
@@ -10001,8 +10001,8 @@ snapshots:
 
   browserslist@4.28.2:
     dependencies:
-      baseline-browser-mapping: 2.10.21
-      caniuse-lite: 1.0.30001790
+      baseline-browser-mapping: 2.10.23
+      caniuse-lite: 1.0.30001791
       electron-to-chromium: 1.5.344
       node-releases: 2.0.38
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
@@ -10086,7 +10086,7 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  caniuse-lite@1.0.30001790: {}
+  caniuse-lite@1.0.30001791: {}
 
   capital-case@1.0.4:
     dependencies:
@@ -10319,8 +10319,8 @@ snapshots:
 
   conf@10.2.0:
     dependencies:
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
       atomically: 1.7.0
       debounce-fn: 4.0.0
       dot-prop: 6.0.1
@@ -10770,7 +10770,7 @@ snapshots:
     transitivePeerDependencies:
       - eslint
 
-  eslint-config-oclif@6.0.159(eslint@8.57.1)(typescript@4.9.5):
+  eslint-config-oclif@6.0.160(eslint@8.57.1)(typescript@4.9.5):
     dependencies:
       '@eslint/compat': 1.4.1(eslint@8.57.1)
       '@eslint/eslintrc': 3.3.5
@@ -10796,7 +10796,7 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-config-oclif@6.0.159(eslint@8.57.1)(typescript@5.9.3):
+  eslint-config-oclif@6.0.160(eslint@8.57.1)(typescript@5.9.3):
     dependencies:
       '@eslint/compat': 1.4.1(eslint@8.57.1)
       '@eslint/eslintrc': 3.3.5
@@ -13132,9 +13132,9 @@ snapshots:
       '@inquirer/input': 2.3.0
       '@inquirer/select': 2.5.0
       '@oclif/core': 4.9.0
-      '@oclif/plugin-help': 6.2.44
-      '@oclif/plugin-not-found': 3.2.80(@types/node@14.18.63)
-      '@oclif/plugin-warn-if-update-available': 3.1.60
+      '@oclif/plugin-help': 6.2.45
+      '@oclif/plugin-not-found': 3.2.81(@types/node@14.18.63)
+      '@oclif/plugin-warn-if-update-available': 3.1.61
       ansis: 3.17.0
       async-retry: 1.3.3
       change-case: 4.1.2
@@ -13163,9 +13163,9 @@ snapshots:
       '@inquirer/input': 2.3.0
       '@inquirer/select': 2.5.0
       '@oclif/core': 4.9.0
-      '@oclif/plugin-help': 6.2.44
-      '@oclif/plugin-not-found': 3.2.80(@types/node@20.19.39)
-      '@oclif/plugin-warn-if-update-available': 3.1.60
+      '@oclif/plugin-help': 6.2.45
+      '@oclif/plugin-not-found': 3.2.81(@types/node@20.19.39)
+      '@oclif/plugin-warn-if-update-available': 3.1.61
       ansis: 3.17.0
       async-retry: 1.3.3
       change-case: 4.1.2
@@ -13194,9 +13194,9 @@ snapshots:
       '@inquirer/input': 2.3.0
       '@inquirer/select': 2.5.0
       '@oclif/core': 4.9.0
-      '@oclif/plugin-help': 6.2.44
-      '@oclif/plugin-not-found': 3.2.80(@types/node@22.19.17)
-      '@oclif/plugin-warn-if-update-available': 3.1.60
+      '@oclif/plugin-help': 6.2.45
+      '@oclif/plugin-not-found': 3.2.81(@types/node@22.19.17)
+      '@oclif/plugin-warn-if-update-available': 3.1.61
       ansis: 3.17.0
       async-retry: 1.3.3
       change-case: 4.1.2

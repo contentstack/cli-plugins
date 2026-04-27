@@ -45,7 +45,7 @@ export default class ExportTaxonomies extends BaseClass {
 
   async start(): Promise<void> {
     log.debug('Starting export process for taxonomies...', this.exportConfig.context);
-
+    
     //create taxonomies folder
     this.taxonomiesFolderPath = pResolve(
       this.exportConfig.data,
@@ -53,7 +53,7 @@ export default class ExportTaxonomies extends BaseClass {
       this.taxonomiesConfig.dirName,
     );
     log.debug(`Taxonomies folder path: '${this.taxonomiesFolderPath}'`, this.exportConfig.context);
-
+    
     await fsUtil.makeDirectory(this.taxonomiesFolderPath);
     log.debug('Created taxonomies directory.', this.exportConfig.context);
 
