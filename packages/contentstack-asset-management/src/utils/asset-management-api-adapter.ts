@@ -54,6 +54,41 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
   }
 
   /**
+   * Format response body or payload for error logging. Safely stringifies and truncates.
+   */
+  private formatResponseBodyForError(data: unknown, maxLen: number = 500): string {
+    if (data === null || data === undefined) return '';
+    try {
+      const str = typeof data === 'string' ? data : JSON.stringify(data);
+      return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Normalize AM API failures into a consistent error message with optional cause and body snippet.
+   */
+  private normalizeAmGetFailure(details: {
+    path: string;
+    fullPath: string;
+    status?: number;
+    cause?: unknown;
+    bodySnippet?: string;
+  }): Error {
+    const { path, status, cause, bodySnippet } = details;
+    let message = `AM API GET failed: path ${path}`;
+    if (status) message += ` (status ${status})`;
+    if (cause && cause instanceof Error) {
+      message += ` - ${cause.message}`;
+    } else if (cause) {
+      message += ` - ${String(cause)}`;
+    }
+    if (bodySnippet) message += `\nResponse: ${bodySnippet}`;
+    return new Error(message);
+  }
+
+  /**
    * GET a space-level endpoint (e.g. /api/spaces/{uid}). Builds path + query string and performs the request.
    */
   private async getSpaceLevel<T = unknown>(
@@ -73,11 +108,29 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
     const queryString = this.buildQueryString(safeParams);
     const fullPath = path + queryString;
     log.debug(`GET ${fullPath}`, this.config.context);
-    const response = await this.apiClient.get<T>(fullPath);
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Asset Management API error: status ${response.status}, path ${path}`);
+
+    try {
+      const response = await this.apiClient.get<T>(fullPath);
+      if (response.status < 200 || response.status >= 300) {
+        const bodySnippet = this.formatResponseBodyForError(response.data);
+        throw this.normalizeAmGetFailure({
+          path,
+          fullPath,
+          status: response.status,
+          bodySnippet: bodySnippet || undefined,
+        });
+      }
+      return response.data as T;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('AM API GET failed')) {
+        throw error;
+      }
+      throw this.normalizeAmGetFailure({
+        path,
+        fullPath,
+        cause: error,
+      });
     }
-    return response.data as T;
   }
 
   async init(): Promise<void> {
@@ -196,32 +249,60 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
     const baseUrl = this.config.baseURL?.replace(/\/$/, '') ?? '';
     const headers = await this.getPostHeaders({ 'Content-Type': 'application/json', ...extraHeaders });
     log.debug(`POST ${path}`, this.config.context);
-    const response = await fetch(`${baseUrl}${path}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`AM API POST error: status ${response.status}, path ${path}, body: ${text}`);
+
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        const bodySnippet = this.formatResponseBodyForError(text);
+        throw new Error(
+          `AM API POST failed: status ${response.status} path ${path}${
+            bodySnippet ? `\nResponse: ${bodySnippet}` : ''
+          }`,
+        );
+      }
+      return response.json() as Promise<T>;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('AM API POST failed')) {
+        throw error;
+      }
+      throw new Error(`AM API POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`);
     }
-    return response.json() as Promise<T>;
   }
 
   private async postMultipart<T>(path: string, form: FormData, extraHeaders: Record<string, string> = {}): Promise<T> {
     const baseUrl = this.config.baseURL?.replace(/\/$/, '') ?? '';
     const headers = await this.getPostHeaders(extraHeaders);
     log.debug(`POST (multipart) ${path}`, this.config.context);
-    const response = await fetch(`${baseUrl}${path}`, {
-      method: 'POST',
-      headers,
-      body: form,
-    });
-    if (!response.ok) {
-      const text = await response.text().catch(() => '');
-      throw new Error(`AM API multipart POST error: status ${response.status}, path ${path}, body: ${text}`);
+
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers,
+        body: form,
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        const bodySnippet = this.formatResponseBodyForError(text);
+        throw new Error(
+          `AM API multipart POST failed: status ${response.status} path ${path}${
+            bodySnippet ? `\nResponse: ${bodySnippet}` : ''
+          }`,
+        );
+      }
+      return response.json() as Promise<T>;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('AM API multipart POST failed')) {
+        throw error;
+      }
+      throw new Error(
+        `AM API multipart POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-    return response.json() as Promise<T>;
   }
 
   // ---------------------------------------------------------------------------

@@ -51,7 +51,7 @@ export class ExportSpaces {
     log.debug(`Exporting Asset Management 2.0 (${linkedWorkspaces.length} space(s))`, context);
     log.debug(`Spaces: ${linkedWorkspaces.map((ws) => ws.space_uid).join(', ')}`, context);
 
-    const spacesRootPath = pResolve(exportDir, branchName || 'main', 'spaces');
+    const spacesRootPath = pResolve(exportDir, 'spaces');
     await mkdir(spacesRootPath, { recursive: true });
     log.debug(`Spaces root path: ${spacesRootPath}`, context);
 
