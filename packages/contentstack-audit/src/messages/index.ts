@@ -44,6 +44,7 @@ const auditMsg = {
   ENTRY_PUBLISH_DETAILS: `Removing the publish details for entry '{uid}' of ct '{ctuid}' in locale '{locale}' as locale '{publocale}' or environment '{environment}' does not exist`,
   CT_REFERENCE_FIELD: `The mentioned Reference field is not Array field reference is '{reference_to}' having display name '{display_name}''`,
   ASSET_NOT_EXIST: `The publish_details either does not exist or is not an array for asset uid '{uid}'`,
+  AUDITING_SPACE: `Auditing assets for space: '{spaceId}'`,
   ENTRY_PUBLISH_DETAILS_NOT_EXIST: `The publish_details either does not exist or is not an array for entry uid '{uid}'`,
   FIELD_RULE_CONDITION_ABSENT: `The operand field '{condition_field}' is not present in the schema of the content-type {ctUid}`,
   FIELD_RULE_TARGET_ABSENT: `The target field '{target_field}' is not present in the schema of the content-type {ctUid}`,
