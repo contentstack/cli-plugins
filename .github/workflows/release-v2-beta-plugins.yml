@@ -44,6 +44,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-asset-management/package.json
+          access: public
           tag: beta
 
       # Variants
