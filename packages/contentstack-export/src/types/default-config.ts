@@ -67,13 +67,6 @@ export default interface DefaultConfig {
       invalidKeys: string[];
       dependencies?: Modules[];
     };
-    'publishing-rules': {
-      dirName: string;
-      fileName: string;
-      invalidKeys: string[];
-      dependencies?: Modules[];
-      limit?: number;
-    };
     globalfields: {
       dirName: string;
       fileName: string;

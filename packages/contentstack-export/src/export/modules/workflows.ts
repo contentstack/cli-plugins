@@ -24,7 +24,7 @@ export default class ExportWorkFlows extends BaseClass {
     this.exportConfig.context.module = 'workflows';
   }
 
-  async start(): Promise<void> {
+  async start(): Promise<void> {  
     this.webhooksFolderPath = pResolve(
       this.exportConfig.data,
       this.exportConfig.branchName || '',
@@ -34,7 +34,7 @@ export default class ExportWorkFlows extends BaseClass {
 
     await fsUtil.makeDirectory(this.webhooksFolderPath);
     log.debug('Created workflows directory', this.exportConfig.context);
-
+    
     await this.getWorkflows();
     log.debug(`Retrieved ${Object.keys(this.workflows).length} workflows`, this.exportConfig.context);
 
@@ -45,7 +45,7 @@ export default class ExportWorkFlows extends BaseClass {
       log.debug(`Writing workflows to: ${workflowsFilePath}`, this.exportConfig.context);
       fsUtil.writeFile(workflowsFilePath, this.workflows);
       log.success(
-        messageHandler.parse('WORKFLOW_EXPORT_COMPLETE', Object.keys(this.workflows).length),
+        messageHandler.parse('WORKFLOW_EXPORT_COMPLETE', Object.keys(this.workflows).length ),
         this.exportConfig.context,
       );
     }
@@ -66,7 +66,7 @@ export default class ExportWorkFlows extends BaseClass {
         //NOTE - Handle the case where old workflow api is enabled in that case getting responses as objects.
         const workflowCount = count !== undefined ? count : items.length;
         log.debug(`Fetched ${items?.length || 0} workflows out of total ${workflowCount}`, this.exportConfig.context);
-
+        
         if (items?.length) {
           log.debug(`Processing ${items.length} workflows`, this.exportConfig.context);
           await this.sanitizeAttribs(items);
@@ -89,29 +89,29 @@ export default class ExportWorkFlows extends BaseClass {
 
   async sanitizeAttribs(workflows: Record<string, string>[]) {
     log.debug(`Sanitizing ${workflows.length} workflows`, this.exportConfig.context);
-
+    
     for (let index = 0; index < workflows?.length; index++) {
       const workflowUid = workflows[index].uid;
       const workflowName = workflows[index]?.name || '';
       log.debug(`Processing workflow: ${workflowName} (${workflowUid})`, this.exportConfig.context);
-
+      
       await this.getWorkflowRoles(workflows[index]);
       this.workflows[workflowUid] = omit(workflows[index], this.workflowConfig.invalidKeys);
-      log.success(messageHandler.parse('WORKFLOW_EXPORT_SUCCESS', workflowName), this.exportConfig.context);
+      log.success(
+        messageHandler.parse('WORKFLOW_EXPORT_SUCCESS', workflowName),
+        this.exportConfig.context,
+      );
     }
-
-    log.debug(
-      `Sanitization complete. Total workflows processed: ${Object.keys(this.workflows).length}`,
-      this.exportConfig.context,
-    );
+    
+    log.debug(`Sanitization complete. Total workflows processed: ${Object.keys(this.workflows).length}`, this.exportConfig.context);
   }
 
   async getWorkflowRoles(workflow: Record<string, any>) {
     log.debug(`Processing workflow roles for workflow: ${workflow.uid}`, this.exportConfig.context);
-
+    
     for (const stage of workflow?.workflow_stages) {
       log.debug(`Processing workflow stage: ${stage.name}`, this.exportConfig.context);
-
+      
       for (let i = 0; i < stage?.SYS_ACL?.roles?.uids?.length; i++) {
         const roleUid = stage.SYS_ACL.roles.uids[i];
         log.debug(`Fetching role data for role UID: ${roleUid}`, this.exportConfig.context);
@@ -123,7 +123,7 @@ export default class ExportWorkFlows extends BaseClass {
 
   async getRoles(roleUid: number): Promise<any> {
     log.debug(`Fetching role with UID: ${roleUid}`, this.exportConfig.context);
-
+    
     return await this.stack
       .role(roleUid)
       .fetch({ include_rules: true, include_permissions: true })
@@ -133,7 +133,10 @@ export default class ExportWorkFlows extends BaseClass {
       })
       .catch((err: any) => {
         log.debug(`Failed to fetch role data for UID: ${roleUid}`, this.exportConfig.context);
-        handleAndLogError(err, { ...this.exportConfig.context });
+        handleAndLogError(
+          err,
+          { ...this.exportConfig.context }
+        );
       });
   }
 }
