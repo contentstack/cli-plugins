@@ -121,14 +121,14 @@ export default class ExportCommand extends Command {
     try {
       const { flags } = await this.parse(ExportCommand);
       const exportConfig = await setupExportConfig(flags);
-
+      
       // Store apiKey in configHandler for session.json (return value not needed)
       createLogContext(
         this.context?.info?.command || 'cm:stacks:export',
         exportConfig.apiKey,
-        exportConfig.authenticationMethod,
+        exportConfig.authenticationMethod
       );
-
+      
       // For log entries, only pass module (other fields are in session.json)
       exportConfig.context = { module: '' };
       //log.info(`Using Cli Version: ${this.context?.cliVersion}`, exportConfig.context);
@@ -143,7 +143,9 @@ export default class ExportCommand extends Command {
       if (!exportConfig.branches?.length) {
         writeExportMetaFile(exportConfig);
       }
-      log.success(`The content of the stack ${exportConfig.apiKey} has been exported successfully!`);
+      log.success(
+        `The content of the stack ${exportConfig.apiKey} has been exported successfully!`,
+      );
       log.info(`The exported content has been stored at '${exportDir}'.`, exportConfig.context);
       log.success(`The log has been stored at '${getLogPath()}'.`, exportConfig.context);
     } catch (error) {
@@ -151,6 +153,7 @@ export default class ExportCommand extends Command {
       log.info(`The log has been stored at '${getLogPath()}'.`);
     }
   }
+
 
   // Assign values to exportConfig
   private assignExportConfig(exportConfig: ExportConfig): void {
