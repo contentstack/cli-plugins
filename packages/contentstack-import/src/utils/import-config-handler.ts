@@ -127,6 +127,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   const spacesDir = path.join(config.contentDir, 'spaces');
   const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
 
   if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
     try {
@@ -135,22 +136,15 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
         config.assetManagementEnabled = true;
         config.assetManagementUrl = configHandler.get('region')?.assetManagementUrl;
 
-        const branchesJsonCandidates = [
-          path.join(config.contentDir, 'branches.json'),
-          path.join(config.contentDir, '..', 'branches.json'),
-        ];
-        for (const branchesJsonPath of branchesJsonCandidates) {
-          if (existsSync(branchesJsonPath)) {
-            try {
-              const branches = JSON.parse(readFileSync(branchesJsonPath, 'utf8'));
-              const apiKey = branches?.[0]?.stackHeaders?.api_key;
-              if (apiKey) {
-                config.source_stack = apiKey;
-              }
-            } catch {
-              // branches.json unreadable — URL mapping will be skipped
+        if (existsSync(stackJsonPath)) {
+          try {
+            const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
+            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
+            if (apiKey) {
+              config.source_stack = apiKey;
             }
-            break;
+          } catch {
+            // stack.json unreadable — source stack API key will not be set
           }
         }
       }

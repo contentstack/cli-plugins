@@ -21,12 +21,14 @@ export async function getLinkedWorkspacesForBranch(
       log.debug('No linked_workspaces in branch settings', context);
       return [];
     }
-    log.info(
-      `Found ${linked.length} linked workspace(s) for branch ${branchName}`,
-      context,
-    );
+    log.info(`Found ${linked.length} linked workspace(s) for branch ${branchName}`, context);
     return linked as LinkedWorkspace[];
   } catch (error) {
+    const err = error as any;
+    if (err?.status === 412 || err?.errorCode === 412) {
+      log.warn('Branch settings not found, please check if the branches are enabled in your stack', context);
+      return [];
+    }
     handleAndLogError(error as Error, context as any, 'Failed to fetch branch settings');
     return [];
   }
