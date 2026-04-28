@@ -14,6 +14,7 @@ import {
   createLogContext,
 } from '@contentstack/cli-utilities';
 
+import path from 'path';
 import { Context, ImportConfig } from '../../../types';
 import { ModuleImporter } from '../../../import';
 import { setupImportConfig } from '../../../utils';
@@ -153,15 +154,20 @@ export default class ImportCommand extends Command {
     let backupDir: string;
     let importConfig: ImportConfig;
     try {
+      if (messageHandler.isEmptyMessages()) {
+        messageHandler.init({
+          messageFilePath: path.join(__dirname, '..', '..', '..', '..', 'messages', 'index.json'),
+        });
+      }
       const { flags } = await this.parse(ImportCommand);
       importConfig = await setupImportConfig(flags);
       // Prepare the context object
       createLogContext(
-        this.context?.info?.command || 'cm:stacks:export',
+        this.context?.info?.command || 'cm:stacks:import',
         importConfig.apiKey,
-        importConfig.authenticationMethod
+        importConfig.authenticationMethod,
       );
-      
+
       importConfig.context = { module: '' };
       //log.info(`Using Cli Version: ${this.context?.cliVersion}`, importConfig.context);
 
