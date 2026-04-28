@@ -34,7 +34,6 @@ USAGE
 * [`csdx audit:fix`](#csdx-auditfix)
 * [`csdx cm:stacks:audit`](#csdx-cmstacksaudit)
 * [`csdx cm:stacks:audit:fix`](#csdx-cmstacksauditfix)
-* [`csdx help [COMMAND]`](#csdx-help-command)
 
 ## `csdx audit`
 
@@ -257,24 +256,4 @@ EXAMPLES
 ```
 
 _See code: [src/commands/cm/stacks/audit/fix.ts](https://github.com/contentstack/audit/blob/main/packages/contentstack-audit/src/commands/cm/stacks/audit/fix.ts)_
-
-## `csdx help [COMMAND]`
-
-Display help for csdx.
-
-```
-USAGE
-  $ csdx help [COMMAND...] [-n]
-
-ARGUMENTS
-  [COMMAND...]  Command to show help for.
-
-FLAGS
-  -n, --nested-commands  Include all nested commands in the output.
-
-DESCRIPTION
-  Display help for csdx.
-```
-
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.37/src/commands/help.ts)_
 <!-- commandsstop -->
