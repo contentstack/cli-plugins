@@ -110,6 +110,7 @@ const config = {
     'publish_locale',
     'publish_environment',
     'asset_uid',
+    'space_id',
     'selectedValue',
     'ct_uid',
     'action',

@@ -38,6 +38,15 @@ jobs:
           filename: .github/config/release.json
           prefix: release
 
+      # Asset Management
+      - name: Publishing asset-management (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-asset-management/package.json
+          access: public
+          tag: beta
+
       # Variants
       - name: Publishing variants (Beta)
         uses: JS-DevTools/npm-publish@v3
