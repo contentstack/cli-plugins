@@ -1,5 +1,11 @@
 import * as path from 'path';
-import { ContentstackClient, handleAndLogError, messageHandler, log, sanitizePath } from '@contentstack/cli-utilities';
+import {
+  ContentstackClient,
+  handleAndLogError,
+  messageHandler,
+  log,
+  sanitizePath,
+} from '@contentstack/cli-utilities';
 
 import { fsUtil } from '../../utils';
 import BaseClass from './base-class';
@@ -55,27 +61,22 @@ export default class LocaleExport extends BaseClass {
     try {
       log.debug('Starting export process for locales...', this.exportConfig.context);
       log.debug(`Locales path: '${this.localesPath}'`, this.exportConfig.context);
-
+      
       await fsUtil.makeDirectory(this.localesPath);
       log.debug('Created locales directory.', this.exportConfig.context);
-
+      
       await this.getLocales();
-      log.debug(
-        `Retrieved ${Object.keys(this.locales).length} locales and ${
-          Object.keys(this.masterLocale).length
-        } master locales.`,
-        this.exportConfig.context,
-      );
-
+      log.debug(`Retrieved ${Object.keys(this.locales).length} locales and ${Object.keys(this.masterLocale).length} master locales.`, this.exportConfig.context);
+      
       const localesFilePath = path.join(this.localesPath, this.localeConfig.fileName);
       const masterLocaleFilePath = path.join(this.localesPath, this.masterLocaleConfig.fileName);
-
+      
       log.debug(`Writing locales to: '${localesFilePath}'`, this.exportConfig.context);
       fsUtil.writeFile(localesFilePath, this.locales);
-
+      
       log.debug(`Writing master locale to: '${masterLocaleFilePath}'`, this.exportConfig.context);
       fsUtil.writeFile(masterLocaleFilePath, this.masterLocale);
-
+      
       log.success(
         messageHandler.parse(
           'LOCALES_EXPORT_COMPLETE',
@@ -96,18 +97,15 @@ export default class LocaleExport extends BaseClass {
       log.debug(`Fetching locales with skip: ${skip}.`, this.exportConfig.context);
     }
     log.debug(`Query parameters: ${JSON.stringify(this.qs)}.`, this.exportConfig.context);
-
+    
     let localesFetchResponse = await this.stackAPIClient.locale().query(this.qs).find();
-
-    log.debug(
-      `Fetched ${localesFetchResponse.items?.length || 0} locales out of ${localesFetchResponse.count}.`,
-      this.exportConfig.context,
-    );
-
+    
+    log.debug(`Fetched ${localesFetchResponse.items?.length || 0} locales out of ${localesFetchResponse.count}.`, this.exportConfig.context);
+    
     if (Array.isArray(localesFetchResponse.items) && localesFetchResponse.items.length > 0) {
       log.debug(`Processing ${localesFetchResponse.items.length} locales...`, this.exportConfig.context);
       this.sanitizeAttribs(localesFetchResponse.items);
-
+      
       skip += this.localeConfig.limit || 100;
       if (skip > localesFetchResponse.count) {
         log.debug('Completed fetching all locales.', this.exportConfig.context);
@@ -122,7 +120,7 @@ export default class LocaleExport extends BaseClass {
 
   sanitizeAttribs(locales: Record<string, string>[]) {
     log.debug(`Sanitizing ${locales.length} locales...`, this.exportConfig.context);
-
+    
     locales.forEach((locale: Record<string, string>) => {
       for (let key in locale) {
         if (this.localeConfig.requiredKeys.indexOf(key) === -1) {
@@ -138,12 +136,7 @@ export default class LocaleExport extends BaseClass {
         this.locales[locale.uid] = locale;
       }
     });
-
-    log.debug(
-      `Sanitization complete. Master locales: ${Object.keys(this.masterLocale).length}, Regular locales: ${
-        Object.keys(this.locales).length
-      }.`,
-      this.exportConfig.context,
-    );
+    
+    log.debug(`Sanitization complete. Master locales: ${Object.keys(this.masterLocale).length}, Regular locales: ${Object.keys(this.locales).length}.`, this.exportConfig.context);
   }
 }
