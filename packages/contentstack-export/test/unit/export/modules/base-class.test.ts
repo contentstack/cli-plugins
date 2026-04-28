@@ -131,11 +131,6 @@ describe('BaseClass', () => {
           fileName: 'workflows.json',
           invalidKeys: []
         },
-        'publishing-rules': {
-          dirName: 'workflows',
-          fileName: 'publishing-rules.json',
-          invalidKeys: [],
-        },
         globalfields: {
           dirName: 'global_fields',
           fileName: 'globalfields.json',
