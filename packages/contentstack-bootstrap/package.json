@@ -21,7 +21,6 @@
     "@contentstack/cli-config": "~1.20.2",
     "@contentstack/cli-utilities": "~1.18.2",
     "@oclif/core": "^4.10.5",
-    "@oclif/plugin-help": "^6.2.37",
     "inquirer": "8.2.7",
     "mkdirp": "^2.1.6",
     "tar": "^7.5.11"
@@ -34,13 +33,10 @@
     "@types/tar": "^6.1.13",
     "chai": "^4.5.0",
     "eslint": "^9.26.0",
-    "eslint-config-oclif": "^6.0.62",
-    "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.17.46",
     "tmp": "^0.2.5",
-    "ts-node": "^8.10.2",
     "typescript": "^4.9.5"
   },
   "engines": {
