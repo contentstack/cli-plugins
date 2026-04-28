@@ -7,9 +7,8 @@ import isEmpty from 'lodash/isEmpty';
 import uniq from 'lodash/uniq';
 import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
-import { v4 as uuid } from 'uuid';
 import { resolve as pResolve, join } from 'node:path';
-import { FsUtility, log, handleAndLogError } from '@contentstack/cli-utilities';
+import { FsUtility, log, handleAndLogError, generateUid } from '@contentstack/cli-utilities';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
@@ -424,7 +423,7 @@ export default class ImportAssets extends BaseClass {
       // 2. if there are multiple assets fetched with same query, then check the parent uid against mapper created while importing folders
       // 3. Replace matched assets
       this.rootFolder = {
-        uid: uuid(),
+        uid: generateUid(),
         name: `Import-${formatDate()}`,
         parent_uid: null,
         created_at: null,
