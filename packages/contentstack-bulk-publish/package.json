@@ -19,7 +19,7 @@
   "devDependencies": {
     "@oclif/test": "^4.1.18",
     "chai": "^4.5.0",
-    "eslint": "^8.57.1",
+    "eslint": "^9.26.0",
     "eslint-config-oclif": "^6.0.62",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
