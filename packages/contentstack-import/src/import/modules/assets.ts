@@ -9,16 +9,21 @@ import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
 import { v4 as uuid } from 'uuid';
 import { resolve as pResolve, join } from 'node:path';
-import {
-  FsUtility,
-  log,
-  handleAndLogError,
-} from '@contentstack/cli-utilities';
+import { FsUtility, log, handleAndLogError } from '@contentstack/cli-utilities';
+import { ImportSpaces, type SpaceMapping } from '@contentstack/cli-asset-management';
 import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
-import { formatDate, PROCESS_NAMES, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS } from '../../utils';
+import {
+  buildImportSpacesOptions,
+  formatDate,
+  fsUtil,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  MODULE_NAMES,
+  PROCESS_STATUS,
+} from '../../utils';
 import BaseClass, { ApiOptions } from './base-class';
 
 export default class ImportAssets extends BaseClass {
@@ -42,22 +47,14 @@ export default class ImportAssets extends BaseClass {
     this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.ASSETS];
 
     this.assetsPath = join(this.importConfig.backupDir, PATH_CONSTANTS.CONTENT_DIRS.ASSETS);
-    this.mapperDirPath = join(
-      this.importConfig.backupDir,
-      PATH_CONSTANTS.MAPPER,
-      PATH_CONSTANTS.MAPPER_MODULES.ASSETS,
-    );
+    this.mapperDirPath = join(this.importConfig.backupDir, PATH_CONSTANTS.MAPPER, PATH_CONSTANTS.MAPPER_MODULES.ASSETS);
     this.assetUidMapperPath = join(this.mapperDirPath, PATH_CONSTANTS.FILES.UID_MAPPING);
     this.assetUrlMapperPath = join(this.mapperDirPath, PATH_CONSTANTS.FILES.URL_MAPPING);
     this.assetFolderUidMapperPath = join(this.mapperDirPath, PATH_CONSTANTS.FILES.FOLDER_MAPPING);
     this.assetsRootPath = join(this.importConfig.backupDir, this.assetConfig.dirName);
     this.fs = new FsUtility({ basePath: this.mapperDirPath });
     this.environments = this.fs.readFile(
-      join(
-        this.importConfig.backupDir,
-        PATH_CONSTANTS.CONTENT_DIRS.ENVIRONMENTS,
-        PATH_CONSTANTS.FILES.ENVIRONMENTS,
-      ),
+      join(this.importConfig.backupDir, PATH_CONSTANTS.CONTENT_DIRS.ENVIRONMENTS, PATH_CONSTANTS.FILES.ENVIRONMENTS),
       true,
     ) as Record<string, unknown>;
   }
@@ -69,6 +66,37 @@ export default class ImportAssets extends BaseClass {
   async start(): Promise<void> {
     try {
       log.debug('Starting assets import process...', this.importConfig.context);
+
+      // AM 2.0: assetManagementEnabled is set in the config handler when spaces/ + am_v2 are detected.
+      if (this.importConfig.assetManagementEnabled) {
+        if (!this.importConfig.assetManagementUrl) {
+          log.info(
+            'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset import.',
+            this.importConfig.context,
+          );
+          return;
+        }
+
+        const progress = this.createNestedProgress(this.currentModuleName);
+        let spaceMappings: SpaceMapping[] = [];
+
+        try {
+          const importer = new ImportSpaces(
+            buildImportSpacesOptions(this.importConfig, this.importConfig.assetManagementUrl),
+          );
+          importer.setParentProgressManager(progress);
+          ({ spaceMappings } = await importer.start());
+        } catch (error) {
+          this.completeProgress(false, (error as Error)?.message ?? 'AM 2.0 asset import failed');
+          throw error;
+        }
+
+        await this.linkImportedAmSpacesToBranch(spaceMappings);
+
+        this.completeProgressWithMessage();
+        return;
+      }
+      // Legacy flow continues below
 
       // Step 1: Analyze import data
       const [foldersCount, assetsCount, versionedAssetsCount, publishableAssetsCount] = await this.withLoadingSpinner(
@@ -127,6 +155,53 @@ export default class ImportAssets extends BaseClass {
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset import failed');
       handleAndLogError(error, { ...this.importConfig.context });
+    }
+  }
+
+  /**
+   * Merges imported AM spaces into the target stack branch's `am_v2.linked_workspaces`.
+   * Errors are logged and swallowed so a successful import still completes; import failures are handled separately.
+   */
+  private async linkImportedAmSpacesToBranch(spaceMappings: SpaceMapping[]): Promise<void> {
+    if (spaceMappings.length === 0) {
+      return;
+    }
+
+    try {
+      const branchUid = this.importConfig.branchName ?? 'main';
+
+      const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
+        string,
+        any
+      >;
+      const currentLinked = (branchData?.settings?.am_v2?.linked_workspaces ?? []) as Array<{
+        uid: string;
+        space_uid: string;
+        is_default: boolean;
+        operation?: string;
+      }>;
+
+      const newWorkspaces = spaceMappings.map(({ newSpaceUid, workspaceUid }) => ({
+        uid: workspaceUid,
+        space_uid: newSpaceUid,
+        is_default: false,
+        operation: 'LINK' as const,
+      }));
+
+      const combinedWorkspaces = [...currentLinked, ...newWorkspaces];
+
+      await this.stack.branch(branchUid).updateSettings({
+        branch: { settings: { am_v2: { linked_workspaces: combinedWorkspaces } } },
+      });
+      log.success(
+        `Linked ${newWorkspaces.length} space(s) to branch "${branchUid}"`,
+        this.importConfig.context,
+      );
+    } catch (linkErr) {
+      handleAndLogError(linkErr, {
+        ...this.importConfig.context,
+        phase: 'AM 2.0 branch linking (linked_workspaces)',
+      });
     }
   }
 
@@ -221,9 +296,7 @@ export default class ImportAssets extends BaseClass {
    */
   async importAssets(isVersion = false): Promise<void> {
     const processName = isVersion ? 'import versioned assets' : 'import assets';
-    const indexFileName = isVersion
-      ? PATH_CONSTANTS.FILES.VERSIONED_ASSETS
-      : this.assetConfig.fileName;
+    const indexFileName = isVersion ? PATH_CONSTANTS.FILES.VERSIONED_ASSETS : this.assetConfig.fileName;
     const basePath = isVersion ? join(this.assetsPath, 'versions') : this.assetsPath;
     const progressProcessName = isVersion ? PROCESS_NAMES.ASSET_VERSIONS : PROCESS_NAMES.ASSET_UPLOAD;
 

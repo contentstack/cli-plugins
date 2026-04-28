@@ -1,4 +1,5 @@
 import { cliux, managementSDKClient } from '@contentstack/cli-utilities';
+
 import { refreshbranchConfig } from '.';
 
 export async function deleteBranch(host: string, apiKey: string, uid: string) {

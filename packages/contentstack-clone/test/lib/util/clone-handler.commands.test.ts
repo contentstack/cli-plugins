@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { CloneHandler } from '../../../src/core/util/clone-handler';
 import { CloneConfig } from '../../../src/types/clone-config';
+import { STRUCTURE_LIST } from '../../../src/utils/constants';
 import sinon from 'sinon';
 import inquirer from 'inquirer';
 
@@ -136,6 +137,94 @@ describe('CloneHandler - Commands', () => {
       const cmdArgs = exportCmdStub.run.firstCall.args[0];
       expect(cmdArgs).to.include('-a');
       expect(cmdArgs).to.include('source-alias');
+    });
+
+    it('should set filteredModules for structure-only export without assets (AM 2.0 needs full export)', async () => {
+      const exportCmdStub = {
+        run: sandbox.stub().returns(Promise.resolve()),
+      };
+      sandbox.stub(require('@contentstack/cli-cm-export'), 'default').value(exportCmdStub);
+
+      await handler.cmdExport();
+
+      expect(fsStub.writeFileSync.calledOnce).to.be.true;
+      const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
+      expect(written.filteredModules).to.deep.equal(['stack', ...STRUCTURE_LIST]);
+      expect(written.filteredModules).to.not.include('assets');
+      expect(written.filteredModules).to.not.include('entries');
+    });
+
+    it('should not set filteredModules for full clone so default export includes assets', async () => {
+      const config: CloneConfig = {
+        cloneContext: {
+          command: 'test',
+          module: 'clone',
+          email: 'test@example.com',
+        },
+        source_stack: 'test-key',
+        cloneType: 'b',
+      };
+      handler = new CloneHandler(config);
+      const exportCmdStub = {
+        run: sandbox.stub().returns(Promise.resolve()),
+      };
+      sandbox.stub(require('@contentstack/cli-cm-export'), 'default').value(exportCmdStub);
+
+      await handler.cmdExport();
+
+      expect(fsStub.writeFileSync.calledOnce).to.be.true;
+      const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
+      expect(written).to.not.have.property('filteredModules');
+    });
+
+    it('should preserve region.assetManagementUrl in serialized export config for AM 2.0 export', async () => {
+      const amUrl = 'https://asset-management.example.com';
+      const config: CloneConfig = {
+        cloneContext: {
+          command: 'test',
+          module: 'clone',
+          email: 'test@example.com',
+        },
+        source_stack: 'test-key',
+        cloneType: 'b',
+        region: { assetManagementUrl: amUrl },
+      };
+      handler = new CloneHandler(config);
+      const exportCmdStub = {
+        run: sandbox.stub().returns(Promise.resolve()),
+      };
+      sandbox.stub(require('@contentstack/cli-cm-export'), 'default').value(exportCmdStub);
+
+      await handler.cmdExport();
+
+      const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
+      expect(written.region).to.be.an('object');
+      expect(written.region.assetManagementUrl).to.equal(amUrl);
+    });
+
+    it('should merge export.region.assetManagementUrl from external export config', async () => {
+      const amUrl = 'https://asset-management-merged.example.com';
+      const config: CloneConfig = {
+        cloneContext: {
+          command: 'test',
+          module: 'clone',
+          email: 'test@example.com',
+        },
+        source_stack: 'test-key',
+        cloneType: 'b',
+        export: { region: { assetManagementUrl: amUrl } },
+      };
+      handler = new CloneHandler(config);
+      const exportCmdStub = {
+        run: sandbox.stub().returns(Promise.resolve()),
+      };
+      sandbox.stub(require('@contentstack/cli-cm-export'), 'default').value(exportCmdStub);
+
+      await handler.cmdExport();
+
+      const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
+      expect(written.region.assetManagementUrl).to.equal(amUrl);
+      expect(written).to.not.have.property('export');
     });
   });
 
@@ -397,7 +486,7 @@ describe('CloneHandler - Commands', () => {
       // Mock configHandler FIRST before creating handler - following import plugin pattern
       const configHandler = require('@contentstack/cli-utilities').configHandler;
       configHandlerGetStub = sandbox.stub(configHandler, 'get').returns(undefined);
-      
+
       // Stub ora spinner - following import plugin pattern
       const oraModule = require('ora');
       const mockSpinner = {
@@ -411,7 +500,7 @@ describe('CloneHandler - Commands', () => {
         writable: true,
         configurable: true,
       });
-      
+
       const config: CloneConfig = {
         cloneContext: {
           command: 'test',
