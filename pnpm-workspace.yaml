@@ -3,4 +3,4 @@ packages:
 overrides:
   tmp: 0.2.4
   follow-redirects: 1.16.0
-  axios: 1.15.0
+  axios: 1.15.2

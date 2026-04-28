@@ -1,14 +1,6 @@
 fileignoreconfig:
+  - filename: packages/contentstack-import/src/utils/import-config-handler.ts
+    checksum: 3194f537cee8041f07a7ea91cdc6351c84e400766696d9c3cf80b98f99961f76
   - filename: pnpm-lock.yaml
-    checksum: ddbcf64748cafbd34d9141252d63d5e0f470bd918dc354196f6a865b66050701
-  - filename: packages/contentstack-branches/src/utils/create-branch.ts
-    checksum: d0613295ee26f7a77d026e40db0a4ab726fabd0a74965f729f1a66d1ef14768f
-  - filename: packages/contentstack-branches/README.md
-    checksum: ad32bd365db7f085cc2ea133d69748954606131ec6157a272a3471aea60011c2
-  - filename: packages/contentstack-branches/src/branch/diff-handler.ts
-    checksum: 3cd4d26a2142cab7cbf2094c9251e028467d17d6a1ed6daf22f21975133805f1
-  - filename: packages/contentstack-branches/src/commands/cm/branches/merge-status.ts
-    checksum: 6e5b959ddcc5ff68e03c066ea185fcf6c6e57b1819069730340af35aad8a93a8
-  - filename: packages/contentstack-branches/src/branch/merge-handler.ts
-    checksum: 4fd8dba9b723733530b9ba12e81e1d3e5d60b73ac4c082defb10593f257bb133
+    checksum: cea25dedde40bf962d825a088e505113c997ae666a4385d3eec0ae3f9f5d1404
 version: '1.0'
