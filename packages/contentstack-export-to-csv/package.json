@@ -22,7 +22,7 @@
     "@types/mkdirp": "^1.0.2",
     "@types/node": "^20.17.50",
     "chai": "^4.5.0",
-    "eslint": "^8.57.1",
+    "eslint": "^9.26.0",
     "eslint-config-oclif": "^6.0.62",
     "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "^10.8.2",

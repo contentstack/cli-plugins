@@ -22,31 +22,27 @@ export default class ExportPersonalize {
   async start(): Promise<void> {
     try {
       log.debug('Starting export process for Personalize...', this.exportConfig.context);
-
+      
       if (!this.personalizeConfig.baseURL[this.exportConfig.region.name]) {
         log.debug(`Personalize URL not set for region: '${this.exportConfig.region.name}'.`, this.exportConfig.context);
         log.info(messageHandler.parse('PERSONALIZE_URL_NOT_SET'), this.exportConfig.context);
         this.exportConfig.personalizationEnabled = false;
         return;
       }
-
+      
       if (this.exportConfig.management_token) {
         log.debug('Management token detected, skipping personalize export.', this.exportConfig.context);
         log.info(messageHandler.parse('PERSONALIZE_SKIPPING_WITH_MANAGEMENT_TOKEN'), this.exportConfig.context);
         this.exportConfig.personalizationEnabled = false;
         return;
       }
-
+      
       log.debug('Starting export process for personalization projects...', this.exportConfig.context);
       await new ExportProjects(this.exportConfig).start();
-
+      
       if (this.exportConfig.personalizationEnabled) {
-        log.debug(
-          'Personalization is enabled, processing personalize modules... ' +
-            this.exportConfig.modules.personalize.exportOrder.join(', '),
-          this.exportConfig.context,
-        );
-
+        log.debug('Personalization is enabled, processing personalize modules... ' + this.exportConfig.modules.personalize.exportOrder.join(', '), this.exportConfig.context);
+        
         const moduleMapper = {
           events: new ExportEvents(this.exportConfig),
           attributes: new ExportAttributes(this.exportConfig),
@@ -58,20 +54,23 @@ export default class ExportPersonalize {
           .exportOrder as (keyof typeof moduleMapper)[];
 
         log.debug(`Personalize export order: ${order.join(', ')}.`, this.exportConfig.context);
-
+        
         for (const module of order) {
           log.debug(`Processing personalization module: '${module}'...`, this.exportConfig.context);
-
+          
           if (moduleMapper[module]) {
             log.debug(`Starting export for module: '${module}'...`, this.exportConfig.context);
             await moduleMapper[module].start();
             log.debug(`Completed export for module: '${module}'.`, this.exportConfig.context);
           } else {
             log.debug(`Module not implemented: '${module}'.`, this.exportConfig.context);
-            log.info(messageHandler.parse('PERSONALIZE_MODULE_NOT_IMPLEMENTED', module), this.exportConfig.context);
+            log.info(
+              messageHandler.parse('PERSONALIZE_MODULE_NOT_IMPLEMENTED', module),
+              this.exportConfig.context,
+            );
           }
         }
-
+        
         log.debug('Completed all personalization module exports.', this.exportConfig.context);
       } else {
         log.debug('Personalization is disabled, skipping personalize module exports.', this.exportConfig.context);
