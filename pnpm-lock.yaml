@@ -7,6 +7,7 @@ settings:
 overrides:
   tmp: 0.2.4
   axios: 1.15.2
+  uuid: 14.0.0
 
 importers:
 
@@ -43,7 +44,7 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       uuid:
-        specifier: ^14.0.0
+        specifier: 14.0.0
         version: 14.0.0
       winston:
         specifier: ^3.19.0
@@ -584,7 +585,7 @@ importers:
         specifier: ^2.7.0
         version: 2.7.0
       uuid:
-        specifier: ^14.0.0
+        specifier: 14.0.0
         version: 14.0.0
       winston:
         specifier: ^3.19.0
@@ -6092,14 +6093,6 @@ packages:
     resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
-  uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    hasBin: true
-
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    hasBin: true
-
   v8-compile-cache-lib@3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
 
@@ -7077,7 +7070,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 9.0.1
+      uuid: 14.0.0
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -7112,7 +7105,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 9.0.1
+      uuid: 14.0.0
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -7147,7 +7140,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 9.0.1
+      uuid: 14.0.0
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -7182,7 +7175,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 9.0.1
+      uuid: 14.0.0
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -11639,7 +11632,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       p-map: 3.0.0
       rimraf: 3.0.2
-      uuid: 8.3.2
+      uuid: 14.0.0
 
   istanbul-lib-report@3.0.1:
     dependencies:
@@ -13894,10 +13887,6 @@ snapshots:
       which-typed-array: 1.1.20
 
   uuid@14.0.0: {}
-
-  uuid@8.3.2: {}
-
-  uuid@9.0.1: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
