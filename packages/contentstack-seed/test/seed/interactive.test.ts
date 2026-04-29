@@ -3,7 +3,10 @@ const mockInquirer = {
   prompt: jest.fn(),
 };
 
-jest.mock('inquirer', () => mockInquirer);
+jest.mock('inquirer', () => ({
+  __esModule: true,
+  default: mockInquirer,
+}));
 
 import * as interactive from '../../src/seed/interactive';
 import { Organization, Stack } from '../../src/seed/contentstack/client';

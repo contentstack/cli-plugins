@@ -5,7 +5,7 @@ import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilit
 
 import BaseClass from './base-class';
 import { WorkflowConfig, ModuleClassParams } from '../../types';
-import { fsUtil, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
+import { fsUtil, getExportBasePath, MODULE_CONTEXTS, MODULE_NAMES } from '../../utils';
 
 export default class ExportWorkFlows extends BaseClass {
   private workflows: Record<string, Record<string, string>>;
@@ -32,8 +32,7 @@ export default class ExportWorkFlows extends BaseClass {
       // Setup with loading spinner
       const [totalCount] = await this.withLoadingSpinner('WORKFLOWS: Analyzing workflows...', async () => {
         this.webhooksFolderPath = pResolve(
-          this.exportConfig.exportDir,
-          this.exportConfig.branchName || '',
+          getExportBasePath(this.exportConfig),
           this.workflowConfig.dirName,
         );
 
