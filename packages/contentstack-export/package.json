@@ -36,7 +36,6 @@
     "dotenv": "^16.5.0",
     "dotenv-expand": "^9.0.0",
     "eslint": "^9.26.0",
-    "eslint-config-oclif": "^6.0.68",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.17.46",
