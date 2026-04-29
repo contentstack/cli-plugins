@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { ImportConfig, Modules } from '../../../src/types';
 import { configHandler } from '@contentstack/cli-utilities';
 import ModuleImporter from '../../../src/import/module-importer';
-import * as utilsModule from '../../../src/utils';
 
 describe('ModuleImporter', () => {
   let moduleImporter: ModuleImporter;
@@ -94,12 +93,11 @@ describe('ModuleImporter', () => {
     const backupHandlerModule = require('../../../src/utils/backup-handler');
     backupHandlerStub = sandbox.stub(backupHandlerModule, 'default').resolves('/test/backup');
 
-    // Stub on the same `../utils` barrel ModuleImporter imports from — stubbing `common-helper`
-    // directly can miss the binding CI uses (re-exports), so the real `masterLocalDetails` runs.
-    masterLocalDetailsStub = sandbox.stub(utilsModule, 'masterLocalDetails').resolves({ code: 'en-us' });
-
-    const sanitizeStackModule = require('../../../src/utils/common-helper');
-    sanitizeStackStub = sandbox.stub(sanitizeStackModule, 'sanitizeStack').resolves();
+    // Stub on `common-helper`: ts-node emits `export *` on the utils barrel as non-configurable getters,
+    // which Sinon cannot stub; the barrel getters forward to the same live binding as common-helper.
+    const commonHelperModule = require('../../../src/utils/common-helper');
+    masterLocalDetailsStub = sandbox.stub(commonHelperModule, 'masterLocalDetails').resolves({ code: 'en-us' });
+    sanitizeStackStub = sandbox.stub(commonHelperModule, 'sanitizeStack').resolves();
 
     const setupBranchModule = require('../../../src/utils/setup-branch');
     setupBranchConfigStub = sandbox.stub(setupBranchModule, 'setupBranchConfig').resolves();
