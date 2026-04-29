@@ -124,9 +124,9 @@ export default class ImportCommand extends Command {
       importConfig = await setupImportConfig(flags);
       // Prepare the context object
       createLogContext(
-        this.context?.info?.command || 'cm:stacks:export',
+        this.context?.info?.command || 'cm:stacks:import',
         importConfig.apiKey,
-        importConfig.authenticationMethod
+        importConfig.authenticationMethod,
       );
       const context = this.createImportContext(importConfig.apiKey, importConfig.authenticationMethod);
       importConfig.context = { ...context };
@@ -152,7 +152,7 @@ export default class ImportCommand extends Command {
       }
 
       const moduleImporter = new ModuleImporter(managementAPIClient, importConfig);
-      const result = await moduleImporter.start();
+      await moduleImporter.start();
       backupDir = importConfig.backupDir;
       //Note: Final summary is now handled by summary manager
       CLIProgressManager.printGlobalSummary();

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
@@ -386,5 +387,60 @@ describe('Extensions scope containing content_types uids', () => {
           expect(fixExt.callCount).to.be.equals(0);
         },
       );
+  });
+
+  describe('fixExtensionsScope single confirmation', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(cliux, 'confirm', async () => true)
+      .it('fixExtensionsScope asks for confirmation once when multiple extensions would be deleted', async () => {
+        const ext = new Extensions({
+          moduleName: 'extensions',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(__dirname, '..', 'mock', 'contents'),
+            flags: {},
+          }),
+          fix: true,
+        });
+        (ext as any).extensionsPath = resolve(__dirname, '..', 'mock', 'contents', 'extensions', 'extensions.json');
+        const twoOrphanExtensions: Extension[] = [
+          { uid: 'orph1', title: 'Orphan 1', scope: { content_types: [] }, type: 'widget' } as any,
+          { uid: 'orph2', title: 'Orphan 2', scope: { content_types: [] }, type: 'widget' } as any,
+        ];
+        ext.missingCts = new Set(['ct-missing']);
+        sinon.stub(fs, 'existsSync').returns(true);
+        sinon.stub(fs, 'readFileSync').returns(
+          JSON.stringify({ orph1: { uid: 'orph1', title: 'Orphan 1', scope: { content_types: [] } }, orph2: { uid: 'orph2', title: 'Orphan 2', scope: { content_types: [] } } }),
+        );
+        const confirmStub = sinon.stub(cliux, 'confirm').resolves(true);
+        sinon.stub(ext, 'writeFixContent').resolves();
+        await (ext as any).fixExtensionsScope(twoOrphanExtensions);
+        expect(confirmStub.callCount).to.equal(1);
+        (fs.existsSync as any).restore?.();
+        (fs.readFileSync as any).restore?.();
+      });
+  });
+
+  describe('writeFixContent with preConfirmed', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('writeFixContent does not prompt when preConfirmed is true', async () => {
+        const ext = new Extensions({
+          moduleName: 'extensions',
+          ctSchema: [],
+          config: Object.assign(config, {
+            basePath: resolve(__dirname, '..', 'mock', 'contents'),
+            flags: {},
+          }),
+          fix: true,
+        });
+        const writeStub = sinon.stub(fs, 'writeFileSync');
+        const confirmStub = sinon.stub(cliux, 'confirm');
+        await (ext as any).writeFixContent({ ext1: {} as Extension }, true);
+        expect(writeStub.called).to.be.true;
+        expect(confirmStub.called).to.be.false;
+        writeStub.restore();
+      });
   });
 });

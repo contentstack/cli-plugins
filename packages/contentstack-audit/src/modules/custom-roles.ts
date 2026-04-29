@@ -249,6 +249,7 @@ export default class CustomRoles extends BaseClass {
         log.debug('Skipping confirmation due to copy-dir, external-config, or yes flags', this.config.auditContext);
       } else {
         log.debug('Asking user for confirmation to write fix content', this.config.auditContext);
+        this.completeProgress(true);
       }
 
       const canWrite = skipConfirm || (await cliux.confirm(commonMsg.FIX_CONFIRMATION));

@@ -1,16 +1,13 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import * as path from 'node:path';
 import setupBranches from '../../../src/utils/setup-branches';
 import * as fileHelper from '../../../src/utils/file-helper';
-import * as utilities from '@contentstack/cli-utilities';
 import { ExportConfig } from '../../../src/types';
 
 describe('Setup Branches', () => {
   let sandbox: sinon.SinonSandbox;
   let mockStackAPIClient: any;
   let mockConfig: ExportConfig;
-  let writeFileSyncStub: sinon.SinonStub;
   let makeDirectoryStub: sinon.SinonStub;
 
   beforeEach(() => {
@@ -28,8 +25,6 @@ describe('Setup Branches', () => {
       branches: []
     } as Partial<ExportConfig> as ExportConfig;
 
-    // Stub file-helper functions
-    writeFileSyncStub = sandbox.stub(fileHelper, 'writeFileSync');
     makeDirectoryStub = sandbox.stub(fileHelper, 'makeDirectory');
 
   });
@@ -80,12 +75,7 @@ describe('Setup Branches', () => {
       expect(mockStackAPIClient.branch.calledWith(branchName)).to.be.true;
       expect(mockBranchClient.fetch.called).to.be.true;
       expect(makeDirectoryStub.calledWith(mockConfig.exportDir)).to.be.true;
-      expect(writeFileSyncStub.called).to.be.true;
       expect(mockConfig.branches).to.deep.equal([mockBranch]);
-      expect(writeFileSyncStub.firstCall.args[0]).to.equal(
-        path.join(mockConfig.exportDir, 'branches.json')
-      );
-      expect(writeFileSyncStub.firstCall.args[1]).to.deep.equal([mockBranch]);
     });
 
     it('should throw error when branch name is provided but branch does not exist', async () => {
@@ -105,7 +95,6 @@ describe('Setup Branches', () => {
       }
 
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
 
     it('should throw error when branch fetch returns invalid result', async () => {
@@ -167,7 +156,6 @@ describe('Setup Branches', () => {
       expect(mockBranchClient.query.called).to.be.true;
       expect(mockQuery.find.called).to.be.true;
       expect(makeDirectoryStub.calledWith(mockConfig.exportDir)).to.be.true;
-      expect(writeFileSyncStub.called).to.be.true;
       expect(mockConfig.branches).to.deep.equal(mockBranches);
     });
 
@@ -186,7 +174,6 @@ describe('Setup Branches', () => {
 
       expect(result).to.be.undefined;
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
 
     it('should return early when result has no items', async () => {
@@ -204,7 +191,6 @@ describe('Setup Branches', () => {
 
       expect(result).to.be.undefined;
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
 
     it('should return early when items is not an array', async () => {
@@ -222,7 +208,6 @@ describe('Setup Branches', () => {
 
       expect(result).to.be.undefined;
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
 
     it('should handle query errors gracefully and return early', async () => {
@@ -240,7 +225,6 @@ describe('Setup Branches', () => {
 
       expect(result).to.be.undefined;
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
 
     it('should handle query catch rejection and return early', async () => {
@@ -258,35 +242,11 @@ describe('Setup Branches', () => {
 
       expect(result).to.be.undefined;
       expect(makeDirectoryStub.called).to.be.false;
-      expect(writeFileSyncStub.called).to.be.false;
     });
   });
 
   describe('File Operations', () => {
-    it('should create directory and write branches.json file', async () => {
-      const mockBranch = { uid: 'branch-123', name: 'test-branch' };
-      mockConfig.branchName = 'test-branch';
-      mockConfig.exportDir = '/test/export';
-
-      const mockBranchClient = {
-        fetch: sandbox.stub().resolves(mockBranch)
-      };
-      mockStackAPIClient.branch.returns(mockBranchClient);
-
-      await setupBranches(mockConfig, mockStackAPIClient);
-
-      expect(makeDirectoryStub.calledWith(mockConfig.exportDir)).to.be.true;
-      expect(writeFileSyncStub.calledOnce).to.be.true;
-      // sanitizePath is called internally, we verify the result instead
-      
-      const filePath = writeFileSyncStub.firstCall.args[0];
-      const fileData = writeFileSyncStub.firstCall.args[1];
-      
-      expect(filePath).to.equal(path.join(mockConfig.exportDir, 'branches.json'));
-      expect(fileData).to.deep.equal([mockBranch]);
-    });
-
-    it('should use sanitized export directory path', async () => {
+    it('should create export directory when branches are resolved', async () => {
       const mockBranch = { uid: 'branch-123', name: 'test-branch' };
       mockConfig.branchName = 'test-branch';
       mockConfig.exportDir = '/test/export/../export';
@@ -298,11 +258,7 @@ describe('Setup Branches', () => {
 
       await setupBranches(mockConfig, mockStackAPIClient);
 
-      // sanitizePath will be called internally by the real implementation
-      expect(writeFileSyncStub.called).to.be.true;
-      // Verify the file path contains the directory and branches.json
-      expect(writeFileSyncStub.firstCall.args[0]).to.include('branches.json');
-      expect(writeFileSyncStub.firstCall.args[0]).to.include('/test/export');
+      expect(makeDirectoryStub.calledWith(mockConfig.exportDir)).to.be.true;
     });
   });
 

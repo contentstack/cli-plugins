@@ -1,10 +1,11 @@
 /**
  * Command specific utilities can be written here
  */
+import { cliux, configHandler, messageHandler, sanitizePath } from '@contentstack/cli-utilities';
 import fs from 'fs';
-import path from 'path';
 import forEach from 'lodash/forEach';
-import { configHandler, cliux, messageHandler, sanitizePath } from '@contentstack/cli-utilities';
+import path from 'path';
+
 import { MergeParams } from '../interfaces';
 
 export const getbranchesList = (branchResult, baseBranch: string) => {
@@ -12,10 +13,10 @@ export const getbranchesList = (branchResult, baseBranch: string) => {
 
   branchResult.map((item) => {
     branches.push({
-      Branch: item.uid,
-      Source: item.source,
       Aliases: item.alias,
+      Branch: item.uid,
       Created: new Date(item.created_at).toLocaleDateString(),
+      Source: item.source,
       Updated: new Date(item.updated_at).toLocaleDateString(),
     });
   });
@@ -23,7 +24,7 @@ export const getbranchesList = (branchResult, baseBranch: string) => {
   const currentBranch = branches.filter((branch) => branch.Branch === baseBranch);
   const otherBranches = branches.filter((branch) => branch.Branch !== baseBranch);
 
-  return { currentBranch, otherBranches, branches };
+  return { branches, currentBranch, otherBranches };
 };
 
 export const getbranchConfig = (stackApiKey: string) => {
@@ -78,8 +79,8 @@ export async function getMergeQueueStatus(stackAPIClient, payload): Promise<any>
 
 export async function executeMergeRequest(stackAPIClient, payload): Promise<any> {
   const {
-    host,
     apiKey,
+    host,
     params: { base_branch, compare_branch, default_merge_strategy, item_merge_strategies, merge_comment, no_revert },
   } = payload;
   const queryParams: MergeParams = {
@@ -139,11 +140,12 @@ export function validateCompareData(branchCompareData) {
   return validCompareData;
 }
 
-export * from './interactive';
-export * from './merge-helper';
-export * from './create-merge-scripts';
-export * from './entry-update-script';
-export * from './entry-create-script';
-export * as interactive from './interactive';
 export * as branchDiffUtility from './branch-diff-utility';
+export * from './create-merge-scripts';
 export * as deleteBranchUtility from './delete-branch';
+export * from './entry-create-script';
+export * from './entry-update-script';
+export * from './interactive';
+export * as interactive from './interactive';
+export * from './merge-helper';
+export * from './merge-status-helper';
