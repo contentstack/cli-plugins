@@ -9,7 +9,6 @@
     "@contentstack/cli-config": "~1.20.2",
     "@contentstack/cli-utilities": "~1.18.2",
     "@oclif/core": "^4.10.5",
-    "@oclif/plugin-help": "^6.2.44",
     "chalk": "^4.1.2",
     "dotenv": "^16.6.1",
     "inquirer": "8.2.7",
