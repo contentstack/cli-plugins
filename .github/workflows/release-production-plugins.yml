@@ -135,6 +135,14 @@ jobs:
           package: ./packages/contentstack-branches/package.json
           tag: latest
 
+      # Query Export
+      - name: Publishing query export (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-query-export/package.json
+          tag: latest
+
       - name: Create Production Release
         id: create_release
         env:
