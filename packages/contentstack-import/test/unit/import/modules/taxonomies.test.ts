@@ -5,6 +5,16 @@ import values from 'lodash/values';
 import ImportTaxonomies from '../../../../src/import/modules/taxonomies';
 import { fsUtil, fileHelper } from '../../../../src/utils';
 
+function nestedProgressMock(sb: sinon.SinonSandbox) {
+  return {
+    addProcess: sb.stub().returnsThis(),
+    startProcess: sb.stub().returnsThis(),
+    updateStatus: sb.stub().returnsThis(),
+    completeProcess: sb.stub().returnsThis(),
+    getFailureCount: sb.stub().returns(0),
+  };
+}
+
 describe('ImportTaxonomies', () => {
   let importTaxonomies: ImportTaxonomies;
   let mockStackClient: any;
@@ -67,11 +77,8 @@ describe('ImportTaxonomies', () => {
     sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
       return await fn();
     });
-    sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]);
-    const mockProgress = {
-      updateStatus: sandbox.stub()
-    };
-    sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns(mockProgress);
+    sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]);
+    sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
     sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
     sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
     sandbox.stub(importTaxonomies as any, 'completeProgress').resolves();
@@ -104,6 +111,9 @@ describe('ImportTaxonomies', () => {
       expect((importTaxonomies as any).localesFilePath).to.equal(
         join(testBackupDir, 'locales', 'locales.json'),
       );
+      expect((importTaxonomies as any).envUidMapperPath).to.equal(
+        join(testBackupDir, 'mapper', 'environments', 'uid-mapping.json'),
+      );
     });
 
     it('should set context module to taxonomies', () => {
@@ -135,9 +145,7 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       const prepareMapperDirectoriesStub = sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       const importTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'importTaxonomies').resolves();
       sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
@@ -189,7 +197,7 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      const analyzeTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0]);
+      const analyzeTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0, 0]);
       sandbox.stub(importTaxonomies as any, 'completeProgress').resolves();
       
       await importTaxonomies.start();
@@ -211,10 +219,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0]); // 0 taxonomies
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0, 0]); // 0 taxonomies
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       sandbox.stub(importTaxonomies as any, 'importTaxonomies').resolves();
       sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
@@ -241,10 +247,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]); // 1 taxonomy
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]); // 1 taxonomy
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       sandbox.stub(importTaxonomies as any, 'importTaxonomies').callsFake(async () => {
         (importTaxonomies as any).createdTaxonomies = { 'taxonomy_1': { uid: 'taxonomy_1' } };
@@ -389,6 +393,103 @@ describe('ImportTaxonomies', () => {
       const result = (importTaxonomies as any).serializeTaxonomy(mockApiOptions);
 
       expect(result.apiData.terms).to.deep.equal({});
+    });
+  });
+
+  describe('serializePublishTaxonomies', () => {
+    it('maps source environment UIDs to destination UIDs and sets items to uid only', () => {
+      (importTaxonomies as any).envUidMapper = { bltSrc: 'bltDest' };
+      const apiOptions: any = {
+        entity: 'publish-taxonomies',
+        apiData: {
+          taxonomy: {
+            uid: 'tax1',
+            locale: 'en-us',
+            publish_details: [{ environment: 'bltSrc', time: '', user: '' }],
+          },
+        },
+        resolve: sandbox.stub(),
+        reject: sandbox.stub(),
+      };
+
+      const result = (importTaxonomies as any).serializePublishTaxonomies(apiOptions);
+
+      expect(result.apiData).to.deep.equal({
+        environments: ['bltDest'],
+        locales: ['en-us'],
+        items: [{ uid: 'tax1' }],
+      });
+    });
+
+    it('dedupes multiple publish_details environments', () => {
+      (importTaxonomies as any).envUidMapper = { e1: 'd1', e2: 'd2' };
+      const apiOptions: any = {
+        entity: 'publish-taxonomies',
+        apiData: {
+          taxonomy: {
+            uid: 'tax2',
+            locale: 'fr-fr',
+            publish_details: [{ environment: 'e1' }, { environment: 'e2' }, { environment: 'e1' }],
+          },
+        },
+        resolve: sandbox.stub(),
+        reject: sandbox.stub(),
+      };
+
+      const result = (importTaxonomies as any).serializePublishTaxonomies(apiOptions);
+
+      expect(result.apiData.environments).to.deep.equal(['d1', 'd2']);
+      expect(result.apiData.locales).to.deep.equal(['fr-fr']);
+      expect(result.apiData.items).to.deep.equal([{ uid: 'tax2' }]);
+    });
+
+    it('returns undefined when publish_details empty', () => {
+      (importTaxonomies as any).envUidMapper = { x: 'y' };
+      const apiOptions: any = {
+        entity: 'publish-taxonomies',
+        apiData: {
+          taxonomy: { uid: 't', locale: 'en-us', publish_details: [] },
+        },
+        resolve: sandbox.stub(),
+        reject: sandbox.stub(),
+      };
+
+      expect((importTaxonomies as any).serializePublishTaxonomies(apiOptions).apiData).to.be.undefined;
+    });
+
+    it('returns undefined when no env mapping resolves', () => {
+      (importTaxonomies as any).envUidMapper = {};
+      const apiOptions: any = {
+        entity: 'publish-taxonomies',
+        apiData: {
+          taxonomy: {
+            uid: 'tax1',
+            locale: 'en-us',
+            publish_details: [{ environment: 'missing' }],
+          },
+        },
+        resolve: sandbox.stub(),
+        reject: sandbox.stub(),
+      };
+
+      expect((importTaxonomies as any).serializePublishTaxonomies(apiOptions).apiData).to.be.undefined;
+    });
+
+    it('returns undefined when taxonomy.locale missing', () => {
+      (importTaxonomies as any).envUidMapper = { e: 'd' };
+      const apiOptions: any = {
+        entity: 'publish-taxonomies',
+        apiData: {
+          taxonomy: {
+            uid: 'tax1',
+            publish_details: [{ environment: 'e' }],
+          },
+        },
+        resolve: sandbox.stub(),
+        reject: sandbox.stub(),
+      };
+
+      expect((importTaxonomies as any).serializePublishTaxonomies(apiOptions).apiData).to.be.undefined;
     });
   });
 
@@ -1123,10 +1224,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]);
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]);
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       
       // Make prepareMapperDirectories reject with the error
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').rejects(new Error('Directory creation failed'));
