@@ -58,6 +58,7 @@ export type ApiModuleType =
   | 'create-entries'
   | 'update-entries'
   | 'publish-entries'
+  | 'publish-taxonomies'
   | 'delete-entries'
   | 'create-taxonomies'
   | 'create-terms'
@@ -343,6 +344,8 @@ export default abstract class BaseClass {
     if (
       !apiData ||
       (entity === 'publish-entries' && !apiData.entryUid) ||
+      (entity === 'publish-taxonomies' &&
+        (!apiData.environments?.length || !apiData.locales?.length || !apiData.items?.length)) ||
       (entity === 'update-extensions' && !apiData.uid)
     ) {
       return Promise.resolve();
@@ -489,6 +492,14 @@ export default abstract class BaseClass {
           })
           .then(onSuccess)
           .catch(onReject);
+      case 'publish-taxonomies': {
+        const publishParams = this.importConfig.branchName ? { branch: this.importConfig.branchName } : {};
+        return (this.stack as any)
+          .taxonomy()
+          .publish(apiData, '3.2', publishParams)
+          .then(onSuccess)
+          .catch(onReject);
+      }
       case 'delete-entries':
         return this.stack
           .contentType(apiData.cTUid)

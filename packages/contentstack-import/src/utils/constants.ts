@@ -57,6 +57,7 @@ export const PROCESS_NAMES = {
   CONTENT_TYPES_EXT_UPDATE: 'Content Types Ext Update',
   WEBHOOKS_IMPORT: 'Webhooks Import',
   TAXONOMIES_IMPORT: 'Taxonomies Import',
+  TAXONOMIES_PUBLISH: 'Taxonomies Publish',
   PERSONALIZE_PROJECTS: 'Projects',
 } as const;
 
@@ -266,6 +267,10 @@ export const PROCESS_STATUS = {
   [PROCESS_NAMES.TAXONOMIES_IMPORT]: {
     IMPORTING: 'Importing taxonomies...',
     FAILED: 'Failed to import taxonomies.',
+  },
+  [PROCESS_NAMES.TAXONOMIES_PUBLISH]: {
+    PUBLISHING: 'Publishing taxonomies...',
+    FAILED: 'Failed to publish taxonomies.',
   },
   [PROCESS_NAMES.PERSONALIZE_PROJECTS]: {
     IMPORTING: 'Importing personalization projects...',
