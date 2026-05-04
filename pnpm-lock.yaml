@@ -43,9 +43,6 @@ importers:
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
-      uuid:
-        specifier: 14.0.0
-        version: 14.0.0
       winston:
         specifier: ^3.19.0
         version: 3.19.0
@@ -584,9 +581,6 @@ importers:
       promise-limit:
         specifier: ^2.7.0
         version: 2.7.0
-      uuid:
-        specifier: 14.0.0
-        version: 14.0.0
       winston:
         specifier: ^3.19.0
         version: 3.19.0
