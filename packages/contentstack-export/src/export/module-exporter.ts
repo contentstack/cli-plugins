@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   ContentstackClient,
   handleAndLogError,
@@ -66,7 +65,6 @@ class ModuleExporter {
     try {
       this.exportConfig.branchName = targetBranch.uid;
       this.stackAPIClient.stackHeaders.branch = targetBranch.uid;
-      this.exportConfig.branchDir = path.join(this.exportConfig.exportDir, targetBranch.uid);
 
       // Initialize progress manager for the target branch
       CLIProgressManager.clearGlobalSummary();
@@ -85,12 +83,11 @@ class ModuleExporter {
         this.exportConfig.context,
       );
     } catch (error) {
-      handleAndLogError(
-        error,
-        { ...this.exportConfig.context, branch: targetBranch?.uid },
-        messageHandler.parse('FAILED_EXPORT_CONTENT_BRANCH', { branch: targetBranch?.uid }),
-      );
-      throw new Error(messageHandler.parse('FAILED_EXPORT_CONTENT_BRANCH', { branch: targetBranch?.uid }));
+      const originalMessage = (error as Error)?.message ?? '';
+      const errorMessage =
+        originalMessage || messageHandler.parse('FAILED_EXPORT_CONTENT_BRANCH', { branch: targetBranch?.uid });
+      handleAndLogError(error, { ...this.exportConfig.context, branch: targetBranch?.uid }, errorMessage);
+      throw new Error(errorMessage);
     }
   }
 

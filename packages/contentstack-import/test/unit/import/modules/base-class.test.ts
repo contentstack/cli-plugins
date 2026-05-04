@@ -101,9 +101,10 @@ describe('BaseClass', () => {
         orgId: 'org-123',
         authenticationMethod: 'Management Token',
       },
+      fetchConcurrency: 5,
+      writeConcurrency: 1,
       modules: {
         types: ['assets', 'content-types'],
-        apiConcurrency: 5,
         assets: {
           dirName: 'assets',
           fileName: 'assets.json',
@@ -120,7 +121,6 @@ describe('BaseClass', () => {
           dirName: 'content_types',
           fileName: 'content_types.json',
           validKeys: ['title', 'uid', 'schema'],
-          apiConcurrency: 1,
         },
       } as any,
       backupDir: '/test/backup',

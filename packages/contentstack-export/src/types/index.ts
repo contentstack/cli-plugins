@@ -32,6 +32,7 @@ export interface Region {
   cma: string;
   cda: string;
   uiHost: string;
+  assetManagementUrl?: string;
 }
 
 export type Modules =
@@ -127,6 +128,7 @@ export interface CustomRoleConfig {
 export interface StackConfig {
   dirName: string;
   fileName: string;
+  invalidKeys: string[];
   dependencies?: Modules[];
   limit?: number;
 }

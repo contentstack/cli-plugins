@@ -218,7 +218,7 @@ export default abstract class BaseClass {
       processName,
       indexerCount,
       currentIndexer,
-      concurrencyLimit = this.importConfig.modules.apiConcurrency,
+      concurrencyLimit = this.importConfig.fetchConcurrency,
     } = env;
 
     /* eslint-disable no-async-promise-executor */

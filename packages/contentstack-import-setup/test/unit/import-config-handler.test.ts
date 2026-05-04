@@ -121,6 +121,23 @@ describe('Import Config Handler', () => {
     const config = await setupConfig(flags);
 
     expect(config.branchName).to.equal('development');
+    expect(config.branchDir).to.equal(path.resolve(contentDir));
+  });
+
+  it('should set branchDir to contentDir when branch or branch-alias is provided', async () => {
+    const flagsWithBranch = {
+      'data-dir': contentDir,
+      branch: 'dev',
+    };
+    const configBranch = await setupConfig(flagsWithBranch);
+    expect(configBranch.branchDir).to.equal(path.resolve(contentDir));
+
+    const flagsWithAlias = {
+      'data-dir': contentDir,
+      'branch-alias': 'my-alias',
+    };
+    const configAlias = await setupConfig(flagsWithAlias);
+    expect(configAlias.branchDir).to.equal(path.resolve(contentDir));
   });
 
   it('should ask for modules when none are provided', async () => {

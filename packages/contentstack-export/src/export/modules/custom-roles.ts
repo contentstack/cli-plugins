@@ -8,6 +8,7 @@ import { handleAndLogError, messageHandler, log } from '@contentstack/cli-utilit
 import BaseClass from './base-class';
 import {
   fsUtil,
+  getExportBasePath,
   PROCESS_NAMES,
   MODULE_CONTEXTS,
   PROCESS_STATUS,
@@ -43,8 +44,7 @@ export default class ExportCustomRoles extends BaseClass {
         'CUSTOM-ROLES: Analyzing roles and locales...',
         async () => {
           this.rolesFolderPath = pResolve(
-            this.exportConfig.exportDir,
-            this.exportConfig.branchName || '',
+            getExportBasePath(this.exportConfig),
             this.customRolesConfig.dirName,
           );
 

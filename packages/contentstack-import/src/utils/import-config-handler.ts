@@ -1,5 +1,6 @@
 import merge from 'merge';
 import * as path from 'path';
+import { existsSync, readFileSync } from 'node:fs';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
@@ -20,7 +21,6 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // setup the config
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
-
 
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
@@ -98,7 +98,6 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['branch']) {
     config.branchName = importCmdFlags['branch'];
-    config.branchDir = config.contentDir;
   }
   if (importCmdFlags['module']) {
     config.moduleName = importCmdFlags['module'];
@@ -124,6 +123,34 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['exclude-global-modules']) {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
+  }
+
+  const spacesDir = path.join(config.contentDir, 'spaces');
+  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
+
+  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
+    try {
+      const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
+      if (stackSettings?.am_v2) {
+        config.assetManagementEnabled = true;
+        config.assetManagementUrl = configHandler.get('region')?.assetManagementUrl;
+
+        if (existsSync(stackJsonPath)) {
+          try {
+            const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
+            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
+            if (apiKey) {
+              config.source_stack = apiKey;
+            }
+          } catch {
+            // stack.json unreadable — source stack API key will not be set
+          }
+        }
+      }
+    } catch {
+      // stack settings unreadable — not an AM 2.0 export we can process
+    }
   }
 
   // Add authentication details to config for context tracking

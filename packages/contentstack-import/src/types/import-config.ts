@@ -28,7 +28,6 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   contentTypes?: string[];
   branches?: branch[];
   branchEnabled?: boolean;
-  branchDir?: string;
   branchAlias?: string;
   moduleName?: Modules;
   master_locale: masterLocale;
@@ -58,6 +57,8 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   personalizeProjectName?: string;
   'exclude-global-modules': false;
   context: Context;
+  assetManagementUrl?: string;
+  assetManagementEnabled?: boolean;
 }
 
 type branch = {
