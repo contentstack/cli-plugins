@@ -52,6 +52,7 @@ describe('ImportGlobalFields', () => {
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
       writeConcurrency: 2,
+      fetchConcurrency: 5,
       context: {
         command: 'cm:stacks:import',
         module: 'global-fields',
@@ -67,7 +68,6 @@ describe('ImportGlobalFields', () => {
         'global-fields': {
           dirName: 'global_fields',
           validKeys: ['title', 'uid', 'schema'],
-          apiConcurrency: 5,
           writeConcurrency: 3,
           fileName: 'globalfields.json',
           limit: 100,

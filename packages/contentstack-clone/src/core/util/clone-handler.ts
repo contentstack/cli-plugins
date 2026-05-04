@@ -644,8 +644,8 @@ export class CloneHandler {
         importConfig.contentDir = importConfig.data;
       }
 
-      if (!importConfig.contentDir && importConfig.sourceStackBranch && importConfig.pathDir) {
-        const dataPath = path.join(importConfig.pathDir, importConfig.sourceStackBranch);
+      if (!importConfig.contentDir && importConfig.pathDir) {
+        const dataPath = importConfig.pathDir;
         cmd.push('-d', dataPath);
         log.debug(`Import data path: ${dataPath}`, this.config.cloneContext);
       }
@@ -675,7 +675,7 @@ export class CloneHandler {
         cmd: cmd.join(' '),
         targetStack: importConfig.apiKey || importConfig.target_stack,
         targetBranch: importConfig.targetStackBranch,
-        dataPath: importConfig.contentDir || (importConfig.pathDir && importConfig.sourceStackBranch ? path.join(importConfig.pathDir, importConfig.sourceStackBranch) : undefined)
+        dataPath: importConfig.contentDir || importConfig.pathDir || undefined
       });
       log.debug('Running import command', { ...this.config.cloneContext, cmd });
       const importData = importCmd.run(cmd);
@@ -804,9 +804,10 @@ export class CloneHandler {
         ];
         let successMsg: string;
         let selectedValue: any = {};
-        // Resolve path to package root - go up 3 levels from __dirname (core/util -> package root)
+        // Export root only (single-branch layout: modules live directly under -d, not pathDir/<branch>)
         const cloneTypePackageRoot = path.resolve(__dirname, '../../..');
-        this.config.contentDir = path.join(cloneTypePackageRoot, 'contents', this.config.sourceStackBranch || '');
+        this.config.contentDir =
+          this.config.pathDir || path.join(cloneTypePackageRoot, 'contents');
         log.debug(`Clone content directory: ${this.config.contentDir}`, this.config.cloneContext);
 
         if (!this.config.cloneType) {

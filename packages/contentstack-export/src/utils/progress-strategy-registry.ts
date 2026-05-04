@@ -1,3 +1,4 @@
+import { AM_MAIN_PROCESS_NAME, isSpaceProcessName } from '@contentstack/cli-asset-management';
 import { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES } from './constants';
 /**
  * Progress Strategy Registrations for Export Modules
@@ -11,6 +12,31 @@ import {
   CustomProgressStrategy,
   DefaultProgressStrategy,
 } from '@contentstack/cli-utilities';
+
+/**
+ * Sum the totals/success/failure counts across every per-space process row in
+ * the multibar. Used by the AM 2.0 Assets strategy so the final summary reports
+ * total assets-across-all-spaces instead of the placeholder row.
+ *
+ * Returns null when no per-space rows exist, letting the strategy fall back to
+ * legacy process names.
+ */
+function aggregateSpaceProcesses(
+  processes: Map<string, { total: number; successCount: number; failureCount: number }>,
+): { total: number; success: number; failures: number } | null {
+  let total = 0;
+  let success = 0;
+  let failures = 0;
+  let found = false;
+  for (const [name, data] of processes) {
+    if (!isSpaceProcessName(name)) continue;
+    found = true;
+    total += data.total;
+    success += data.successCount;
+    failures += data.failureCount;
+  }
+  return found ? { total, success, failures } : null;
+}
 
 // Wrap all registrations in try-catch to prevent module loading errors
 try {
@@ -28,6 +54,28 @@ try {
           total: downloadsProcess.total,
           success: downloadsProcess.successCount,
           failures: downloadsProcess.failureCount,
+        };
+      }
+      // Asset Management 2.0 (per-space layout): sum every "Space *" row so the
+      // final summary reports total assets-across-all-spaces. Falls through to
+      // the legacy AM_MAIN/SPACES rows when the per-space layout isn't in use.
+      const spaceTotals = aggregateSpaceProcesses(processes);
+      if (spaceTotals) return spaceTotals;
+
+      const amProcess = processes.get(AM_MAIN_PROCESS_NAME);
+      if (amProcess) {
+        return {
+          total: amProcess.total,
+          success: amProcess.successCount,
+          failures: amProcess.failureCount,
+        };
+      }
+      const spacesProcess = processes.get(PROCESS_NAMES.ASSET_MANAGEMENT_SPACES);
+      if (spacesProcess) {
+        return {
+          total: spacesProcess.total,
+          success: spacesProcess.successCount,
+          failures: spacesProcess.failureCount,
         };
       }
 

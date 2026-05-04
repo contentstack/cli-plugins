@@ -1,6 +1,7 @@
 {
   "releaseAll": true,
   "plugins": {
+    "asset-management": false,
     "export": false,
     "import": false,
     "clone": false,

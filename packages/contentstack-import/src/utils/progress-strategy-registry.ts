@@ -10,7 +10,33 @@ import {
   CustomProgressStrategy,
   DefaultProgressStrategy,
 } from '@contentstack/cli-utilities';
+import { isSpaceProcessName } from '@contentstack/cli-asset-management';
 import { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES } from './constants';
+
+/**
+ * Sum the totals/success/failure counts across every per-space process row in
+ * the multibar. Used by the AM 2.0 Assets strategy so the final import summary
+ * reports total assets-across-all-spaces instead of the placeholder row.
+ *
+ * Returns null when no per-space rows exist, letting the strategy fall back to
+ * legacy process names.
+ */
+function aggregateSpaceProcesses(
+  processes: Map<string, { total: number; successCount: number; failureCount: number }>,
+): { total: number; success: number; failures: number } | null {
+  let total = 0;
+  let success = 0;
+  let failures = 0;
+  let found = false;
+  for (const [name, data] of processes) {
+    if (!isSpaceProcessName(name)) continue;
+    found = true;
+    total += data.total;
+    success += data.successCount;
+    failures += data.failureCount;
+  }
+  return found ? { total, success, failures } : null;
+}
 
 // Wrap all registrations in try-catch to prevent module loading errors
 try {
@@ -32,6 +58,11 @@ try {
         failures: uploadsProcess.failureCount,
       };
     }
+
+    // Asset Management 2.0 (per-space layout): sum every "Space *" row so the
+    // final summary reports total assets-across-all-spaces.
+    const spaceTotals = aggregateSpaceProcesses(processes);
+    if (spaceTotals) return spaceTotals;
 
     return null; // Fall back to default aggregation
   }),

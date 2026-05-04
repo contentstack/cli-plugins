@@ -1,0 +1,232 @@
+import { join, resolve as pResolve } from 'node:path';
+import { mkdirSync, readdirSync, statSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
+import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
+
+import type {
+  AssetManagementAPIConfig,
+  ImportContext,
+  ImportResult,
+  ImportSpacesOptions,
+  SpaceMapping,
+} from '../types/asset-management-api';
+import { AM_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
+import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
+import ImportAssetTypes from './asset-types';
+import ImportFields from './fields';
+import ImportWorkspace from './workspaces';
+
+/**
+ * Top-level orchestrator for AM 2.0 import.
+ * Mirrors ExportSpaces: creates shared fields + asset types, then imports each space.
+ * Returns combined uidMap, urlMap, and spaceMappings for the bridge module.
+ */
+export class ImportSpaces {
+  private readonly options: ImportSpacesOptions;
+  private parentProgressManager: CLIProgressManager | null = null;
+  private progressManager: CLIProgressManager | null = null;
+
+  constructor(options: ImportSpacesOptions) {
+    this.options = options;
+  }
+
+  public setParentProgressManager(parent: CLIProgressManager): void {
+    this.parentProgressManager = parent;
+  }
+
+  async start(): Promise<ImportResult> {
+    const configOptions = this.options;
+    const spacesRootPath = pResolve(configOptions.contentDir, 'spaces');
+    const org_uid = configOptions.org_uid;
+    const context = configOptions.context;
+    const importContext: ImportContext = {
+      spacesRootPath,
+      sourceApiKey: configOptions.sourceApiKey,
+      apiKey: configOptions.apiKey,
+      host: configOptions.host,
+      org_uid,
+      context,
+      apiConcurrency: configOptions.apiConcurrency,
+      uploadAssetsConcurrency: configOptions.uploadAssetsConcurrency,
+      importFoldersConcurrency: configOptions.importFoldersConcurrency,
+      spacesDirName: configOptions.spacesDirName,
+      fieldsDir: configOptions.fieldsDir,
+      assetTypesDir: configOptions.assetTypesDir,
+      fieldsFileName: configOptions.fieldsFileName,
+      assetTypesFileName: configOptions.assetTypesFileName,
+      foldersFileName: configOptions.foldersFileName,
+      assetsFileName: configOptions.assetsFileName,
+      fieldsImportInvalidKeys: configOptions.fieldsImportInvalidKeys,
+      assetTypesImportInvalidKeys: configOptions.assetTypesImportInvalidKeys,
+      mapperRootDir: configOptions.mapperRootDir,
+      mapperAssetsModuleDir: configOptions.mapperAssetsModuleDir,
+      mapperUidFileName: configOptions.mapperUidFileName,
+      mapperUrlFileName: configOptions.mapperUrlFileName,
+      mapperSpaceUidFileName: configOptions.mapperSpaceUidFileName,
+    };
+    const apiConfig: AssetManagementAPIConfig = {
+      baseURL: configOptions.assetManagementUrl,
+      headers: { organization_uid: org_uid },
+      context,
+    };
+
+    log.debug('Starting Asset Management import process...', context);
+
+    // Discover space directories
+    let spaceDirs: string[] = [];
+    try {
+      spaceDirs = readdirSync(spacesRootPath).filter((entry) => {
+        try {
+          return statSync(join(spacesRootPath, entry)).isDirectory() && entry.startsWith('am');
+        } catch {
+          return false;
+        }
+      });
+    } catch (e) {
+      log.warn(`Could not read spaces root path ${spacesRootPath}: ${e}`, context);
+    }
+
+    const progress = this.createProgress();
+    // Multibar layout: two shared bootstrap rows + one row per space directory.
+    // Per-space totals start at 1 and are bumped to (folderCount + assetCount)
+    // inside ImportAssets.start once we know the counts for that space.
+    progress.addProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, 1);
+    progress.addProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, 1);
+    const spaceProcessNames = new Map<string, string>();
+    for (const spaceUid of spaceDirs) {
+      const spaceProcess = getSpaceProcessName(spaceUid);
+      spaceProcessNames.set(spaceUid, spaceProcess);
+      progress.addProcess(spaceProcess, 1);
+    }
+
+    const allUidMap: Record<string, string> = {};
+    const allUrlMap: Record<string, string> = {};
+    const allSpaceUidMap: Record<string, string> = {};
+    const spaceMappings: SpaceMapping[] = [];
+    let hasFailures = false;
+    let spacesSucceeded = 0;
+    let spacesFailed = 0;
+
+    // Space UIDs already present in the target org — reuse when export dir name matches a uid here.
+    const existingSpaceUids = new Set<string>();
+    try {
+      const adapterForList = new AssetManagementAdapter(apiConfig);
+      await adapterForList.init();
+      const { spaces } = await adapterForList.listSpaces();
+      for (const s of spaces) {
+        if (s.uid) existingSpaceUids.add(s.uid);
+      }
+      log.debug(`Found ${existingSpaceUids.size} existing space uid(s) in target org`, context);
+    } catch (e) {
+      log.debug(`Could not fetch existing spaces — reuse-by-uid disabled: ${e}`, context);
+    }
+
+    try {
+      log.info('Started Asset Management import', context);
+
+      // 1. Import shared fields
+      progress.startProcess(PROCESS_NAMES.AM_IMPORT_FIELDS);
+      const fieldsImporter = new ImportFields(apiConfig, importContext);
+      fieldsImporter.setParentProgressManager(progress);
+      try {
+        await fieldsImporter.start();
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, true);
+      } catch (e) {
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, false);
+        throw e;
+      }
+
+      // 2. Import shared asset types
+      progress.startProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+      const assetTypesImporter = new ImportAssetTypes(apiConfig, importContext);
+      assetTypesImporter.setParentProgressManager(progress);
+      try {
+        await assetTypesImporter.start();
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, true);
+      } catch (e) {
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, false);
+        throw e;
+      }
+
+      // 3. Import each space — continue on failure so partially-imported data is never lost
+      for (const spaceUid of spaceDirs) {
+        const spaceDir = join(spacesRootPath, spaceUid);
+        const spaceProcess = spaceProcessNames.get(spaceUid)!;
+        progress.startProcess(spaceProcess);
+        log.debug(`Importing space: ${spaceUid}`, context);
+
+        try {
+          const workspaceImporter = new ImportWorkspace(apiConfig, importContext);
+          workspaceImporter.setParentProgressManager(progress);
+          const result = await workspaceImporter.start(spaceUid, spaceDir, existingSpaceUids, spaceProcess);
+
+          // Newly created spaces get a new uid — add so later iterations in this run see it.
+          existingSpaceUids.add(result.newSpaceUid);
+
+          Object.assign(allUidMap, result.uidMap);
+          Object.assign(allUrlMap, result.urlMap);
+          allSpaceUidMap[result.oldSpaceUid] = result.newSpaceUid;
+          spaceMappings.push({
+            oldSpaceUid: result.oldSpaceUid,
+            newSpaceUid: result.newSpaceUid,
+            workspaceUid: result.workspaceUid,
+            isDefault: result.isDefault,
+          });
+
+          progress.completeProcess(spaceProcess, true);
+          log.debug(`Imported space ${spaceUid} → ${result.newSpaceUid}`, context);
+          spacesSucceeded += 1;
+        } catch (err) {
+          hasFailures = true;
+          spacesFailed += 1;
+          progress.completeProcess(spaceProcess, false);
+          log.warn(`Failed to import space ${spaceUid}: ${err}`, context);
+        }
+      }
+
+      if (this.options.backupDir) {
+        const mapperRoot = importContext.mapperRootDir ?? 'mapper';
+        const mapperAssetsMod = importContext.mapperAssetsModuleDir ?? 'assets';
+        const mapperDir = join(this.options.backupDir, mapperRoot, mapperAssetsMod);
+        mkdirSync(mapperDir, { recursive: true });
+        const uidFile = importContext.mapperUidFileName ?? 'uid-mapping.json';
+        const urlFile = importContext.mapperUrlFileName ?? 'url-mapping.json';
+        const spaceUidFile = importContext.mapperSpaceUidFileName ?? 'space-uid-mapping.json';
+        await writeFile(join(mapperDir, uidFile), JSON.stringify(allUidMap), 'utf8');
+        await writeFile(join(mapperDir, urlFile), JSON.stringify(allUrlMap), 'utf8');
+        await writeFile(join(mapperDir, spaceUidFile), JSON.stringify(allSpaceUidMap), 'utf8');
+        log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', context);
+      }
+
+      log.info(
+        `Asset Management import finished: ${spacesSucceeded} space(s) succeeded, ${spacesFailed} failed, ${spaceDirs.length} attempted.`,
+        context,
+      );
+      log.debug(
+        `Asset Management 2.0 import completed (hasFailures=${hasFailures})`,
+        context,
+      );
+    } catch (err) {
+      // Mark any spaces that hadn't been processed as failed so the multibar
+      // doesn't leave dangling pending rows when the bootstrap phase throws.
+      for (const [, spaceProcess] of spaceProcessNames) {
+        progress.completeProcess(spaceProcess, false);
+      }
+      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management import failed');
+      throw err;
+    }
+
+    return { uidMap: allUidMap, urlMap: allUrlMap, spaceMappings, spaceUidMap: allSpaceUidMap };
+  }
+
+  private createProgress(): CLIProgressManager {
+    if (this.parentProgressManager) {
+      this.progressManager = this.parentProgressManager;
+      return this.parentProgressManager;
+    }
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+    this.progressManager = CLIProgressManager.createNested(AM_MAIN_PROCESS_NAME, showConsoleLogs);
+    return this.progressManager;
+  }
+}

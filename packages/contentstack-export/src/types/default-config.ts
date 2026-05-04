@@ -96,6 +96,15 @@ export default interface DefaultConfig {
       includeVersionedAssets: boolean;
       dependencies?: Modules[];
     };
+    'asset-management': {
+      /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
+      chunkFileSizeMb: number;
+      /** Shared export concurrency fallback used by AM 2.0 export. */
+      apiConcurrency: number;
+      /** Parallel downloads per AM workspace export. */
+      downloadAssetsConcurrency: number;
+      dependencies?: Modules[];
+    };
     content_types: {
       dirName: string;
       fileName: string;
@@ -147,6 +156,7 @@ export default interface DefaultConfig {
     stack: {
       dirName: string;
       fileName: string;
+      invalidKeys: string[];
       dependencies?: Modules[];
     };
     dependency: {

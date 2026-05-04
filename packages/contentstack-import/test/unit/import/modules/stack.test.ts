@@ -13,29 +13,30 @@ describe('ImportStack', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    
+
     tempDir = '/tmp/test-backup';
-    
+
     mockImportConfig = {
       backupDir: tempDir,
+      contentDir: path.join(tempDir, 'export-content'),
       target_stack: 'test-stack-uid',
       org_uid: 'test-org-uid',
       management_token: undefined,
       context: {
         module: 'stack',
         stack: 'test-stack',
-        management_token: 'test-token'
-      }
+        management_token: 'test-token',
+      },
     } as any;
 
-    importStack = new ImportStack({ 
+    importStack = new ImportStack({
       importConfig: mockImportConfig,
       stackAPIClient: {} as any,
-      moduleName: 'stack' as any
+      moduleName: 'stack' as any,
     });
 
     sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-      updateStatus: sandbox.stub()
+      updateStatus: sandbox.stub(),
     });
     sandbox.stub(importStack as any, 'completeProgress').resolves();
   });
@@ -56,7 +57,9 @@ describe('ImportStack', () => {
     it('should initialize with correct config and paths', () => {
       expect(importStack.importConfig).to.deep.equal(mockImportConfig);
       expect((importStack as any).stackSettingsPath).to.equal(path.join(tempDir, 'stack', 'settings.json'));
-      expect((importStack as any).envUidMapperPath).to.equal(path.join(tempDir, 'mapper', 'environments', 'uid-mapping.json'));
+      expect((importStack as any).envUidMapperPath).to.equal(
+        path.join(tempDir, 'mapper', 'environments', 'uid-mapping.json'),
+      );
     });
 
     it('should initialize with null stackSettings and empty envUidMapper', () => {
@@ -68,9 +71,9 @@ describe('ImportStack', () => {
   describe('start method', () => {
     it('should skip import when management_token is present', async () => {
       mockImportConfig.management_token = 'test-token';
-      
+
       const logSpy = sandbox.spy(console, 'log');
-      
+
       await importStack.start();
 
       // The method should return early without doing anything
@@ -82,7 +85,7 @@ describe('ImportStack', () => {
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').resolves([false]);
-      
+
       await importStack.start();
 
       expect((importStack as any).stackSettings).to.be.null;
@@ -91,7 +94,7 @@ describe('ImportStack', () => {
     it('should skip import when environment UID mapper file does not exist', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify({ some: 'settings' }));
-      
+
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').callsFake(async () => {
@@ -100,10 +103,10 @@ describe('ImportStack', () => {
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
-      
+
       await importStack.start();
 
       expect((importStack as any).stackSettings).to.deep.equal({ some: 'settings' });
@@ -112,10 +115,10 @@ describe('ImportStack', () => {
     it('should successfully import stack settings without live preview', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = { some: 'settings' };
-      const envUidMapper = { 'env1': 'new-env1' };
-      
+      const envUidMapper = { env1: 'new-env1' };
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
       fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify(envUidMapper));
 
@@ -127,13 +130,13 @@ describe('ImportStack', () => {
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       expect(stackStub.calledWith(stackSettings)).to.be.true;
@@ -144,27 +147,27 @@ describe('ImportStack', () => {
     it('should successfully import stack settings with live preview and environment mapping', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
           'default-env': 'old-env-uid',
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
       fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'old-env-uid': 'new-env-uid' }));
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       const expectedSettings = {
         live_preview: {
           'default-env': 'new-env-uid',
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
       expect(stackStub.calledWith(expectedSettings)).to.be.true;
     });
@@ -172,19 +175,19 @@ describe('ImportStack', () => {
     it('should handle live preview without default-env', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       expect(stackStub.calledWith(stackSettings)).to.be.true;
@@ -193,32 +196,32 @@ describe('ImportStack', () => {
     it('should handle live preview with default-env but no mapping found', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
           'default-env': 'unknown-env-uid',
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').callsFake(async () => {
         (importStack as any).stackSettings = stackSettings;
-        (importStack as any).envUidMapper = { 'env1': 'new-env1' };
+        (importStack as any).envUidMapper = { env1: 'new-env1' };
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       // Since default-env is undefined, it won't be modified, so check with original settings
@@ -228,22 +231,22 @@ describe('ImportStack', () => {
     it('should handle stack settings import error', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify({ some: 'settings' }));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').resolves([true]);
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'importStackSettings').rejects(new Error('Stack settings error'));
       const completeProgressStub = sandbox.stub(importStack as any, 'completeProgress');
 
       const stackStub = sandbox.stub().rejects(new Error('Stack settings error'));
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       // The error should be caught and handled
@@ -253,13 +256,13 @@ describe('ImportStack', () => {
     it('should handle null stackSettings', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(null));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       // When stackSettings is null, analyzeStackSettings returns [false], so start() returns early
@@ -269,26 +272,26 @@ describe('ImportStack', () => {
     it('should handle empty stackSettings object', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {};
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').callsFake(async () => {
         (importStack as any).stackSettings = stackSettings;
-        (importStack as any).envUidMapper = { 'env1': 'new-env1' };
+        (importStack as any).envUidMapper = { env1: 'new-env1' };
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       expect(stackStub.calledWith(stackSettings)).to.be.true;
@@ -297,20 +300,20 @@ describe('ImportStack', () => {
     it('should handle stackSettings without live_preview property', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         other: 'settings',
-        not_live_preview: 'value'
+        not_live_preview: 'value',
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
 
       const logSpy = sandbox.spy(console, 'log');
-      
+
       await importStack.start();
 
       expect(stackStub.calledWith(stackSettings)).to.be.true;
@@ -319,29 +322,29 @@ describe('ImportStack', () => {
     it('should handle live_preview with null default-env', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
           'default-env': null as any,
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
 
       const logSpy = sandbox.spy(console, 'log');
-      
+
       await importStack.start();
 
       const expectedSettings = {
         live_preview: {
           'default-env': null as any,
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
       expect(stackStub.calledWith(expectedSettings)).to.be.true;
     });
@@ -349,31 +352,31 @@ describe('ImportStack', () => {
     it('should handle live_preview with undefined default-env', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       sandbox.restore();
       sandbox = sinon.createSandbox();
       sandbox.stub(importStack as any, 'analyzeStackSettings').callsFake(async () => {
         (importStack as any).stackSettings = stackSettings;
-        (importStack as any).envUidMapper = { 'env1': 'new-env1' };
+        (importStack as any).envUidMapper = { env1: 'new-env1' };
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       expect(stackStub.calledWith(stackSettings)).to.be.true;
@@ -382,14 +385,14 @@ describe('ImportStack', () => {
     it('should handle live_preview with empty string default-env', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       const stackSettings = {
         live_preview: {
           'default-env': '' as any,
-          other: 'settings'
-        }
+          other: 'settings',
+        },
       };
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify(stackSettings));
       fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ '': 'new-env-uid' }));
 
@@ -401,13 +404,13 @@ describe('ImportStack', () => {
         return [true];
       });
       sandbox.stub(importStack as any, 'createSimpleProgress').returns({
-        updateStatus: sandbox.stub()
+        updateStatus: sandbox.stub(),
       });
       sandbox.stub(importStack as any, 'completeProgress').resolves();
 
       const stackStub = sandbox.stub().resolves();
       sandbox.stub(importStack, 'stack').value({ addSettings: stackStub });
-      
+
       await importStack.start();
 
       // Since default-env is '', it will be mapped to 'new-env-uid' if mapping exists
@@ -420,12 +423,12 @@ describe('ImportStack', () => {
     it('should handle malformed JSON in stack settings file', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, 'invalid json');
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       const logSpy = sandbox.spy(console, 'log');
-      
+
       try {
         await importStack.start();
       } catch (error) {
@@ -437,12 +440,12 @@ describe('ImportStack', () => {
     it('should handle malformed JSON in env mapper file', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify({ some: 'settings' }));
       fs.writeFileSync((importStack as any).envUidMapperPath, 'invalid json');
 
       const logSpy = sandbox.spy(console, 'log');
-      
+
       try {
         await importStack.start();
       } catch (error) {
@@ -454,15 +457,15 @@ describe('ImportStack', () => {
     it('should handle file read errors', async () => {
       fs.mkdirSync(path.dirname((importStack as any).stackSettingsPath), { recursive: true });
       fs.mkdirSync(path.dirname((importStack as any).envUidMapperPath), { recursive: true });
-      
+
       fs.writeFileSync((importStack as any).stackSettingsPath, JSON.stringify({ some: 'settings' }));
-      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ 'env1': 'new-env1' }));
+      fs.writeFileSync((importStack as any).envUidMapperPath, JSON.stringify({ env1: 'new-env1' }));
 
       // Make file unreadable
       fs.chmodSync((importStack as any).stackSettingsPath, 0o000);
 
       const logSpy = sandbox.spy(console, 'log');
-      
+
       try {
         await importStack.start();
       } catch (error) {

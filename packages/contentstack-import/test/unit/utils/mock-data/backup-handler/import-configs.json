@@ -7,14 +7,6 @@
       "module": "all"
     }
   },
-  "withBranchDir": {
-    "branchDir": "/path/to/branch/content",
-    "contentDir": "/path/to/content",
-    "context": {
-      "command": "cm:stacks:import",
-      "module": "all"
-    }
-  },
   "withContentDir": {
     "contentDir": "/path/to/content",
     "context": {
