@@ -50,9 +50,10 @@ export default class ImportSetup {
    * @returns {Promise<Array<void | string>>}
    */
   protected async generateDependencyTree() {
-    type ModulesKey = keyof typeof this.config.modules;
     const visited: Set<string> = new Set();
     const assignedDependencies: Set<string> = new Set(); // Track assigned dependencies
+
+    type ModulesKey = keyof typeof this.config.modules;
 
     const getAllDependencies = (module: ModulesKey): Modules[] => {
       if (visited.has(module)) return [];
@@ -130,10 +131,14 @@ export default class ImportSetup {
    */
   async start() {
     try {
-      if (!this.config.management_token) {
+      const needsStackFetch =
+        !this.config.management_token ||
+        (this.config.assetManagementEnabled && !this.config.org_uid);
+
+      if (needsStackFetch) {
         const stackDetails: Record<string, unknown> = await this.stackAPIClient.fetch();
-        this.config.stackName = stackDetails.name as string;
-        this.config.org_uid = stackDetails.org_uid as string;
+        this.config.stackName = (stackDetails.name as string) ?? this.config.stackName;
+        this.config.org_uid = (stackDetails.org_uid as string) ?? this.config.org_uid;
       }
 
       this.log.debug('Creating backup directory');

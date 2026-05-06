@@ -1,6 +1,7 @@
 import merge from 'merge';
 import * as path from 'path';
 import { configHandler, isAuthenticated, cliux, sanitizePath } from '@contentstack/cli-utilities';
+import { detectAssetManagementExportFromContentDir } from '@contentstack/cli-asset-management';
 import defaultConfig from '../config';
 import { askContentDir, askAPIKey, askSelectedModules } from './interactive';
 import login from './login-handler';
@@ -68,6 +69,15 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   //Note to support the old key
   config.source_stack = config.apiKey;
+
+  const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
+  if (assetManagementExport.assetManagementEnabled) {
+    config.assetManagementEnabled = true;
+    config.assetManagementUrl = assetManagementExport.assetManagementUrl;
+    if (assetManagementExport.source_stack) {
+      config.source_stack = assetManagementExport.source_stack;
+    }
+  }
 
   // config.skipAudit = importCmdFlags['skip-audit'];
   // config.forceStopMarketplaceAppsPrompt = importCmdFlags.yes;

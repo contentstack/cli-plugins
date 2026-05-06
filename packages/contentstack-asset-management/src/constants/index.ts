@@ -27,6 +27,17 @@ export const FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS = [
 
 /** @deprecated Use FALLBACK_AM_CHUNK_FILE_SIZE_MB */
 export const CHUNK_FILE_SIZE_MB = FALLBACK_AM_CHUNK_FILE_SIZE_MB;
+/**
+ * Mapper output paths — must stay aligned with contentstack-import `PATH_CONSTANTS`
+ * (`mapper` / `assets` / uid, url, space-uid file names).
+ */
+export const IMPORT_ASSETS_MAPPER_DIR_SEGMENTS = ['mapper', 'assets'] as const;
+export const IMPORT_ASSETS_MAPPER_FILES = {
+  UID_MAPPING: 'uid-mapping.json',
+  URL_MAPPING: 'url-mapping.json',
+  SPACE_UID_MAPPING: 'space-uid-mapping.json',
+  DUPLICATE_ASSETS: 'duplicate-assets.json',
+} as const;
 
 /**
  * Main process name for Asset Management 2.0 export (single progress bar).
@@ -49,6 +60,8 @@ export const PROCESS_NAMES = {
   AM_IMPORT_ASSET_TYPES: 'Import asset types',
   AM_IMPORT_FOLDERS: 'Import folders',
   AM_IMPORT_ASSETS: 'Import assets',
+  /** Import-setup (CLI): generate uid/url/space mappers from AM export before full import. */
+  AM_IMPORT_SETUP_ASSET_MAPPERS: 'Import setup asset mappers',
 } as const;
 
 /**
@@ -94,5 +107,9 @@ export const PROCESS_STATUS = {
   [PROCESS_NAMES.AM_IMPORT_ASSETS]: {
     IMPORTING: 'Importing assets...',
     FAILED: 'Failed to import assets.',
+  },
+  [PROCESS_NAMES.AM_IMPORT_SETUP_ASSET_MAPPERS]: {
+    GENERATING: 'Generating asset mappers...',
+    FAILED: 'Failed to generate asset mappers.',
   },
 } as const;

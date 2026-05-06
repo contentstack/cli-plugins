@@ -1,8 +1,8 @@
 import merge from 'merge';
 import * as path from 'path';
-import { existsSync, readFileSync } from 'node:fs';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import { detectAssetManagementExportFromContentDir } from '@contentstack/cli-asset-management';
 import defaultConfig from '../config';
 import { readFile } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
@@ -125,31 +125,12 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
   }
 
-  const spacesDir = path.join(config.contentDir, 'spaces');
-  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
-  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
-
-  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
-    try {
-      const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
-      if (stackSettings?.am_v2) {
-        config.assetManagementEnabled = true;
-        config.assetManagementUrl = configHandler.get('region')?.assetManagementUrl;
-
-        if (existsSync(stackJsonPath)) {
-          try {
-            const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
-            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
-            if (apiKey) {
-              config.source_stack = apiKey;
-            }
-          } catch {
-            // stack.json unreadable — source stack API key will not be set
-          }
-        }
-      }
-    } catch {
-      // stack settings unreadable — not an AM 2.0 export we can process
+  const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
+  if (assetManagementExport.assetManagementEnabled) {
+    config.assetManagementEnabled = true;
+    config.assetManagementUrl = assetManagementExport.assetManagementUrl;
+    if (assetManagementExport.source_stack) {
+      config.source_stack = assetManagementExport.source_stack;
     }
   }
 
