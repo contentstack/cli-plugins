@@ -1,5 +1,5 @@
 import map from 'lodash/map';
-import { getChalk } from '@contentstack/cli-utilities';
+import { cliux, getChalk } from '@contentstack/cli-utilities';
 import chunk from 'lodash/chunk';
 import first from 'lodash/first';
 import merge from 'lodash/merge';
@@ -34,6 +34,7 @@ import {
   MODULE_NAMES,
   getOrgUid,
 } from '../../utils';
+import { handle } from '@oclif/core';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -61,13 +62,27 @@ export default class ExportAssets extends BaseClass {
     if (linkedWorkspaces.length > 0) {
       const assetManagementUrl = this.exportConfig.region?.assetManagementUrl;
       if (!assetManagementUrl) {
-        this.completeProgress(
-          false,
-          'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+        handleAndLogError(
+          new Error(
+            'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+          ),
+          {
+            ...this.exportConfig.context,
+            message:
+              'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+          },
         );
-        throw new Error(
+        this.completeProgressWithMessage({
+          moduleName: 'Asset Management 2.0',
+          customWarningMessage:
+            'Asset Management 2.0 export was skipped: assetManagementUrl is not configured. AM 2.0 assets will not be exported.',
+          context: this.exportConfig.context,
+        });
+        cliux.print(
           'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+          { color: 'yellow' },
         );
+        return;
       }
       log.debug(
         `Exporting with AM 2.0: ${assetManagementUrl} (linked_workspaces from exportConfig)`,
