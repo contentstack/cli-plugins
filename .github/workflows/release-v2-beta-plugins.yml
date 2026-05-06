@@ -38,6 +38,15 @@ jobs:
           filename: .github/config/release.json
           prefix: release
 
+      # Asset Management
+      - name: Publishing asset-management (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-asset-management/package.json
+          access: public
+          tag: beta
+
       # Variants
       - name: Publishing variants (Beta)
         uses: JS-DevTools/npm-publish@v3
@@ -126,17 +135,10 @@ jobs:
           package: ./packages/contentstack-branches/package.json
           tag: beta
 
-      - name: Create Beta Release
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
-          VERSION: ${{ steps.publish-core.outputs.version }}
-        run: |
-          # Get the previous beta release for comparison
-          PREVIOUS_BETA=$(gh release list --limit 10 | grep 'beta' | head -1 | cut -f1)
-
-          if [ -n "$PREVIOUS_BETA" ]; then
-            gh release create v"$VERSION" --title "Beta Release $VERSION" --notes-from-tag "$PREVIOUS_BETA" --prerelease
-          else
-            gh release create v"$VERSION" --title "Beta Release $VERSION" --generate-notes --prerelease
-          fi
+      # Query Export
+      - name: Publishing query-export (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-query-export/package.json
+          tag: beta
