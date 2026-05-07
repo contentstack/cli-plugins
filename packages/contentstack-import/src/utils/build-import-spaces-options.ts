@@ -1,4 +1,5 @@
 import type { ImportSpacesOptions } from '@contentstack/cli-asset-management';
+import { log } from '@contentstack/cli-utilities';
 
 import { PATH_CONSTANTS } from '../constants';
 import type ImportConfig from '../types/import-config';
@@ -7,16 +8,17 @@ import type ImportConfig from '../types/import-config';
  * Maps stack `ImportConfig` and AM base URL into a single `ImportSpacesOptions` for the AM package
  * (variants-style: one flat object; `ImportSpaces` splits API vs context internally).
  */
-export function buildImportSpacesOptions(
-  importConfig: ImportConfig,
-  assetManagementUrl: string,
-): ImportSpacesOptions {
-  const am = importConfig.modules['asset-management'];
+export function buildImportSpacesOptions(importConfig: ImportConfig, csAssetsUrl: string): ImportSpacesOptions {
+  const legacyModuleConfig = (importConfig.modules as Record<string, any>)['asset-management'];
+  const am = importConfig.modules['cs-assets'] || legacyModuleConfig;
+  if (!importConfig.modules['cs-assets'] && legacyModuleConfig) {
+    log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+  }
   const org_uid = importConfig.org_uid ?? '';
 
   return {
     contentDir: importConfig.contentDir,
-    assetManagementUrl,
+    csAssetsUrl,
     org_uid,
     apiKey: importConfig.apiKey,
     host: importConfig.region?.cma ?? importConfig.host ?? '',

@@ -154,7 +154,7 @@ describe('BaseClass', () => {
           enableDownloadStatus: false,
           includeVersionedAssets: false,
         },
-        'asset-management': {
+        'cs-assets': {
           chunkFileSizeMb: 1,
           apiConcurrency: 5,
           downloadAssetsConcurrency: 5,

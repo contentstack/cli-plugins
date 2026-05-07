@@ -62,7 +62,7 @@ describe('ImportLocales', () => {
           folderValidKeys: ['uid', 'name'],
           validKeys: ['uid', 'title'],
         },
-        'asset-management': {
+        'cs-assets': {
           dirName: 'spaces',
           fieldsDir: 'fields',
           assetTypesDir: 'asset_types',
