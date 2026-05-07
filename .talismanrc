@@ -1,8 +1,6 @@
 fileignoreconfig:
-  - filename: packages/contentstack-import/test/unit/utils/extension-helper.test.ts
-    checksum: c5aad4f28fbab6610d955490f061e647714b88f7b8f8d9cc4dbc3b4a10b9e59a
-  - filename: packages/contentstack-import/test/unit/import/modules/locales.test.ts
-    checksum: 0085926464eeb17cda0b9fb5a16853ad9c9aec9a42b54161107d0c808347498f
-  - filename: packages/contentstack-import/test/unit/import/modules/publishing-rules.test.ts
-    checksum: 0fcbff5dab2f9e594fe2a316c3c96e8d86bcd5d72e7c1f9eb35c0e3458f87817
+  - filename: packages/contentstack-export/test/unit/export/modules/assets.test.ts
+    checksum: 2d493850007ed97dce15bd0117d37b55434beb8de0f0475d044f5008d57d4132
+  - filename: packages/contentstack-export/test/unit/export/modules/base-class.test.ts
+    checksum: 60e81daf49efeb424143317388cd2bbe4efcb8945dd8cd0cafaf30a0329e2c7b
 version: '1.0'
