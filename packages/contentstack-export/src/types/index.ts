@@ -32,7 +32,7 @@ export interface Region {
   cma: string;
   cda: string;
   uiHost: string;
-  assetManagementUrl?: string;
+  csAssetsUrl?: string;
 }
 
 export type Modules =

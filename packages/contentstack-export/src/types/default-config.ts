@@ -96,10 +96,10 @@ export default interface DefaultConfig {
       includeVersionedAssets: boolean;
       dependencies?: Modules[];
     };
-    'asset-management': {
+    'cs-assets': {
       /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
       chunkFileSizeMb: number;
-      /** Shared export concurrency fallback used by AM 2.0 export. */
+      /** Shared export concurrency fallback used by CS Assets export. */
       apiConcurrency: number;
       /** Parallel downloads per AM workspace export. */
       downloadAssetsConcurrency: number;

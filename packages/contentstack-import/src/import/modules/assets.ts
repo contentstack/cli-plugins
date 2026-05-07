@@ -67,11 +67,11 @@ export default class ImportAssets extends BaseClass {
     try {
       log.debug('Starting assets import process...', this.importConfig.context);
 
-      // AM 2.0: assetManagementEnabled is set in the config handler when spaces/ + am_v2 are detected.
-      if (this.importConfig.assetManagementEnabled) {
-        if (!this.importConfig.assetManagementUrl) {
+      // CS Assets: csAssetsEnabled is set in the config handler when spaces/ + am_v2 are detected.
+      if (this.importConfig.csAssetsEnabled) {
+        if (!this.importConfig.csAssetsUrl) {
           log.info(
-            'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset import.',
+            'CS Assets export detected but csAssetsUrl is not configured in the region settings. Skipping CS Assets asset import.',
             this.importConfig.context,
           );
           return;
@@ -81,13 +81,11 @@ export default class ImportAssets extends BaseClass {
         let spaceMappings: SpaceMapping[] = [];
 
         try {
-          const importer = new ImportSpaces(
-            buildImportSpacesOptions(this.importConfig, this.importConfig.assetManagementUrl),
-          );
+          const importer = new ImportSpaces(buildImportSpacesOptions(this.importConfig, this.importConfig.csAssetsUrl));
           importer.setParentProgressManager(progress);
           ({ spaceMappings } = await importer.start());
         } catch (error) {
-          this.completeProgress(false, (error as Error)?.message ?? 'AM 2.0 asset import failed');
+          this.completeProgress(false, (error as Error)?.message ?? 'CS Assets asset import failed');
           throw error;
         }
 
@@ -170,10 +168,7 @@ export default class ImportAssets extends BaseClass {
     try {
       const branchUid = this.importConfig.branchName ?? 'main';
 
-      const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
-        string,
-        any
-      >;
+      const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<string, any>;
       const currentLinked = (branchData?.settings?.am_v2?.linked_workspaces ?? []) as Array<{
         uid: string;
         space_uid: string;
@@ -193,14 +188,11 @@ export default class ImportAssets extends BaseClass {
       await this.stack.branch(branchUid).updateSettings({
         branch: { settings: { am_v2: { linked_workspaces: combinedWorkspaces } } },
       });
-      log.success(
-        `Linked ${newWorkspaces.length} space(s) to branch "${branchUid}"`,
-        this.importConfig.context,
-      );
+      log.success(`Linked ${newWorkspaces.length} space(s) to branch "${branchUid}"`, this.importConfig.context);
     } catch (linkErr) {
       handleAndLogError(linkErr, {
         ...this.importConfig.context,
-        phase: 'AM 2.0 branch linking (linked_workspaces)',
+        phase: 'CS Assets branch linking (linked_workspaces)',
       });
     }
   }
