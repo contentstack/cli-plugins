@@ -1,6 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-export/test/unit/export/modules/assets.test.ts
-    checksum: 2d493850007ed97dce15bd0117d37b55434beb8de0f0475d044f5008d57d4132
-  - filename: packages/contentstack-export/test/unit/export/modules/base-class.test.ts
-    checksum: 60e81daf49efeb424143317388cd2bbe4efcb8945dd8cd0cafaf30a0329e2c7b
+  - filename: pnpm-lock.yaml
+    checksum: 97c02af1c210f0a8d5486ec114746856c96209132b973199cfed33de8461965c
 version: '1.0'
