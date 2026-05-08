@@ -32,7 +32,6 @@ USAGE
 <!-- commands -->
 * [`csdx cm:stacks:audit`](#csdx-cmstacksaudit)
 * [`csdx cm:stacks:audit:fix`](#csdx-cmstacksauditfix)
-* [`csdx help [COMMAND]`](#csdx-help-command)
 
 ## `csdx cm:stacks:audit`
 
