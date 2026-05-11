@@ -14,6 +14,7 @@ import {
   getSessionLogPath,
   CLIProgressManager,
   clearProgressModuleSetting,
+  loadChalk,
 } from '@contentstack/cli-utilities';
 
 import { ModuleExporter } from '../../../export';
@@ -87,6 +88,7 @@ export default class ExportCommand extends Command {
   };
 
   async run(): Promise<void> {
+    await loadChalk();
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);

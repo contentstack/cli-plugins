@@ -13,6 +13,7 @@ import {
   cliux,
   clearProgressModuleSetting,
   createLogContext,
+  loadChalk,
 } from '@contentstack/cli-utilities';
 
 import { Context, ImportConfig } from '../../../types';
@@ -117,6 +118,7 @@ export default class ImportCommand extends Command {
     // setup import config
     // initialize the importer
     // start import
+    await loadChalk();
     let backupDir: string;
     let importConfig: ImportConfig;
     try {
