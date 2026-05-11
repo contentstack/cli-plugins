@@ -5,7 +5,17 @@ import { log, handleAndLogError, CLIProgressManager } from '@contentstack/cli-ut
 import { PATH_CONSTANTS } from '../../constants';
 
 import BaseClass, { ApiOptions } from './base-class';
-import { fsUtil, fileHelper, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS, PROCESS_NAMES } from '../../utils';
+import {
+  fsUtil,
+  fileHelper,
+  MODULE_CONTEXTS,
+  MODULE_NAMES,
+  PROCESS_STATUS,
+  PROCESS_NAMES,
+  readEnvUidMapperSync,
+  warnIfEnvMapperEmpty,
+  serializePublishTaxonomies,
+} from '../../utils';
 import { ModuleClassParams, TaxonomiesConfig } from '../../types';
 
 export default class ImportTaxonomies extends BaseClass {
@@ -20,7 +30,6 @@ export default class ImportTaxonomies extends BaseClass {
   private termsFailsPath: string;
   private localesFilePath: string;
   private envUidMapperPath: string;
-  private envUidMapper: Record<string, string> = {};
   private isLocaleBasedStructure: boolean = false;
   public createdTaxonomies: Record<string, unknown> = {};
   public failedTaxonomies: Record<string, unknown> = {};
@@ -387,30 +396,6 @@ export default class ImportTaxonomies extends BaseClass {
 
   // --- Publish ---
 
-  /**
-   * Reads source env UID → destination stack env UID map produced during environments import.
-   */
-  private readEnvUidMapperSync(): Record<string, string> {
-    if (!fileHelper.fileExistsSync(this.envUidMapperPath)) {
-      log.debug(`Environment UID mapper not found at ${this.envUidMapperPath}`, this.importConfig.context);
-      return {};
-    }
-
-    try {
-      const raw = fsUtil.readFile(this.envUidMapperPath, true) as Record<string, unknown>;
-      const out: Record<string, string> = {};
-      for (const [k, v] of Object.entries(raw || {})) {
-        if (v !== undefined && v !== null && String(v).trim() !== '') {
-          out[k] = String(v);
-        }
-      }
-      return out;
-    } catch {
-      log.debug('Failed to read environment UID mapper', this.importConfig.context);
-      return {};
-    }
-  }
-
   private countPublishEligibleTaxonomies(envMapper: Record<string, string>): number {
     let count = 0;
     for (const key of Object.keys(this.taxonomies || {})) {
@@ -454,18 +439,9 @@ export default class ImportTaxonomies extends BaseClass {
     return jobs;
   }
 
-  private loadEnvUidMapper(): void {
-    this.envUidMapper = this.readEnvUidMapperSync();
-    if (isEmpty(this.envUidMapper)) {
-      log.warn(
-        'Environment UID mapper is empty; taxonomy publishing is skipped. Import environments first or ensure mapper/environments/uid-mapping.json exists.',
-        this.importConfig.context,
-      );
-    }
-  }
-
   async processTaxonomyPublishing(): Promise<void> {
-    this.loadEnvUidMapper();
+    const envUidMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
+    warnIfEnvMapperEmpty(envUidMapper, this.importConfig.context);
     const jobs = this.collectTaxonomyPublishJobs();
 
     if (jobs.length === 0) {
@@ -506,7 +482,7 @@ export default class ImportTaxonomies extends BaseClass {
         apiContent: jobs as unknown as Record<string, any>[],
         processName: 'publish taxonomies',
         apiParams: {
-          serializeData: this.serializePublishTaxonomies.bind(this),
+          serializeData: (opts: ApiOptions) => serializePublishTaxonomies(opts, envUidMapper),
           reject: onReject,
           resolve: onSuccess,
           entity: 'publish-taxonomies',
@@ -517,43 +493,6 @@ export default class ImportTaxonomies extends BaseClass {
       undefined,
       false,
     );
-  }
-
-  /**
-   * Builds taxonomy publish payload: destination env UIDs from mapper, locales from taxonomy.locale, items: [{ uid }].
-   */
-  serializePublishTaxonomies(apiOptions: ApiOptions): ApiOptions {
-    const job = apiOptions.apiData as { taxonomy?: Record<string, any> };
-    const taxonomy = job?.taxonomy;
-
-    if (!taxonomy?.publish_details?.length || !taxonomy?.locale) {
-      apiOptions.apiData = undefined;
-      return apiOptions;
-    }
-
-    const environments: string[] = [];
-    for (const pub of taxonomy.publish_details as any[]) {
-      const sourceEnvUid = pub?.environment;
-      if (!sourceEnvUid) continue;
-      const destUid = this.envUidMapper[String(sourceEnvUid)];
-      if (destUid && !environments.includes(destUid)) {
-        environments.push(destUid);
-      }
-    }
-
-    if (environments.length === 0) {
-      apiOptions.apiData = undefined;
-      return apiOptions;
-    }
-
-    const locales = [String(taxonomy.locale)];
-    apiOptions.apiData = {
-      environments,
-      locales,
-      items: [{ uid: taxonomy.uid }],
-    };
-
-    return apiOptions;
   }
 
   // --- Mapper output ---
@@ -631,7 +570,7 @@ export default class ImportTaxonomies extends BaseClass {
       this.isLocaleBasedStructure = this.detectAndScanLocaleStructure();
 
       const taxonomyCount = Object.keys(this.taxonomies || {}).length;
-      const envMapper = this.readEnvUidMapperSync();
+      const envMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
       const publishJobCount = this.countPublishEligibleTaxonomies(envMapper);
 
       log.debug(
