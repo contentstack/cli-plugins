@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { FsUtility, getDirectories } from '@contentstack/cli-utilities';
-import { ExportSpaces } from '@contentstack/cli-cs-assets';
+import { ExportSpaces } from '@contentstack/cli-asset-management';
 import ExportAssets from '../../../../src/export/modules/assets';
 import { ExportConfig } from '../../../../src/types';
 import { mockData, assetsMetaData } from '../../mock/assets';
