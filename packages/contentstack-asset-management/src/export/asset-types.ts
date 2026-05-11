@@ -7,6 +7,8 @@ import { getArrayFromResponse } from '../utils/export-helpers';
 import { PROCESS_NAMES } from '../constants/index';
 
 export default class ExportAssetTypes extends AssetManagementExportAdapter {
+  protected processName: string = PROCESS_NAMES.AM_ASSET_TYPES;
+
   constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
@@ -24,7 +26,13 @@ export default class ExportAssetTypes extends AssetManagementExportAdapter {
     } else {
       log.debug(`Writing ${items.length} shared asset types`, this.exportContext.context);
     }
-    await this.writeItemsToChunkedJson(dir, 'asset-types.json', 'asset_types', ['uid', 'title', 'category', 'file_extension'], items);
-    this.tick(true, PROCESS_NAMES.AM_ASSET_TYPES, null);
+    await this.writeItemsToChunkedJson(
+      dir,
+      'asset-types.json',
+      'asset_types',
+      ['uid', 'title', 'category', 'file_extension'],
+      items,
+    );
+    this.tick(true, `asset_types (${items.length})`, null);
   }
 }

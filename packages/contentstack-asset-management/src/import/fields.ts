@@ -24,6 +24,11 @@ type FieldToCreate = { uid: string; payload: Record<string, unknown> };
  * 5. Strip read-only/computed keys from the POST body before creating new fields.
  */
 export default class ImportFields extends AssetManagementImportAdapter {
+  protected processName: string = PROCESS_NAMES.AM_IMPORT_FIELDS;
+  private successCount = 0;
+  private failureCount = 0;
+  private skippedCount = 0;
+
   constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
@@ -40,12 +45,15 @@ export default class ImportFields extends AssetManagementImportAdapter {
 
     if (!existsSync(indexPath)) {
       log.info('No shared fields to import (index missing)', this.importContext.context);
+      // Single aggregate tick so the shared row in the multibar still completes
+      // even when there is nothing to import.
+      this.tick(true, 'fields (0)', null);
       return;
     }
 
     const existingByUid = await this.loadExistingFieldsMap();
 
-    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].IMPORTING, PROCESS_NAMES.AM_IMPORT_FIELDS);
+    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].IMPORTING);
 
     await forEachChunkedJsonStore<Record<string, unknown>>(
       dir,
@@ -60,6 +68,15 @@ export default class ImportFields extends AssetManagementImportAdapter {
         const toCreate = this.buildFieldsToCreate(records, existingByUid, stripKeys);
         await this.importFieldsCreates(toCreate);
       },
+    );
+
+    // Aggregate tick at end so the single-row shared bootstrap bar reaches 100%
+    // regardless of how many chunks/items were processed; the per-field outcome
+    // is still captured in logs.
+    this.tick(
+      this.failureCount === 0,
+      `fields: ${this.successCount} created, ${this.skippedCount} skipped, ${this.failureCount} failed`,
+      this.failureCount > 0 ? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].FAILED : null,
     );
   }
 
@@ -105,7 +122,7 @@ export default class ImportFields extends AssetManagementImportAdapter {
         } else {
           log.debug(`Field "${uid}" already exists with matching definition, skipping`, this.importContext.context);
         }
-        this.tick(true, `field: ${uid} (skipped, already exists)`, null, PROCESS_NAMES.AM_IMPORT_FIELDS);
+        this.skippedCount += 1;
         continue;
       }
 
@@ -119,15 +136,10 @@ export default class ImportFields extends AssetManagementImportAdapter {
     await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createField(payload as any);
-        this.tick(true, `field: ${uid}`, null, PROCESS_NAMES.AM_IMPORT_FIELDS);
+        this.successCount += 1;
         log.debug(`Imported field: ${uid}`, this.importContext.context);
       } catch (e) {
-        this.tick(
-          false,
-          `field: ${uid}`,
-          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FIELDS].FAILED,
-          PROCESS_NAMES.AM_IMPORT_FIELDS,
-        );
+        this.failureCount += 1;
         log.debug(`Failed to import field ${uid}: ${e}`, this.importContext.context);
       }
     });

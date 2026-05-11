@@ -8,6 +8,20 @@ import values from 'lodash/values';
 import { keys } from 'lodash';
 import BaseClass from './base-class';
 
+/**
+ * Multibar row label for a single space. Bounded to 14 chars after the
+ * `Space ` prefix so CLIProgressManager.formatProcessName doesn't truncate the
+ * row mid-string. Mirrors the helper in `@contentstack/cli-asset-management`.
+ */
+const SPACE_PROCESS_NAME_PREFIX = 'Space ';
+const SPACE_PROCESS_NAME_MAX_UID_LEN = 14;
+function getSpaceProcessName(spaceUid: string): string {
+  const safe = spaceUid ?? '';
+  const trimmed =
+    safe.length > SPACE_PROCESS_NAME_MAX_UID_LEN ? safe.substring(0, SPACE_PROCESS_NAME_MAX_UID_LEN) : safe;
+  return `${SPACE_PROCESS_NAME_PREFIX}${trimmed}`;
+}
+
 /* The `Assets` class is responsible for scanning assets, looking for missing environment/locale references,
 and generating a report in JSON and CSV formats. */
 export default class Assets extends BaseClass {
@@ -24,6 +38,8 @@ export default class Assets extends BaseClass {
   public moduleName: keyof typeof auditConfig.moduleConfig;
   private fixOverwriteConfirmed: boolean | null = null;
   private resolvedBasePaths: Array<{ path: string; spaceId: string | null }> = [];
+  /** Map space dir name → the per-space multibar row label, or empty when single-space. */
+  private spaceProcessNames: Map<string, string> = new Map();
 
   constructor({ fix, config, moduleName }: ModuleConstructorParam & CtConstructorParam) {
     super({ config });
@@ -71,14 +87,31 @@ export default class Assets extends BaseClass {
         await this.prerequisiteData();
       });
 
-      // Create progress manager if we have a total count
-      if (totalCount && totalCount > 0) {
+      // Resolve base paths up front so the progress UI can decide between a
+      // simple single-bar layout (legacy export) and a per-space multibar.
+      this.resolvedBasePaths = this.resolveAssetBasePaths();
+      log.debug(`Resolved ${this.resolvedBasePaths.length} asset base path(s)`, this.config.auditContext);
+
+      const isMultiSpace =
+        this.resolvedBasePaths.length > 1 ||
+        (this.resolvedBasePaths.length === 1 && this.resolvedBasePaths[0].spaceId !== null);
+
+      if (isMultiSpace) {
+        const progress = this.createNestedProgress(this.moduleName);
+        for (const { path, spaceId } of this.resolvedBasePaths) {
+          // Each space row's total = number of assets in that space; pre-counted
+          // from the chunked metadata so the bar shows real progress as ticks
+          // accumulate inside lookForReference.
+          const rowName = getSpaceProcessName(spaceId ?? 'unknown');
+          this.spaceProcessNames.set(spaceId ?? path, rowName);
+          const spaceTotal = this.countAssetsInChunkedStore(path);
+          progress.addProcess(rowName, Math.max(1, spaceTotal));
+        }
+      } else if (totalCount && totalCount > 0) {
+        // Legacy flat layout — single progress bar for the whole asset set.
         const progress = this.createSimpleProgress(this.moduleName, totalCount);
         progress.updateStatus('Validating asset references...');
       }
-
-      this.resolvedBasePaths = this.resolveAssetBasePaths();
-      log.debug(`Resolved ${this.resolvedBasePaths.length} asset base path(s)`, this.config.auditContext);
 
       log.debug('Starting asset Reference, Environment and Locale validation', this.config.auditContext);
       await this.lookForReference();
@@ -250,8 +283,16 @@ export default class Assets extends BaseClass {
         cliux.print($t(auditMsg.AUDITING_SPACE, { spaceId }), { color: 'cyan' });
       }
 
-      // Progress bar UX: update status label to reflect the current space
-      this.progressManager?.updateStatus?.(spaceId ? `Space: ${spaceId}` : 'Scanning assets...');
+      // Multi-space layout: start the per-space row and route ticks below to it.
+      // Single-space (legacy) layout falls back to the existing simple progress
+      // bar with a status update.
+      const spaceProcessName = this.spaceProcessNames.get(spaceId ?? spacePath);
+      if (spaceProcessName) {
+        this.progressManager?.startProcess?.(spaceProcessName);
+        this.progressManager?.updateStatus?.(`Space: ${spaceId ?? 'assets'}`, spaceProcessName);
+      } else {
+        this.progressManager?.updateStatus?.(spaceId ? `Space: ${spaceId}` : 'Scanning assets...');
+      }
 
       let fsUtility = new FsUtility({ basePath: spacePath, indexFileName: 'assets.json' });
       let indexer = fsUtility.indexFileContent;
@@ -332,7 +373,9 @@ export default class Assets extends BaseClass {
           );
 
           if (this.progressManager) {
-            this.progressManager.tick(true, `asset: ${assetUid}`, null);
+            // Route the tick to the per-space row when multi-space, otherwise
+            // tick the single legacy progress bar (processName arg defaults).
+            this.progressManager.tick(true, `asset: ${assetUid}`, null, spaceProcessName);
           }
 
           if (this.fix) {
@@ -345,6 +388,12 @@ export default class Assets extends BaseClass {
           await this.writeFixContent(`${spacePath}/${indexer[fileIndex]}`, this.assets);
         }
       }
+
+      // Per-space row finished — close it so the multibar shows ✓ Complete
+      // and the next space (if any) starts cleanly.
+      if (spaceProcessName) {
+        this.progressManager?.completeProcess?.(spaceProcessName, true);
+      }
     }
 
     log.debug(
@@ -353,5 +402,31 @@ export default class Assets extends BaseClass {
       } assets with issues`,
       this.config.auditContext,
     );
+  }
+
+  /**
+   * Sum the asset count across all chunk metadata files for a given space's
+   * `assets/` directory. Used by `run` to seed each per-space progress row's
+   * total before validation begins. Falls back to walking chunk files if the
+   * aggregated `metadata.json` is unavailable (older exports).
+   */
+  private countAssetsInChunkedStore(assetsDir: string): number {
+    try {
+      const fsUtility = new FsUtility({ basePath: assetsDir, indexFileName: 'assets.json' });
+      const meta = fsUtility.getPlainMeta();
+      let total = 0;
+      for (const value of Object.values(meta)) {
+        if (Array.isArray(value)) total += value.length;
+      }
+      if (total > 0) return total;
+
+      // Fallback: count keys across each chunk file (slow path for legacy
+      // exports without metadata.json).
+      const indexer = fsUtility.indexFileContent ?? {};
+      return Object.keys(indexer).length;
+    } catch (e) {
+      log.debug(`Could not pre-count assets in ${assetsDir}: ${e}`, this.config.auditContext);
+      return 0;
+    }
   }
 }

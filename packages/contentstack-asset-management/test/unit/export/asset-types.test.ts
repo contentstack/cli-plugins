@@ -3,7 +3,6 @@ import sinon from 'sinon';
 
 import ExportAssetTypes from '../../../src/export/asset-types';
 import { AssetManagementExportAdapter } from '../../../src/export/base';
-import { PROCESS_NAMES } from '../../../src/constants/index';
 
 import type { AssetManagementAPIConfig } from '../../../src/types/asset-management-api';
 import type { ExportContext } from '../../../src/types/export-types';
@@ -76,13 +75,19 @@ describe('ExportAssetTypes', () => {
       expect(writeStub.firstCall.args[4]).to.deep.equal([]);
     });
 
-    it('should tick with success=true, the asset types process name, and null error', async () => {
+    it('should tick once with the asset_types summary label and null error after writing', async () => {
       sinon.stub(ExportAssetTypes.prototype, 'getWorkspaceAssetTypes').resolves(assetTypesResponse);
       const exporter = new ExportAssetTypes(apiConfig, exportContext);
       await exporter.start(spaceUid);
 
       const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
-      expect(tickStub.firstCall.args).to.deep.equal([true, PROCESS_NAMES.AM_ASSET_TYPES, null]);
+      expect(tickStub.callCount).to.equal(1);
+      const [success, label, error] = tickStub.firstCall.args;
+      expect(success).to.be.true;
+      // Label format is `asset_types (<count>)` so the shared row carries a count
+      // summary; exact count comes from the mocked asset-types response.
+      expect(String(label)).to.match(/^asset_types \(\d+\)$/);
+      expect(error).to.be.null;
     });
   });
 });
