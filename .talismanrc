@@ -127,4 +127,10 @@ fileignoreconfig:
     checksum: 749931f9ae23ba044e19774ea802627220fd8bffa7d6fe7b9666e866189c3854
   - filename: packages/contentstack-audit/test/unit/modules/entries.test.ts
     checksum: aaf2e125c5e93ab15364e41559390502a18b83a4b3de5879c02572969381c0a6
+  - filename: packages/contentstack-import/test/unit/utils/build-import-spaces-options.test.ts
+    checksum: 528078a659ae769da1de37098dd2701b1cc395235ce635ad4c79f95615134714
+  - filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
+    checksum: 31e62a1bf4644c80d27f4e2d76a8f64465c43b76aca86ec4a722dc872c20d599
+  - filename: packages/contentstack-asset-management/test/unit/import/workspaces.test.ts
+    checksum: d626c529785f4d61f58ec27f946597233a138184d2d956d37fb1bf5fe33d37d5
 version: '1.0'
