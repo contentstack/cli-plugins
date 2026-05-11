@@ -18,7 +18,7 @@ export class AssetManagementExportAdapter extends AssetManagementAdapter {
   protected readonly exportContext: ExportContext;
   protected progressManager: CLIProgressManager | null = null;
   protected parentProgressManager: CLIProgressManager | null = null;
-  protected readonly processName: string = AM_MAIN_PROCESS_NAME;
+  protected processName: string = AM_MAIN_PROCESS_NAME;
 
   constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
     super(apiConfig);
@@ -28,6 +28,15 @@ export class AssetManagementExportAdapter extends AssetManagementAdapter {
 
   public setParentProgressManager(parent: CLIProgressManager): void {
     this.parentProgressManager = parent;
+  }
+
+  /**
+   * Override the default progress process name for {@link tick}/{@link updateStatus}
+   * calls. Used by the per-space orchestrator so each module's ticks land on the
+   * row for the space currently being exported.
+   */
+  public setProcessName(name: string): void {
+    this.processName = name;
   }
 
   protected get progressOrParent(): CLIProgressManager | null {

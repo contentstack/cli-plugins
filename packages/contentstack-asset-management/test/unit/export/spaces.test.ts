@@ -7,7 +7,7 @@ import ExportAssetTypes from '../../../src/export/asset-types';
 import ExportFields from '../../../src/export/fields';
 import ExportWorkspace from '../../../src/export/workspaces';
 import { AssetManagementExportAdapter } from '../../../src/export/base';
-import { AM_MAIN_PROCESS_NAME } from '../../../src/constants/index';
+import { PROCESS_NAMES, getSpaceProcessName } from '../../../src/constants/index';
 
 import type { AssetManagementExportOptions, LinkedWorkspace } from '../../../src/types/asset-management-api';
 
@@ -42,8 +42,11 @@ describe('ExportSpaces', () => {
     sinon.stub(ExportWorkspace.prototype, 'start').resolves();
     sinon.stub(ExportWorkspace.prototype, 'setParentProgressManager');
 
+    fakeProgress.addProcess.resetHistory();
     fakeProgress.addProcess.returnsThis();
+    fakeProgress.startProcess.resetHistory();
     fakeProgress.startProcess.returnsThis();
+    fakeProgress.updateStatus.resetHistory();
     fakeProgress.updateStatus.returnsThis();
     fakeProgress.tick.reset();
     fakeProgress.completeProcess.reset();
@@ -105,31 +108,46 @@ describe('ExportSpaces', () => {
       expect(wsStub.secondCall.args[0]).to.deep.include({ uid: 'ws-2', space_uid: 'space-2' });
     });
 
-    it('should register and complete the progress process with success', async () => {
-      const totalSteps = 2 + baseOptions.linkedWorkspaces.length * 4; // 10
+    it('should register one shared row per bootstrap phase plus one row per space, and complete each on success', async () => {
       const exporter = new ExportSpaces(baseOptions);
       await exporter.start();
 
-      expect(fakeProgress.addProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, totalSteps]);
-      expect(fakeProgress.startProcess.firstCall.args[0]).to.equal(AM_MAIN_PROCESS_NAME);
-      expect(fakeProgress.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, true]);
+      const addProcessCalls = fakeProgress.addProcess.getCalls().map((c) => c.args);
+      // Shared bootstrap rows + one row per linked workspace.
+      expect(addProcessCalls).to.deep.equal([
+        [PROCESS_NAMES.AM_FIELDS, 1],
+        [PROCESS_NAMES.AM_ASSET_TYPES, 1],
+        [getSpaceProcessName('space-1'), 1],
+        [getSpaceProcessName('space-2'), 1],
+      ]);
+
+      const completeArgs = fakeProgress.completeProcess.getCalls().map((c) => c.args);
+      expect(completeArgs).to.deep.include.members([
+        [PROCESS_NAMES.AM_FIELDS, true],
+        [PROCESS_NAMES.AM_ASSET_TYPES, true],
+        [getSpaceProcessName('space-1'), true],
+        [getSpaceProcessName('space-2'), true],
+      ]);
     });
 
-    it('should mark progress as failed and re-throw when a workspace export errors', async () => {
-      (ExportWorkspace.prototype.start as sinon.SinonStub).rejects(new Error('workspace-error'));
+    it('should mark only the failing space row as failed and continue with remaining spaces', async () => {
+      const wsStub = ExportWorkspace.prototype.start as sinon.SinonStub;
+      wsStub.onFirstCall().rejects(new Error('workspace-error'));
+      wsStub.onSecondCall().resolves();
 
       const exporter = new ExportSpaces(baseOptions);
-      try {
-        await exporter.start();
-        expect.fail('should have thrown');
-      } catch (err: any) {
-        expect(err.message).to.equal('workspace-error');
-      }
+      // Per the plan, per-space failures must NOT abort the orchestrator —
+      // they're recorded on that space's row and the next space proceeds.
+      await exporter.start();
 
-      expect(fakeProgress.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, false]);
+      expect(wsStub.callCount).to.equal(2);
+
+      const completeArgs = fakeProgress.completeProcess.getCalls().map((c) => c.args);
+      expect(completeArgs).to.deep.include([getSpaceProcessName('space-1'), false]);
+      expect(completeArgs).to.deep.include([getSpaceProcessName('space-2'), true]);
     });
 
-    it('should mark progress as failed and re-throw when shared bootstrap export errors', async () => {
+    it('should mark shared rows as failed and re-throw when shared bootstrap export errors', async () => {
       (ExportFields.prototype.start as sinon.SinonStub).rejects(new Error('shared-bootstrap-error'));
 
       const exporter = new ExportSpaces(baseOptions);
@@ -140,7 +158,9 @@ describe('ExportSpaces', () => {
         expect(err.message).to.equal('shared-bootstrap-error');
       }
 
-      expect(fakeProgress.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, false]);
+      const completeArgs = fakeProgress.completeProcess.getCalls().map((c) => c.args);
+      expect(completeArgs).to.deep.include([PROCESS_NAMES.AM_FIELDS, false]);
+      expect(completeArgs).to.deep.include([PROCESS_NAMES.AM_ASSET_TYPES, false]);
     });
 
     it('should use the provided parentProgressManager instead of creating a new one', async () => {
@@ -151,16 +171,20 @@ describe('ExportSpaces', () => {
         tick: sinon.stub(),
         completeProcess: sinon.stub(),
       };
-      const totalSteps = 2 + baseOptions.linkedWorkspaces.length * 4;
 
       const exporter = new ExportSpaces(baseOptions);
       exporter.setParentProgressManager(fakeParent as any);
       await exporter.start();
 
       expect((CLIProgressManager.createNested as sinon.SinonStub).callCount).to.equal(0);
-      expect(fakeParent.addProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, totalSteps]);
-      expect(fakeParent.startProcess.firstCall.args[0]).to.equal(AM_MAIN_PROCESS_NAME);
-      expect(fakeParent.completeProcess.firstCall.args).to.deep.equal([AM_MAIN_PROCESS_NAME, true]);
+
+      const addProcessCalls = fakeParent.addProcess.getCalls().map((c) => c.args);
+      expect(addProcessCalls).to.deep.equal([
+        [PROCESS_NAMES.AM_FIELDS, 1],
+        [PROCESS_NAMES.AM_ASSET_TYPES, 1],
+        [getSpaceProcessName('space-1'), 1],
+        [getSpaceProcessName('space-2'), 1],
+      ]);
     });
   });
 

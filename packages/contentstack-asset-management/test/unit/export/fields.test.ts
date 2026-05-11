@@ -3,7 +3,6 @@ import sinon from 'sinon';
 
 import ExportFields from '../../../src/export/fields';
 import { AssetManagementExportAdapter } from '../../../src/export/base';
-import { PROCESS_NAMES } from '../../../src/constants/index';
 
 import type { AssetManagementAPIConfig } from '../../../src/types/asset-management-api';
 import type { ExportContext } from '../../../src/types/export-types';
@@ -76,13 +75,19 @@ describe('ExportFields', () => {
       expect(writeStub.firstCall.args[4]).to.deep.equal([]);
     });
 
-    it('should tick with success=true, the fields process name, and null error', async () => {
+    it('should tick once with the fields summary label and null error after writing', async () => {
       sinon.stub(ExportFields.prototype, 'getWorkspaceFields').resolves(fieldsResponse);
       const exporter = new ExportFields(apiConfig, exportContext);
       await exporter.start(spaceUid);
 
       const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
-      expect(tickStub.firstCall.args).to.deep.equal([true, PROCESS_NAMES.AM_FIELDS, null]);
+      expect(tickStub.callCount).to.equal(1);
+      const [success, label, error] = tickStub.firstCall.args;
+      expect(success).to.be.true;
+      // Label format is `fields (<count>)` so the shared row carries a count
+      // summary; exact count comes from the mocked fields response.
+      expect(String(label)).to.match(/^fields \(\d+\)$/);
+      expect(error).to.be.null;
     });
   });
 });

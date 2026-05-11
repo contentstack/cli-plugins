@@ -55,13 +55,26 @@ describe('ExportWorkspace', () => {
       expect(getSpaceStub.firstCall.args[0]).to.equal(workspace.space_uid);
     });
 
-    it('should tick success after writing metadata', async () => {
+    it('should NOT tick after writing metadata (per-space row is owned by ExportAssets)', async () => {
       sinon.stub(ExportWorkspace.prototype, 'getSpace').resolves(spaceResponse);
       const exporter = new ExportWorkspace(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir, branchName);
 
+      // The per-space progress row's total is folder + metadata + downloads —
+      // all owned by ExportAssets. The workspace metadata.json write is a
+      // fixed bootstrap step and intentionally does not consume a tick.
       const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
-      expect(tickStub.firstCall.args).to.deep.equal([true, `space: ${workspace.space_uid}`, null]);
+      expect(tickStub.callCount).to.equal(0);
+    });
+
+    it('should forward spaceProcessName to the assets exporter via setProcessName', async () => {
+      sinon.stub(ExportWorkspace.prototype, 'getSpace').resolves(spaceResponse);
+      const setProcessNameStub = sinon.stub(ExportAssets.prototype, 'setProcessName' as any);
+
+      const exporter = new ExportWorkspace(apiConfig, exportContext);
+      await exporter.start(workspace, spaceDir, branchName, 'Space space-uid-1');
+
+      expect(setProcessNameStub.firstCall.args[0]).to.equal('Space space-uid-1');
     });
 
     it('should delegate to ExportAssets.start with workspace and spaceDir', async () => {

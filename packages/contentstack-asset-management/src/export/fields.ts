@@ -7,6 +7,8 @@ import { getArrayFromResponse } from '../utils/export-helpers';
 import { PROCESS_NAMES } from '../constants/index';
 
 export default class ExportFields extends AssetManagementExportAdapter {
+  protected processName: string = PROCESS_NAMES.AM_FIELDS;
+
   constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
@@ -25,6 +27,6 @@ export default class ExportFields extends AssetManagementExportAdapter {
       log.debug(`Writing ${items.length} shared fields`, this.exportContext.context);
     }
     await this.writeItemsToChunkedJson(dir, 'fields.json', 'fields', ['uid', 'title', 'display_type'], items);
-    this.tick(true, PROCESS_NAMES.AM_FIELDS, null);
+    this.tick(true, `fields (${items.length})`, null);
   }
 }

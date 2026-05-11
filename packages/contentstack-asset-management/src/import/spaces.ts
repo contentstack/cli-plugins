@@ -10,7 +10,7 @@ import type {
   ImportSpacesOptions,
   SpaceMapping,
 } from '../types/asset-management-api';
-import { AM_MAIN_PROCESS_NAME } from '../constants/index';
+import { AM_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
 import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
 import ImportAssetTypes from './asset-types';
 import ImportFields from './fields';
@@ -86,10 +86,18 @@ export class ImportSpaces {
       log.warn(`Could not read spaces root path ${spacesRootPath}: ${e}`, context);
     }
 
-    const totalSteps = 2 + spaceDirs.length * 2;
     const progress = this.createProgress();
-    progress.addProcess(AM_MAIN_PROCESS_NAME, totalSteps);
-    progress.startProcess(AM_MAIN_PROCESS_NAME);
+    // Multibar layout: two shared bootstrap rows + one row per space directory.
+    // Per-space totals start at 1 and are bumped to (folderCount + assetCount)
+    // inside ImportAssets.start once we know the counts for that space.
+    progress.addProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, 1);
+    progress.addProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, 1);
+    const spaceProcessNames = new Map<string, string>();
+    for (const spaceUid of spaceDirs) {
+      const spaceProcess = getSpaceProcessName(spaceUid);
+      spaceProcessNames.set(spaceUid, spaceProcess);
+      progress.addProcess(spaceProcess, 1);
+    }
 
     const allUidMap: Record<string, string> = {};
     const allUrlMap: Record<string, string> = {};
@@ -117,27 +125,40 @@ export class ImportSpaces {
       log.info('Started Asset Management import', context);
 
       // 1. Import shared fields
-      progress.updateStatus(`Importing shared fields...`, AM_MAIN_PROCESS_NAME);
+      progress.startProcess(PROCESS_NAMES.AM_IMPORT_FIELDS);
       const fieldsImporter = new ImportFields(apiConfig, importContext);
       fieldsImporter.setParentProgressManager(progress);
-      await fieldsImporter.start();
+      try {
+        await fieldsImporter.start();
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, true);
+      } catch (e) {
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_FIELDS, false);
+        throw e;
+      }
 
       // 2. Import shared asset types
-      progress.updateStatus('Importing shared asset types...', AM_MAIN_PROCESS_NAME);
+      progress.startProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
       const assetTypesImporter = new ImportAssetTypes(apiConfig, importContext);
       assetTypesImporter.setParentProgressManager(progress);
-      await assetTypesImporter.start();
+      try {
+        await assetTypesImporter.start();
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, true);
+      } catch (e) {
+        progress.completeProcess(PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, false);
+        throw e;
+      }
 
       // 3. Import each space — continue on failure so partially-imported data is never lost
       for (const spaceUid of spaceDirs) {
         const spaceDir = join(spacesRootPath, spaceUid);
-        progress.updateStatus(`Importing space: ${spaceUid}...`, AM_MAIN_PROCESS_NAME);
+        const spaceProcess = spaceProcessNames.get(spaceUid)!;
+        progress.startProcess(spaceProcess);
         log.debug(`Importing space: ${spaceUid}`, context);
 
         try {
           const workspaceImporter = new ImportWorkspace(apiConfig, importContext);
           workspaceImporter.setParentProgressManager(progress);
-          const result = await workspaceImporter.start(spaceUid, spaceDir, existingSpaceUids);
+          const result = await workspaceImporter.start(spaceUid, spaceDir, existingSpaceUids, spaceProcess);
 
           // Newly created spaces get a new uid — add so later iterations in this run see it.
           existingSpaceUids.add(result.newSpaceUid);
@@ -152,17 +173,13 @@ export class ImportSpaces {
             isDefault: result.isDefault,
           });
 
+          progress.completeProcess(spaceProcess, true);
           log.debug(`Imported space ${spaceUid} → ${result.newSpaceUid}`, context);
           spacesSucceeded += 1;
         } catch (err) {
           hasFailures = true;
           spacesFailed += 1;
-          progress.tick(
-            false,
-            `space: ${spaceUid}`,
-            (err as Error)?.message ?? 'Failed to import space',
-            AM_MAIN_PROCESS_NAME,
-          );
+          progress.completeProcess(spaceProcess, false);
           log.warn(`Failed to import space ${spaceUid}: ${err}`, context);
         }
       }
@@ -181,14 +198,20 @@ export class ImportSpaces {
         log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', context);
       }
 
-      progress.completeProcess(AM_MAIN_PROCESS_NAME, !hasFailures);
       log.info(
         `Asset Management import finished: ${spacesSucceeded} space(s) succeeded, ${spacesFailed} failed, ${spaceDirs.length} attempted.`,
         context,
       );
-      log.debug('Asset Management 2.0 import completed', context);
+      log.debug(
+        `Asset Management 2.0 import completed (hasFailures=${hasFailures})`,
+        context,
+      );
     } catch (err) {
-      progress.completeProcess(AM_MAIN_PROCESS_NAME, false);
+      // Mark any spaces that hadn't been processed as failed so the multibar
+      // doesn't leave dangling pending rows when the bootstrap phase throws.
+      for (const [, spaceProcess] of spaceProcessNames) {
+        progress.completeProcess(spaceProcess, false);
+      }
       handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management import failed');
       throw err;
     }

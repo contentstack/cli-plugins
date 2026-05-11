@@ -10,7 +10,7 @@ fileignoreconfig:
   - filename: packages/contentstack-query-export/.env-example
     checksum: 922c7aa9c788ab60b987de2b0a2aee6d90843c463a8bbc29201e4efe31081187
   - filename: pnpm-lock.yaml
-    checksum: bb5303f2fe64f90ae95d2738363267fb0bfcfeb71f025c2110d4cec87ff84d95
+    checksum: 3d2eaabf1df366efee1759156465c6aefa68f30d372717de2cdc3e41946aa3d8
   - filename: packages/contentstack-import/src/utils/build-import-spaces-options.ts
     checksum: fe0cb6cb5903515982af1e3642f2a19233207d35f13dc205cebeda0aa399f8b5
   - filename: packages/contentstack-export/src/export/modules/stack.ts
