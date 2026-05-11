@@ -36,6 +36,7 @@ const config: DefaultConfig = {
       'content-types',
       'custom-roles',
       'workflows',
+      'publishing-rules',
       'personalize',
       'entries',
       'labels',
@@ -84,6 +85,11 @@ const config: DefaultConfig = {
     workflows: {
       dirName: 'workflows',
       fileName: 'workflows.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
+    'publishing-rules': {
+      dirName: 'workflows',
+      fileName: 'publishing-rules.json',
       invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
     },
     globalfields: {
