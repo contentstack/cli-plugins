@@ -21,9 +21,8 @@
     "@contentstack/cli-utilities": "~2.0.0-beta.7",
     "@contentstack/cli-config": "~2.0.0-beta.8",
     "@oclif/core": "^4.3.0",
-    "@oclif/plugin-help": "^6.2.37",
     "inquirer": "12.11.1",
-    "mkdirp": "^1.0.4",
+    "mkdirp": "^2.1.6",
     "tar": "^7.5.11"
   },
   "devDependencies": {
@@ -33,9 +32,7 @@
     "@types/node": "^18.11.9",
     "@types/tar": "^6.1.13",
     "chai": "^4.5.0",
-    "eslint": "^8.57.1",
-    "eslint-config-oclif": "^6.0.62",
-    "eslint-config-oclif-typescript": "^3.1.14",
+    "eslint": "^9.26.0",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.17.46",
