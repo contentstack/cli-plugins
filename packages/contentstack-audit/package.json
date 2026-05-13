@@ -51,6 +51,9 @@
   "oclif": {
     "bin": "csdx",
     "commands": "./lib/commands",
+    "hooks": {
+      "init": ["./lib/hooks/init/load-chalk"]
+    },
     "plugins": [
       "@oclif/plugin-help"
     ],

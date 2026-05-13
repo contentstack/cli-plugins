@@ -51,6 +51,9 @@
   "types": "./lib/index.d.ts",
   "oclif": {
     "commands": "./lib/commands",
+    "hooks": {
+      "init": ["./lib/hooks/init/load-chalk"]
+    },
     "bin": "csdx",
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-export-to-csv/<%- commandPath %>"
   },

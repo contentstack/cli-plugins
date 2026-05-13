@@ -49,6 +49,9 @@
   "license": "MIT",
   "oclif": {
     "commands": "./lib/commands",
+    "hooks": {
+      "init": ["./lib/hooks/init/load-chalk"]
+    },
     "bin": "csdx",
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-migration/<%- commandPath %>"
   },
