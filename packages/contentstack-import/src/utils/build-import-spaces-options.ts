@@ -6,10 +6,14 @@ import type ImportConfig from '../types/import-config';
 /**
  * Maps stack `ImportConfig` and AM base URL into a single `ImportSpacesOptions` for the AM package
  * (variants-style: one flat object; `ImportSpaces` splits API vs context internally).
+ *
+ * Pass `overrides` to inject default-space mapping data fetched from the target branch before
+ * calling this function (see `ImportAssets.start()` for the fetch logic).
  */
 export function buildImportSpacesOptions(
   importConfig: ImportConfig,
   assetManagementUrl: string,
+  overrides?: Pick<ImportSpacesOptions, 'targetDefaultSpaceUid' | 'targetDefaultWorkspaceUid'>,
 ): ImportSpacesOptions {
   const am = importConfig.modules['asset-management'];
   const org_uid = importConfig.org_uid ?? '';
@@ -40,5 +44,7 @@ export function buildImportSpacesOptions(
     mapperUidFileName: am?.mapperUidFileName ?? PATH_CONSTANTS.FILES.UID_MAPPING,
     mapperUrlFileName: am?.mapperUrlFileName ?? PATH_CONSTANTS.FILES.URL_MAPPING,
     mapperSpaceUidFileName: am?.mapperSpaceUidFileName ?? PATH_CONSTANTS.FILES.SPACE_UID_MAPPING,
+    targetDefaultSpaceUid: overrides?.targetDefaultSpaceUid,
+    targetDefaultWorkspaceUid: overrides?.targetDefaultWorkspaceUid,
   };
 }
