@@ -112,6 +112,11 @@ describe('ExportAssets', () => {
           fileName: 'workflows.json',
           invalidKeys: [],
         },
+        'publishing-rules': {
+          dirName: 'workflows',
+          fileName: 'publishing-rules.json',
+          invalidKeys: [],
+        },
         globalfields: {
           dirName: 'global_fields',
           fileName: 'globalfields.json',
@@ -312,6 +317,7 @@ describe('ExportAssets', () => {
         return await fn();
       });
       sinon.stub(exportAssets as any, 'completeProgress');
+      getAssetsCountStub.withArgs(false).resolves(10).withArgs(true).resolves(5);
     });
 
     afterEach(() => {
