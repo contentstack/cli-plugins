@@ -22,6 +22,15 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
 
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn(
+        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
+      );
+    }
+
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
       externalConfig = omit(externalConfig, ['modules']);
@@ -133,8 +142,8 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     try {
       const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
       if (stackSettings?.am_v2) {
-        config.assetManagementEnabled = true;
-        config.assetManagementUrl = configHandler.get('region')?.assetManagementUrl;
+        config.csAssetsEnabled = true;
+        config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
 
         if (existsSync(stackJsonPath)) {
           try {
@@ -149,7 +158,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
         }
       }
     } catch {
-      // stack settings unreadable — not an AM 2.0 export we can process
+      // stack settings unreadable — not an CS Assets export we can process
     }
   }
 

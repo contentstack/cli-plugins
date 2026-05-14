@@ -2,12 +2,12 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { FsUtility, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 
-import type { AssetManagementAPIConfig } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../../../src/types/cs-assets-api';
 import type { ExportContext } from '../../../src/types/export-types';
 
-class TestAdapter extends AssetManagementExportAdapter {
+class TestAdapter extends CSAssetsExportAdapter {
   public callCreateNestedProgress(name: string) {
     return this.createNestedProgress(name);
   }
@@ -20,7 +20,7 @@ class TestAdapter extends AssetManagementExportAdapter {
   public callCompleteProcess(name: string, success: boolean) {
     return this.completeProcess(name, success);
   }
-  public callWriteItemsToChunkedJson(...args: Parameters<AssetManagementExportAdapter['writeItemsToChunkedJson']>) {
+  public callWriteItemsToChunkedJson(...args: Parameters<CSAssetsExportAdapter['writeItemsToChunkedJson']>) {
     return this.writeItemsToChunkedJson(...args);
   }
   public getProgressOrParent() {
@@ -37,8 +37,8 @@ class TestAdapter extends AssetManagementExportAdapter {
   }
 }
 
-describe('AssetManagementExportAdapter (base)', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+describe('CSAssetsExportAdapter (base)', () => {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -48,7 +48,7 @@ describe('AssetManagementExportAdapter (base)', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
   });
 
   afterEach(() => {

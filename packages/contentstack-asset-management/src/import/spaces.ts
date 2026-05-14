@@ -4,20 +4,20 @@ import { writeFile } from 'node:fs/promises';
 import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type {
-  AssetManagementAPIConfig,
+  CSAssetsAPIConfig,
   ImportContext,
   ImportResult,
   ImportSpacesOptions,
   SpaceMapping,
-} from '../types/asset-management-api';
-import { AM_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
-import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
+} from '../types/cs-assets-api';
+import { CS_ASSETS_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
+import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
 import ImportAssetTypes from './asset-types';
 import ImportFields from './fields';
 import ImportWorkspace from './workspaces';
 
 /**
- * Top-level orchestrator for AM 2.0 import.
+ * Top-level orchestrator for CS Assets import.
  * Mirrors ExportSpaces: creates shared fields + asset types, then imports each space.
  * Returns combined uidMap, urlMap, and spaceMappings for the bridge module.
  */
@@ -64,13 +64,13 @@ export class ImportSpaces {
       mapperUrlFileName: configOptions.mapperUrlFileName,
       mapperSpaceUidFileName: configOptions.mapperSpaceUidFileName,
     };
-    const apiConfig: AssetManagementAPIConfig = {
-      baseURL: configOptions.assetManagementUrl,
+    const apiConfig: CSAssetsAPIConfig = {
+      baseURL: configOptions.csAssetsUrl,
       headers: { organization_uid: org_uid },
       context,
     };
 
-    log.debug('Starting Asset Management import process...', context);
+    log.debug('Starting Contentstack Assets import process...', context);
 
     // Discover space directories
     let spaceDirs: string[] = [];
@@ -110,7 +110,7 @@ export class ImportSpaces {
     // Space UIDs already present in the target org — reuse when export dir name matches a uid here.
     const existingSpaceUids = new Set<string>();
     try {
-      const adapterForList = new AssetManagementAdapter(apiConfig);
+      const adapterForList = new CSAssetsAdapter(apiConfig);
       await adapterForList.init();
       const { spaces } = await adapterForList.listSpaces();
       for (const s of spaces) {
@@ -122,7 +122,7 @@ export class ImportSpaces {
     }
 
     try {
-      log.info('Started Asset Management import', context);
+      log.info('Started Contentstack Assets import', context);
 
       // 1. Import shared fields
       progress.startProcess(PROCESS_NAMES.AM_IMPORT_FIELDS);
@@ -202,15 +202,15 @@ export class ImportSpaces {
         await writeFile(join(mapperDir, uidFile), JSON.stringify(allUidMap), 'utf8');
         await writeFile(join(mapperDir, urlFile), JSON.stringify(allUrlMap), 'utf8');
         await writeFile(join(mapperDir, spaceUidFile), JSON.stringify(allSpaceUidMap), 'utf8');
-        log.debug('Wrote AM 2.0 mapper files (uid, url, space-uid)', context);
+        log.debug('Wrote CS Assets mapper files (uid, url, space-uid)', context);
       }
 
       log.info(
-        `Asset Management import finished: ${spacesSucceeded} space(s) succeeded, ${spacesFailed} failed, ${spaceDirs.length} attempted.`,
+        `Contentstack Assets import finished: ${spacesSucceeded} space(s) succeeded, ${spacesFailed} failed, ${spaceDirs.length} attempted.`,
         context,
       );
       log.debug(
-        `Asset Management 2.0 import completed (hasFailures=${hasFailures})`,
+        `Contentstack Assets import completed (hasFailures=${hasFailures})`,
         context,
       );
     } catch (err) {
@@ -219,7 +219,7 @@ export class ImportSpaces {
       for (const [, spaceProcess] of spaceProcessNames) {
         progress.completeProcess(spaceProcess, false);
       }
-      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management import failed');
+      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Contentstack Assets import failed');
       throw err;
     }
 
@@ -233,7 +233,7 @@ export class ImportSpaces {
     }
     const logConfig = configHandler.get('log') || {};
     const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(AM_MAIN_PROCESS_NAME, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME, showConsoleLogs);
     return this.progressManager;
   }
 }

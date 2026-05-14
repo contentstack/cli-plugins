@@ -107,7 +107,7 @@ const config: DefaultConfig = {
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
     },
-    'asset-management': {
+    'cs-assets': {
       dirName: 'spaces',
       fieldsDir: 'fields',
       assetTypesDir: 'asset_types',
