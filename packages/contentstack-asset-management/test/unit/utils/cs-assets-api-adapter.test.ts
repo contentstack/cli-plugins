@@ -2,12 +2,12 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { HttpClient, authenticationHandler } from '@contentstack/cli-utilities';
 
-import { AssetManagementAdapter } from '../../../src/utils/asset-management-api-adapter';
+import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
 
-import type { AssetManagementAPIConfig } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../../../src/types/cs-assets-api';
 
-describe('AssetManagementAdapter', () => {
-  const baseConfig: AssetManagementAPIConfig = {
+describe('CSAssetsAdapter', () => {
+  const baseConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -31,12 +31,12 @@ describe('AssetManagementAdapter', () => {
 
   describe('constructor', () => {
     it('should set the baseURL with trailing slash stripped', () => {
-      new AssetManagementAdapter({ baseURL: 'https://am.example.com/' });
+      new CSAssetsAdapter({ baseURL: 'https://am.example.com/' });
       expect(baseUrlStub.firstCall.args[0]).to.equal('https://am.example.com');
     });
 
     it('should set default headers with x-cs-api-version when no extra headers provided', () => {
-      new AssetManagementAdapter({ baseURL: 'https://am.example.com' });
+      new CSAssetsAdapter({ baseURL: 'https://am.example.com' });
       const allHeaderArgs = headersStub.getCalls().map((c) => c.args[0]);
       const apiVersionCall = allHeaderArgs.find((h) => 'x-cs-api-version' in h);
       expect(apiVersionCall).to.exist;
@@ -45,7 +45,7 @@ describe('AssetManagementAdapter', () => {
     });
 
     it('should merge extra headers with default headers', () => {
-      new AssetManagementAdapter(baseConfig);
+      new CSAssetsAdapter(baseConfig);
       const allHeaderArgs = headersStub.getCalls().map((c) => c.args[0]);
       const apiVersionCall = allHeaderArgs.find((h) => 'x-cs-api-version' in h);
       expect(apiVersionCall).to.exist;
@@ -54,14 +54,14 @@ describe('AssetManagementAdapter', () => {
     });
 
     it('should handle empty baseURL gracefully', () => {
-      new AssetManagementAdapter({ baseURL: '' });
+      new CSAssetsAdapter({ baseURL: '' });
       expect(baseUrlStub.firstCall.args[0]).to.equal('');
     });
   });
 
   describe('init', () => {
     it('should set access_token header when OAuth is disabled', async () => {
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.init();
 
       const authCallArgs = headersStub.getCalls().map((c) => c.args[0]);
@@ -83,7 +83,7 @@ describe('AssetManagementAdapter', () => {
 
       it('should set authorization header', async () => {
         const capturedHeaders = HttpClient.prototype.headers as sinon.SinonStub;
-        const adapter = new AssetManagementAdapter(baseConfig);
+        const adapter = new CSAssetsAdapter(baseConfig);
         await adapter.init();
 
         const authCallArgs = capturedHeaders.getCalls().map((c) => c.args[0]);
@@ -95,7 +95,7 @@ describe('AssetManagementAdapter', () => {
 
     it('should re-throw errors from getAuthDetails', async () => {
       (authenticationHandler.getAuthDetails as sinon.SinonStub).rejects(new Error('auth-failed'));
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
 
       try {
         await adapter.init();
@@ -106,7 +106,7 @@ describe('AssetManagementAdapter', () => {
     });
 
     it('should merge config headers with auth header when config.headers is present', async () => {
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.init();
 
       const capturedHeaders = headersStub.getCalls().map((c) => c.args[0]);
@@ -118,7 +118,7 @@ describe('AssetManagementAdapter', () => {
   describe('getSpace', () => {
     it('should GET /api/spaces/{spaceUid}?addl_fields=... and return the space', async () => {
       getStub.resolves({ status: 200, data: { space: { uid: 'sp-1' } } });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getSpace('sp-1');
 
       const path = getStub.firstCall.args[0] as string;
@@ -129,7 +129,7 @@ describe('AssetManagementAdapter', () => {
 
     it('should throw when response status is non-2xx', async () => {
       getStub.resolves({ status: 404, data: null });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
 
       try {
         await adapter.getSpace('missing-space');
@@ -144,7 +144,7 @@ describe('AssetManagementAdapter', () => {
     it('should GET /api/fields and return the response data', async () => {
       const fieldsResponse = { count: 1, relation: 'org', fields: [{ uid: 'f1' }] };
       getStub.resolves({ status: 200, data: fieldsResponse });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceFields('sp-1');
 
       expect(getStub.firstCall.args[0]).to.equal('/api/fields');
@@ -155,7 +155,7 @@ describe('AssetManagementAdapter', () => {
   describe('getWorkspaceAssets', () => {
     it('should GET /api/spaces/{spaceUid}/assets', async () => {
       getStub.resolves({ status: 200, data: { items: [] } });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceAssets('sp-1');
 
       expect(getStub.firstCall.args[0]).to.include('/api/spaces/sp-1/assets');
@@ -163,7 +163,7 @@ describe('AssetManagementAdapter', () => {
 
     it('should URL-encode the spaceUid in the path', async () => {
       getStub.resolves({ status: 200, data: { items: [] } });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceAssets('sp uid/special');
 
       const path = getStub.firstCall.args[0] as string;
@@ -174,7 +174,7 @@ describe('AssetManagementAdapter', () => {
   describe('getWorkspaceFolders', () => {
     it('should GET /api/spaces/{spaceUid}/folders', async () => {
       getStub.resolves({ status: 200, data: [] });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceFolders('sp-1');
 
       expect(getStub.firstCall.args[0]).to.include('/api/spaces/sp-1/folders');
@@ -185,7 +185,7 @@ describe('AssetManagementAdapter', () => {
     it('should GET /api/asset_types?include_fields=true and return the response data', async () => {
       const atResponse = { count: 1, relation: 'org', asset_types: [{ uid: 'at1' }] };
       getStub.resolves({ status: 200, data: atResponse });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceAssetTypes('sp-1');
 
       const path = getStub.firstCall.args[0] as string;
@@ -198,7 +198,7 @@ describe('AssetManagementAdapter', () => {
   describe('buildQueryString (via public methods)', () => {
     it('should encode array values as repeated key=value pairs', async () => {
       getStub.resolves({ status: 200, data: { space: { uid: 'sp-1' } } });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getSpace('sp-1');
 
       const path = getStub.firstCall.args[0] as string;
@@ -208,7 +208,7 @@ describe('AssetManagementAdapter', () => {
 
     it('should return empty string and no "?" when params are empty', async () => {
       getStub.resolves({ status: 200, data: { count: 0, relation: '', fields: [] } });
-      const adapter = new AssetManagementAdapter(baseConfig);
+      const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceFields('sp-1');
 
       const path = getStub.firstCall.args[0] as string;

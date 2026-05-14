@@ -6,16 +6,16 @@ import { ImportSpaces } from '../../../src/import/spaces';
 import ImportWorkspace from '../../../src/import/workspaces';
 import ImportFields from '../../../src/import/fields';
 import ImportAssetTypes from '../../../src/import/asset-types';
-import { AssetManagementAdapter } from '../../../src/utils/asset-management-api-adapter';
-import { AssetManagementImportAdapter } from '../../../src/import/base';
+import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
+import { CSAssetsImportAdapter } from '../../../src/import/base';
 import { PROCESS_NAMES } from '../../../src/constants/index';
 
-import type { ImportSpacesOptions } from '../../../src/types/asset-management-api';
+import type { ImportSpacesOptions } from '../../../src/types/cs-assets-api';
 
 describe('ImportSpaces', () => {
   const baseOptions: ImportSpacesOptions = {
     contentDir: '/tmp/import',
-    assetManagementUrl: 'https://am.example.com',
+    csAssetsUrl: 'https://am.example.com',
     org_uid: 'org-1',
     apiKey: 'api-key-1',
     host: 'https://api.contentstack.io/v3',
@@ -34,8 +34,8 @@ describe('ImportSpaces', () => {
     sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress as any);
     // init and listSpaces live on AssetManagementAdapter (the common base).
     // Stubbing the base once covers both the adapter used for listSpaces and ImportWorkspace.
-    sinon.stub(AssetManagementAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementAdapter.prototype, 'listSpaces' as any).resolves({ spaces: [] });
+    sinon.stub(CSAssetsAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsAdapter.prototype, 'listSpaces' as any).resolves({ spaces: [] });
     sinon.stub(ImportFields.prototype, 'start').resolves();
     sinon.stub(ImportFields.prototype, 'setParentProgressManager');
     sinon.stub(ImportAssetTypes.prototype, 'start').resolves();
@@ -63,9 +63,14 @@ describe('ImportSpaces', () => {
   describe('targetDefaultSpaceUid threading', () => {
     it('should pass targetDefaultSpaceUid and targetDefaultWorkspaceUid to ImportWorkspace.start()', async () => {
       stubSpaceDirs(['am-space-1']);
-      const startStub = sinon
-        .stub(ImportWorkspace.prototype, 'start')
-        .resolves({ oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true, uidMap: {}, urlMap: {} });
+      const startStub = sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1',
+        newSpaceUid: 'target-space-3',
+        workspaceUid: 'ws-3',
+        isDefault: true,
+        uidMap: {},
+        urlMap: {},
+      });
 
       const options: ImportSpacesOptions = {
         ...baseOptions,
@@ -83,9 +88,14 @@ describe('ImportSpaces', () => {
 
     it('should pass undefined to ImportWorkspace when targetDefaultSpaceUid is not set', async () => {
       stubSpaceDirs(['am-space-1']);
-      const startStub = sinon
-        .stub(ImportWorkspace.prototype, 'start')
-        .resolves({ oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space', workspaceUid: 'main', isDefault: false, uidMap: {}, urlMap: {} });
+      const startStub = sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1',
+        newSpaceUid: 'new-space',
+        workspaceUid: 'main',
+        isDefault: false,
+        uidMap: {},
+        urlMap: {},
+      });
 
       const importer = new ImportSpaces(baseOptions);
       await importer.start();
@@ -97,9 +107,14 @@ describe('ImportSpaces', () => {
 
     it('should record the correct spaceUidMap entry when default space is remapped', async () => {
       stubSpaceDirs(['am-space-1']);
-      sinon
-        .stub(ImportWorkspace.prototype, 'start')
-        .resolves({ oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true, uidMap: {}, urlMap: {} });
+      sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1',
+        newSpaceUid: 'target-space-3',
+        workspaceUid: 'ws-3',
+        isDefault: true,
+        uidMap: {},
+        urlMap: {},
+      });
 
       const options: ImportSpacesOptions = {
         ...baseOptions,
@@ -117,10 +132,20 @@ describe('ImportSpaces', () => {
       stubSpaceDirs(['am-space-1', 'am-space-2']);
       const startStub = sinon.stub(ImportWorkspace.prototype, 'start');
       startStub.onFirstCall().resolves({
-        oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true, uidMap: {}, urlMap: {},
+        oldSpaceUid: 'am-space-1',
+        newSpaceUid: 'target-space-3',
+        workspaceUid: 'ws-3',
+        isDefault: true,
+        uidMap: {},
+        urlMap: {},
       });
       startStub.onSecondCall().resolves({
-        oldSpaceUid: 'am-space-2', newSpaceUid: 'brand-new-space', workspaceUid: 'main', isDefault: false, uidMap: {}, urlMap: {},
+        oldSpaceUid: 'am-space-2',
+        newSpaceUid: 'brand-new-space',
+        workspaceUid: 'main',
+        isDefault: false,
+        uidMap: {},
+        urlMap: {},
       });
 
       const options: ImportSpacesOptions = {

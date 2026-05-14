@@ -60,56 +60,60 @@ export default class ExportAssets extends BaseClass {
     const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
 
     if (linkedWorkspaces.length > 0) {
-      const assetManagementUrl = this.exportConfig.region?.assetManagementUrl;
-      if (!assetManagementUrl) {
+      const csAssetsUrl = this.exportConfig.region?.csAssetsUrl;
+      if (!csAssetsUrl) {
         handleAndLogError(
           new Error(
-            'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+            'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
           ),
           {
             ...this.exportConfig.context,
             message:
-              'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+              'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
           },
         );
         this.completeProgressWithMessage({
-          moduleName: 'Asset Management 2.0',
+          moduleName: 'Contentstack Assets',
           customWarningMessage:
-            'Asset Management 2.0 export was skipped: assetManagementUrl is not configured. AM 2.0 assets will not be exported.',
+            'Contentstack Assets export was skipped: csAssetsUrl is not configured. CS Assets assets will not be exported.',
           context: this.exportConfig.context,
         });
         cliux.print(
-          'Asset Management URL is required for AM 2.0 export. Ensure your region is configured with assetManagementUrl.',
+          'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
           { color: 'yellow' },
         );
         return;
       }
       log.debug(
-        `Exporting with AM 2.0: ${assetManagementUrl} (linked_workspaces from exportConfig)`,
+        `Exporting with CS Assets: ${csAssetsUrl} (linked_workspaces from exportConfig)`,
         this.exportConfig.context,
       );
       this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
       const progress = this.createNestedProgress(this.currentModuleName);
       try {
-        const assetManagementModuleConfig = this.exportConfig.modules['asset-management'];
+        const legacyModuleConfig = (this.exportConfig.modules as Record<string, any>)['asset-management'];
+        const csAssetsModuleConfig = this.exportConfig.modules['cs-assets'] || legacyModuleConfig;
+        if (!this.exportConfig.modules['cs-assets'] && legacyModuleConfig) {
+          log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+        }
         const exporter = new ExportSpaces({
           linkedWorkspaces,
           exportDir: this.exportConfig.exportDir,
           branchName: this.exportConfig.branchName || 'main',
-          assetManagementUrl,
+          csAssetsUrl,
           org_uid: this.exportConfig.org_uid ?? '',
           apiKey: this.exportConfig.apiKey,
           context: this.exportConfig.context as unknown as Record<string, unknown>,
           securedAssets: this.exportConfig.securedAssets,
-          chunkFileSizeMb: assetManagementModuleConfig?.chunkFileSizeMb,
-          apiConcurrency: assetManagementModuleConfig?.apiConcurrency,
-          downloadAssetsConcurrency: assetManagementModuleConfig?.downloadAssetsConcurrency,
+          chunkFileSizeMb: csAssetsModuleConfig?.chunkFileSizeMb,
+          apiConcurrency: csAssetsModuleConfig?.apiConcurrency,
+          downloadAssetsConcurrency: csAssetsModuleConfig?.downloadAssetsConcurrency,
         });
         exporter.setParentProgressManager(progress);
         await exporter.start();
         this.completeProgressWithMessage();
       } catch (error) {
-        this.completeProgress(false, (error as Error)?.message ?? 'Asset Management export failed');
+        this.completeProgress(false, (error as Error)?.message ?? 'Contentstack Assets export failed');
         throw error;
       }
       return;

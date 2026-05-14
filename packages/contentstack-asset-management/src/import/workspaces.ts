@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext, SpaceMapping } from '../types/asset-management-api';
-import { AssetManagementImportAdapter } from './base';
+import type { CSAssetsAPIConfig, ImportContext, SpaceMapping } from '../types/cs-assets-api';
+import { CSAssetsImportAdapter } from './base';
 import ImportAssets from './assets';
 
 type WorkspaceResult = SpaceMapping & {
@@ -12,13 +12,13 @@ type WorkspaceResult = SpaceMapping & {
 };
 
 /**
- * Handles import for a single AM 2.0 space directory.
+ * Handles import for a single CS Assets space directory.
  * Reads `metadata.json`, creates the space in the target org when its uid is not
  * already present, or reuses the existing space and emits identity mappers only.
  * Returns the SpaceMapping plus UID/URL maps for the mapper files.
  */
-export default class ImportWorkspace extends AssetManagementImportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+export default class ImportWorkspace extends CSAssetsImportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
 
@@ -83,7 +83,7 @@ export default class ImportWorkspace extends AssetManagementImportAdapter {
     // Reuse: target org already has a space with the same uid as the export directory.
     if (existingSpaceUids.has(oldSpaceUid)) {
       log.info(
-        `Reusing existing AM space "${oldSpaceUid}" (uid matches export directory); skipping create and upload.`,
+        `Reusing existing Asset space "${oldSpaceUid}" (uid matches export directory); skipping create and upload.`,
         this.importContext.context,
       );
       const newSpaceUid = oldSpaceUid;
