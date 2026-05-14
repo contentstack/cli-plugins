@@ -29,4 +29,6 @@ fileignoreconfig:
     checksum: a0a17ff803fcf8f20538c8e158909d06705fc801f0bd3356b1eac1d92f006d83
   - filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
     checksum: 163c7e519561f2c1f473f6f0c5303a2a47c9f5c231b638cd90782c37eaa4859e
+  - filename: packages/contentstack-branches/README.md
+    checksum: 2978e9a9c151cbbafb5dd542edf6815ccec12172ae4ca114a6c4e5e73a85a2b5
 version: '1.0'
