@@ -1,2 +1,2 @@
-export * from './asset-management-api';
+export * from './cs-assets-api';
 export * from './export-types';

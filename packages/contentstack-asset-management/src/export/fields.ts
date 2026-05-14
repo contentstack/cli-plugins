@@ -1,15 +1,15 @@
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementExportAdapter } from './base';
+import { CSAssetsExportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
 import { PROCESS_NAMES } from '../constants/index';
 
-export default class ExportFields extends AssetManagementExportAdapter {
+export default class ExportFields extends CSAssetsExportAdapter {
   protected processName: string = PROCESS_NAMES.AM_FIELDS;
 
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
 

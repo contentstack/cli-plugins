@@ -2,13 +2,13 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import ExportFields from '../../../src/export/fields';
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 
-import type { AssetManagementAPIConfig } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../../../src/types/cs-assets-api';
 import type { ExportContext } from '../../../src/types/export-types';
 
 describe('ExportFields', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -30,9 +30,9 @@ describe('ExportFields', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'writeItemsToChunkedJson' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'tick' as any);
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'writeItemsToChunkedJson' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'tick' as any);
   });
 
   afterEach(() => {
@@ -53,7 +53,7 @@ describe('ExportFields', () => {
       const exporter = new ExportFields(apiConfig, exportContext);
       await exporter.start(spaceUid);
 
-      const writeStub = (AssetManagementExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
+      const writeStub = (CSAssetsExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
       const args = writeStub.firstCall.args;
       expect(args[0]).to.equal(fieldsDir);
       expect(args[1]).to.equal('fields.json');
@@ -71,7 +71,7 @@ describe('ExportFields', () => {
       const exporter = new ExportFields(apiConfig, exportContext);
       await exporter.start(spaceUid);
 
-      const writeStub = (AssetManagementExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
+      const writeStub = (CSAssetsExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
       expect(writeStub.firstCall.args[4]).to.deep.equal([]);
     });
 
@@ -80,7 +80,7 @@ describe('ExportFields', () => {
       const exporter = new ExportFields(apiConfig, exportContext);
       await exporter.start(spaceUid);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       expect(tickStub.callCount).to.equal(1);
       const [success, label, error] = tickStub.firstCall.args;
       expect(success).to.be.true;

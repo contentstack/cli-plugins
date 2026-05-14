@@ -1,4 +1,5 @@
 import type { ImportSpacesOptions } from '@contentstack/cli-asset-management';
+import { log } from '@contentstack/cli-utilities';
 
 import { PATH_CONSTANTS } from '../constants';
 import type ImportConfig from '../types/import-config';
@@ -12,15 +13,19 @@ import type ImportConfig from '../types/import-config';
  */
 export function buildImportSpacesOptions(
   importConfig: ImportConfig,
-  assetManagementUrl: string,
+  csAssetsUrl: string,
   overrides?: Pick<ImportSpacesOptions, 'targetDefaultSpaceUid' | 'targetDefaultWorkspaceUid'>,
 ): ImportSpacesOptions {
-  const am = importConfig.modules['asset-management'];
+  const legacyModuleConfig = (importConfig.modules as Record<string, any>)['asset-management'];
+  const am = importConfig.modules['cs-assets'] || legacyModuleConfig;
+  if (!importConfig.modules['cs-assets'] && legacyModuleConfig) {
+    log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+  }
   const org_uid = importConfig.org_uid ?? '';
 
   return {
     contentDir: importConfig.contentDir,
-    assetManagementUrl,
+    csAssetsUrl,
     org_uid,
     apiKey: importConfig.apiKey,
     host: importConfig.region?.cma ?? importConfig.host ?? '',
