@@ -3,15 +3,15 @@ import { Readable } from 'node:stream';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { configHandler, log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementExportAdapter } from './base';
+import { CSAssetsExportAdapter } from './base';
 import { getAssetItems, writeStreamToFile } from '../utils/export-helpers';
 import { runInBatches } from '../utils/concurrent-batch';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
-export default class ExportAssets extends AssetManagementExportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+export default class ExportAssets extends CSAssetsExportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
 

@@ -1,24 +1,24 @@
 import { resolve as pResolve } from 'node:path';
 import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
-import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY } from '../constants/index';
+import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
+import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY } from '../constants/index';
 
 export type { ImportContext };
 
 /**
- * Base class for all AM 2.0 import modules. Mirrors AssetManagementExportAdapter
+ * Base class for all CS Assets import modules. Mirrors CSAssetsExportAdapter
  * but carries ImportContext (spacesRootPath, apiKey, host, etc.) instead of ExportContext.
  */
-export class AssetManagementImportAdapter extends AssetManagementAdapter {
-  protected readonly apiConfig: AssetManagementAPIConfig;
+export class CSAssetsImportAdapter extends CSAssetsAdapter {
+  protected readonly apiConfig: CSAssetsAPIConfig;
   protected readonly importContext: ImportContext;
   protected progressManager: CLIProgressManager | null = null;
   protected parentProgressManager: CLIProgressManager | null = null;
-  protected processName: string = AM_MAIN_PROCESS_NAME;
+  protected processName: string = CS_ASSETS_MAIN_PROCESS_NAME;
 
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig);
     this.apiConfig = apiConfig;
     this.importContext = importContext;
@@ -70,7 +70,7 @@ export class AssetManagementImportAdapter extends AssetManagementAdapter {
     return this.importContext.spacesRootPath;
   }
 
-  /** Parallel AM API limit for import batches. */
+  /** Parallel CS Assets API limit for import batches. */
   protected get apiConcurrency(): number {
     return this.importContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
   }

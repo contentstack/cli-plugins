@@ -2,13 +2,13 @@ import { resolve as pResolve } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementExportAdapter } from './base';
+import { CSAssetsExportAdapter } from './base';
 import ExportAssets from './assets';
 
-export default class ExportWorkspace extends AssetManagementExportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+export default class ExportWorkspace extends CSAssetsExportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
 

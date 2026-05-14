@@ -3,12 +3,12 @@ import sinon from 'sinon';
 
 import ImportWorkspace from '../../../src/import/workspaces';
 import ImportAssets from '../../../src/import/assets';
-import { AssetManagementImportAdapter } from '../../../src/import/base';
+import { CSAssetsImportAdapter } from '../../../src/import/base';
 
-import type { AssetManagementAPIConfig, ImportContext } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig, ImportContext } from '../../../src/types/cs-assets-api';
 
 describe('ImportWorkspace', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -28,8 +28,8 @@ describe('ImportWorkspace', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementImportAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementImportAdapter.prototype, 'tick' as any);
+    sinon.stub(CSAssetsImportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsImportAdapter.prototype, 'tick' as any);
     sinon.stub(ImportAssets.prototype, 'setParentProgressManager');
     sinon.stub(ImportAssets.prototype, 'setProcessName' as any);
   });
@@ -41,7 +41,7 @@ describe('ImportWorkspace', () => {
   describe('default-space mapping path', () => {
     it('should use targetDefaultSpaceUid and skip createSpace when isDefault=true', async () => {
       stubMetadata({ title: 'Source Default Space', is_default: true });
-      const createSpaceStub = sinon.stub(AssetManagementImportAdapter.prototype, 'createSpace' as any);
+      const createSpaceStub = sinon.stub(CSAssetsImportAdapter.prototype, 'createSpace' as any);
       const assetsStartStub = sinon.stub(ImportAssets.prototype, 'start').resolves({ uidMap: {}, urlMap: {} });
 
       const importer = new ImportWorkspace(apiConfig, importContext);
@@ -65,7 +65,7 @@ describe('ImportWorkspace', () => {
 
     it('should upload assets into the existing target default space (not identity-map)', async () => {
       stubMetadata({ title: 'Source Default Space', is_default: true });
-      sinon.stub(AssetManagementImportAdapter.prototype, 'createSpace' as any);
+      sinon.stub(CSAssetsImportAdapter.prototype, 'createSpace' as any);
       const assetsStartStub = sinon.stub(ImportAssets.prototype, 'start').resolves({
         uidMap: { 'old-asset-1': 'new-asset-1' },
         urlMap: { 'old-url-1': 'new-url-1' },
@@ -81,7 +81,7 @@ describe('ImportWorkspace', () => {
 
     it('should fall back to "main" as workspaceUid when targetDefaultWorkspaceUid is not provided', async () => {
       stubMetadata({ is_default: true });
-      sinon.stub(AssetManagementImportAdapter.prototype, 'createSpace' as any);
+      sinon.stub(CSAssetsImportAdapter.prototype, 'createSpace' as any);
       sinon.stub(ImportAssets.prototype, 'start').resolves({ uidMap: {}, urlMap: {} });
 
       const importer = new ImportWorkspace(apiConfig, importContext);
@@ -93,7 +93,7 @@ describe('ImportWorkspace', () => {
     it('should NOT use the default-space path when isDefault=false even if targetDefaultSpaceUid is set', async () => {
       stubMetadata({ title: 'Non-default Space', is_default: false });
       const createSpaceStub = sinon
-        .stub(AssetManagementImportAdapter.prototype, 'createSpace' as any)
+        .stub(CSAssetsImportAdapter.prototype, 'createSpace' as any)
         .resolves({ space: { uid: 'new-space-uid' } });
       sinon.stub(ImportAssets.prototype, 'start').resolves({ uidMap: {}, urlMap: {} });
 
@@ -107,7 +107,7 @@ describe('ImportWorkspace', () => {
     it('should NOT use the default-space path when targetDefaultSpaceUid is undefined', async () => {
       stubMetadata({ title: 'Source Default Space', is_default: true });
       const createSpaceStub = sinon
-        .stub(AssetManagementImportAdapter.prototype, 'createSpace' as any)
+        .stub(CSAssetsImportAdapter.prototype, 'createSpace' as any)
         .resolves({ space: { uid: 'brand-new-uid' } });
       sinon.stub(ImportAssets.prototype, 'start').resolves({ uidMap: {}, urlMap: {} });
 
@@ -125,7 +125,7 @@ describe('ImportWorkspace', () => {
       const identityStub = sinon
         .stub(ImportAssets.prototype, 'buildIdentityMappersFromExport')
         .resolves({ uidMap: { a: 'a' }, urlMap: {} });
-      sinon.stub(AssetManagementImportAdapter.prototype, 'createSpace' as any);
+      sinon.stub(CSAssetsImportAdapter.prototype, 'createSpace' as any);
 
       const importer = new ImportWorkspace(apiConfig, importContext);
       const result = await importer.start('am-space-existing', spaceDir, new Set(['am-space-existing']));
@@ -139,7 +139,7 @@ describe('ImportWorkspace', () => {
     it('should create a new space and upload assets for non-default non-existing space', async () => {
       stubMetadata({ title: 'Source Space 2', is_default: false });
       const createStub = sinon
-        .stub(AssetManagementImportAdapter.prototype, 'createSpace' as any)
+        .stub(CSAssetsImportAdapter.prototype, 'createSpace' as any)
         .resolves({ space: { uid: 'new-space-2-uid' } });
       sinon.stub(ImportAssets.prototype, 'start').resolves({ uidMap: {}, urlMap: {} });
 
