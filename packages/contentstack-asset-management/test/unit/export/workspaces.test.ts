@@ -3,13 +3,13 @@ import sinon from 'sinon';
 
 import ExportWorkspace from '../../../src/export/workspaces';
 import ExportAssets from '../../../src/export/assets';
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace, SpaceResponse } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace, SpaceResponse } from '../../../src/types/cs-assets-api';
 import type { ExportContext } from '../../../src/types/export-types';
 
 describe('ExportWorkspace', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -36,8 +36,8 @@ describe('ExportWorkspace', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'tick' as any);
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'tick' as any);
     sinon.stub(ExportAssets.prototype, 'start').resolves();
     sinon.stub(ExportAssets.prototype, 'setParentProgressManager');
   });
@@ -63,7 +63,7 @@ describe('ExportWorkspace', () => {
       // The per-space progress row's total is folder + metadata + downloads —
       // all owned by ExportAssets. The workspace metadata.json write is a
       // fixed bootstrap step and intentionally does not consume a tick.
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       expect(tickStub.callCount).to.equal(0);
     });
 

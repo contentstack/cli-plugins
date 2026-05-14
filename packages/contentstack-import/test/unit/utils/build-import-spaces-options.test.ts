@@ -31,7 +31,7 @@ describe('buildImportSpacesOptions', () => {
     const result = buildImportSpacesOptions(baseConfig, 'https://am.example.com');
 
     expect(result.contentDir).to.equal('/tmp/content');
-    expect(result.assetManagementUrl).to.equal('https://am.example.com');
+    expect(result.csAssetsUrl).to.equal('https://am.example.com');
     expect(result.org_uid).to.equal('org-123');
     expect(result.apiKey).to.equal('stack-api-key');
     expect(result.host).to.equal('https://api.contentstack.io/v3');
