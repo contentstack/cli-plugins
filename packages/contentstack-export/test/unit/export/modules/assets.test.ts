@@ -142,7 +142,7 @@ describe('ExportAssets', () => {
           enableDownloadStatus: false,
           includeVersionedAssets: false,
         },
-        'asset-management': {
+        'cs-assets': {
           chunkFileSizeMb: 1,
           apiConcurrency: 5,
           downloadAssetsConcurrency: 5,
@@ -341,11 +341,11 @@ describe('ExportAssets', () => {
 
     it('should forward AM export concurrency options to ExportSpaces', async () => {
       mockExportConfig.linkedWorkspaces = [{ uid: 'ws-1', space_uid: 'am-space-1', is_default: true }];
-      mockExportConfig.region.assetManagementUrl = 'https://am.example.com';
+      mockExportConfig.region.csAssetsUrl = 'https://am.example.com';
       mockExportConfig.org_uid = 'org-from-config';
-      mockExportConfig.modules['asset-management'].chunkFileSizeMb = 2;
-      mockExportConfig.modules['asset-management'].apiConcurrency = 7;
-      mockExportConfig.modules['asset-management'].downloadAssetsConcurrency = 3;
+      mockExportConfig.modules['cs-assets'].chunkFileSizeMb = 2;
+      mockExportConfig.modules['cs-assets'].apiConcurrency = 7;
+      mockExportConfig.modules['cs-assets'].downloadAssetsConcurrency = 3;
 
       const progressManager = { addProcess: sinon.stub(), startProcess: sinon.stub(), updateStatus: sinon.stub() };
       ((exportAssets as any).createNestedProgress as sinon.SinonStub).returns(progressManager as any);

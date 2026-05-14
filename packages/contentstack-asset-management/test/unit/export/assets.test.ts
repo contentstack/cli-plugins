@@ -3,9 +3,9 @@ import sinon from 'sinon';
 import { configHandler } from '@contentstack/cli-utilities';
 
 import ExportAssets from '../../../src/export/assets';
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace } from '../../../src/types/cs-assets-api';
 import type { ExportContext } from '../../../src/types/export-types';
 
 const foldersData = [{ uid: 'folder-1', name: 'Images' }];
@@ -18,7 +18,7 @@ const assetsResponseWithItems = {
 const emptyAssetsResponse = { items: [] as any[] };
 
 describe('ExportAssets', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -48,10 +48,10 @@ describe('ExportAssets', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'writeItemsToChunkedJson' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'tick' as any);
-    sinon.stub(AssetManagementExportAdapter.prototype, 'updateStatus' as any);
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'writeItemsToChunkedJson' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'tick' as any);
+    sinon.stub(CSAssetsExportAdapter.prototype, 'updateStatus' as any);
     fetchStub = sinon.stub(globalThis, 'fetch');
   });
 
@@ -89,7 +89,7 @@ describe('ExportAssets', () => {
       const exporter = new ExportAssets(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir);
 
-      const writeStub = (AssetManagementExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
+      const writeStub = (CSAssetsExportAdapter.prototype as any).writeItemsToChunkedJson as sinon.SinonStub;
       const args = writeStub.firstCall.args;
       expect(args[1]).to.equal('assets.json');
       expect(args[2]).to.equal('assets');
@@ -105,7 +105,7 @@ describe('ExportAssets', () => {
       await exporter.start(workspace, spaceDir);
 
       expect(fetchStub.callCount).to.equal(0);
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       expect(assetTicks).to.have.length(0);
     });
@@ -118,7 +118,7 @@ describe('ExportAssets', () => {
       const exporter = new ExportAssets(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       // Per-asset tick: one failure entry per attempted download.
       expect(assetTicks.length).to.be.greaterThan(0);
@@ -136,7 +136,7 @@ describe('ExportAssets', () => {
       const exporter = new ExportAssets(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       // One successful tick per asset in the workspace.
       expect(assetTicks).to.have.length(assetsResponseWithItems.items.length);
@@ -175,7 +175,7 @@ describe('ExportAssets', () => {
       await exporter.start(workspace, spaceDir);
 
       expect(fetchStub.firstCall.args[0]).to.equal('https://cdn.example.com/a.png');
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       expect(assetTicks).to.have.length(1);
       expect(assetTicks[0].args[0]).to.be.true;
@@ -199,7 +199,7 @@ describe('ExportAssets', () => {
       expect(fetchStub.callCount).to.equal(2);
       expect(fetchStub.firstCall.args[0]).to.equal('https://cdn.example.com/a1.pdf');
       expect(fetchStub.secondCall.args[0]).to.equal('https://cdn.example.com/a2.bin');
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       expect(assetTicks).to.have.length(2);
       for (const t of assetTicks) expect(t.args[0]).to.be.true;
@@ -247,7 +247,7 @@ describe('ExportAssets', () => {
       const exporter = new ExportAssets(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       expect(assetTicks).to.have.length(1);
       expect(assetTicks[0].args[0]).to.be.false;
@@ -264,7 +264,7 @@ describe('ExportAssets', () => {
       const exporter = new ExportAssets(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
       const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
       expect(assetTicks).to.have.length(1);
       expect(assetTicks[0].args[0]).to.be.false;

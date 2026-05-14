@@ -177,7 +177,7 @@ describe('CloneHandler - Commands', () => {
       expect(written).to.not.have.property('filteredModules');
     });
 
-    it('should preserve region.assetManagementUrl in serialized export config for AM 2.0 export', async () => {
+    it('should preserve region.csAssetsUrl in serialized export config for AM 2.0 export', async () => {
       const amUrl = 'https://asset-management.example.com';
       const config: CloneConfig = {
         cloneContext: {
@@ -187,7 +187,7 @@ describe('CloneHandler - Commands', () => {
         },
         source_stack: 'test-key',
         cloneType: 'b',
-        region: { assetManagementUrl: amUrl },
+        region: { csAssetsUrl: amUrl },
       };
       handler = new CloneHandler(config);
       const exportCmdStub = {
@@ -199,10 +199,10 @@ describe('CloneHandler - Commands', () => {
 
       const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
       expect(written.region).to.be.an('object');
-      expect(written.region.assetManagementUrl).to.equal(amUrl);
+      expect(written.region.csAssetsUrl).to.equal(amUrl);
     });
 
-    it('should merge export.region.assetManagementUrl from external export config', async () => {
+    it('should merge export.region.csAssetsUrl from external export config', async () => {
       const amUrl = 'https://asset-management-merged.example.com';
       const config: CloneConfig = {
         cloneContext: {
@@ -212,7 +212,7 @@ describe('CloneHandler - Commands', () => {
         },
         source_stack: 'test-key',
         cloneType: 'b',
-        export: { region: { assetManagementUrl: amUrl } },
+        export: { region: { csAssetsUrl: amUrl } },
       };
       handler = new CloneHandler(config);
       const exportCmdStub = {
@@ -223,7 +223,7 @@ describe('CloneHandler - Commands', () => {
       await handler.cmdExport();
 
       const written = JSON.parse(fsStub.writeFileSync.firstCall.args[1] as string);
-      expect(written.region.assetManagementUrl).to.equal(amUrl);
+      expect(written.region.csAssetsUrl).to.equal(amUrl);
       expect(written).to.not.have.property('export');
     });
   });

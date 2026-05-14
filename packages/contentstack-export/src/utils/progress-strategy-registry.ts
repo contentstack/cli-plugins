@@ -1,4 +1,4 @@
-import { AM_MAIN_PROCESS_NAME, isSpaceProcessName } from '@contentstack/cli-asset-management';
+import { CS_ASSETS_MAIN_PROCESS_NAME, isSpaceProcessName } from '@contentstack/cli-asset-management';
 import { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES } from './constants';
 /**
  * Progress Strategy Registrations for Export Modules
@@ -15,7 +15,7 @@ import {
 
 /**
  * Sum the totals/success/failure counts across every per-space process row in
- * the multibar. Used by the AM 2.0 Assets strategy so the final summary reports
+ * the multibar. Used by the CS Assets Assets strategy so the final summary reports
  * total assets-across-all-spaces instead of the placeholder row.
  *
  * Returns null when no per-space rows exist, letting the strategy fall back to
@@ -56,13 +56,13 @@ try {
           failures: downloadsProcess.failureCount,
         };
       }
-      // Asset Management 2.0 (per-space layout): sum every "Space *" row so the
+      // Contentstack Assets (per-space layout): sum every "Space *" row so the
       // final summary reports total assets-across-all-spaces. Falls through to
       // the legacy AM_MAIN/SPACES rows when the per-space layout isn't in use.
       const spaceTotals = aggregateSpaceProcesses(processes);
       if (spaceTotals) return spaceTotals;
 
-      const amProcess = processes.get(AM_MAIN_PROCESS_NAME);
+      const amProcess = processes.get(CS_ASSETS_MAIN_PROCESS_NAME);
       if (amProcess) {
         return {
           total: amProcess.total,

@@ -6,10 +6,10 @@ import { ExportSpaces, exportSpaceStructure } from '../../../src/export/spaces';
 import ExportAssetTypes from '../../../src/export/asset-types';
 import ExportFields from '../../../src/export/fields';
 import ExportWorkspace from '../../../src/export/workspaces';
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 import { PROCESS_NAMES, getSpaceProcessName } from '../../../src/constants/index';
 
-import type { AssetManagementExportOptions, LinkedWorkspace } from '../../../src/types/asset-management-api';
+import type { AssetManagementExportOptions, LinkedWorkspace } from '../../../src/types/cs-assets-api';
 
 describe('ExportSpaces', () => {
   const baseOptions: AssetManagementExportOptions = {
@@ -19,7 +19,7 @@ describe('ExportSpaces', () => {
     ],
     exportDir: '/tmp/export',
     branchName: 'main',
-    assetManagementUrl: 'https://am.example.com',
+    csAssetsUrl: 'https://am.example.com',
     org_uid: 'org-1',
   };
 
@@ -32,7 +32,7 @@ describe('ExportSpaces', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
     sinon.stub(configHandler, 'get').returns({ showConsoleLogs: false });
     sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress as any);
     sinon.stub(ExportAssetTypes.prototype, 'start').resolves();

@@ -4,8 +4,8 @@ import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
-import { AssetManagementImportAdapter } from './base';
+import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
+import { CSAssetsImportAdapter } from './base';
 import { FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import { runInBatches } from '../utils/concurrent-batch';
 import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
@@ -23,13 +23,13 @@ type AssetTypeToCreate = { uid: string; payload: Record<string, unknown> };
  * 4. If uid already exists and definition matches → silently skip.
  * 5. Strip read-only/computed keys from the POST body before creating new asset types.
  */
-export default class ImportAssetTypes extends AssetManagementImportAdapter {
+export default class ImportAssetTypes extends CSAssetsImportAdapter {
   protected processName: string = PROCESS_NAMES.AM_IMPORT_ASSET_TYPES;
   private successCount = 0;
   private failureCount = 0;
   private skippedCount = 0;
 
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
 
