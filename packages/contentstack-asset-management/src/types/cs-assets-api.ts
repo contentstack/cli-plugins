@@ -243,6 +243,16 @@ export type ImportSpacesOptions = {
   mapperUidFileName?: string;
   mapperUrlFileName?: string;
   mapperSpaceUidFileName?: string;
+  /**
+   * UID of the already-existing default space in the target org.
+   * When set, the source default space is imported into this space instead of creating a new one.
+   */
+  targetDefaultSpaceUid?: string;
+  /**
+   * Workspace link UID of the existing default workspace in the target branch's `am_v2.linked_workspaces`.
+   * Returned in SpaceMapping.workspaceUid so downstream branch-linking logic can identify the entry correctly.
+   */
+  targetDefaultWorkspaceUid?: string;
 };
 
 /**

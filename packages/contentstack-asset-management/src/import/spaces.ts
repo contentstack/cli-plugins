@@ -158,7 +158,14 @@ export class ImportSpaces {
         try {
           const workspaceImporter = new ImportWorkspace(apiConfig, importContext);
           workspaceImporter.setParentProgressManager(progress);
-          const result = await workspaceImporter.start(spaceUid, spaceDir, existingSpaceUids, spaceProcess);
+          const result = await workspaceImporter.start(
+            spaceUid,
+            spaceDir,
+            existingSpaceUids,
+            spaceProcess,
+            configOptions.targetDefaultSpaceUid,
+            configOptions.targetDefaultWorkspaceUid,
+          );
 
           // Newly created spaces get a new uid — add so later iterations in this run see it.
           existingSpaceUids.add(result.newSpaceUid);

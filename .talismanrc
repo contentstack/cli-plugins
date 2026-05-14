@@ -16,11 +16,17 @@ fileignoreconfig:
   - filename: packages/contentstack-import/src/import/modules/publishing-rules.ts
     checksum: 429a803bc18e691db93bae3df1714071d0face6441b82cb938a83e8bf94ae14c
   - filename: packages/contentstack-import/src/types/default-config.ts
-    checksum: 84589b06580c88dc6722abd663c4b7bb352d1bcfa1f870f4237f6f97b2166f3d
+    checksum: c117d060d6979540a1bb6ae20ad6ad6d43e9b15a6909291f76ed60b11e5f793d
   - filename: packages/contentstack-import/test/unit/import/modules/publishing-rules.test.ts
     checksum: 0fcbff5dab2f9e594fe2a316c3c96e8d86bcd5d72e7c1f9eb35c0e3458f87817
   - filename: packages/contentstack-export/src/types/default-config.ts
     checksum: 70c9ca7400c447f2b54f48a07965c7ba34706deee97d68951d6229d523c7e4b0
   - filename: packages/contentstack-export/src/types/index.ts
-    checksum: 4d895dc8355b94847e3e1746d65eb51d5b9434de307ddcd91c0a33083b97b9ef
+    checksum: 71f02ac11507c61222a661caf228dfd54ffdc6c57e4cc631f66598ecd617852b
+  - filename: packages/contentstack-import/test/unit/utils/build-import-spaces-options.test.ts
+    checksum: ecc39327ca93ca4ea749937ec853f5a4c9a609a96c4e4e15df1b596fb4f32c74
+  - filename: packages/contentstack-asset-management/test/unit/import/workspaces.test.ts
+    checksum: a0a17ff803fcf8f20538c8e158909d06705fc801f0bd3356b1eac1d92f006d83
+  - filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
+    checksum: 163c7e519561f2c1f473f6f0c5303a2a47c9f5c231b638cd90782c37eaa4859e
 version: '1.0'

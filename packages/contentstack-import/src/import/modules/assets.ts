@@ -79,8 +79,56 @@ export default class ImportAssets extends BaseClass {
         const progress = this.createNestedProgress(this.currentModuleName);
         let spaceMappings: SpaceMapping[] = [];
 
+        // Resolve the existing default space in the target branch before building options.
+        // This allows the source default space to be imported into the pre-existing target default
+        // space instead of creating a new one.
+        const branchUid = this.importConfig.branchName ?? 'main';
+        let targetDefaultSpaceUid: string | undefined;
+        let targetDefaultWorkspaceUid: string | undefined;
         try {
-          const importer = new ImportSpaces(buildImportSpacesOptions(this.importConfig, this.importConfig.csAssetsUrl));
+          const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
+            string,
+            any
+          >;
+          const linkedWorkspaces = (branchData?.settings?.am_v2?.linked_workspaces ?? []) as Array<{
+            uid: string;
+            space_uid: string;
+            is_default: boolean;
+          }>;
+          const defaultMatches = linkedWorkspaces.filter((w) => w.is_default === true);
+          if (defaultMatches.length > 1) {
+            log.warn(
+              `Target branch "${branchUid}" has ${defaultMatches.length} workspaces with is_default=true; using the first.`,
+              this.importConfig.context,
+            );
+          }
+          if (defaultMatches.length > 0) {
+            targetDefaultSpaceUid = defaultMatches[0].space_uid;
+            targetDefaultWorkspaceUid = defaultMatches[0].uid;
+            log.debug(
+              `Target default space: ${targetDefaultSpaceUid} (workspace uid: ${targetDefaultWorkspaceUid})`,
+              this.importConfig.context,
+            );
+          } else {
+            log.debug(
+              'Target branch has no default workspace; source default space will be created as new.',
+              this.importConfig.context,
+            );
+          }
+        } catch (e) {
+          log.debug(
+            `Could not fetch target branch linked_workspaces for default space detection: ${e}`,
+            this.importConfig.context,
+          );
+        }
+
+        try {
+          const importer = new ImportSpaces(
+            buildImportSpacesOptions(this.importConfig, this.importConfig.csAssetsUrl, {
+              targetDefaultSpaceUid,
+              targetDefaultWorkspaceUid,
+            }),
+          );
           importer.setParentProgressManager(progress);
           ({ spaceMappings } = await importer.start());
         } catch (error) {
@@ -175,12 +223,16 @@ export default class ImportAssets extends BaseClass {
         operation?: string;
       }>;
 
-      const newWorkspaces = spaceMappings.map(({ newSpaceUid, workspaceUid }) => ({
-        uid: workspaceUid,
-        space_uid: newSpaceUid,
-        is_default: false,
-        operation: 'LINK' as const,
-      }));
+      // Skip spaces already linked to the branch (e.g. the pre-existing target default space).
+      const alreadyLinkedSpaceUids = new Set(currentLinked.map((w) => w.space_uid));
+      const newWorkspaces = spaceMappings
+        .filter(({ newSpaceUid }) => !alreadyLinkedSpaceUids.has(newSpaceUid))
+        .map(({ newSpaceUid, workspaceUid }) => ({
+          uid: workspaceUid,
+          space_uid: newSpaceUid,
+          is_default: false,
+          operation: 'LINK' as const,
+        }));
 
       const combinedWorkspaces = [...currentLinked, ...newWorkspaces];
 
