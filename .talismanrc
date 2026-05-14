@@ -1,26 +1,4 @@
 fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    checksum: 0942b9ee7e4b284bfd9f0a2258ca8281cf8569b60dd293e08abf64373db12d59
-  - filename: packages/contentstack-import/src/types/index.ts
-    checksum: 0fd8f3f82bd754848b1ab90980c0c1316b62eddfe5d2a6e6216e0ff8429591ca
-  - filename: packages/contentstack-import/test/unit/utils/extension-helper.test.ts
-    checksum: 569e0b434372b8b97d3d4db906cf3e9e56eb546899f490e008e2d3107285e1f3
-  - filename: packages/contentstack-import/test/unit/import/modules/locales.test.ts
-    checksum: 55e481f09920dcf4d5d6cfe50fb8e20caffb2fd80673b3e08507192f76b46700
-  - filename: packages/contentstack-import/src/config/index.ts
-    checksum: 5939e3cb57b9b2046072dcc144c9526831a9b8088ef30289d0de605ca46f97c4
-  - filename: packages/contentstack-variants/src/types/export-config.ts
-    checksum: e6df2394b6acb1f1ff30ed18baca686ba5b36c9de03b529f9980acbec4c8c8fc
-  - filename: packages/contentstack-export/src/config/index.ts
-    checksum: 0a800b44643b5cb808c575b5d029fae1769a8f16aa3ead06246da293400b82db
-  - filename: packages/contentstack-import/src/import/modules/publishing-rules.ts
-    checksum: 429a803bc18e691db93bae3df1714071d0face6441b82cb938a83e8bf94ae14c
-  - filename: packages/contentstack-import/src/types/default-config.ts
-    checksum: c117d060d6979540a1bb6ae20ad6ad6d43e9b15a6909291f76ed60b11e5f793d
-  - filename: packages/contentstack-import/test/unit/import/modules/publishing-rules.test.ts
-    checksum: 0fcbff5dab2f9e594fe2a316c3c96e8d86bcd5d72e7c1f9eb35c0e3458f87817
-  - filename: packages/contentstack-export/src/types/default-config.ts
-    checksum: 18d499426bec295034b6012d934c6ac82933656add43b3ca48c1f81a2fd98245
-  - filename: packages/contentstack-export/src/types/index.ts
-    checksum: 71f02ac11507c61222a661caf228dfd54ffdc6c57e4cc631f66598ecd617852b
+  - filename: packages/contentstack-export/src/export/modules/publishing-rules.ts
+    checksum: 8826b77d5917edee7ec808c5270512378b458993945b3c5fbaf40a5979113f64
 version: '1.0'
