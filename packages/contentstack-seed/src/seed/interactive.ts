@@ -1,11 +1,46 @@
 import inquirer from 'inquirer';
+import { cliux } from '@contentstack/cli-utilities';
+
+import { OfficialSeedStack } from './seed-stacks';
 import { Organization, Stack } from './contentstack/client';
+
+export const OFFICIAL_SEED_STACK_SELECTION_MESSAGE = 'Select a stack to import';
 
 export interface InquireStackResponse {
   isNew: boolean;
   name: string | null;
   uid: string | null;
   api_key: string | null;
+}
+
+export async function inquireOfficialSeedStack(
+  stacks: OfficialSeedStack[],
+): Promise<{ owner: string; repo: string }> {
+  if (!stacks || stacks.length === 0) {
+    throw new Error('Precondition failed: No official seed stacks configured.');
+  }
+
+  const choices = stacks.map((s) => ({
+    name: s.displayName,
+    value: s,
+  }));
+
+  const response = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'stack',
+      message: OFFICIAL_SEED_STACK_SELECTION_MESSAGE,
+      choices: [...choices, 'Exit'],
+    },
+  ]);
+
+  if (response.stack === 'Exit') {
+    cliux.print('Exiting...');
+    throw new Error('Exit');
+  }
+
+  const selected = response.stack as OfficialSeedStack;
+  return { owner: selected.owner, repo: selected.repo };
 }
 
 export async function inquireRepo(repos: any[]): Promise<{ choice: string }> {
