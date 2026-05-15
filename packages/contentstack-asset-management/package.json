@@ -30,7 +30,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@contentstack/cli-utilities": "~2.0.0-beta.8"
+    "@contentstack/cli-utilities": "~2.0.0-beta.5"
   },
   "oclif": {
     "commands": "./lib/commands",
