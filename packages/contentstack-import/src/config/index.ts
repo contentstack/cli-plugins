@@ -41,6 +41,7 @@ const config: DefaultConfig = {
       'personalize',
       'custom-roles',
       'workflows',
+      'publishing-rules',
       'entries',
       'variant-entries',
       'labels',
@@ -88,6 +89,11 @@ const config: DefaultConfig = {
       fileName: 'workflows.json',
       invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
     },
+    'publishing-rules': {
+      dirName: 'workflows',
+      fileName: 'publishing-rules.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
     assets: {
       dirName: 'assets',
       assetBatchLimit: 1,
@@ -100,6 +106,40 @@ const config: DefaultConfig = {
       host: 'https://api.contentstack.io',
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
+    },
+    'cs-assets': {
+      dirName: 'spaces',
+      fieldsDir: 'fields',
+      assetTypesDir: 'asset_types',
+      fieldsFileName: 'fields.json',
+      assetTypesFileName: 'asset-types.json',
+      foldersFileName: 'folders.json',
+      assetsFileName: 'assets.json',
+      fieldsImportInvalidKeys: [
+        'created_at',
+        'created_by',
+        'updated_at',
+        'updated_by',
+        'is_system',
+        'asset_types_count',
+      ],
+      assetTypesImportInvalidKeys: [
+        'created_at',
+        'created_by',
+        'updated_at',
+        'updated_by',
+        'is_system',
+        'category',
+        'preview_image_url',
+        'category_detail',
+      ],
+      mapperRootDir: 'mapper',
+      mapperAssetsModuleDir: 'assets',
+      mapperUidFileName: 'uid-mapping.json',
+      mapperUrlFileName: 'url-mapping.json',
+      mapperSpaceUidFileName: 'space-uid-mapping.json',
+      uploadAssetsConcurrency: 2,
+      importFoldersConcurrency: 1,
     },
     'assets-old': {
       dirName: 'assets',
@@ -454,5 +494,7 @@ const config: DefaultConfig = {
   globalModules: ['webhooks'],
   entriesPublish: true,
 };
+export const PUBLISHING_RULES_APPROVERS_SKIP_MSG =
+  'Skipping import of publish rule approver(s) (roles/users); reconfigure approvers on the target stack.';
 
 export default config;

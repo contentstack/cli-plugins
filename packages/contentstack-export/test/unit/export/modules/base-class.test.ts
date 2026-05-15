@@ -129,6 +129,11 @@ describe('BaseClass', () => {
           fileName: 'workflows.json',
           invalidKeys: [],
         },
+        'publishing-rules': {
+          dirName: 'workflows',
+          fileName: 'publishing-rules.json',
+          invalidKeys: [],
+        },
         globalfields: {
           dirName: 'global_fields',
           fileName: 'globalfields.json',
@@ -153,6 +158,11 @@ describe('BaseClass', () => {
           displayExecutionTime: false,
           enableDownloadStatus: false,
           includeVersionedAssets: false,
+        },
+        'cs-assets': {
+          chunkFileSizeMb: 1,
+          apiConcurrency: 5,
+          downloadAssetsConcurrency: 5,
         },
         content_types: {
           dirName: 'content_types',
@@ -235,7 +245,7 @@ describe('BaseClass', () => {
           dirName: 'composable_studio',
           fileName: 'composable_studio.json',
           apiBaseUrl: 'https://api.contentstack.io',
-          apiVersion: 'v3'
+          apiVersion: 'v3',
         },
       },
     } as ExportConfig;

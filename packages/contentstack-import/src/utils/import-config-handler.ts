@@ -1,5 +1,6 @@
 import merge from 'merge';
 import * as path from 'path';
+import { existsSync, readFileSync } from 'node:fs';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
@@ -21,6 +22,14 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
 
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn(
+        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
+      );
+    }
 
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
@@ -123,6 +132,34 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['exclude-global-modules']) {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
+  }
+
+  const spacesDir = path.join(config.contentDir, 'spaces');
+  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
+
+  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
+    try {
+      const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
+      if (stackSettings?.am_v2) {
+        config.csAssetsEnabled = true;
+        config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
+
+        if (existsSync(stackJsonPath)) {
+          try {
+            const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
+            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
+            if (apiKey) {
+              config.source_stack = apiKey;
+            }
+          } catch {
+            // stack.json unreadable — source stack API key will not be set
+          }
+        }
+      }
+    } catch {
+      // stack settings unreadable — not an CS Assets export we can process
+    }
   }
 
   // Add authentication details to config for context tracking

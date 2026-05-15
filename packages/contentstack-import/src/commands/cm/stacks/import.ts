@@ -126,7 +126,7 @@ export default class ImportCommand extends Command {
       createLogContext(
         this.context?.info?.command || 'cm:stacks:import',
         importConfig.apiKey,
-        importConfig.authenticationMethod
+        importConfig.authenticationMethod,
       );
       const context = this.createImportContext(importConfig.apiKey, importConfig.authenticationMethod);
       importConfig.context = { ...context };

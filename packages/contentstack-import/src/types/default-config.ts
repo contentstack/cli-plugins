@@ -49,6 +49,11 @@ export default interface DefaultConfig {
       fileName: string;
       invalidKeys: string[];
     };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+    };
     assets: {
       dirName: string;
       assetBatchLimit: number;
@@ -69,6 +74,24 @@ export default interface DefaultConfig {
       host: string;
       validKeys: string[];
       assetBatchLimit: number;
+      uploadAssetsConcurrency: number;
+      importFoldersConcurrency: number;
+    };
+    'cs-assets': {
+      dirName: string;
+      fieldsDir: string;
+      assetTypesDir: string;
+      fieldsFileName: string;
+      assetTypesFileName: string;
+      foldersFileName: string;
+      assetsFileName: string;
+      fieldsImportInvalidKeys: string[];
+      assetTypesImportInvalidKeys: string[];
+      mapperRootDir: string;
+      mapperAssetsModuleDir: string;
+      mapperUidFileName: string;
+      mapperUrlFileName: string;
+      mapperSpaceUidFileName: string;
       uploadAssetsConcurrency: number;
       importFoldersConcurrency: number;
     };

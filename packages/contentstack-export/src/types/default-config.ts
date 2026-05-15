@@ -66,6 +66,13 @@ export default interface DefaultConfig {
       invalidKeys: string[];
       dependencies?: Modules[];
     };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+      dependencies?: Modules[];
+      limit?: number;
+    };
     globalfields: {
       dirName: string;
       fileName: string;
@@ -94,6 +101,15 @@ export default interface DefaultConfig {
       displayExecutionTime: boolean;
       enableDownloadStatus: boolean;
       includeVersionedAssets: boolean;
+      dependencies?: Modules[];
+    };
+    'cs-assets': {
+      /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
+      chunkFileSizeMb: number;
+      /** Shared export concurrency fallback used by CS Assets export. */
+      apiConcurrency: number;
+      /** Parallel downloads per AM workspace export. */
+      downloadAssetsConcurrency: number;
       dependencies?: Modules[];
     };
     content_types: {

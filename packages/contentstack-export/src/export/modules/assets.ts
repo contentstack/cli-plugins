@@ -1,5 +1,5 @@
 import map from 'lodash/map';
-import { getChalk } from '@contentstack/cli-utilities';
+import { cliux, getChalk } from '@contentstack/cli-utilities';
 import chunk from 'lodash/chunk';
 import first from 'lodash/first';
 import merge from 'lodash/merge';
@@ -25,7 +25,16 @@ import { PATH_CONSTANTS } from '../../constants';
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
-import { getExportBasePath, PROCESS_NAMES, MODULE_CONTEXTS, PROCESS_STATUS, MODULE_NAMES } from '../../utils';
+import { ExportSpaces } from '@contentstack/cli-asset-management';
+import {
+  getExportBasePath,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  PROCESS_STATUS,
+  MODULE_NAMES,
+  getOrgUid,
+} from '../../utils';
+import { handle } from '@oclif/core';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -48,9 +57,74 @@ export default class ExportAssets extends BaseClass {
   }
 
   async start(): Promise<void> {
-      this.assetsRootPath = pResolve(
-      getExportBasePath(this.exportConfig),
-      this.assetConfig.dirName,
+    const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
+
+    if (linkedWorkspaces.length > 0) {
+      const csAssetsUrl = this.exportConfig.region?.csAssetsUrl;
+      if (!csAssetsUrl) {
+        handleAndLogError(
+          new Error(
+            'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          ),
+          {
+            ...this.exportConfig.context,
+            message:
+              'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          },
+        );
+        this.completeProgressWithMessage({
+          moduleName: 'Contentstack Assets',
+          customWarningMessage:
+            'Contentstack Assets export was skipped: csAssetsUrl is not configured. CS Assets assets will not be exported.',
+          context: this.exportConfig.context,
+        });
+        cliux.print(
+          'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          { color: 'yellow' },
+        );
+        return;
+      }
+      log.debug(
+        `Exporting with CS Assets: ${csAssetsUrl} (linked_workspaces from exportConfig)`,
+        this.exportConfig.context,
+      );
+      this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
+      const progress = this.createNestedProgress(this.currentModuleName);
+      try {
+        const legacyModuleConfig = (this.exportConfig.modules as Record<string, any>)['asset-management'];
+        const csAssetsModuleConfig = this.exportConfig.modules['cs-assets'] || legacyModuleConfig;
+        if (!this.exportConfig.modules['cs-assets'] && legacyModuleConfig) {
+          log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+        }
+        const exporter = new ExportSpaces({
+          linkedWorkspaces,
+          exportDir: this.exportConfig.exportDir,
+          branchName: this.exportConfig.branchName || 'main',
+          csAssetsUrl,
+          org_uid: this.exportConfig.org_uid ?? '',
+          apiKey: this.exportConfig.apiKey,
+          context: this.exportConfig.context as unknown as Record<string, unknown>,
+          securedAssets: this.exportConfig.securedAssets,
+          chunkFileSizeMb: csAssetsModuleConfig?.chunkFileSizeMb,
+          apiConcurrency: csAssetsModuleConfig?.apiConcurrency,
+          downloadAssetsConcurrency: csAssetsModuleConfig?.downloadAssetsConcurrency,
+        });
+        exporter.setParentProgressManager(progress);
+        await exporter.start();
+        this.completeProgressWithMessage();
+      } catch (error) {
+        this.completeProgress(false, (error as Error)?.message ?? 'Contentstack Assets export failed');
+        throw error;
+      }
+      return;
+    }
+
+    log.debug('Using legacy asset export (no linked_workspaces in exportConfig)', this.exportConfig.context);
+
+    this.assetsRootPath = pResolve(
+      this.exportConfig.exportDir,
+      this.exportConfig.branchName || '',
+      (this.assetsRootPath = pResolve(getExportBasePath(this.exportConfig), this.assetConfig.dirName)),
     );
     log.debug(`Assets root path resolved to: ${this.assetsRootPath}`, this.exportConfig.context);
     log.debug('Fetching assets and folders count...', this.exportConfig.context);
@@ -77,10 +151,7 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsFolderCount === 'number' && assetsFolderCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_FOLDERS)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FETCHING,
-            PROCESS_NAMES.ASSET_FOLDERS,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FETCHING, PROCESS_NAMES.ASSET_FOLDERS);
         await this.getAssetsFolders(assetsFolderCount);
         progress.completeProcess(PROCESS_NAMES.ASSET_FOLDERS, true);
       }
@@ -89,10 +160,7 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsCount === 'number' && assetsCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_METADATA)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING,
-            PROCESS_NAMES.ASSET_METADATA,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING, PROCESS_NAMES.ASSET_METADATA);
         await this.getAssets(assetsCount);
         progress.completeProcess(PROCESS_NAMES.ASSET_METADATA, true);
       }
@@ -111,17 +179,13 @@ export default class ExportAssets extends BaseClass {
       if (typeof assetsCount === 'number' && assetsCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.ASSET_DOWNLOADS)
-          .updateStatus(
-            PROCESS_STATUS[PROCESS_NAMES.ASSET_DOWNLOADS].DOWNLOADING,
-            PROCESS_NAMES.ASSET_DOWNLOADS,
-          );
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_DOWNLOADS].DOWNLOADING, PROCESS_NAMES.ASSET_DOWNLOADS);
         log.debug('Starting download of all assets...', this.exportConfig.context);
         await this.downloadAssets();
         progress.completeProcess(PROCESS_NAMES.ASSET_DOWNLOADS, true);
       }
 
       this.completeProgressWithMessage();
-
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset export failed');
     }
@@ -147,12 +211,7 @@ export default class ExportAssets extends BaseClass {
       if (!isEmpty(items)) {
         this.assetsFolder.push(...items);
         items.forEach((folder: any) => {
-          this.progressManager?.tick(
-            true,
-            `folder: ${folder.name || folder.uid}`,
-            null,
-            PROCESS_NAMES.ASSET_FOLDERS,
-          );
+          this.progressManager?.tick(true, `folder: ${folder.name || folder.uid}`, null, PROCESS_NAMES.ASSET_FOLDERS);
         });
       }
     };
@@ -253,12 +312,7 @@ export default class ExportAssets extends BaseClass {
         fs?.writeIntoFile(items, { mapKeyVal: true });
         // Track progress for each asset with process name
         items.forEach((asset: any) => {
-          this.progressManager?.tick(
-            true,
-            `asset: ${asset.filename || asset.uid}`,
-            null,
-            PROCESS_NAMES.ASSET_METADATA,
-          );
+          this.progressManager?.tick(true, `asset: ${asset.filename || asset.uid}`, null, PROCESS_NAMES.ASSET_METADATA);
         });
       }
     };

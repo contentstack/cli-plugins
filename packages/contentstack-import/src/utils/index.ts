@@ -1,9 +1,5 @@
 export { setupBranchConfig } from './setup-branch';
-export {
-  resolveImportPath,
-  updateImportConfigWithResolvedPath,
-  executeImportPathLogic
-} from './import-path-resolver';
+export { resolveImportPath, updateImportConfigWithResolvedPath, executeImportPathLogic } from './import-path-resolver';
 export * as interactive from './interactive';
 export { default as setupImportConfig } from './import-config-handler';
 export * as fileHelper from './file-helper';
@@ -37,3 +33,5 @@ export {
   serializePublishTaxonomies,
 } from './taxonomy-publish-utils';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
+export { buildImportSpacesOptions } from './build-import-spaces-options';
+export { parseErrorPayload, isDuplicatePublishingRuleError } from './publishing-rules-helper';
