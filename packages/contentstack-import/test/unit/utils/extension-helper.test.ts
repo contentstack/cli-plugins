@@ -34,13 +34,13 @@ describe('Extension Helper', () => {
     contentDir: '/test/content',
     data: '/test/content',
     modules: {
+      apiConcurrency: 5,
       'composable-studio': {
         dirName: 'composable_studio',
         fileName: 'composable_studio.json',
         apiBaseUrl: 'https://composable-studio-api.contentstack.com',
         apiVersion: 'v1',
       },
-      apiConcurrency: 1,
       types: [],
       locales: { dirName: 'locales', fileName: 'locales.json', requiredKeys: ['code', 'name'] },
       customRoles: {
@@ -54,6 +54,11 @@ describe('Extension Helper', () => {
       webhooks: { dirName: 'webhooks', fileName: 'webhooks.json' },
       releases: { dirName: 'releases', fileName: 'releases.json', invalidKeys: ['uid'] },
       workflows: { dirName: 'workflows', fileName: 'workflows.json', invalidKeys: ['uid'] },
+      'publishing-rules': {
+        dirName: 'workflows',
+        fileName: 'publishing-rules.json',
+        invalidKeys: ['uid'],
+      },
       assets: {
         dirName: 'assets',
         assetBatchLimit: 10,
@@ -66,6 +71,24 @@ describe('Extension Helper', () => {
         host: 'https://api.contentstack.io',
         folderValidKeys: ['uid', 'name'],
         validKeys: ['uid', 'title'],
+      },
+      'cs-assets': {
+        dirName: 'spaces',
+        fieldsDir: 'fields',
+        assetTypesDir: 'asset_types',
+        fieldsFileName: 'fields.json',
+        assetTypesFileName: 'asset-types.json',
+        foldersFileName: 'folders.json',
+        assetsFileName: 'assets.json',
+        fieldsImportInvalidKeys: [],
+        assetTypesImportInvalidKeys: [],
+        mapperRootDir: 'mapper',
+        mapperAssetsModuleDir: 'assets',
+        mapperUidFileName: 'uid-mapping.json',
+        mapperUrlFileName: 'url-mapping.json',
+        mapperSpaceUidFileName: 'space-uid-mapping.json',
+        uploadAssetsConcurrency: 1,
+        importFoldersConcurrency: 1,
       },
       'assets-old': {
         dirName: 'assets',

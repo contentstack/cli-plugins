@@ -39,6 +39,8 @@ describe('ImportAssets', () => {
       region: 'us',
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
+      fetchConcurrency: 5,
+      writeConcurrency: 1,
       context: {
         command: 'cm:stacks:import',
         module: 'assets',
@@ -55,7 +57,6 @@ describe('ImportAssets', () => {
           dirName: 'assets',
           validKeys: ['title', 'filename', 'content_type', 'parent_uid', 'description', 'tags'],
           folderValidKeys: ['name', 'parent_uid'],
-          apiConcurrency: 5,
           importFoldersConcurrency: 3,
           uploadAssetsConcurrency: 5,
           includeVersionedAssets: true,
@@ -1088,6 +1089,104 @@ describe('ImportAssets', () => {
 
       expect(result).to.have.lengthOf(100);
       expect(result[99].parent_uid).to.equal('folder-98');
+    });
+  });
+
+  describe('linkImportedAmSpacesToBranch() — duplicate prevention', () => {
+    let branchFetchStub: sinon.SinonStub;
+    let branchUpdateSettingsStub: sinon.SinonStub;
+    let branchStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      branchFetchStub = sinon.stub();
+      branchUpdateSettingsStub = sinon.stub().resolves();
+      branchStub = sinon.stub().returns({
+        fetch: branchFetchStub,
+        updateSettings: branchUpdateSettingsStub,
+      });
+      // stack is a getter-only property on BaseClass; override via defineProperty.
+      Object.defineProperty(importAssets, 'stack', {
+        get: () => ({ branch: branchStub }),
+        configurable: true,
+      });
+    });
+
+    it('should skip space mappings whose newSpaceUid is already linked to the branch', async () => {
+      branchFetchStub.resolves({
+        settings: {
+          am_v2: {
+            linked_workspaces: [
+              { uid: 'ws-3', space_uid: 'target-space-3', is_default: true },
+            ],
+          },
+        },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      expect(branchUpdateSettingsStub.callCount).to.equal(1);
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      // The existing entry stays; no new entry appended for target-space-3.
+      expect(updatedWorkspaces).to.have.lengthOf(1);
+      expect(updatedWorkspaces[0].space_uid).to.equal('target-space-3');
+      expect(updatedWorkspaces[0].uid).to.equal('ws-3');
+    });
+
+    it('should append only the non-default (new) space, not the already-linked default space', async () => {
+      branchFetchStub.resolves({
+        settings: {
+          am_v2: {
+            linked_workspaces: [
+              { uid: 'ws-3', space_uid: 'target-space-3', is_default: true },
+            ],
+          },
+        },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true },
+        { oldSpaceUid: 'am-space-2', newSpaceUid: 'brand-new-space', workspaceUid: 'main', isDefault: false },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      // Existing default + one new space = 2 total.
+      expect(updatedWorkspaces).to.have.lengthOf(2);
+      expect(updatedWorkspaces.map((w: any) => w.space_uid)).to.include.members([
+        'target-space-3',
+        'brand-new-space',
+      ]);
+    });
+
+    it('should append all mappings when none are already linked', async () => {
+      branchFetchStub.resolves({
+        settings: { am_v2: { linked_workspaces: [] } },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space-1', workspaceUid: 'main', isDefault: true },
+        { oldSpaceUid: 'am-space-2', newSpaceUid: 'new-space-2', workspaceUid: 'main', isDefault: false },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      expect(updatedWorkspaces).to.have.lengthOf(2);
+    });
+
+    it('should do nothing when spaceMappings is empty', async () => {
+      await (importAssets as any).linkImportedAmSpacesToBranch([]);
+
+      expect(branchFetchStub.callCount).to.equal(0);
+      expect(branchUpdateSettingsStub.callCount).to.equal(0);
     });
   });
 });

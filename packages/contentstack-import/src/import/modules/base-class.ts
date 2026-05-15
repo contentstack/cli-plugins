@@ -62,7 +62,8 @@ export type ApiModuleType =
   | 'delete-entries'
   | 'create-taxonomies'
   | 'create-terms'
-  | 'import-taxonomy';
+  | 'import-taxonomy'
+  | 'create-publishing-rule';
 
 export type ApiOptions = {
   uid?: string;
@@ -219,7 +220,7 @@ export default abstract class BaseClass {
       processName,
       indexerCount,
       currentIndexer,
-      concurrencyLimit = this.importConfig.modules.apiConcurrency,
+      concurrencyLimit = this.importConfig.fetchConcurrency,
     } = env;
 
     /* eslint-disable no-async-promise-executor */
@@ -462,6 +463,13 @@ export default abstract class BaseClass {
         return this.stack
           .workflow()
           .create({ workflow: apiData as WorkflowData })
+          .then(onSuccess)
+          .catch(onReject);
+      case 'create-publishing-rule':
+        return this.stack
+          .workflow()
+          .publishRule()
+          .create({ publishing_rule: omit(apiData, ['uid']) as any })
           .then(onSuccess)
           .catch(onReject);
       case 'create-custom-role':

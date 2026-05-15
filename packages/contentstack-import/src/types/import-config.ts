@@ -57,6 +57,8 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   personalizeProjectName?: string;
   'exclude-global-modules': false;
   context: Context;
+  csAssetsUrl?: string;
+  csAssetsEnabled?: boolean;
 }
 
 type branch = {

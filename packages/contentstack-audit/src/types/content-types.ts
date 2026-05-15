@@ -162,6 +162,7 @@ enum OutputColumn {
   'publish_locale' = 'publish_locale',
   'publish_environment' = 'publish_environment',
   'asset_uid' = 'asset_uid',
+  'space_id' = 'space_id',
   'selectedValue' = 'selectedValue',
   'fixStatus' = 'fixStatus',
   'Content_type_uid' = 'ct_uid',

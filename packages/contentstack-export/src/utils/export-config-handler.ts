@@ -25,6 +25,15 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
     log.debug('Loading external configuration file...', { configFile: exportCmdFlags['config'] });
     const externalConfig = await readFile(exportCmdFlags['config']);
 
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn(
+        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
+      );
+    }
+
 
     config = merge.recursive(config, externalConfig);
   }
