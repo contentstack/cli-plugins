@@ -31,4 +31,6 @@ fileignoreconfig:
     checksum: 163c7e519561f2c1f473f6f0c5303a2a47c9f5c231b638cd90782c37eaa4859e
   - filename: packages/contentstack-branches/README.md
     checksum: 2978e9a9c151cbbafb5dd542edf6815ccec12172ae4ca114a6c4e5e73a85a2b5
+  - filename: packages/contentstack-seed/README.md
+    checksum: ee6667dc5ce3a11517663ed19c090cac9ddfadf562a117b1f165220eb61cdc2b
 version: '1.0'
