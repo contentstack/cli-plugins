@@ -5,6 +5,10 @@ import { HttpClient, log, authenticationHandler, handleAndLogError } from '@cont
 import type {
   CSAssetsAPIConfig,
   AssetTypesResponse,
+  BulkDeleteAssetsPayload,
+  BulkDeleteAssetsResponse,
+  BulkMoveAssetsPayload,
+  BulkMoveAssetsResponse,
   CreateAssetMetadata,
   CreateAssetTypePayload,
   CreateFieldPayload,
@@ -363,5 +367,29 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
    */
   async createAssetType(payload: CreateAssetTypePayload): Promise<{ asset_type: { uid: string } }> {
     return this.postJson<{ asset_type: { uid: string } }>('/api/asset_types', payload);
+  }
+
+  /**
+   * POST /api/spaces/{spaceUid}/assets/bulk/delete — bulk delete assets (per locale entries).
+   */
+  async bulkDeleteAssets(
+    spaceUid: string,
+    workspaceUid: string = 'main',
+    payload: BulkDeleteAssetsPayload,
+  ): Promise<BulkDeleteAssetsResponse> {
+    const path = `/api/spaces/${encodeURIComponent(spaceUid)}/assets/bulk/delete?workspace=${encodeURIComponent(workspaceUid)}`;
+    return this.postJson<BulkDeleteAssetsResponse>(path, payload, { space_key: spaceUid });
+  }
+
+  /**
+   * POST /api/spaces/{spaceUid}/assets/bulk-move — move assets into a folder.
+   */
+  async bulkMoveAssets(
+    spaceUid: string,
+    workspaceUid: string = 'main',
+    payload: BulkMoveAssetsPayload,
+  ): Promise<BulkMoveAssetsResponse> {
+    const path = `/api/spaces/${encodeURIComponent(spaceUid)}/assets/bulk-move?workspace=${encodeURIComponent(workspaceUid)}`;
+    return this.postJson<BulkMoveAssetsResponse>(path, payload, { space_key: spaceUid });
   }
 }
