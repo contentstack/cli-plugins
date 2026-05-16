@@ -1,11 +1,21 @@
 import { join } from 'node:path';
 import values from 'lodash/values';
 import isEmpty from 'lodash/isEmpty';
-import { log, handleAndLogError } from '@contentstack/cli-utilities';
+import { log, handleAndLogError, CLIProgressManager } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 
 import BaseClass, { ApiOptions } from './base-class';
-import { fsUtil, fileHelper, MODULE_CONTEXTS, MODULE_NAMES, PROCESS_STATUS, PROCESS_NAMES } from '../../utils';
+import {
+  fsUtil,
+  fileHelper,
+  MODULE_CONTEXTS,
+  MODULE_NAMES,
+  PROCESS_STATUS,
+  PROCESS_NAMES,
+  readEnvUidMapperSync,
+  warnIfEnvMapperEmpty,
+  serializePublishTaxonomies,
+} from '../../utils';
 import { ModuleClassParams, TaxonomiesConfig } from '../../types';
 
 export default class ImportTaxonomies extends BaseClass {
@@ -19,6 +29,7 @@ export default class ImportTaxonomies extends BaseClass {
   private termsSuccessPath: string;
   private termsFailsPath: string;
   private localesFilePath: string;
+  private envUidMapperPath: string;
   private isLocaleBasedStructure: boolean = false;
   public createdTaxonomies: Record<string, unknown> = {};
   public failedTaxonomies: Record<string, unknown> = {};
@@ -46,7 +57,15 @@ export default class ImportTaxonomies extends BaseClass {
       importConfig.modules.locales.dirName,
       importConfig.modules.locales.fileName,
     );
+    this.envUidMapperPath = join(
+      importConfig.backupDir,
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.ENVIRONMENTS,
+      PATH_CONSTANTS.FILES.UID_MAPPING,
+    );
   }
+
+  // --- Lifecycle ---
 
   /**
    * @method start
@@ -56,7 +75,7 @@ export default class ImportTaxonomies extends BaseClass {
     try {
       log.debug('Starting taxonomies import process...', this.importConfig.context);
 
-      const [taxonomiesCount] = await this.analyzeTaxonomies();
+      const [taxonomiesCount, publishJobCount] = await this.analyzeTaxonomies();
       if (taxonomiesCount === 0) {
         log.info('No taxonomies found to import', this.importConfig.context);
         return;
@@ -67,8 +86,12 @@ export default class ImportTaxonomies extends BaseClass {
       // Check if locale-based structure exists before import
       this.isLocaleBasedStructure = this.detectAndScanLocaleStructure();
 
-      const progress = this.createSimpleProgress(this.currentModuleName, taxonomiesCount);
-      progress.updateStatus(PROCESS_STATUS[PROCESS_NAMES.TAXONOMIES_IMPORT].IMPORTING);
+      const progress = this.createNestedProgress(this.currentModuleName);
+      this.initializeTaxonomiesProgress(progress, taxonomiesCount, publishJobCount);
+
+      progress
+        .startProcess(PROCESS_NAMES.TAXONOMIES_IMPORT)
+        .updateStatus(PROCESS_STATUS[PROCESS_NAMES.TAXONOMIES_IMPORT].IMPORTING, PROCESS_NAMES.TAXONOMIES_IMPORT);
       log.debug('Starting taxonomies import', this.importConfig.context);
 
       if (this.isLocaleBasedStructure) {
@@ -79,6 +102,19 @@ export default class ImportTaxonomies extends BaseClass {
         await this.importTaxonomiesLegacy();
       }
 
+      progress.completeProcess(PROCESS_NAMES.TAXONOMIES_IMPORT, true);
+
+      if (publishJobCount > 0) {
+        progress
+          .startProcess(PROCESS_NAMES.TAXONOMIES_PUBLISH)
+          .updateStatus(
+            PROCESS_STATUS[PROCESS_NAMES.TAXONOMIES_PUBLISH].PUBLISHING,
+            PROCESS_NAMES.TAXONOMIES_PUBLISH,
+          );
+        await this.processTaxonomyPublishing();
+        progress.completeProcess(PROCESS_NAMES.TAXONOMIES_PUBLISH, true);
+      }
+
       this.createSuccessAndFailedFile();
       this.completeProgressWithMessage();
     } catch (error) {
@@ -86,6 +122,8 @@ export default class ImportTaxonomies extends BaseClass {
       handleAndLogError(error, { ...this.importConfig.context });
     }
   }
+
+  // --- Import ---
 
   /**
    * create taxonomy and enter success & failure related data into taxonomies mapper file
@@ -344,6 +382,121 @@ export default class ImportTaxonomies extends BaseClass {
     return true;
   }
 
+  // --- Progress ---
+
+  /**
+   * Registers nested progress for taxonomy import and optional taxonomy publish when publish jobs exist.
+   */
+  initializeTaxonomiesProgress(progress: CLIProgressManager, taxonomyCount: number, publishJobCount: number): void {
+    progress.addProcess(PROCESS_NAMES.TAXONOMIES_IMPORT, taxonomyCount);
+    if (publishJobCount > 0) {
+      progress.addProcess(PROCESS_NAMES.TAXONOMIES_PUBLISH, publishJobCount);
+    }
+  }
+
+  // --- Publish ---
+
+  private countPublishEligibleTaxonomies(envMapper: Record<string, string>): number {
+    let count = 0;
+    for (const key of Object.keys(this.taxonomies || {})) {
+      const meta = this.taxonomies[key] as Record<string, any>;
+      const taxonomyUid = meta?.uid || key;
+      const filePath = this.findTaxonomyFilePath(taxonomyUid);
+      if (!filePath) continue;
+
+      const details = this.loadTaxonomyFile(filePath);
+      const tax = details?.taxonomy as Record<string, any> | undefined;
+      if (!tax?.publish_details?.length || !tax?.locale) continue;
+
+      const hasMapped = (tax.publish_details as any[]).some(
+        (p: any) => p?.environment && envMapper[String(p.environment)],
+      );
+      if (hasMapped) count++;
+    }
+    return count;
+  }
+
+  private collectTaxonomyPublishJobs(): Array<{ taxonomy: Record<string, any> }> {
+    const jobs: Array<{ taxonomy: Record<string, any> }> = [];
+    const seen = new Set<string>();
+
+    for (const key of Object.keys(this.taxonomies || {})) {
+      const meta = this.taxonomies[key] as Record<string, any>;
+      const taxonomyUid = meta?.uid || key;
+      if (seen.has(taxonomyUid)) continue;
+
+      const filePath = this.findTaxonomyFilePath(taxonomyUid);
+      if (!filePath) continue;
+
+      const details = this.loadTaxonomyFile(filePath);
+      const tax = details?.taxonomy as Record<string, any> | undefined;
+      if (!tax?.publish_details?.length || !tax?.locale) continue;
+
+      seen.add(taxonomyUid);
+      jobs.push({ taxonomy: tax });
+    }
+
+    return jobs;
+  }
+
+  async processTaxonomyPublishing(): Promise<void> {
+    const envUidMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
+    warnIfEnvMapperEmpty(envUidMapper, this.importConfig.context);
+    const jobs = this.collectTaxonomyPublishJobs();
+
+    if (jobs.length === 0) {
+      log.debug('No taxonomies with publish_details to publish', this.importConfig.context);
+      return;
+    }
+
+    log.info('Starting taxonomy publishing process', this.importConfig.context);
+
+    const onSuccess = ({ apiData }: any) => {
+      const taxonomyUid = apiData?.items?.[0]?.uid;
+      this.progressManager?.tick(
+        true,
+        `taxonomy published: ${taxonomyUid}`,
+        null,
+        PROCESS_NAMES.TAXONOMIES_PUBLISH,
+      );
+      log.success(`Published taxonomy '${taxonomyUid}'`, this.importConfig.context);
+    };
+
+    const onReject = ({ error, apiData }: any) => {
+      const taxonomyUid = apiData?.items?.[0]?.uid;
+      handleAndLogError(
+        error,
+        { ...this.importConfig.context, taxonomyUid },
+        `Failed to publish taxonomy '${taxonomyUid}'`,
+      );
+      this.progressManager?.tick(
+        false,
+        `taxonomy publish: ${taxonomyUid}`,
+        (error as Error)?.message || `Failed to publish taxonomy '${taxonomyUid}'`,
+        PROCESS_NAMES.TAXONOMIES_PUBLISH,
+      );
+    };
+
+    await this.makeConcurrentCall(
+      {
+        apiContent: jobs as unknown as Record<string, any>[],
+        processName: 'publish taxonomies',
+        apiParams: {
+          serializeData: (opts: ApiOptions) => serializePublishTaxonomies(opts, envUidMapper),
+          reject: onReject,
+          resolve: onSuccess,
+          entity: 'publish-taxonomies',
+          includeParamOnCompletion: true,
+        },
+        concurrencyLimit: this.importConfig.concurrency || this.importConfig.fetchConcurrency || 1,
+      },
+      undefined,
+      false,
+    );
+  }
+
+  // --- Mapper output ---
+
   /**
    * create taxonomies success and fail in (mapper/taxonomies)
    * create terms success and fail in (mapper/taxonomies/terms)
@@ -396,25 +549,36 @@ export default class ImportTaxonomies extends BaseClass {
     }
   }
 
-  private async analyzeTaxonomies(): Promise<[number]> {
+  // --- Analyze & prepare ---
+
+  private async analyzeTaxonomies(): Promise<[number, number]> {
     return this.withLoadingSpinner('TAXONOMIES: Analyzing import data...', async () => {
       log.debug('Checking for taxonomies folder existence', this.importConfig.context);
 
-      if (fileHelper.fileExistsSync(this.taxonomiesFolderPath)) {
-        log.debug(`Found taxonomies folder: ${this.taxonomiesFolderPath}`, this.importConfig.context);
-
-        this.taxonomies = fsUtil.readFile(join(this.taxonomiesFolderPath, 'taxonomies.json'), true) as Record<
-          string,
-          unknown
-        >;
-
-        const taxonomyCount = Object.keys(this.taxonomies || {}).length;
-        log.debug(`Loaded ${taxonomyCount} taxonomy items from file`, this.importConfig.context);
-        return [taxonomyCount];
-      } else {
+      if (!fileHelper.fileExistsSync(this.taxonomiesFolderPath)) {
         log.info(`No Taxonomies Found! - '${this.taxonomiesFolderPath}'`, this.importConfig.context);
-        return [0];
+        return [0, 0];
       }
+
+      log.debug(`Found taxonomies folder: ${this.taxonomiesFolderPath}`, this.importConfig.context);
+
+      this.taxonomies = fsUtil.readFile(join(this.taxonomiesFolderPath, 'taxonomies.json'), true) as Record<
+        string,
+        unknown
+      >;
+
+      this.isLocaleBasedStructure = this.detectAndScanLocaleStructure();
+
+      const taxonomyCount = Object.keys(this.taxonomies || {}).length;
+      const envMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
+      const publishJobCount = this.countPublishEligibleTaxonomies(envMapper);
+
+      log.debug(
+        `Loaded ${taxonomyCount} taxonomy items; ${publishJobCount} eligible for publish (mapped environments).`,
+        this.importConfig.context,
+      );
+
+      return [taxonomyCount, publishJobCount];
     });
   }
 
