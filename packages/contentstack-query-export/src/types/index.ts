@@ -210,11 +210,11 @@ export interface QueryExportConfig extends DefaultConfig {
   batchDelayMs?: number;
   assetBatchSize?: number;
   assetBatchDelayMs?: number;
-  /** AM 2.0 linked workspaces from branch settings (am_v2.linked_workspaces). */
+  /** Linked workspaces from branch settings (Contentstack Assets). */
   linkedWorkspaces?: LinkedWorkspace[];
-  /** Contentstack Assets API base URL for AM 2.0 export. */
+  /** Contentstack Assets API base URL. */
   csAssetsUrl?: string;
-  /** Organization UID for AM 2.0 API headers. */
+  /** Organization UID for Contentstack Assets API headers. */
   org_uid?: string;
   context?: LogContext; // Log context for centralized logging
 }

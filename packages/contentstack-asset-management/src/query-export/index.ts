@@ -1,1 +1,1 @@
-export { AmAssetQueryExporter } from './am-asset-query-exporter';
+export { CsAssetsQueryExporter } from './cs-assets-query-exporter';

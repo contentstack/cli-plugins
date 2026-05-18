@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { log, handleAndLogError, configHandler } from '@contentstack/cli-utilities';
 
-import type { AmAssetQueryExportOptions, CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
+import type { CsAssetsQueryExportOptions, CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import ExportAssetTypes from '../export/asset-types';
 import ExportFields from '../export/fields';
@@ -15,13 +15,13 @@ const DEFAULT_ASSET_BATCH_SIZE = 100;
 const SEARCH_PAGE_LIMIT = 50;
 
 /**
- * Query-based AM 2.0 asset exporter.
+ * Query-based Contentstack Assets exporter.
  * Exports only referenced asset UIDs from entries into the `spaces/` directory layout.
  */
-export class AmAssetQueryExporter {
-  private readonly options: AmAssetQueryExportOptions;
+export class CsAssetsQueryExporter {
+  private readonly options: CsAssetsQueryExportOptions;
 
-  constructor(options: AmAssetQueryExportOptions) {
+  constructor(options: CsAssetsQueryExportOptions) {
     this.options = options;
   }
 
@@ -29,17 +29,17 @@ export class AmAssetQueryExporter {
     const { linkedWorkspaces, exportDir, context } = this.options;
 
     if (!assetUIDs.length) {
-      log.info('No asset UIDs to export for AM 2.0 query export', context);
+      log.info('No asset UIDs to export for Contentstack Assets query export', context);
       return;
     }
 
     if (!linkedWorkspaces.length) {
-      log.warn('No linked workspaces configured for AM 2.0 asset query export', context);
+      log.warn('No linked workspaces configured for Contentstack Assets query export', context);
       return;
     }
 
     log.info(
-      `Starting AM 2.0 query asset export (${assetUIDs.length} UID(s), ${linkedWorkspaces.length} space(s))`,
+      `Starting Contentstack Assets query export (${assetUIDs.length} UID(s), ${linkedWorkspaces.length} space(s))`,
       context,
     );
 
@@ -73,14 +73,14 @@ export class AmAssetQueryExporter {
           handleAndLogError(
             err,
             { ...(context as Record<string, unknown>), spaceUid: workspace.space_uid },
-            `Failed AM 2.0 query export for space ${workspace.space_uid}`,
+            `Failed Contentstack Assets query export for space ${workspace.space_uid}`,
           );
         }
       }
 
-      log.success('AM 2.0 query asset export completed', context);
+      log.success('Contentstack Assets query export completed', context);
     } catch (err) {
-      handleAndLogError(err, context as Record<string, unknown>, 'AM 2.0 query asset export failed');
+      handleAndLogError(err, context as Record<string, unknown>, 'Contentstack Assets query export failed');
       throw err;
     }
   }
@@ -110,7 +110,7 @@ export class AmAssetQueryExporter {
     const { branchName, context } = this.options;
     const workspaceExporter = new QueryExportWorkspaceAdapter(apiConfig, exportContext);
     await workspaceExporter.start(workspace, assetUIDs, branchName || 'main', batchSize);
-    log.debug(`AM 2.0 query export finished for space ${workspace.space_uid}`, context);
+    log.debug(`Contentstack Assets query export finished for space ${workspace.space_uid}`, context);
   }
 }
 

@@ -119,7 +119,7 @@ export type CSAssetsAPIConfig = {
  * Adapter interface for Contentstack Assets API calls.
  * Used by export and (future) import.
  */
-/** Space + workspace pair for AM search API. */
+/** Space + workspace pair for Contentstack Assets search API. */
 export type SearchSpaceRef = {
   space_uid: string;
   workspace: string;
@@ -152,8 +152,8 @@ export interface ICSAssetsAdapter {
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
 }
 
-/** Options for query-based AM asset export (referenced assets from entries). */
-export type AmAssetQueryExportOptions = {
+/** Options for query-based Contentstack Assets export (referenced assets from entries). */
+export type CsAssetsQueryExportOptions = {
   linkedWorkspaces: LinkedWorkspace[];
   exportDir: string;
   branchName: string;

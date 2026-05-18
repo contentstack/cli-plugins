@@ -5,19 +5,19 @@ import { resolve as pResolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { HttpClient, authenticationHandler } from '@contentstack/cli-utilities';
 
-import { AmAssetQueryExporter } from '../../../src/query-export/am-asset-query-exporter';
+import { CsAssetsQueryExporter } from '../../../src/query-export/cs-assets-query-exporter';
 import ExportAssetTypes from '../../../src/export/asset-types';
 import ExportFields from '../../../src/export/fields';
 import { CSAssetsExportAdapter } from '../../../src/export/base';
 import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
 import * as concurrentBatch from '../../../src/utils/concurrent-batch';
 
-import type { AmAssetQueryExportOptions } from '../../../src/types/cs-assets-api';
+import type { CsAssetsQueryExportOptions } from '../../../src/types/cs-assets-api';
 
-describe('AmAssetQueryExporter', () => {
+describe('CsAssetsQueryExporter', () => {
   let exportDir: string;
   let searchAssetsStub: sinon.SinonStub;
-  const baseOptions: AmAssetQueryExportOptions = {
+  const baseOptions: CsAssetsQueryExportOptions = {
     linkedWorkspaces: [{ uid: 'main', space_uid: 'space-1', is_default: true }],
     exportDir: '',
     branchName: 'main',
@@ -28,7 +28,7 @@ describe('AmAssetQueryExporter', () => {
   };
 
   beforeEach(async () => {
-    exportDir = await fs.mkdtemp(pResolve(tmpdir(), 'am-query-export-'));
+    exportDir = await fs.mkdtemp(pResolve(tmpdir(), 'cs-assets-query-export-'));
     baseOptions.exportDir = exportDir;
 
     sinon.stub(ExportFields.prototype, 'start').resolves();
@@ -56,14 +56,14 @@ describe('AmAssetQueryExporter', () => {
   });
 
   it('should return early when no asset UIDs are provided', async () => {
-    const exporter = new AmAssetQueryExporter(baseOptions);
+    const exporter = new CsAssetsQueryExporter(baseOptions);
     await exporter.export([]);
 
     expect((ExportFields.prototype.start as sinon.SinonStub).called).to.be.false;
   });
 
   it('should bootstrap shared fields and asset types', async () => {
-    const exporter = new AmAssetQueryExporter(baseOptions);
+    const exporter = new CsAssetsQueryExporter(baseOptions);
     await exporter.export(['asset-1']);
 
     expect((ExportFields.prototype.start as sinon.SinonStub).calledOnceWith('space-1')).to.be.true;
@@ -71,7 +71,7 @@ describe('AmAssetQueryExporter', () => {
   });
 
   it('should call searchAssets with batched UIDs and space reference', async () => {
-    const exporter = new AmAssetQueryExporter(baseOptions);
+    const exporter = new CsAssetsQueryExporter(baseOptions);
     await exporter.export(['asset-1', 'asset-2', 'asset-3']);
 
     expect(searchAssetsStub.called).to.be.true;
@@ -81,7 +81,7 @@ describe('AmAssetQueryExporter', () => {
   });
 
   it('should write space metadata and asset files under spaces/', async () => {
-    const exporter = new AmAssetQueryExporter(baseOptions);
+    const exporter = new CsAssetsQueryExporter(baseOptions);
     await exporter.export(['asset-1']);
 
     const metadataPath = pResolve(exportDir, 'spaces', 'space-1', 'metadata.json');

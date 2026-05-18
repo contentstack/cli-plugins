@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import { QueryExporter } from '../../src/core/query-executor';
 import { QueryParser } from '../../src/utils/query-parser';
 import { ModuleExporter } from '../../src/core/module-exporter';
-import { AmAssetQueryExporter } from '@contentstack/cli-asset-management';
+import { CsAssetsQueryExporter } from '@contentstack/cli-asset-management';
 import * as logger from '../../src/utils/logger';
 import {
   ReferencedContentTypesHandler,
@@ -577,11 +577,11 @@ describe('QueryExporter', () => {
   describe('exportReferencedAssets', () => {
     let moduleExporterStub: sinon.SinonStub;
     let assetHandlerStub: any;
-    let amExporterStub: sinon.SinonStub;
+    let csAssetsExporterStub: sinon.SinonStub;
 
     beforeEach(() => {
       moduleExporterStub = sandbox.stub((queryExporter as any).moduleExporter, 'exportModule').resolves();
-      amExporterStub = sandbox.stub(AmAssetQueryExporter.prototype, 'export').resolves();
+      csAssetsExporterStub = sandbox.stub(CsAssetsQueryExporter.prototype, 'export').resolves();
 
       // Mock AssetReferenceHandler
       assetHandlerStub = {
@@ -592,7 +592,7 @@ describe('QueryExporter', () => {
         .callsFake(assetHandlerStub.extractReferencedAssets);
     });
 
-    it('should export referenced assets when found (AM 1.0 legacy path)', async () => {
+    it('should export referenced assets when found (stack assets path)', async () => {
       mockConfig.linkedWorkspaces = [];
       mockConfig.csAssetsUrl = undefined;
       queryExporter = new QueryExporter(mockManagementClient, mockConfig);
@@ -603,26 +603,26 @@ describe('QueryExporter', () => {
       await (queryExporter as any).exportReferencedAssets();
 
       expect(legacyModuleExporterStub.calledOnce).to.be.true;
-      expect(amExporterStub.called).to.be.false;
+      expect(csAssetsExporterStub.called).to.be.false;
       const exportCall = legacyModuleExporterStub.getCall(0);
       expect(exportCall.args[0]).to.equal('assets');
       expect(exportCall.args[1].query.modules.assets.uid.$in).to.deep.equal(['asset_1', 'asset_2', 'asset_3']);
     });
 
-    it('should use AmAssetQueryExporter when AM 2.0 linked workspaces and csAssetsUrl are set', async () => {
+    it('should use CsAssetsQueryExporter when linked workspaces and csAssetsUrl are set', async () => {
       mockConfig.linkedWorkspaces = [{ uid: 'main', space_uid: 'space-1', is_default: true }];
       mockConfig.csAssetsUrl = 'https://am.example.com';
       mockConfig.org_uid = 'org-1';
       queryExporter = new QueryExporter(mockManagementClient, mockConfig);
-      const am2ModuleExporterStub = sandbox
+      const csAssetsModuleExporterStub = sandbox
         .stub((queryExporter as any).moduleExporter, 'exportModule')
         .resolves();
 
       await (queryExporter as any).exportReferencedAssets();
 
-      expect(amExporterStub.calledOnce).to.be.true;
-      expect(amExporterStub.firstCall.args[0]).to.deep.equal(['asset_1', 'asset_2', 'asset_3']);
-      expect(am2ModuleExporterStub.called).to.be.false;
+      expect(csAssetsExporterStub.calledOnce).to.be.true;
+      expect(csAssetsExporterStub.firstCall.args[0]).to.deep.equal(['asset_1', 'asset_2', 'asset_3']);
+      expect(csAssetsModuleExporterStub.called).to.be.false;
     });
 
     it('should skip export when no assets found', async () => {

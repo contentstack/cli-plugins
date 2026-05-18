@@ -254,7 +254,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
   }
 
   /**
-   * POST /api/search — query assets by UID within linked spaces (AM 2.0 query export).
+   * POST /api/search — query assets by UID within linked spaces (Contentstack Assets query export).
    */
   async searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse> {
     await this.init();
