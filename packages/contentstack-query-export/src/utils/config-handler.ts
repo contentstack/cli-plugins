@@ -1,8 +1,17 @@
 import * as path from 'path';
-import { QueryExportConfig } from '../types';
+import { QueryExportConfig, Region } from '../types';
 import { sanitizePath, pathValidator, configHandler, isAuthenticated } from '@contentstack/cli-utilities';
 import config from '../config';
 import { askAPIKey } from './common-helper';
+
+/**
+ * Apply region-derived AM 2.0 settings after the command resolves region.
+ */
+export function applyRegionToQueryExportConfig(exportQueryConfig: QueryExportConfig, region?: Region): void {
+  if (!region) return;
+  exportQueryConfig.region = region;
+  exportQueryConfig.csAssetsUrl = region.csAssetsUrl;
+}
 
 export async function setupQueryExportConfig(flags: any): Promise<QueryExportConfig> {
   const exportDir = sanitizePath(flags['data-dir'] || pathValidator('export'));

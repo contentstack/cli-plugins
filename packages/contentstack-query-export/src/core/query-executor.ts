@@ -4,7 +4,9 @@ import {
   log,
   handleAndLogError,
   readContentTypeSchemas,
+  managementSDKClient,
 } from '@contentstack/cli-utilities';
+import { AmAssetQueryExporter } from '@contentstack/cli-asset-management';
 import * as fs from 'fs';
 import * as path from 'path';
 import { QueryExportConfig, Modules } from '../types';
@@ -44,6 +46,9 @@ export class QueryExporter {
     // Step 2: Always export general modules
     await this.exportGeneralModules();
 
+    // Step 3: Resolve AM 2.0 linked workspaces from branch settings
+    await this.fetchLinkedWorkspaces();
+
     // Step 4: Export queried modules
     await this.exportQueriedModule(parsedQuery);
 
@@ -57,6 +62,56 @@ export class QueryExporter {
     // Step 9: export all other modules
 
     log.success('Query-based export completed successfully!', this.exportQueryConfig.context);
+  }
+
+  /**
+   * Fetch linked workspaces (am_v2) from branch settings for AM 2.0 asset routing.
+   */
+  private async fetchLinkedWorkspaces(): Promise<void> {
+    const branchName = this.exportQueryConfig.branchName || 'main';
+    try {
+      const branch = await this.stackAPIClient
+        .branch(branchName)
+        .fetch({ include_settings: true } as Record<string, unknown>);
+      const linked = (branch as { settings?: { am_v2?: { linked_workspaces?: QueryExportConfig['linkedWorkspaces'] } } })
+        ?.settings?.am_v2?.linked_workspaces;
+      this.exportQueryConfig.linkedWorkspaces = Array.isArray(linked) ? linked : [];
+      log.debug(
+        `Linked workspaces for AM 2.0: ${this.exportQueryConfig.linkedWorkspaces?.length ?? 0}`,
+        this.exportQueryConfig.context,
+      );
+    } catch (error) {
+      log.warn(
+        `Could not fetch linked workspaces for branch ${branchName}, using legacy asset export`,
+        this.exportQueryConfig.context,
+      );
+      this.exportQueryConfig.linkedWorkspaces = [];
+    }
+  }
+
+  private isAM2AssetExport(): boolean {
+    return (
+      (this.exportQueryConfig.linkedWorkspaces?.length ?? 0) > 0 &&
+      Boolean(this.exportQueryConfig.csAssetsUrl)
+    );
+  }
+
+  /**
+   * Resolve organization UID for AM 2.0 API calls.
+   */
+  private async resolveOrgUid(): Promise<string> {
+    if (this.exportQueryConfig.org_uid) {
+      return this.exportQueryConfig.org_uid;
+    }
+    try {
+      const tempAPIClient = await managementSDKClient({ host: this.exportQueryConfig.host });
+      const stackData = await tempAPIClient.stack({ api_key: this.exportQueryConfig.stackApiKey }).fetch();
+      this.exportQueryConfig.org_uid = (stackData as { org_uid?: string })?.org_uid ?? '';
+      return this.exportQueryConfig.org_uid;
+    } catch (error) {
+      handleAndLogError(error, this.exportQueryConfig.context, 'Failed to resolve organization UID');
+      return '';
+    }
   }
 
   // export general modules
@@ -266,28 +321,75 @@ export class QueryExporter {
     log.info('Starting export of referenced assets...', this.exportQueryConfig.context);
 
     try {
-      const assetsDir = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'assets',
-      );
-
-      const metadataFilePath = path.join(assetsDir, 'metadata.json');
-      const assetFilePath = path.join(assetsDir, 'assets.json');
-
-      // Define temp file paths
-      const tempMetadataFilePath = path.join(assetsDir, 'metadata_temp.json');
-      const tempAssetFilePath = path.join(assetsDir, 'assets_temp.json');
-
       const assetHandler = new AssetReferenceHandler(this.exportQueryConfig);
 
       // Extract referenced asset UIDs from all entries
       log.debug('Extracting referenced assets from entries', this.exportQueryConfig.context);
       const assetUIDs = assetHandler.extractReferencedAssets();
 
-      if (assetUIDs.length > 0) {
-        log.info(`Found ${assetUIDs.length} referenced assets to export`, this.exportQueryConfig.context);
+      if (assetUIDs.length === 0) {
+        log.info('No referenced assets found in entries', this.exportQueryConfig.context);
+        return;
+      }
 
+      log.info(`Found ${assetUIDs.length} referenced assets to export`, this.exportQueryConfig.context);
+
+      if (this.isAM2AssetExport()) {
+        await this.exportReferencedAssetsAM2(assetUIDs);
+        return;
+      }
+
+      await this.exportReferencedAssetsLegacy(assetUIDs);
+    } catch (error) {
+      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting referenced assets');
+      throw error;
+    }
+  }
+
+  /**
+   * AM 2.0: export referenced assets into spaces/ via Contentstack Assets search API.
+   */
+  private async exportReferencedAssetsAM2(assetUIDs: string[]): Promise<void> {
+    log.info('Using AM 2.0 asset export (spaces/)', this.exportQueryConfig.context);
+    const org_uid = await this.resolveOrgUid();
+    if (!org_uid) {
+      throw new Error('Organization UID is required for AM 2.0 asset export');
+    }
+
+    const amExporter = new AmAssetQueryExporter({
+      linkedWorkspaces: this.exportQueryConfig.linkedWorkspaces ?? [],
+      exportDir: this.exportQueryConfig.exportDir,
+      branchName: this.exportQueryConfig.branchName || 'main',
+      csAssetsUrl: this.exportQueryConfig.csAssetsUrl!,
+      org_uid,
+      apiKey: this.exportQueryConfig.stackApiKey,
+      context: this.exportQueryConfig.context as unknown as Record<string, unknown>,
+      securedAssets: this.exportQueryConfig.securedAssets,
+      assetBatchSize: this.exportQueryConfig.assetBatchSize,
+    });
+
+    await amExporter.export(assetUIDs);
+    log.success('Referenced assets exported successfully (AM 2.0)', this.exportQueryConfig.context);
+  }
+
+  /**
+   * AM 1.0: export referenced assets into legacy assets/ via CMA export module.
+   */
+  private async exportReferencedAssetsLegacy(assetUIDs: string[]): Promise<void> {
+    const assetsDir = path.join(
+      sanitizePath(this.exportQueryConfig.exportDir),
+      sanitizePath(this.exportQueryConfig.branchName || ''),
+      'assets',
+    );
+
+    const metadataFilePath = path.join(assetsDir, 'metadata.json');
+    const assetFilePath = path.join(assetsDir, 'assets.json');
+
+    // Define temp file paths
+    const tempMetadataFilePath = path.join(assetsDir, 'metadata_temp.json');
+    const tempAssetFilePath = path.join(assetsDir, 'assets_temp.json');
+
+    try {
         fs.mkdirSync(assetsDir, { recursive: true });
 
         // Define batch size - can be configurable through exportQueryConfig
@@ -383,11 +485,8 @@ export class QueryExporter {
 
         log.info(`Temporary files cleaned up`, this.exportQueryConfig.context);
         log.success('Referenced assets exported successfully', this.exportQueryConfig.context);
-      } else {
-        log.info('No referenced assets found in entries', this.exportQueryConfig.context);
-      }
     } catch (error) {
-      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting referenced assets');
+      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting legacy referenced assets');
       throw error;
     }
   }
