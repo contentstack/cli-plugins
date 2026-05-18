@@ -5,7 +5,7 @@ import config from '../config';
 import { askAPIKey } from './common-helper';
 
 /**
- * Apply region-derived AM 2.0 settings after the command resolves region.
+ * Apply region-derived Contentstack Assets settings after the command resolves region.
  */
 export function applyRegionToQueryExportConfig(exportQueryConfig: QueryExportConfig, region?: Region): void {
   if (!region) return;

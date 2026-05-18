@@ -6,7 +6,7 @@ import {
   readContentTypeSchemas,
   managementSDKClient,
 } from '@contentstack/cli-utilities';
-import { AmAssetQueryExporter } from '@contentstack/cli-asset-management';
+import { CsAssetsQueryExporter } from '@contentstack/cli-asset-management';
 import * as fs from 'fs';
 import * as path from 'path';
 import { QueryExportConfig, Modules } from '../types';
@@ -46,7 +46,7 @@ export class QueryExporter {
     // Step 2: Always export general modules
     await this.exportGeneralModules();
 
-    // Step 3: Resolve AM 2.0 linked workspaces from branch settings
+    // Step 3: Resolve linked workspaces from branch settings (Contentstack Assets)
     await this.fetchLinkedWorkspaces();
 
     // Step 4: Export queried modules
@@ -65,7 +65,7 @@ export class QueryExporter {
   }
 
   /**
-   * Fetch linked workspaces (am_v2) from branch settings for AM 2.0 asset routing.
+   * Fetch linked workspaces from branch settings for Contentstack Assets export routing.
    */
   private async fetchLinkedWorkspaces(): Promise<void> {
     const branchName = this.exportQueryConfig.branchName || 'main';
@@ -77,19 +77,19 @@ export class QueryExporter {
         ?.settings?.am_v2?.linked_workspaces;
       this.exportQueryConfig.linkedWorkspaces = Array.isArray(linked) ? linked : [];
       log.debug(
-        `Linked workspaces for AM 2.0: ${this.exportQueryConfig.linkedWorkspaces?.length ?? 0}`,
+        `Linked workspaces for Contentstack Assets: ${this.exportQueryConfig.linkedWorkspaces?.length ?? 0}`,
         this.exportQueryConfig.context,
       );
     } catch (error) {
       log.warn(
-        `Could not fetch linked workspaces for branch ${branchName}, using legacy asset export`,
+        `Could not fetch linked workspaces for branch ${branchName}, using stack assets export`,
         this.exportQueryConfig.context,
       );
       this.exportQueryConfig.linkedWorkspaces = [];
     }
   }
 
-  private isAM2AssetExport(): boolean {
+  private isCsAssetsExport(): boolean {
     return (
       (this.exportQueryConfig.linkedWorkspaces?.length ?? 0) > 0 &&
       Boolean(this.exportQueryConfig.csAssetsUrl)
@@ -97,7 +97,7 @@ export class QueryExporter {
   }
 
   /**
-   * Resolve organization UID for AM 2.0 API calls.
+   * Resolve organization UID for Contentstack Assets API calls.
    */
   private async resolveOrgUid(): Promise<string> {
     if (this.exportQueryConfig.org_uid) {
@@ -334,12 +334,12 @@ export class QueryExporter {
 
       log.info(`Found ${assetUIDs.length} referenced assets to export`, this.exportQueryConfig.context);
 
-      if (this.isAM2AssetExport()) {
-        await this.exportReferencedAssetsAM2(assetUIDs);
+      if (this.isCsAssetsExport()) {
+        await this.exportReferencedCsAssets(assetUIDs);
         return;
       }
 
-      await this.exportReferencedAssetsLegacy(assetUIDs);
+      await this.exportReferencedStackAssets(assetUIDs);
     } catch (error) {
       handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting referenced assets');
       throw error;
@@ -347,16 +347,16 @@ export class QueryExporter {
   }
 
   /**
-   * AM 2.0: export referenced assets into spaces/ via Contentstack Assets search API.
+   * Export referenced assets into spaces/ via Contentstack Assets search API.
    */
-  private async exportReferencedAssetsAM2(assetUIDs: string[]): Promise<void> {
-    log.info('Using AM 2.0 asset export (spaces/)', this.exportQueryConfig.context);
+  private async exportReferencedCsAssets(assetUIDs: string[]): Promise<void> {
+    log.info('Using Contentstack Assets export (spaces/)', this.exportQueryConfig.context);
     const org_uid = await this.resolveOrgUid();
     if (!org_uid) {
-      throw new Error('Organization UID is required for AM 2.0 asset export');
+      throw new Error('Organization UID is required for Contentstack Assets export');
     }
 
-    const amExporter = new AmAssetQueryExporter({
+    const csAssetsExporter = new CsAssetsQueryExporter({
       linkedWorkspaces: this.exportQueryConfig.linkedWorkspaces ?? [],
       exportDir: this.exportQueryConfig.exportDir,
       branchName: this.exportQueryConfig.branchName || 'main',
@@ -368,14 +368,14 @@ export class QueryExporter {
       assetBatchSize: this.exportQueryConfig.assetBatchSize,
     });
 
-    await amExporter.export(assetUIDs);
-    log.success('Referenced assets exported successfully (AM 2.0)', this.exportQueryConfig.context);
+    await csAssetsExporter.export(assetUIDs);
+    log.success('Referenced assets exported successfully (Contentstack Assets)', this.exportQueryConfig.context);
   }
 
   /**
-   * AM 1.0: export referenced assets into legacy assets/ via CMA export module.
+   * Export referenced assets into stack assets/ via CMA export module.
    */
-  private async exportReferencedAssetsLegacy(assetUIDs: string[]): Promise<void> {
+  private async exportReferencedStackAssets(assetUIDs: string[]): Promise<void> {
     const assetsDir = path.join(
       sanitizePath(this.exportQueryConfig.exportDir),
       sanitizePath(this.exportQueryConfig.branchName || ''),
@@ -486,7 +486,7 @@ export class QueryExporter {
         log.info(`Temporary files cleaned up`, this.exportQueryConfig.context);
         log.success('Referenced assets exported successfully', this.exportQueryConfig.context);
     } catch (error) {
-      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting legacy referenced assets');
+      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting stack referenced assets');
       throw error;
     }
   }
