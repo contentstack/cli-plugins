@@ -2,15 +2,15 @@ import { resolve as pResolve } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
-import type { AssetManagementExportOptions, AssetManagementAPIConfig } from '../types/asset-management-api';
+import type { AssetManagementExportOptions, CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AM_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
+import { CS_ASSETS_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
 import ExportAssetTypes from './asset-types';
 import ExportFields from './fields';
 import ExportWorkspace from './workspaces';
 
 /**
- * Orchestrates the full Asset Management 2.0 export: shared asset types and fields,
+ * Orchestrates the full Contentstack Assets export: shared asset types and fields,
  * then per-workspace metadata and assets (including internal download).
  * Progress and download are fully owned by this package.
  */
@@ -32,7 +32,7 @@ export class ExportSpaces {
       linkedWorkspaces,
       exportDir,
       branchName,
-      assetManagementUrl,
+      csAssetsUrl,
       org_uid,
       apiKey,
       context,
@@ -45,9 +45,9 @@ export class ExportSpaces {
       return;
     }
 
-    log.debug('Starting Asset Management export process...', context);
-    log.info('Started Asset Management export', context);
-    log.debug(`Exporting Asset Management 2.0 (${linkedWorkspaces.length} space(s))`, context);
+    log.debug('Starting Contentstack Assets export process...', context);
+    log.info('Started Contentstack Assets export', context);
+    log.debug(`Exporting Contentstack Assets (${linkedWorkspaces.length} space(s))`, context);
     log.debug(`Spaces: ${linkedWorkspaces.map((ws) => ws.space_uid).join(', ')}`, context);
 
     const spacesRootPath = pResolve(exportDir, 'spaces');
@@ -67,8 +67,8 @@ export class ExportSpaces {
       progress.addProcess(spaceProcess, 1);
     }
 
-    const apiConfig: AssetManagementAPIConfig = {
-      baseURL: assetManagementUrl,
+    const apiConfig: CSAssetsAPIConfig = {
+      baseURL: csAssetsUrl,
       headers: { organization_uid: org_uid },
       context,
     };
@@ -135,11 +135,11 @@ export class ExportSpaces {
 
       log.info(
         anySpaceFailed
-          ? 'Asset Management export completed with errors in one or more spaces'
-          : 'Asset Management export completed successfully',
+          ? 'Contentstack Assets export completed with errors in one or more spaces'
+          : 'Contentstack Assets export completed successfully',
         context,
       );
-      log.debug('Asset Management 2.0 export completed', context);
+      log.debug('Contentstack Assets export completed', context);
     } catch (err) {
       if (!bootstrapFailed) {
         // Mark any spaces that hadn't been processed as failed so the multibar
@@ -148,7 +148,7 @@ export class ExportSpaces {
           progress.completeProcess(spaceProcess, false);
         }
       }
-      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Asset Management export failed');
+      handleAndLogError(err, { ...(context as Record<string, unknown>) }, 'Contentstack Assets export failed');
       throw err;
     }
   }
@@ -160,7 +160,7 @@ export class ExportSpaces {
     }
     const logConfig = configHandler.get('log') || {};
     const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(AM_MAIN_PROCESS_NAME, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME, showConsoleLogs);
     return this.progressManager;
   }
 }

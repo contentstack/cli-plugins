@@ -32,7 +32,7 @@ export interface Region {
   cma: string;
   cda: string;
   uiHost: string;
-  assetManagementUrl?: string;
+  csAssetsUrl?: string;
 }
 
 export type Modules =
@@ -47,6 +47,7 @@ export type Modules =
   | 'content-types'
   | 'custom-roles'
   | 'workflows'
+  | 'publishing-rules'
   | 'labels'
   | 'marketplace-apps'
   | 'taxonomies'
@@ -111,6 +112,14 @@ export interface WebhookConfig {
 }
 
 export interface WorkflowConfig {
+  dirName: string;
+  fileName: string;
+  invalidKeys: string[];
+  dependencies?: Modules[];
+  limit?: number;
+}
+
+export interface PublishingRulesConfig {
   dirName: string;
   fileName: string;
   invalidKeys: string[];

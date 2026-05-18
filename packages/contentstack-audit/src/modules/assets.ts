@@ -11,7 +11,7 @@ import BaseClass from './base-class';
 /**
  * Multibar row label for a single space. Bounded to 14 chars after the
  * `Space ` prefix so CLIProgressManager.formatProcessName doesn't truncate the
- * row mid-string. Mirrors the helper in `@contentstack/cli-asset-management`.
+ * row mid-string. Mirrors the helper in `@contentstack/cli-cs-assets`.
  */
 const SPACE_PROCESS_NAME_PREFIX = 'Space ';
 const SPACE_PROCESS_NAME_MAX_UID_LEN = 14;

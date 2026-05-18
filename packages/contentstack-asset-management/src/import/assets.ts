@@ -2,8 +2,8 @@ import { resolve as pResolve, join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import { FsUtility, log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
-import { AssetManagementImportAdapter } from './base';
+import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
+import { CSAssetsImportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
 import { runInBatches } from '../utils/concurrent-batch';
 import { forEachChunkRecordsFromFs } from '../utils/chunked-json-reader';
@@ -40,8 +40,8 @@ type UploadJob = {
  * - Builds UID and URL mapper entries for entries.ts consumption
  * Mirrors ExportAssets.
  */
-export default class ImportAssets extends AssetManagementImportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+export default class ImportAssets extends CSAssetsImportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
 

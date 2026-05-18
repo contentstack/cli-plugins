@@ -106,9 +106,9 @@ export type AssetTypesResponse = {
 };
 
 /**
- * Configuration for AssetManagementAdapter constructor.
+ * Configuration for CSAssetsAdapter constructor.
  */
-export type AssetManagementAPIConfig = {
+export type CSAssetsAPIConfig = {
   baseURL: string;
   headers?: Record<string, string>;
   /** Optional context for logging (e.g. exportConfig.context) */
@@ -116,10 +116,10 @@ export type AssetManagementAPIConfig = {
 };
 
 /**
- * Adapter interface for Asset Management API calls.
+ * Adapter interface for Contentstack Assets API calls.
  * Used by export and (future) import.
  */
-export interface IAssetManagementAdapter {
+export interface ICSAssetsAdapter {
   init(): Promise<void>;
   listSpaces(): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
@@ -136,7 +136,7 @@ export type AssetManagementExportOptions = {
   linkedWorkspaces: LinkedWorkspace[];
   exportDir: string;
   branchName: string;
-  assetManagementUrl: string;
+  csAssetsUrl: string;
   org_uid: string;
   context?: Record<string, unknown>;
   /** When true, the AM package will add authtoken to asset download URLs. */
@@ -152,7 +152,7 @@ export type AssetManagementExportOptions = {
    */
   chunkFileSizeMb?: number;
   /**
-   * Max parallel AM API/export tasks for export (shared module bootstrap default).
+   * Max parallel CS Assets API/export tasks for export (shared module bootstrap default).
    */
   apiConcurrency?: number;
   /**
@@ -184,13 +184,13 @@ export type ImportContext = {
   /** Optional logging context (same shape as ExportConfig.context). */
   context?: Record<string, unknown>;
   /**
-   * Max parallel AM API calls for import (fields, asset types, and default for folders/uploads).
+   * Max parallel CS Assets API calls for import (fields, asset types, and default for folders/uploads).
    * Set from `ImportSpacesOptions.apiConcurrency` (or host wiring).
    */
   apiConcurrency?: number;
-  /** Overrides parallel limit for asset uploads when set (import `modules['asset-management'].uploadAssetsConcurrency`). */
+  /** Overrides parallel limit for asset uploads when set (import `modules['cs-assets'].uploadAssetsConcurrency`). */
   uploadAssetsConcurrency?: number;
-  /** Overrides parallel limit for folder creation batches when set (import `modules['asset-management'].importFoldersConcurrency`). */
+  /** Overrides parallel limit for folder creation batches when set (import `modules['cs-assets'].importFoldersConcurrency`). */
   importFoldersConcurrency?: number;
   /** Relative dir under content dir for AM export root (e.g. `spaces`). */
   spacesDirName?: string;
@@ -217,8 +217,8 @@ export type ImportContext = {
 export type ImportSpacesOptions = {
   /** Absolute path to the root content / backup directory. */
   contentDir: string;
-  /** AM 2.0 base URL (e.g. "https://am.contentstack.io"). */
-  assetManagementUrl: string;
+  /** CS Assets base URL (e.g. "https://am.contentstack.io"). */
+  csAssetsUrl: string;
   org_uid: string;
   apiKey: string;
   host: string;
@@ -243,6 +243,16 @@ export type ImportSpacesOptions = {
   mapperUidFileName?: string;
   mapperUrlFileName?: string;
   mapperSpaceUidFileName?: string;
+  /**
+   * UID of the already-existing default space in the target org.
+   * When set, the source default space is imported into this space instead of creating a new one.
+   */
+  targetDefaultSpaceUid?: string;
+  /**
+   * Workspace link UID of the existing default workspace in the target branch's `am_v2.linked_workspaces`.
+   * Returned in SpaceMapping.workspaceUid so downstream branch-linking logic can identify the entry correctly.
+   */
+  targetDefaultWorkspaceUid?: string;
 };
 
 /**
