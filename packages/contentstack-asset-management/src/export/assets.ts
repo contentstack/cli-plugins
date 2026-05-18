@@ -3,15 +3,15 @@ import { Readable } from 'node:stream';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { configHandler, log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementExportAdapter } from './base';
+import { CSAssetsExportAdapter } from './base';
 import { getAssetItems, writeStreamToFile } from '../utils/export-helpers';
 import { runInBatches } from '../utils/concurrent-batch';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
-export default class ExportAssets extends AssetManagementExportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+export default class ExportAssets extends CSAssetsExportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
 
@@ -32,11 +32,17 @@ export default class ExportAssets extends AssetManagementExportAdapter {
       this.getWorkspaceAssets(workspace.space_uid, workspace.uid),
     ]);
 
+    const assetItems = getAssetItems(assetsData);
+    const downloadableCount = assetItems.filter((asset) => Boolean(asset.url && (asset.uid ?? asset._uid))).length;
+    // Per-space total: 1 folder write + 1 metadata write + N per-asset downloads.
+    // The shared module-level total is just a placeholder before this point; update
+    // it now so the multibar row shows real progress as downloads tick in.
+    this.progressOrParent?.updateProcessTotal?.(this.processName, 2 + downloadableCount);
+
     await writeFile(pResolve(assetsDir, 'folders.json'), JSON.stringify(folders, null, 2));
     this.tick(true, `folders: ${workspace.space_uid}`, null);
     log.debug(`Wrote folders.json for space ${workspace.space_uid}`, this.exportContext.context);
 
-    const assetItems = getAssetItems(assetsData);
     log.debug(
       assetItems.length === 0
         ? `No assets for space ${workspace.space_uid}, wrote empty assets.json`
@@ -60,7 +66,7 @@ export default class ExportAssets extends AssetManagementExportAdapter {
         : `Wrote ${assetItems.length} asset metadata record(s) for space ${workspace.space_uid}`,
       this.exportContext.context,
     );
-    this.tick(true, `assets: ${workspace.space_uid} (${assetItems.length})`, null);
+    this.tick(true, `metadata: ${workspace.space_uid} (${assetItems.length})`, null);
 
     log.debug(`Starting binary downloads for space ${workspace.space_uid}`, this.exportContext.context);
     await this.downloadWorkspaceAssets(assetsData, assetsDir, workspace.space_uid);
@@ -87,8 +93,6 @@ export default class ExportAssets extends AssetManagementExportAdapter {
       `Asset downloads: securedAssets=${securedAssets}, concurrency=${this.downloadAssetsBatchConcurrency}`,
       this.exportContext.context,
     );
-    let lastError: string | null = null;
-    let allSuccess = true;
     let downloadOk = 0;
     let downloadFail = 0;
 
@@ -118,24 +122,25 @@ export default class ExportAssets extends AssetManagementExportAdapter {
         const filePath = pResolve(assetFolderPath, filename);
         await writeStreamToFile(nodeStream, filePath);
         downloadOk += 1;
+        // Per-asset tick so the per-space progress bar moves in real time.
+        this.tick(true, `asset: ${filename}`, null);
         log.debug(`Downloaded asset ${uid} → ${filePath}`, this.exportContext.context);
       } catch (e) {
-        allSuccess = false;
         downloadFail += 1;
-        lastError = (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_DOWNLOADS].FAILED;
+        const err = (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_DOWNLOADS].FAILED;
+        this.tick(false, `asset: ${filename}`, err);
         log.debug(`Failed to download asset ${uid}: ${e}`, this.exportContext.context);
       }
     });
 
-    this.tick(allSuccess, `downloads: ${spaceUid}`, lastError);
     log.info(
-      allSuccess
+      downloadFail === 0
         ? `Finished downloading ${downloadOk} asset file(s) for space ${spaceUid}`
         : `Asset downloads for space ${spaceUid} completed with errors: ${downloadOk} succeeded, ${downloadFail} failed`,
       this.exportContext.context,
     );
     log.debug(
-      `Asset downloads finished for space ${spaceUid}: ok=${downloadOk}, failed=${downloadFail}, allSuccess=${allSuccess}`,
+      `Asset downloads finished for space ${spaceUid}: ok=${downloadOk}, failed=${downloadFail}`,
       this.exportContext.context,
     );
   }

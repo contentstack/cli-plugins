@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-variants",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0-beta.13",
   "description": "Variants plugin",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -19,7 +19,6 @@
   "license": "MIT",
   "devDependencies": {
     "@contentstack/cli-dev-dependencies": "^2.0.0-beta.0",
-    "@oclif/plugin-help": "^6.2.28",
     "@oclif/test": "^4.1.18",
     "@types/node": "^20.19.39",
     "mocha": "^10.8.2",
@@ -28,9 +27,8 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@contentstack/cli-utilities": "~2.0.0-beta.7",
+    "@contentstack/cli-utilities": "~2.0.0-beta.8",
     "@oclif/core": "^4.3.0",
-    "@oclif/plugin-help": "^6.2.28",
     "lodash": "^4.18.1",
     "mkdirp": "^1.0.4",
     "winston": "^3.19.0"

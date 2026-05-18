@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type {
-  AssetManagementAPIConfig,
+  CSAssetsAPIConfig,
   AssetTypesResponse,
   CreateAssetMetadata,
   CreateAssetTypePayload,
@@ -11,24 +11,24 @@ import type {
   CreateFolderPayload,
   CreateSpacePayload,
   FieldsResponse,
-  IAssetManagementAdapter,
+  ICSAssetsAdapter,
   Space,
   SpaceResponse,
   SpacesListResponse,
-} from '../types/asset-management-api';
+} from '../types/cs-assets-api';
 
-export class AssetManagementAdapter implements IAssetManagementAdapter {
-  private readonly config: AssetManagementAPIConfig;
+export class CSAssetsAdapter implements ICSAssetsAdapter {
+  private readonly config: CSAssetsAPIConfig;
   private readonly apiClient: HttpClient;
 
-  constructor(config: AssetManagementAPIConfig) {
+  constructor(config: CSAssetsAPIConfig) {
     this.config = config;
     this.apiClient = new HttpClient();
     const baseURL = config.baseURL?.replace(/\/$/, '') ?? '';
     this.apiClient.baseUrl(baseURL);
     const defaultHeaders = { Accept: 'application/json', 'x-cs-api-version': '4' };
     this.apiClient.headers(config.headers ? { ...defaultHeaders, ...config.headers } : defaultHeaders);
-    log.debug('AssetManagementAdapter initialized', config.context);
+    log.debug('CSAssetsAdapter initialized', config.context);
   }
 
   /**
@@ -67,7 +67,7 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
   }
 
   /**
-   * Normalize AM API failures into a consistent error message with optional cause and body snippet.
+   * Normalize CS Assets API failures into a consistent error message with optional cause and body snippet.
    */
   private normalizeAmGetFailure(details: {
     path: string;
@@ -77,7 +77,7 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
     bodySnippet?: string;
   }): Error {
     const { path, status, cause, bodySnippet } = details;
-    let message = `AM API GET failed: path ${path}`;
+    let message = `CS Assets API GET failed: path ${path}`;
     if (status) message += ` (status ${status})`;
     if (cause && cause instanceof Error) {
       message += ` - ${cause.message}`;
@@ -122,7 +122,7 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
       }
       return response.data as T;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('AM API GET failed')) {
+      if (error instanceof Error && error.message.includes('CS Assets API GET failed')) {
         throw error;
       }
       throw this.normalizeAmGetFailure({
@@ -135,7 +135,7 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
 
   async init(): Promise<void> {
     try {
-      log.debug('Initializing Asset Management adapter...', this.config.context);
+      log.debug('Initializing Contentstack Assets adapter...', this.config.context);
       await authenticationHandler.getAuthDetails();
       const token = authenticationHandler.accessToken;
       log.debug(
@@ -144,12 +144,12 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
       );
       const authHeader = authenticationHandler.isOauthEnabled ? { authorization: token } : { access_token: token };
       this.apiClient.headers(this.config.headers ? { ...authHeader, ...this.config.headers } : authHeader);
-      log.debug('Asset Management adapter initialization completed', this.config.context);
+      log.debug('Contentstack Assets adapter initialization completed', this.config.context);
     } catch (error: unknown) {
       handleAndLogError(
         error as Error,
         this.config.context ? { ...(this.config.context as Record<string, unknown>) } : {},
-        'Asset Management adapter initialization failed',
+        'Contentstack Assets adapter initialization failed',
       );
       throw error;
     }
@@ -260,17 +260,17 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
         const text = await response.text().catch(() => '');
         const bodySnippet = this.formatResponseBodyForError(text);
         throw new Error(
-          `AM API POST failed: status ${response.status} path ${path}${
+          `CS Assets API POST failed: status ${response.status} path ${path}${
             bodySnippet ? `\nResponse: ${bodySnippet}` : ''
           }`,
         );
       }
       return response.json() as Promise<T>;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('AM API POST failed')) {
+      if (error instanceof Error && error.message.includes('CS Assets API POST failed')) {
         throw error;
       }
-      throw new Error(`AM API POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`CS Assets API POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -289,18 +289,18 @@ export class AssetManagementAdapter implements IAssetManagementAdapter {
         const text = await response.text().catch(() => '');
         const bodySnippet = this.formatResponseBodyForError(text);
         throw new Error(
-          `AM API multipart POST failed: status ${response.status} path ${path}${
+          `CS Assets API multipart POST failed: status ${response.status} path ${path}${
             bodySnippet ? `\nResponse: ${bodySnippet}` : ''
           }`,
         );
       }
       return response.json() as Promise<T>;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('AM API multipart POST failed')) {
+      if (error instanceof Error && error.message.includes('CS Assets API multipart POST failed')) {
         throw error;
       }
       throw new Error(
-        `AM API multipart POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
+        `CS Assets API multipart POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
