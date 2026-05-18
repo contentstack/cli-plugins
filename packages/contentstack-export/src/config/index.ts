@@ -35,6 +35,7 @@ const config: DefaultConfig = {
       'content-types',
       'custom-roles',
       'workflows',
+      'publishing-rules',
       'personalize',
       'entries',
       'labels',
@@ -85,6 +86,11 @@ const config: DefaultConfig = {
       fileName: 'workflows.json',
       invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
     },
+    'publishing-rules': {
+      dirName: 'workflows',
+      fileName: 'publishing-rules.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
     globalfields: {
       dirName: 'global_fields',
       fileName: 'globalfields.json',
@@ -112,7 +118,7 @@ const config: DefaultConfig = {
       enableDownloadStatus: false,
       includeVersionedAssets: false,
     },
-    'asset-management': {
+    'cs-assets': {
       chunkFileSizeMb: 1,
       apiConcurrency: 5,
       downloadAssetsConcurrency: 5,

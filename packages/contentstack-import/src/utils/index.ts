@@ -29,3 +29,4 @@ export * from './common-helper';
 export { lookUpTaxonomy, lookUpTerms } from './taxonomies-helper';
 export { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES, PROCESS_STATUS } from './constants';
 export { buildImportSpacesOptions } from './build-import-spaces-options';
+export { parseErrorPayload, isDuplicatePublishingRuleError } from './publishing-rules-helper';

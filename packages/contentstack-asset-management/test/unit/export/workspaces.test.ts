@@ -3,13 +3,13 @@ import sinon from 'sinon';
 
 import ExportWorkspace from '../../../src/export/workspaces';
 import ExportAssets from '../../../src/export/assets';
-import { AssetManagementExportAdapter } from '../../../src/export/base';
+import { CSAssetsExportAdapter } from '../../../src/export/base';
 
-import type { AssetManagementAPIConfig, LinkedWorkspace, SpaceResponse } from '../../../src/types/asset-management-api';
+import type { CSAssetsAPIConfig, LinkedWorkspace, SpaceResponse } from '../../../src/types/cs-assets-api';
 import type { ExportContext } from '../../../src/types/export-types';
 
 describe('ExportWorkspace', () => {
-  const apiConfig: AssetManagementAPIConfig = {
+  const apiConfig: CSAssetsAPIConfig = {
     baseURL: 'https://am.example.com',
     headers: { organization_uid: 'org-1' },
   };
@@ -36,8 +36,8 @@ describe('ExportWorkspace', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(AssetManagementExportAdapter.prototype, 'init' as any).resolves();
-    sinon.stub(AssetManagementExportAdapter.prototype, 'tick' as any);
+    sinon.stub(CSAssetsExportAdapter.prototype, 'init' as any).resolves();
+    sinon.stub(CSAssetsExportAdapter.prototype, 'tick' as any);
     sinon.stub(ExportAssets.prototype, 'start').resolves();
     sinon.stub(ExportAssets.prototype, 'setParentProgressManager');
   });
@@ -55,13 +55,26 @@ describe('ExportWorkspace', () => {
       expect(getSpaceStub.firstCall.args[0]).to.equal(workspace.space_uid);
     });
 
-    it('should tick success after writing metadata', async () => {
+    it('should NOT tick after writing metadata (per-space row is owned by ExportAssets)', async () => {
       sinon.stub(ExportWorkspace.prototype, 'getSpace').resolves(spaceResponse);
       const exporter = new ExportWorkspace(apiConfig, exportContext);
       await exporter.start(workspace, spaceDir, branchName);
 
-      const tickStub = (AssetManagementExportAdapter.prototype as any).tick as sinon.SinonStub;
-      expect(tickStub.firstCall.args).to.deep.equal([true, `space: ${workspace.space_uid}`, null]);
+      // The per-space progress row's total is folder + metadata + downloads —
+      // all owned by ExportAssets. The workspace metadata.json write is a
+      // fixed bootstrap step and intentionally does not consume a tick.
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
+      expect(tickStub.callCount).to.equal(0);
+    });
+
+    it('should forward spaceProcessName to the assets exporter via setProcessName', async () => {
+      sinon.stub(ExportWorkspace.prototype, 'getSpace').resolves(spaceResponse);
+      const setProcessNameStub = sinon.stub(ExportAssets.prototype, 'setProcessName' as any);
+
+      const exporter = new ExportWorkspace(apiConfig, exportContext);
+      await exporter.start(workspace, spaceDir, branchName, 'Space space-uid-1');
+
+      expect(setProcessNameStub.firstCall.args[0]).to.equal('Space space-uid-1');
     });
 
     it('should delegate to ExportAssets.start with workspace and spaceDir', async () => {

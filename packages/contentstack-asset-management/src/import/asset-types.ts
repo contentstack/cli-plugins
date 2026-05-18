@@ -4,8 +4,8 @@ import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
-import { AssetManagementImportAdapter } from './base';
+import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
+import { CSAssetsImportAdapter } from './base';
 import { FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import { runInBatches } from '../utils/concurrent-batch';
 import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
@@ -23,8 +23,13 @@ type AssetTypeToCreate = { uid: string; payload: Record<string, unknown> };
  * 4. If uid already exists and definition matches → silently skip.
  * 5. Strip read-only/computed keys from the POST body before creating new asset types.
  */
-export default class ImportAssetTypes extends AssetManagementImportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+export default class ImportAssetTypes extends CSAssetsImportAdapter {
+  protected processName: string = PROCESS_NAMES.AM_IMPORT_ASSET_TYPES;
+  private successCount = 0;
+  private failureCount = 0;
+  private skippedCount = 0;
+
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
 
@@ -40,15 +45,13 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
 
     if (!existsSync(indexPath)) {
       log.info('No shared asset types to import (index missing)', this.importContext.context);
+      this.tick(true, 'asset_types (0)', null);
       return;
     }
 
     const existingByUid = await this.loadExistingAssetTypesMap();
 
-    this.updateStatus(
-      PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING,
-      PROCESS_NAMES.AM_IMPORT_ASSET_TYPES,
-    );
+    this.updateStatus(PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].IMPORTING);
 
     await forEachChunkedJsonStore<Record<string, unknown>>(
       dir,
@@ -63,6 +66,12 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
         const toCreate = this.buildAssetTypesToCreate(records, existingByUid, stripKeys);
         await this.importAssetTypesCreates(toCreate);
       },
+    );
+
+    this.tick(
+      this.failureCount === 0,
+      `asset_types: ${this.successCount} created, ${this.skippedCount} skipped, ${this.failureCount} failed`,
+      this.failureCount > 0 ? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].FAILED : null,
     );
   }
 
@@ -111,7 +120,7 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
             this.importContext.context,
           );
         }
-        this.tick(true, `asset-type: ${uid} (skipped, already exists)`, null, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+        this.skippedCount += 1;
         continue;
       }
 
@@ -125,15 +134,10 @@ export default class ImportAssetTypes extends AssetManagementImportAdapter {
     await runInBatches(toCreate, this.apiConcurrency, async ({ uid, payload }) => {
       try {
         await this.createAssetType(payload as any);
-        this.tick(true, `asset-type: ${uid}`, null, PROCESS_NAMES.AM_IMPORT_ASSET_TYPES);
+        this.successCount += 1;
         log.debug(`Imported asset type: ${uid}`, this.importContext.context);
       } catch (e) {
-        this.tick(
-          false,
-          `asset-type: ${uid}`,
-          (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSET_TYPES].FAILED,
-          PROCESS_NAMES.AM_IMPORT_ASSET_TYPES,
-        );
+        this.failureCount += 1;
         log.debug(`Failed to import asset type ${uid}: ${e}`, this.importContext.context);
       }
     });

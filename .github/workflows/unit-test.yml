@@ -62,3 +62,7 @@ jobs:
       - name: Run tests for Contentstack Branches
         working-directory: ./packages/contentstack-branches
         run: npm run test:unit
+
+      - name: Run tests for Contentstack Query Export
+        working-directory: ./packages/contentstack-query-export
+        run: npm run test:unit

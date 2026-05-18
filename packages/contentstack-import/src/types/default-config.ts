@@ -49,6 +49,11 @@ export default interface DefaultConfig {
       fileName: string;
       invalidKeys: string[];
     };
+    'publishing-rules': {
+      dirName: string;
+      fileName: string;
+      invalidKeys: string[];
+    };
     assets: {
       dirName: string;
       assetBatchLimit: number;
@@ -72,7 +77,7 @@ export default interface DefaultConfig {
       uploadAssetsConcurrency: number;
       importFoldersConcurrency: number;
     };
-    'asset-management': {
+    'cs-assets': {
       dirName: string;
       fieldsDir: string;
       assetTypesDir: string;

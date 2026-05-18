@@ -2,10 +2,9 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig, ImportContext, SpaceMapping } from '../types/asset-management-api';
-import { AssetManagementImportAdapter } from './base';
+import type { CSAssetsAPIConfig, ImportContext, SpaceMapping } from '../types/cs-assets-api';
+import { CSAssetsImportAdapter } from './base';
 import ImportAssets from './assets';
-import { PROCESS_NAMES } from '../constants/index';
 
 type WorkspaceResult = SpaceMapping & {
   uidMap: Record<string, string>;
@@ -13,22 +12,37 @@ type WorkspaceResult = SpaceMapping & {
 };
 
 /**
- * Handles import for a single AM 2.0 space directory.
+ * Handles import for a single CS Assets space directory.
  * Reads `metadata.json`, creates the space in the target org when its uid is not
  * already present, or reuses the existing space and emits identity mappers only.
  * Returns the SpaceMapping plus UID/URL maps for the mapper files.
  */
-export default class ImportWorkspace extends AssetManagementImportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, importContext: ImportContext) {
+export default class ImportWorkspace extends CSAssetsImportAdapter {
+  constructor(apiConfig: CSAssetsAPIConfig, importContext: ImportContext) {
     super(apiConfig, importContext);
   }
 
+  /**
+   * Run the import pipeline for a single space.
+   *
+   * The optional `spaceProcessName` is the multibar row label that ticks
+   * (folder creates + per-asset uploads) should land on. The orchestrator
+   * passes the per-space row produced by `getSpaceProcessName`; if omitted the
+   * default {@link processName} is used so direct callers keep working.
+   */
   async start(
     oldSpaceUid: string,
     spaceDir: string,
     existingSpaceUids: Set<string> = new Set(),
+    spaceProcessName?: string,
+    targetDefaultSpaceUid?: string,
+    targetDefaultWorkspaceUid?: string,
   ): Promise<WorkspaceResult> {
     await this.init();
+
+    if (spaceProcessName) {
+      this.setProcessName(spaceProcessName);
+    }
 
     log.debug(`Starting import for AM space directory ${oldSpaceUid}`, this.importContext.context);
 
@@ -48,16 +62,35 @@ export default class ImportWorkspace extends AssetManagementImportAdapter {
 
     const assetsImporter = new ImportAssets(this.apiConfig, this.importContext);
     if (this.progressOrParent) assetsImporter.setParentProgressManager(this.progressOrParent);
+    if (spaceProcessName) {
+      assetsImporter.setProcessName(spaceProcessName);
+    }
+
+    // Map source default space → existing target default space (cross-org migration).
+    // The caller supplies the uid of the pre-existing target default space; we upload
+    // source assets into it instead of creating a new space.
+    if (isDefault && targetDefaultSpaceUid) {
+      const newSpaceUid = targetDefaultSpaceUid;
+      const resolvedWorkspaceUid = targetDefaultWorkspaceUid ?? workspaceUid;
+      log.info(
+        `Source default space "${oldSpaceUid}" mapped to existing target default space "${newSpaceUid}".`,
+        this.importContext.context,
+      );
+      const { uidMap, urlMap } = await assetsImporter.start(newSpaceUid, spaceDir);
+      return { oldSpaceUid, newSpaceUid, workspaceUid: resolvedWorkspaceUid, isDefault: true, uidMap, urlMap };
+    }
 
     // Reuse: target org already has a space with the same uid as the export directory.
     if (existingSpaceUids.has(oldSpaceUid)) {
       log.info(
-        `Reusing existing AM space "${oldSpaceUid}" (uid matches export directory); skipping create and upload.`,
+        `Reusing existing Asset space "${oldSpaceUid}" (uid matches export directory); skipping create and upload.`,
         this.importContext.context,
       );
       const newSpaceUid = oldSpaceUid;
       const { uidMap, urlMap } = await assetsImporter.buildIdentityMappersFromExport(spaceDir);
-      this.tick(true, `space: ${oldSpaceUid} → ${newSpaceUid} (reused)`, null, PROCESS_NAMES.AM_SPACE_METADATA);
+      // Reused spaces do no folder/asset work; tick the per-space row once so it
+      // completes in the multibar.
+      this.tick(true, `space: ${oldSpaceUid} → ${newSpaceUid} (reused)`, null);
       return {
         oldSpaceUid,
         newSpaceUid,
@@ -75,7 +108,6 @@ export default class ImportWorkspace extends AssetManagementImportAdapter {
     const newSpaceUid = space.uid;
 
     log.debug(`Created space ${newSpaceUid} (old: ${oldSpaceUid})`, this.importContext.context);
-    this.tick(true, `space: ${oldSpaceUid} → ${newSpaceUid}`, null, PROCESS_NAMES.AM_SPACE_METADATA);
 
     const { uidMap, urlMap } = await assetsImporter.start(newSpaceUid, spaceDir);
 
