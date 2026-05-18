@@ -31,7 +31,14 @@ export interface Region {
   cma: string;
   cda: string;
   uiHost: string;
+  csAssetsUrl?: string;
 }
+
+export type LinkedWorkspace = {
+  uid: string;
+  space_uid: string;
+  is_default: boolean;
+};
 
 export type Modules =
   | 'stack'
@@ -203,6 +210,12 @@ export interface QueryExportConfig extends DefaultConfig {
   batchDelayMs?: number;
   assetBatchSize?: number;
   assetBatchDelayMs?: number;
+  /** Linked workspaces from branch settings (Contentstack Assets). */
+  linkedWorkspaces?: LinkedWorkspace[];
+  /** Contentstack Assets API base URL. */
+  csAssetsUrl?: string;
+  /** Organization UID for Contentstack Assets API headers. */
+  org_uid?: string;
   context?: LogContext; // Log context for centralized logging
 }
 

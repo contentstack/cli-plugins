@@ -119,6 +119,28 @@ export type CSAssetsAPIConfig = {
  * Adapter interface for Contentstack Assets API calls.
  * Used by export and (future) import.
  */
+/** Space + workspace pair for Contentstack Assets search API. */
+export type SearchSpaceRef = {
+  space_uid: string;
+  workspace: string;
+};
+
+/** Parameters for POST /api/search (asset query export). */
+export type SearchAssetsParams = {
+  assetUIDs: string[];
+  spaces: SearchSpaceRef[];
+  skip?: number;
+  limit?: number;
+};
+
+/** Response shape from POST /api/search for assets. */
+export type SearchAssetsResponse = {
+  count?: number;
+  assets?: unknown[];
+  items?: unknown[];
+  folders?: unknown[];
+};
+
 export interface ICSAssetsAdapter {
   init(): Promise<void>;
   listSpaces(): Promise<SpacesListResponse>;
@@ -127,7 +149,25 @@ export interface ICSAssetsAdapter {
   getWorkspaceAssets(spaceUid: string, workspaceUid?: string): Promise<unknown>;
   getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
+  searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
 }
+
+/** Options for query-based Contentstack Assets export (referenced assets from entries). */
+export type CsAssetsQueryExportOptions = {
+  linkedWorkspaces: LinkedWorkspace[];
+  exportDir: string;
+  branchName: string;
+  csAssetsUrl: string;
+  org_uid: string;
+  apiKey?: string;
+  context?: Record<string, unknown>;
+  securedAssets?: boolean;
+  chunkFileSizeMb?: number;
+  apiConcurrency?: number;
+  downloadAssetsConcurrency?: number;
+  /** Max UIDs per search request ($in batch). */
+  assetBatchSize?: number;
+};
 
 /**
  * Options for exporting space structure (used by export app after fetching linked workspaces).

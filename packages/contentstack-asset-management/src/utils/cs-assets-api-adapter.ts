@@ -12,10 +12,40 @@ import type {
   CreateSpacePayload,
   FieldsResponse,
   ICSAssetsAdapter,
+  SearchAssetsParams,
+  SearchAssetsResponse,
   Space,
   SpaceResponse,
   SpacesListResponse,
 } from '../types/cs-assets-api';
+
+/** Default fields requested from POST /api/search for asset export. */
+export const DEFAULT_SEARCH_ASSET_FIELDS = [
+  'asset_id',
+  'uid',
+  'title',
+  'file_name',
+  'description',
+  'parent_uid',
+  'is_dir',
+  'dimensions',
+  'file_size',
+  'content_type',
+  'asset_type',
+  'url',
+  'tags',
+  'created_at',
+  'updated_at',
+  'created_by',
+  'updated_by',
+  'path',
+  'locale',
+  'space_uid',
+  'version',
+  'publish_details',
+  'ACL',
+  '_asset_scan_status',
+] as const;
 
 export class CSAssetsAdapter implements ICSAssetsAdapter {
   private readonly config: CSAssetsAPIConfig;
@@ -221,6 +251,30 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     });
     log.debug(`Fetched asset types (count: ${result?.count ?? '?'})`, this.config.context);
     return result;
+  }
+
+  /**
+   * POST /api/search — query assets by UID within linked spaces (Contentstack Assets query export).
+   */
+  async searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse> {
+    await this.init();
+    const { assetUIDs, spaces, skip = 0, limit = 50 } = params;
+    if (!assetUIDs.length) {
+      return { count: 0, assets: [] };
+    }
+    const body = {
+      query: { uid: { $in: assetUIDs } },
+      skip,
+      limit,
+      object_type: 'asset',
+      fields: [...DEFAULT_SEARCH_ASSET_FIELDS],
+      spaces,
+    };
+    log.debug(
+      `Searching assets (skip=${skip}, limit=${limit}, uids=${assetUIDs.length}, spaces=${spaces.length})`,
+      this.config.context,
+    );
+    return this.postJson<SearchAssetsResponse>('/api/search', body);
   }
 
   // ---------------------------------------------------------------------------
