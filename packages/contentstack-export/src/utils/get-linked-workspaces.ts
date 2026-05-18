@@ -6,7 +6,7 @@ type StackWithBranch = { branch: (name: string) => { fetch: (params?: Record<str
 
 /**
  * Fetch branch details with include_settings: true and return linked workspaces (am_v2).
- * Reused by stack export (included in settings.json) and asset-management module.
+ * Reused by stack export (included in settings.json) and cs-assets module.
  */
 export async function getLinkedWorkspacesForBranch(
   stack: StackWithBranch,

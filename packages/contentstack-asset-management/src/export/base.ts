@@ -2,10 +2,10 @@ import { resolve as pResolve } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
-import { AM_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
 
 export type { ExportContext };
 
@@ -13,14 +13,14 @@ export type { ExportContext };
  * Base class for export modules. Extends the API adapter and adds export context,
  * internal progress management, and shared write helpers.
  */
-export class AssetManagementExportAdapter extends AssetManagementAdapter {
-  protected readonly apiConfig: AssetManagementAPIConfig;
+export class CSAssetsExportAdapter extends CSAssetsAdapter {
+  protected readonly apiConfig: CSAssetsAPIConfig;
   protected readonly exportContext: ExportContext;
   protected progressManager: CLIProgressManager | null = null;
   protected parentProgressManager: CLIProgressManager | null = null;
-  protected processName: string = AM_MAIN_PROCESS_NAME;
+  protected processName: string = CS_ASSETS_MAIN_PROCESS_NAME;
 
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig);
     this.apiConfig = apiConfig;
     this.exportContext = exportContext;

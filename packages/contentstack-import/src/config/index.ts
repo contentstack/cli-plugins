@@ -41,6 +41,7 @@ const config: DefaultConfig = {
       'personalize',
       'custom-roles',
       'workflows',
+      'publishing-rules',
       'entries',
       'variant-entries',
       'labels',
@@ -88,6 +89,11 @@ const config: DefaultConfig = {
       fileName: 'workflows.json',
       invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
     },
+    'publishing-rules': {
+      dirName: 'workflows',
+      fileName: 'publishing-rules.json',
+      invalidKeys: ['stackHeaders', 'urlPath', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+    },
     assets: {
       dirName: 'assets',
       assetBatchLimit: 1,
@@ -101,7 +107,7 @@ const config: DefaultConfig = {
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
     },
-    'asset-management': {
+    'cs-assets': {
       dirName: 'spaces',
       fieldsDir: 'fields',
       assetTypesDir: 'asset_types',
@@ -488,5 +494,7 @@ const config: DefaultConfig = {
   globalModules: ['webhooks'],
   entriesPublish: true,
 };
+export const PUBLISHING_RULES_APPROVERS_SKIP_MSG =
+  'Skipping import of publish rule approver(s) (roles/users); reconfigure approvers on the target stack.';
 
 export default config;
