@@ -1,13 +1,15 @@
 import { log } from '@contentstack/cli-utilities';
 
-import type { AssetManagementAPIConfig } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
-import { AssetManagementExportAdapter } from './base';
+import { CSAssetsExportAdapter } from './base';
 import { getArrayFromResponse } from '../utils/export-helpers';
 import { PROCESS_NAMES } from '../constants/index';
 
-export default class ExportAssetTypes extends AssetManagementExportAdapter {
-  constructor(apiConfig: AssetManagementAPIConfig, exportContext: ExportContext) {
+export default class ExportAssetTypes extends CSAssetsExportAdapter {
+  protected processName: string = PROCESS_NAMES.AM_ASSET_TYPES;
+
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
     super(apiConfig, exportContext);
   }
 
@@ -24,7 +26,13 @@ export default class ExportAssetTypes extends AssetManagementExportAdapter {
     } else {
       log.debug(`Writing ${items.length} shared asset types`, this.exportContext.context);
     }
-    await this.writeItemsToChunkedJson(dir, 'asset-types.json', 'asset_types', ['uid', 'title', 'category', 'file_extension'], items);
-    this.tick(true, PROCESS_NAMES.AM_ASSET_TYPES, null);
+    await this.writeItemsToChunkedJson(
+      dir,
+      'asset-types.json',
+      'asset_types',
+      ['uid', 'title', 'category', 'file_extension'],
+      items,
+    );
+    this.tick(true, `asset_types (${items.length})`, null);
   }
 }

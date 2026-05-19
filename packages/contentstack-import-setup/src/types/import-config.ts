@@ -49,9 +49,9 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   region: any;
   authenticationMethod?: string;
   /** Set when export layout is Asset Management (`spaces/` + stack settings key `am_v2`). */
-  assetManagementEnabled?: boolean;
+  csAssetsEnabled?: boolean;
   /** AM 2.0 base URL from region / detection (`detectAssetManagementExportFromContentDir`). */
-  assetManagementUrl?: string;
+  csAssetsUrl?: string;
 }
 
 type branch = {

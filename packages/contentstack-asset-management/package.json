@@ -1,7 +1,7 @@
 {
   "name": "@contentstack/cli-asset-management",
-  "version": "1.0.0-beta.0",
-  "description": "Asset Management 2.0 API adapter for export and import",
+  "version": "1.0.0-beta.1",
+  "description": "Contentstack Assets API adapter for export and import",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
@@ -24,12 +24,13 @@
   },
   "keywords": [
     "contentstack",
-    "asset-management",
+    "cs-assets",
+    "contentstack-assets",
     "cli"
   ],
   "license": "MIT",
   "dependencies": {
-    "@contentstack/cli-utilities": "~2.0.0-beta.7"
+    "@contentstack/cli-utilities": "~2.0.0-beta.8"
   },
   "oclif": {
     "commands": "./lib/commands",
@@ -37,7 +38,7 @@
     "devPlugins": [
       "@oclif/plugin-help"
     ],
-    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-asset-management/<%- commandPath %>"
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-cs-assets/<%- commandPath %>"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",

@@ -5,10 +5,10 @@ import { join, resolve } from 'node:path';
 import { formatError, log } from '@contentstack/cli-utilities';
 
 import { IMPORT_ASSETS_MAPPER_FILES, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
-import type { AssetManagementAPIConfig, ImportContext } from '../types/asset-management-api';
+import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
 import type { AssetMapperImportSetupResult, RunAssetMapperImportSetupParams } from '../types/import-setup-asset-mapper';
 import ImportAssets from '../import/assets';
-import { AssetManagementAdapter } from '../utils/asset-management-api-adapter';
+import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
 import { AssetManagementImportSetupAdapter } from './base';
 
 const PROCESS = PROCESS_NAMES.AM_IMPORT_SETUP_ASSET_MAPPERS;
@@ -22,8 +22,8 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
     super(params);
   }
 
-  private async fetchExistingSpaceUidsInOrg(apiConfig: AssetManagementAPIConfig): Promise<Set<string>> {
-    const adapter = new AssetManagementAdapter(apiConfig);
+  private async fetchExistingSpaceUidsInOrg(apiConfig: CSAssetsAPIConfig): Promise<Set<string>> {
+    const adapter = new CSAssetsAdapter(apiConfig);
     await adapter.init();
     const { spaces } = await adapter.listSpaces();
     const uids = new Set<string>();
@@ -53,16 +53,7 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
 
   async start(): Promise<AssetMapperImportSetupResult> {
     const p = this.params;
-    const {
-      contentDir,
-      mapperBaseDir,
-      assetManagementUrl,
-      org_uid,
-      source_stack,
-      apiKey,
-      host,
-      context,
-    } = p;
+    const { contentDir, mapperBaseDir, assetManagementUrl, org_uid, source_stack, apiKey, host, context } = p;
 
     const apiConcurrencyResolved = p.apiConcurrency ?? p.fetchConcurrency;
 
@@ -90,7 +81,7 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
     const spaceUidFile = p.mapperSpaceUidFileName ?? IMPORT_ASSETS_MAPPER_FILES.SPACE_UID_MAPPING;
     const duplicateAssetMapperPath = join(mapperDirPath, IMPORT_ASSETS_MAPPER_FILES.DUPLICATE_ASSETS);
 
-    const apiConfig: AssetManagementAPIConfig = {
+    const apiConfig: CSAssetsAPIConfig = {
       baseURL: assetManagementUrl,
       headers: { organization_uid: org_uid },
       context,
@@ -125,19 +116,14 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
     try {
       if (parentProgressManager) {
         parentProgressManager.addProcess(PROCESS, 1);
-        parentProgressManager
-          .startProcess(PROCESS)
-          .updateStatus(PROCESS_STATUS[PROCESS].GENERATING, PROCESS);
+        parentProgressManager.startProcess(PROCESS).updateStatus(PROCESS_STATUS[PROCESS].GENERATING, PROCESS);
       }
 
       const existingSpaceUids = await this.fetchExistingSpaceUidsInOrg(apiConfig);
 
       const { spaceDirs, readFailed } = this.listExportedSpaceDirectories(spacesRootPath);
       if (spaceDirs.length === 0 && !readFailed) {
-        log.info(
-          `No Asset Management space directories (am*) found under ${spacesDirSegment}/.`,
-          context,
-        );
+        log.info(`No Asset Management space directories (am*) found under ${spacesDirSegment}/.`, context);
       }
 
       const allUidMap: Record<string, string> = {};
@@ -175,10 +161,7 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
       await writeFile(duplicateAssetMapperPath, JSON.stringify({}), 'utf8');
 
       parentProgressManager?.completeProcess(PROCESS, true);
-      log.success(
-        'The required Asset Management setup files for assets have been generated successfully.',
-        context,
-      );
+      log.success('The required Asset Management setup files for assets have been generated successfully.', context);
 
       return { kind: 'success' };
     } catch (error) {

@@ -40,13 +40,25 @@ export const IMPORT_ASSETS_MAPPER_FILES = {
 } as const;
 
 /**
- * Main process name for Asset Management 2.0 export (single progress bar).
+ * Main process name for Contentstack Assets export (single progress bar).
  * Use this when adding/starting the process and for all ticks.
  */
-export const AM_MAIN_PROCESS_NAME = 'Asset Management 2.0';
+export const CS_ASSETS_MAIN_PROCESS_NAME = 'Contentstack Assets';
+/** @deprecated Use CS_ASSETS_MAIN_PROCESS_NAME */
+export const AM_MAIN_PROCESS_NAME = CS_ASSETS_MAIN_PROCESS_NAME;
 
 /**
- * Process names for Asset Management 2.0 export progress (for tick labels).
+ * Process names for Contentstack Assets export/import progress.
+ *
+ * In the new per-space layout each entry below corresponds to a single row in
+ * the multibar:
+ *   - {@link AM_FIELDS} / {@link AM_ASSET_TYPES} are the shared bootstrap rows
+ *     (one execution per org, ahead of per-space work).
+ *   - {@link AM_IMPORT_FIELDS} / {@link AM_IMPORT_ASSET_TYPES} are the import
+ *     equivalents.
+ *   - One additional row per space is added dynamically via
+ *     {@link getSpaceProcessName} and ticks include folders + metadata + asset
+ *     transfer for that space.
  */
 export const PROCESS_NAMES = {
   AM_SPACE_METADATA: 'Space metadata',
@@ -63,6 +75,38 @@ export const PROCESS_NAMES = {
   /** Import-setup (CLI): generate uid/url/space mappers from AM export before full import. */
   AM_IMPORT_SETUP_ASSET_MAPPERS: 'Import setup asset mappers',
 } as const;
+
+/**
+ * Maximum visual length of a per-space process row label. The CLIProgressManager
+ * truncates anything over 20 characters; reserve 6 chars for the `Space ` prefix
+ * so the trailing space uid keeps 14 chars before truncation.
+ */
+const SPACE_PROCESS_NAME_PREFIX = 'Space ';
+const SPACE_PROCESS_NAME_MAX_UID_LEN = 14;
+
+/**
+ * Returns the multibar row label for a single CS Assets space.
+ * The label is bounded so CLIProgressManager.formatProcessName doesn't truncate
+ * it mid-string; the full uid is still used for tick item labels and structured
+ * logs, only the row label itself is shortened for display.
+ */
+export function getSpaceProcessName(spaceUid: string): string {
+  const safeUid = spaceUid ?? '';
+  const trimmed =
+    safeUid.length > SPACE_PROCESS_NAME_MAX_UID_LEN
+      ? safeUid.substring(0, SPACE_PROCESS_NAME_MAX_UID_LEN)
+      : safeUid;
+  return `${SPACE_PROCESS_NAME_PREFIX}${trimmed}`;
+}
+
+/**
+ * Detects whether a process name belongs to a per-space progress row, used by
+ * the export/import strategy registries to aggregate counts for the final
+ * summary across all spaces.
+ */
+export function isSpaceProcessName(processName: string): boolean {
+  return typeof processName === 'string' && processName.startsWith(SPACE_PROCESS_NAME_PREFIX);
+}
 
 /**
  * Status messages for each process (exporting, fetching, importing, failed).

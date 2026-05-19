@@ -72,8 +72,8 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
   if (assetManagementExport.assetManagementEnabled) {
-    config.assetManagementEnabled = true;
-    config.assetManagementUrl = assetManagementExport.assetManagementUrl;
+    config.csAssetsEnabled = true;
+    config.csAssetsUrl = assetManagementExport.assetManagementUrl;
     if (assetManagementExport.source_stack) {
       config.source_stack = assetManagementExport.source_stack;
     }

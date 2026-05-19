@@ -41,24 +41,22 @@ export default class AssetImportSetup extends BaseImportSetup {
    */
   async start() {
     try {
-      if (this.config.assetManagementEnabled) {
-        const assetManagementUrl = this.config.assetManagementUrl ?? this.config.region?.assetManagementUrl;
-        if (!assetManagementUrl) {
+      if (this.config.csAssetsEnabled) {
+        const csAssetsUrl = this.config.csAssetsUrl ?? this.config.region?.csAssetsUrl;
+        if (!csAssetsUrl) {
           log(
             this.config,
-            'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset mapper setup.',
+            'CS Assets export detected but csAssetsUrl is not configured in the region settings. Skipping CS Assets asset mapper setup.',
             'info',
           );
           return;
         }
         if (!this.config.org_uid) {
-          log(this.config, 'Cannot run Asset Management import-setup: organization UID is missing.', 'error');
+          log(this.config, 'Cannot run CS Assets import-setup: organization UID is missing.', 'error');
           return;
         }
         const progress = this.createNestedProgress(this.currentModuleName);
-        const mappers = new ImportSetupAssetMappers(
-          buildImportSetupAssetMapperParams(this.config, assetManagementUrl),
-        );
+        const mappers = new ImportSetupAssetMappers(buildImportSetupAssetMapperParams(this.config, csAssetsUrl));
         mappers.setParentProgressManager(progress);
         const result = await mappers.start();
         if (result.kind === 'success') {

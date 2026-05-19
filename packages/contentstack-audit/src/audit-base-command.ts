@@ -1,7 +1,6 @@
 import { getChalk } from '@contentstack/cli-utilities';
 import * as csv from 'fast-csv';
 import { copy } from 'fs-extra';
-import { v4 as uuid } from 'uuid';
 import isEmpty from 'lodash/isEmpty';
 import { join, resolve } from 'path';
 import cloneDeep from 'lodash/cloneDeep';
@@ -15,6 +14,7 @@ import {
   CLIProgressManager,
   clearProgressModuleSetting,
   readContentTypeSchemas,
+  generateUid
 } from '@contentstack/cli-utilities';
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
 import config from './config';
@@ -471,7 +471,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
         this.flags['copy-path'] ||
         this.flags['data-dir'] ||
         this.sharedConfig.basePath
-      ).replace(/\/+$/, '')}_backup_${uuid()}`;
+      ).replace(/\/+$/, '')}_backup_${generateUid()}`;
 
       if (!existsSync(backupDirPath)) {
         mkdirSync(backupDirPath, { recursive: true });

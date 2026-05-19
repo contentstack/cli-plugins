@@ -32,7 +32,6 @@ USAGE
 <!-- commands -->
 * [`csdx cm:stacks:audit`](#csdx-cmstacksaudit)
 * [`csdx cm:stacks:audit:fix`](#csdx-cmstacksauditfix)
-* [`csdx help [COMMAND]`](#csdx-help-command)
 
 ## `csdx cm:stacks:audit`
 
@@ -157,5 +156,5 @@ DESCRIPTION
   Display help for csdx.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/6.2.44/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v6.2.37/src/commands/help.ts)_
 <!-- commandsstop -->
