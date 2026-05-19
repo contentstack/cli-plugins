@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 import {
   flatten,
   sanitizeData,
@@ -7,6 +8,7 @@ import {
   getMappedRoles,
   determineUserOrgRole,
   cleanOrgUsers,
+  cleanTeamsData,
   getTeamsUserDetails,
   formatTaxonomiesData,
   formatTermsOfTaxonomyData,
@@ -14,6 +16,7 @@ import {
   getFormattedDate,
   getDateTime,
 } from '../../../src/utils/data-transform';
+import * as errorHandler from '../../../src/utils/error-handler';
 
 describe('data-transform', () => {
   describe('flatten', () => {
@@ -374,6 +377,129 @@ describe('data-transform', () => {
 
       const result = cleanOrgUsers(orgUsers, mappedUsers, mappedRoles);
       expect(result[0]['Invited By']).to.equal('System');
+    });
+
+    it('should use System when mappedUsers lookup throws', () => {
+      const orgUsers = {
+        items: [
+          {
+            email: 'user@test.com',
+            user_uid: 'uid1',
+            org_roles: [],
+            status: 'active',
+            invited_by: 'throws',
+            created_at: '2024-01-15T00:00:00Z',
+            updated_at: '2024-01-16T00:00:00Z',
+          },
+        ],
+      } as any;
+
+      const mappedUsers = new Proxy(
+        { uid1: 'user@test.com', System: 'System' },
+        {
+          get(target, prop: string) {
+            if (prop === 'throws') {
+              throw new Error('lookup failed');
+            }
+            return (target as any)[prop];
+          },
+        },
+      ) as any;
+      const mappedRoles = {};
+
+      const result = cleanOrgUsers(orgUsers, mappedUsers, mappedRoles);
+      expect(result[0]['Invited By']).to.equal('System');
+    });
+  });
+
+  describe('cleanTeamsData', () => {
+    const org = { name: 'Acme', uid: 'org-1' };
+
+    it('should return empty array when data is empty', async () => {
+      const client = {
+        organization() {
+          return {
+            roles: () => Promise.resolve({ items: [{ name: 'member', uid: 'm' }, { name: 'admin', uid: 'a' }] }),
+          };
+        },
+      } as any;
+
+      const result = await cleanTeamsData([], client, org);
+      expect(result).to.deep.equal([]);
+    });
+
+    it('should map member vs admin, default description, and member count', async () => {
+      const memberUid = 'role-member';
+      const adminUid = 'role-admin';
+      const client = {
+        organization(uid: string) {
+          expect(uid).to.equal(org.uid);
+          return {
+            roles: () =>
+              Promise.resolve({
+                items: [
+                  { name: 'member', uid: memberUid },
+                  { name: 'admin', uid: adminUid },
+                ],
+              }),
+          };
+        },
+      } as any;
+
+      const teams = [
+        {
+          uid: 't1',
+          name: 'Team M',
+          organizationRole: memberUid,
+          users: [{ id: 1 }, { id: 2 }],
+          _id: 'x',
+          description: 'has desc',
+        },
+        {
+          uid: 't2',
+          name: 'Team A',
+          organizationRole: adminUid,
+          users: [],
+          _id: 'y',
+        },
+      ] as any[];
+
+      const result = await cleanTeamsData(teams, client, org);
+
+      expect(result).to.have.lengthOf(2);
+      expect(result[0].organizationRole).to.equal('member');
+      expect(result[0].Total_Members).to.equal(2);
+      expect(result[1].organizationRole).to.equal('admin');
+      expect(result[1].description).to.equal('');
+      expect(result[1].Total_Members).to.equal(0);
+    });
+
+    it('should call handleErrorMsg when roles fetch fails', async () => {
+      const stub = sinon.stub(errorHandler, 'handleErrorMsg').callsFake(() => undefined as never);
+      try {
+        const client = {
+          organization() {
+            return {
+              roles: () => Promise.reject(new Error('roles unavailable')),
+            };
+          },
+        } as any;
+
+        const teams = [
+          {
+            uid: 't1',
+            name: 'T',
+            organizationRole: 'any',
+            users: [],
+          },
+        ] as any[];
+
+        await cleanTeamsData(teams, client, org);
+
+        expect(stub.calledOnce).to.equal(true);
+      } finally {
+        stub.restore();
+      }
     });
   });
 
