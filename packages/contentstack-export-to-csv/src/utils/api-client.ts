@@ -169,15 +169,18 @@ async function getUsers(
   try {
     const users = await managementAPIClient.organization(organization.uid).getInvitations(params) as unknown as OrgUsersResponse;
 
-    if (!users.items || (users.items && !users.items.length)) {
+    if (!users.items || users.items.length < params.limit) {
+      if (users.items?.length) {
+        result = result.concat(users.items);
+      }
       return result;
-    } else {
-      result = result.concat(users.items);
-      params.skip = params.page * params.limit;
-      params.page++;
-      await wait(200);
-      return getUsers(managementAPIClient, organization, params, result);
     }
+
+    result = result.concat(users.items);
+    params.skip = params.page * params.limit;
+    params.page++;
+    await wait(200);
+    return getUsers(managementAPIClient, organization, params, result);
   } catch {
     return result;
   }
