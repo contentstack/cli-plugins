@@ -31,243 +31,120 @@ function getFileContent(_path) {
   });
 }
 
+function normalizeEnvContent(content) {
+  return content.replace(/\n/g, ',');
+}
+
+function createManagementAPIClient(environments, token) {
+  return {
+    stack: () => ({
+      environment: () => ({
+        query: () => ({
+          find: () => Promise.resolve(environments),
+        }),
+      }),
+      managementToken: () => ({
+        create: () => Promise.resolve({ uid: 'mock-management-token-uid', token: 'mock-management-token' }),
+      }),
+      deliveryToken: () => ({
+        create: () => Promise.resolve({ token, preview_token: 'mock_preview_token' }),
+      }),
+    }),
+  };
+}
+
+const region = {
+  name: 'AWS-NA',
+  cda: 'https://cdn.contentstack.com',
+  cma: 'https://api.contentstack.com',
+  uiHost: 'https://app.contentstack.com',
+};
+
 describe('Utils', function () {
   describe('#setupEnvironments', () => {
     it('Create env file for a stack with live preview enabled', async () => {
       const environments = { items: [{ name: 'production' }, { name: 'development' }] };
-      const token = 'mock-delivery-token';
-      const api_key = 'mock-api-key';
-      const appConfig = {
-        appConfigKey: 'reactjs',
-      };
-      const livePreviewEnabled = true;
+      const appConfig = { appConfigKey: 'kickstart-next' };
       const clonedDirectory = await getDirectory();
-      const region = {
-        name: 'AWS-NA',
-        cda: 'https://cdn.contentstack.com',
-        cma: 'https://api.contentstack.com',
-        uiHost: 'https://app.contentstack.com',
-      };
-      const managementAPIClient = {
-        stack: () => {
-          return {
-            environment: () => {
-              return {
-                query: () => {
-                  return {
-                    find: () => Promise.resolve(environments),
-                  };
-                },
-              };
-            },
-            managementToken: () => ({
-              create: () => Promise.resolve({ token: 'mock-management-token' }),
-            }),
-            managementToken: () => ({
-              create: () => Promise.reject(new Error('Management token is not available in your plan.')),
-            }),
-            deliveryToken: () => {
-              return {
-                create: () => Promise.resolve({ token, preview_token: 'mock_preview_token' }),
-              };
-            },
-          };
-        },
-      };
+      const managementAPIClient = createManagementAPIClient(environments, 'mock-delivery-token');
 
-      try {
-        await setupEnvironments(managementAPIClient, api_key, appConfig, clonedDirectory, region, livePreviewEnabled);
-      } catch (error) {
-        expect(error.message).to.equal('Management token is not available in your plan.');
-        return;
-      }
+      await setupEnvironments(
+        managementAPIClient,
+        'mock-api-key',
+        appConfig,
+        clonedDirectory,
+        region,
+        true,
+      );
 
       const files = await getDirFiles(clonedDirectory);
-      expect(files).to.have.length(2);
-      let devEnvFile = await getFileContent(path.join(clonedDirectory, '.env.development.local'));
-      devEnvFile = devEnvFile.replace(/\n/g, ',');
-      expect(devEnvFile).equal(
-        'REACT_APP_CONTENTSTACK_API_KEY=mock-api-key,REACT_APP_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,REACT_APP_CONTENTSTACK_PREVIEW_TOKEN=mock_preview_token,REACT_APP_CONTENTSTACK_PREVIEW_HOST=rest-preview.contentstack.com,REACT_APP_CONTENTSTACK_APP_HOST=app.contentstack.com,,REACT_APP_CONTENTSTACK_ENVIRONMENT=development,,SKIP_PREFLIGHT_CHECK=true,REACT_APP_CONTENTSTACK_LIVE_PREVIEW=true',
-      );
-      let prodEnvFile = await getFileContent(path.join(clonedDirectory, '.env.production.local'));
-      prodEnvFile = prodEnvFile.replace(/\n/g, ',');
-      expect(prodEnvFile).equal(
-        'REACT_APP_CONTENTSTACK_API_KEY=mock-api-key,REACT_APP_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,REACT_APP_CONTENTSTACK_PREVIEW_TOKEN=mock_preview_token,REACT_APP_CONTENTSTACK_PREVIEW_HOST=rest-preview.contentstack.com,REACT_APP_CONTENTSTACK_APP_HOST=app.contentstack.com,,REACT_APP_CONTENTSTACK_ENVIRONMENT=production,,SKIP_PREFLIGHT_CHECK=true,REACT_APP_CONTENTSTACK_LIVE_PREVIEW=true',
+      expect(files).to.have.length(1);
+      const envFile = normalizeEnvContent(await getFileContent(path.join(clonedDirectory, '.env')));
+      expect(envFile).to.equal(
+        'NEXT_PUBLIC_CONTENTSTACK_API_KEY=mock-api-key,NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,NEXT_PUBLIC_CONTENTSTACK_PREVIEW_TOKEN=mock_preview_token,NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT=development,NEXT_PUBLIC_CONTENTSTACK_REGION=aws-na,NEXT_PUBLIC_CONTENTSTACK_PREVIEW=true,NEXT_PUBLIC_CONTENTSTACK_CONTENT_DELIVERY = cdn.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_CONTENT_APPLICATION = app.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_PREVIEW_HOST = rest-preview.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_IMAGE_HOSTNAME=images.contentstack.com',
       );
     });
 
     it('Create env file for a stack with live preview disabled', async () => {
       const environments = { items: [{ name: 'production' }, { name: 'development' }] };
-      const token = 'mock-delivery-token';
-      const api_key = 'mock-api-key';
-      const appConfig = {
-        appConfigKey: 'reactjs',
-      };
-      const livePreviewEnabled = false;
+      const appConfig = { appConfigKey: 'kickstart-next' };
       const clonedDirectory = await getDirectory();
-      const region = {
-        name: 'AWS-NA',
-        cda: 'https://cdn.contentstack.com',
-        cma: 'https://api.contentstack.com',
-        uiHost: 'https://app.contentstack.com',
-      };
-      const managementAPIClient = {
-        stack: () => {
-          return {
-            environment: () => {
-              return {
-                query: () => {
-                  return {
-                    find: () => Promise.resolve(environments),
-                  };
-                },
-              };
-            },
-            managementToken: () => ({
-              create: () => Promise.reject(new Error('Management token is not available in your plan.')),
-            }),
-            deliveryToken: () => {
-              return {
-                create: () => Promise.resolve({ token, preview_token: 'mock_preview_token' }),
-              };
-            },
-          };
-        },
-      };
+      const managementAPIClient = createManagementAPIClient(environments, 'mock-delivery-token');
 
-      try {
-        await setupEnvironments(managementAPIClient, api_key, appConfig, clonedDirectory, region, livePreviewEnabled);
-      } catch (error) {
-        expect(error.message).to.equal('Management token is not available in your plan.');
-        return;
-      }
+      await setupEnvironments(
+        managementAPIClient,
+        'mock-api-key',
+        appConfig,
+        clonedDirectory,
+        region,
+        false,
+      );
 
       const files = await getDirFiles(clonedDirectory);
-      expect(files).to.have.length(2);
-      let devEnvFile = await getFileContent(path.join(clonedDirectory, '.env.development.local'));
-      devEnvFile = devEnvFile.replace(/\n/g, ',');
-      expect(devEnvFile).equal(
-        'REACT_APP_CONTENTSTACK_API_KEY=mock-api-key,REACT_APP_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,,REACT_APP_CONTENTSTACK_ENVIRONMENT=development,,SKIP_PREFLIGHT_CHECK=true,REACT_APP_CONTENTSTACK_LIVE_PREVIEW=false',
-      );
-      let prodEnvFile = await getFileContent(path.join(clonedDirectory, '.env.production.local'));
-      prodEnvFile = prodEnvFile.replace(/\n/g, ',');
-      expect(prodEnvFile).equal(
-        'REACT_APP_CONTENTSTACK_API_KEY=mock-api-key,REACT_APP_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,,REACT_APP_CONTENTSTACK_ENVIRONMENT=production,,SKIP_PREFLIGHT_CHECK=true,REACT_APP_CONTENTSTACK_LIVE_PREVIEW=false',
+      expect(files).to.have.length(1);
+      const envFile = normalizeEnvContent(await getFileContent(path.join(clonedDirectory, '.env')));
+      expect(envFile).to.equal(
+        'NEXT_PUBLIC_CONTENTSTACK_API_KEY=mock-api-key,NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN=mock-delivery-token,NEXT_PUBLIC_CONTENTSTACK_PREVIEW_TOKEN=mock_preview_token,NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT=development,NEXT_PUBLIC_CONTENTSTACK_REGION=aws-na,NEXT_PUBLIC_CONTENTSTACK_PREVIEW=false,NEXT_PUBLIC_CONTENTSTACK_CONTENT_DELIVERY = cdn.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_CONTENT_APPLICATION = app.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_PREVIEW_HOST = rest-preview.contentstack.com,NEXT_PUBLIC_CONTENTSTACK_IMAGE_HOSTNAME=images.contentstack.com',
       );
     });
 
     it('Create env with invalid environments, should throw an error', async () => {
       const environments = {};
-      const token = 'mock-delivery-token';
-      const api_key = 'mock-api-key';
-      const appConfig = {
-        appConfigKey: 'reactjs',
-      };
+      const appConfig = { appConfigKey: 'kickstart-next' };
       const clonedDirectory = await getDirectory();
-      const region = {
-        name: 'AWS-NA',
-        cda: 'https://app.contentstack.com',
-        cma: 'https://api.contentstack.com',
-      };
-      const managementAPIClient = {
-        stack: () => ({
-          environment: () => {
-            return {
-              query: () => {
-                return {
-                  find: () => Promise.resolve(environments),
-                };
-              },
-            };
-          },
-          deliveryToken: () => {
-            return {
-              create: () => Promise.resolve({ token }),
-            };
-          },
-        }),
-      };
+      const managementAPIClient = createManagementAPIClient(environments, 'mock-delivery-token');
 
       try {
-        await setupEnvironments(managementAPIClient, api_key, appConfig, clonedDirectory, region);
+        await setupEnvironments(managementAPIClient, 'mock-api-key', appConfig, clonedDirectory, region);
       } catch (error) {
         expect(error).to.be.instanceOf(Error);
       }
     });
 
     it('Create env with invalid app config, should throw an error', async () => {
-      const environments = {};
-      const token = 'mock-delivery-token';
-      const api_key = 'mock-api-key';
-      const appConfig = {
-        appConfigKey: 'sdsds',
-      };
+      const environments = { items: [{ name: 'production' }] };
+      const appConfig = { appConfigKey: 'invalid-app' };
       const clonedDirectory = await getDirectory();
-      const region = {
-        name: 'AWS-NA',
-        cda: 'https://app.contentstack.com',
-        cma: 'https://app.contentstack.com',
-      };
-      const managementAPIClient = {
-        stack: () => ({
-          environment: () => ({
-            query: () => ({
-              find: () => Promise.resolve(environments),
-            }),
-          }),
-          managementToken: () => ({
-            create: () => Promise.reject(new Error('Management token is not available in your plan.')),
-          }),
-          deliveryToken: () => ({
-            create: () => Promise.resolve({ token }),
-          }),
-        }),
-      };
+      const managementAPIClient = createManagementAPIClient(environments, 'mock-delivery-token');
 
-      try {
-        await setupEnvironments(managementAPIClient, api_key, appConfig, clonedDirectory, region);
-      } catch (error) {
-        expect(error).to.be.instanceOf(Error);
-      }
+      await setupEnvironments(managementAPIClient, 'mock-api-key', appConfig, clonedDirectory, region, false);
+
+      const files = await getDirFiles(clonedDirectory);
+      expect(files).to.have.length(0);
     });
 
     it('Create env with one invalid environment, should not create env file for invalid one', async () => {
-      // Valid 'production' environment and one invalid environment
       const environments = { items: [{ name: 'production' }, { name: null }] };
-      const token = 'mock-delivery-token';
-      const api_key = 'mock-api-key';
-      const appConfig = {
-        appConfigKey: 'reactjs',
-      };
+      const appConfig = { appConfigKey: 'kickstart-next' };
       const clonedDirectory = await getDirectory();
-      const region = {
-        name: 'AWS-NA',
-        cda: 'https://app.contentstack.com',
-        cma: 'https://app.contentstack.com',
-      };
+      const managementAPIClient = createManagementAPIClient(environments, 'mock-delivery-token');
 
-      const managementAPIClient = {
-        stack: () => ({
-          environment: () => ({
-            query: () => ({
-              find: () => Promise.resolve(environments),
-            }),
-          }),
-          managementToken: () => ({
-            create: () => Promise.reject(new Error('Management token is not available in your plan.')),
-          }),
-          deliveryToken: () => ({
-            create: () => Promise.resolve({ token }),
-          }),
-        }),
-      };
-      try {
-        await setupEnvironments(managementAPIClient, api_key, appConfig, clonedDirectory, region, false);
-        const files = await getDirFiles(clonedDirectory);
-        expect(files).to.have.length(1);
-      } catch (error) {
-        expect(error).to.be.instanceOf(Error);
-      }
+      await setupEnvironments(managementAPIClient, 'mock-api-key', appConfig, clonedDirectory, region, false);
+
+      const files = await getDirFiles(clonedDirectory);
+      expect(files).to.have.length(1);
+      const envFile = normalizeEnvContent(await getFileContent(path.join(clonedDirectory, '.env')));
+      expect(envFile).to.include('NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT=production');
     });
   });
 });
