@@ -131,9 +131,7 @@ export default class ImportSetup {
    */
   async start() {
     try {
-      const needsStackFetch =
-        !this.config.management_token ||
-        (this.config.assetManagementEnabled && !this.config.org_uid);
+      const needsStackFetch = !this.config.management_token || (this.config.csAssetsEnabled && !this.config.org_uid);
 
       if (needsStackFetch) {
         const stackDetails: Record<string, unknown> = await this.stackAPIClient.fetch();

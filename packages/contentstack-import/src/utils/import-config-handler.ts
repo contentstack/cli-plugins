@@ -2,12 +2,12 @@ import merge from 'merge';
 import * as path from 'path';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
-import { detectAssetManagementExportFromContentDir } from '@contentstack/cli-asset-management';
 import defaultConfig from '../config';
-import { readFile } from './file-helper';
+import { readFile, readFileSync } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
 import login from './login-handler';
 import { ImportConfig } from '../types';
+import { existsSync } from 'fs';
 
 const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // Set progress supported module FIRST, before any log calls
@@ -21,6 +21,13 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // setup the config
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
+
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+    }
 
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
@@ -125,12 +132,31 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
   }
 
-  const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
-  if (assetManagementExport.assetManagementEnabled) {
-    config.assetManagementEnabled = true;
-    config.assetManagementUrl = assetManagementExport.assetManagementUrl;
-    if (assetManagementExport.source_stack) {
-      config.source_stack = assetManagementExport.source_stack;
+  const spacesDir = path.join(config.contentDir, 'spaces');
+  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
+
+  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
+    try {
+      const stackSettings = JSON.parse(readFileSync(stackSettingsPath));
+      if (stackSettings?.am_v2) {
+        config.csAssetsEnabled = true;
+        config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
+
+        if (existsSync(stackJsonPath)) {
+          try {
+            const stackData = JSON.parse(readFileSync(stackJsonPath));
+            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
+            if (apiKey) {
+              config.source_stack = apiKey;
+            }
+          } catch {
+            // stack.json unreadable — source stack API key will not be set
+          }
+        }
+      }
+    } catch {
+      // stack settings unreadable — not an CS Assets export we can process
     }
   }
 

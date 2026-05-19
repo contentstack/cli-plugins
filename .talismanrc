@@ -1,54 +1,40 @@
 fileignoreconfig:
-  - filename: packages/contentstack-query-export/.env-example
-    checksum: 922c7aa9c788ab60b987de2b0a2aee6d90843c463a8bbc29201e4efe31081187
   - filename: pnpm-lock.yaml
-    checksum: 73c1ad42ca31bec6adb29d6d0be9b2835a2a06242ab2fd37b7d2c5ea8f86ca94
-  - filename: .cursor/rules/contentstack-cli.mdc
-    checksum: ba287a9e9dcf6565d2d2e79c9bbf6350a89e13afbd1f8755973d837563115c83
-  - filename: packages/contentstack-query-export/src/utils/common-helper.ts
-    checksum: 924a9fbc57dd774a7957870d63366ffc16cd4242dbe684321b9b52a888cfa455
-  - filename: .cursor/rules/oclif-commands.mdc
-    checksum: 3f9891d3d5872a2823c83215bc1727911dd32935d17d91ad5f2e7d5f75f3ab61
-  - filename: .cursor/rules/dev-workflow.md
-    checksum: ae8f8b2894c5cf0da6a85eb53c97775bd38835c191f9132ecaa24dcb9f439811
-  - filename: packages/contentstack-query-export/src/commands/cm/stacks/export-query.ts
-    checksum: 7642419baffc58871fafd9b1811b875e6f9e3e3c0a7d24e8508d137f14414574
-  - filename: packages/contentstack-query-export/src/utils/config-handler.ts
-    checksum: 2a17dfe46ff5e77bb585013719065db0b513b21d700eb54e6615e78a6811f885
-  - filename: packages/contentstack-query-export/src/utils/logger.ts
-    checksum: de6dd816bc534aaddf9adbe4e1db935f152d32eedaad5b76445f4affa836fcc9
-  - filename: packages/contentstack-query-export/src/types/index.ts
-    checksum: 686c5ed7fadb6620201dc3f1ed19c5ba94afd73ad165c33379b8b33dec81e519
-  - filename: packages/contentstack-query-export/skills/code-review/SKILL.md
-    checksum: 1c1cb0b1ce20114b9e855278a63c098d87f9302f093b08eb7f05f667840b6166
-  - filename: packages/contentstack-query-export/.eslintrc
-    checksum: b34756122b251dc2feedc7c7b98a7772d4d763bc468c8291be483ae2ac3471be
-  - filename: packages/contentstack-audit/src/modules/assets.ts
-    checksum: 551156796b5cd447a9abb580e95734198d33047d550258361cdd05c0cc9ce041
-  - filename: packages/contentstack-query-export/test/unit/common-helper.test.ts
-    checksum: c1d023d8c23e0400805448eb1466da5cb1fe891b6e838100fb12cbc7e1514a59
-  - filename: packages/contentstack-query-export/test/config.json
-    checksum: 792e177efa078e31aa05a5136807fd1fed4b6ea7a4cd44d69353edd8b96ff33f
-  - filename: packages/contentstack-query-export/test/unit/module-exporter.test.ts
-    checksum: e27fab52e65a8d5430d268f3562a823828e9e3dd9eb9569342f1cdb83eef9ea3
-  - filename: packages/contentstack-query-export/skills/framework/SKILL.md
-    checksum: b45c4bc28025292c168053e95a3c570b9d67500e0ee5241553089bca6914bb3f
-  - filename: packages/contentstack-query-export/src/core/query-executor.ts
-    checksum: a6bd72f954dc7343a93c3e405c1bbe8f354daa051a2f7dcbf776d3ddf9faa51b
-  - filename: packages/contentstack-query-export/README.md
-    checksum: 9be27e9a5f027f2bbbbcc6d4c706b19071cf40f596ce3e778f33ea7579a52626
-  - filename: packages/contentstack-query-export/test/unit/query-parser-simple.test.ts
-    checksum: d187ad885a914b70406e343a92ad3ee1ca3c30207b0d8b040f36c6f287da3a6c
-  - filename: packages/contentstack-query-export/test/unit/referenced-asset-handler.test.ts
-    checksum: 3d19ad04a0306be741f9acd3a2d164d19e2b3803efc0a50342b156e8686c8b0c
-  - filename: packages/contentstack-query-export/src/utils/dependency-resolver.ts
-    checksum: 79e3f53778385e964efa2a407b80a7f624a20e536ad576b684fe51cb224ed701
-  - filename: packages/contentstack-query-export/test/unit/config-handler.test.ts
-    checksum: a1077cb686431fea29de839762dbc16c951b6d61171f525e311e4a34182b0d08
-  - filename: packages/contentstack-query-export/test/unit/content-type-helper.test.ts
-    checksum: 1b4b9724a1281032605b61f007f7a7da080731bd9e0e4b2c4bc00b212ff30242
-  - filename: packages/contentstack-query-export/test/unit/dependency-resolver.test.ts
-    checksum: 749931f9ae23ba044e19774ea802627220fd8bffa7d6fe7b9666e866189c3854
-  - filename: packages/contentstack-query-export/test/unit/query-executor.test.ts
-    checksum: afa11e89e913b05f4e8475aa27cf6de5ffd870da1c7e75dd59d864d268d11a1b
+    checksum: 63ec5f1f048f2a689880e7dd89cedc4936f182884e2e619ca726c8b6b7e6ba0c
+  - filename: packages/contentstack-import/src/config/index.ts
+    checksum: 6f323d5d876ee2556f58ce752c055887905f46a57d7ba58e6659ca1e29bb6944
+  - filename: packages/contentstack-import/src/types/index.ts
+    checksum: d61bcc581f6d7f684caa75a5880fb740af12404d271d4e8429610f856154089f
+  - filename: packages/contentstack-variants/src/types/export-config.ts
+    checksum: e6df2394b6acb1f1ff30ed18baca686ba5b36c9de03b529f9980acbec4c8c8fc
+  - filename: packages/contentstack-export/src/types/index.ts
+    checksum: 4d895dc8355b94847e3e1746d65eb51d5b9434de307ddcd91c0a33083b97b9ef
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 5dddd4e482975bdb65f3d94383438f09c43fcc8a8d50753d9be4af73b5a171aa
+  - filename: packages/contentstack-import/src/utils/import-config-handler.ts
+    checksum: 8b7b3abef5f7c420e5604d9ff40a83f182023abf261ef2d6b1ea66464fa9ac47
+  - filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
+    checksum: 163c7e519561f2c1f473f6f0c5303a2a47c9f5c231b638cd90782c37eaa4859e
+  - filename: packages/contentstack-asset-management/test/unit/import/workspaces.test.ts
+    checksum: a0a17ff803fcf8f20538c8e158909d06705fc801f0bd3356b1eac1d92f006d83
+  - filename: packages/contentstack-import/test/unit/utils/extension-helper.test.ts
+    checksum: 03d92ee1e9666cb740fdb9cb1cf6a90d47b1c07b21f5c7e202d8e66566c9b320
+  - filename: packages/contentstack-export/src/export/modules/publishing-rules.ts
+    checksum: 8826b77d5917edee7ec808c5270512378b458993945b3c5fbaf40a5979113f64
+  - filename: packages/contentstack-asset-management/src/import-setup/import-setup-asset-mappers.ts
+    checksum: 9fa87dc7639e821411fba5b4f7871384dc2c4d5c11887a5d3c5a19702e7130be
+  - filename: packages/contentstack-export/src/types/default-config.ts
+    checksum: 70c9ca7400c447f2b54f48a07965c7ba34706deee97d68951d6229d523c7e4b0
+  - filename: packages/contentstack-import/src/types/default-config.ts
+    checksum: fddccaf817e4fd216100b25347c1dab37a5eca3c40c072c6b62e7354c713a626
+  - filename: packages/contentstack-import/test/unit/import/modules/publishing-rules.test.ts
+    checksum: 0fcbff5dab2f9e594fe2a316c3c96e8d86bcd5d72e7c1f9eb35c0e3458f87817
+  - filename: packages/contentstack-import-setup/src/import/modules/assets.ts
+    checksum: 941d19279e9c583f6e1dea15bafc51a371c17961a16c56d91f09753ae0f0fdea
+  - filename: packages/contentstack-import/test/unit/import/modules/locales.test.ts
+    checksum: 16f75ba91f4331f426919529b37c5339cbd57740447f4c31ba518ea63e6b8c0a
+  - filename: packages/contentstack-import/test/unit/utils/build-import-spaces-options.test.ts
+    checksum: ecc39327ca93ca4ea749937ec853f5a4c9a609a96c4e4e15df1b596fb4f32c74
+  - filename: packages/contentstack-import/src/import/modules/publishing-rules.ts
+    checksum: 429a803bc18e691db93bae3df1714071d0face6441b82cb938a83e8bf94ae14c
 version: '1.0'

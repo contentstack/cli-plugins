@@ -48,6 +48,11 @@ describe('ImportLocales', () => {
         webhooks: { dirName: 'webhooks', fileName: 'webhooks.json' },
         releases: { dirName: 'releases', fileName: 'releases.json', invalidKeys: ['uid'] },
         workflows: { dirName: 'workflows', fileName: 'workflows.json', invalidKeys: ['uid'] },
+        'publishing-rules': {
+          dirName: 'workflows',
+          fileName: 'publishing-rules.json',
+          invalidKeys: ['uid'],
+        },
         assets: {
           dirName: 'assets',
           assetBatchLimit: 10,
@@ -61,7 +66,7 @@ describe('ImportLocales', () => {
           folderValidKeys: ['uid', 'name'],
           validKeys: ['uid', 'title'],
         },
-        'asset-management': {
+        'cs-assets': {
           dirName: 'spaces',
           fieldsDir: 'fields',
           assetTypesDir: 'asset_types',

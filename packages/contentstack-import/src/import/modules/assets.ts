@@ -7,9 +7,8 @@ import isEmpty from 'lodash/isEmpty';
 import uniq from 'lodash/uniq';
 import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
-import { v4 as uuid } from 'uuid';
 import { resolve as pResolve, join } from 'node:path';
-import { FsUtility, log, handleAndLogError } from '@contentstack/cli-utilities';
+import { FsUtility, log, handleAndLogError, generateUid } from '@contentstack/cli-utilities';
 import { ImportSpaces, type SpaceMapping } from '@contentstack/cli-asset-management';
 import { PATH_CONSTANTS } from '../../constants';
 
@@ -67,11 +66,11 @@ export default class ImportAssets extends BaseClass {
     try {
       log.debug('Starting assets import process...', this.importConfig.context);
 
-      // AM 2.0: assetManagementEnabled is set in the config handler when spaces/ + am_v2 are detected.
-      if (this.importConfig.assetManagementEnabled) {
-        if (!this.importConfig.assetManagementUrl) {
+      // CS Assets: csAssetsEnabled is set in the config handler when spaces/ + am_v2 are detected.
+      if (this.importConfig.csAssetsEnabled) {
+        if (!this.importConfig.csAssetsUrl) {
           log.info(
-            'AM 2.0 export detected but assetManagementUrl is not configured in the region settings. Skipping AM 2.0 asset import.',
+            'CS Assets export detected but csAssetsUrl is not configured in the region settings. Skipping CS Assets asset import.',
             this.importConfig.context,
           );
           return;
@@ -80,14 +79,60 @@ export default class ImportAssets extends BaseClass {
         const progress = this.createNestedProgress(this.currentModuleName);
         let spaceMappings: SpaceMapping[] = [];
 
+        // Resolve the existing default space in the target branch before building options.
+        // This allows the source default space to be imported into the pre-existing target default
+        // space instead of creating a new one.
+        const branchUid = this.importConfig.branchName ?? 'main';
+        let targetDefaultSpaceUid: string | undefined;
+        let targetDefaultWorkspaceUid: string | undefined;
+        try {
+          const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
+            string,
+            any
+          >;
+          const linkedWorkspaces = (branchData?.settings?.am_v2?.linked_workspaces ?? []) as Array<{
+            uid: string;
+            space_uid: string;
+            is_default: boolean;
+          }>;
+          const defaultMatches = linkedWorkspaces.filter((w) => w.is_default === true);
+          if (defaultMatches.length > 1) {
+            log.warn(
+              `Target branch "${branchUid}" has ${defaultMatches.length} workspaces with is_default=true; using the first.`,
+              this.importConfig.context,
+            );
+          }
+          if (defaultMatches.length > 0) {
+            targetDefaultSpaceUid = defaultMatches[0].space_uid;
+            targetDefaultWorkspaceUid = defaultMatches[0].uid;
+            log.debug(
+              `Target default space: ${targetDefaultSpaceUid} (workspace uid: ${targetDefaultWorkspaceUid})`,
+              this.importConfig.context,
+            );
+          } else {
+            log.debug(
+              'Target branch has no default workspace; source default space will be created as new.',
+              this.importConfig.context,
+            );
+          }
+        } catch (e) {
+          log.debug(
+            `Could not fetch target branch linked_workspaces for default space detection: ${e}`,
+            this.importConfig.context,
+          );
+        }
+
         try {
           const importer = new ImportSpaces(
-            buildImportSpacesOptions(this.importConfig, this.importConfig.assetManagementUrl),
+            buildImportSpacesOptions(this.importConfig, this.importConfig.csAssetsUrl, {
+              targetDefaultSpaceUid,
+              targetDefaultWorkspaceUid,
+            }),
           );
           importer.setParentProgressManager(progress);
           ({ spaceMappings } = await importer.start());
         } catch (error) {
-          this.completeProgress(false, (error as Error)?.message ?? 'AM 2.0 asset import failed');
+          this.completeProgress(false, (error as Error)?.message ?? 'CS Assets asset import failed');
           throw error;
         }
 
@@ -170,10 +215,7 @@ export default class ImportAssets extends BaseClass {
     try {
       const branchUid = this.importConfig.branchName ?? 'main';
 
-      const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<
-        string,
-        any
-      >;
+      const branchData = (await this.stack.branch(branchUid).fetch({ include_settings: true })) as Record<string, any>;
       const currentLinked = (branchData?.settings?.am_v2?.linked_workspaces ?? []) as Array<{
         uid: string;
         space_uid: string;
@@ -181,26 +223,27 @@ export default class ImportAssets extends BaseClass {
         operation?: string;
       }>;
 
-      const newWorkspaces = spaceMappings.map(({ newSpaceUid, workspaceUid }) => ({
-        uid: workspaceUid,
-        space_uid: newSpaceUid,
-        is_default: false,
-        operation: 'LINK' as const,
-      }));
+      // Skip spaces already linked to the branch (e.g. the pre-existing target default space).
+      const alreadyLinkedSpaceUids = new Set(currentLinked.map((w) => w.space_uid));
+      const newWorkspaces = spaceMappings
+        .filter(({ newSpaceUid }) => !alreadyLinkedSpaceUids.has(newSpaceUid))
+        .map(({ newSpaceUid, workspaceUid }) => ({
+          uid: workspaceUid,
+          space_uid: newSpaceUid,
+          is_default: false,
+          operation: 'LINK' as const,
+        }));
 
       const combinedWorkspaces = [...currentLinked, ...newWorkspaces];
 
       await this.stack.branch(branchUid).updateSettings({
         branch: { settings: { am_v2: { linked_workspaces: combinedWorkspaces } } },
       });
-      log.success(
-        `Linked ${newWorkspaces.length} space(s) to branch "${branchUid}"`,
-        this.importConfig.context,
-      );
+      log.success(`Linked ${newWorkspaces.length} space(s) to branch "${branchUid}"`, this.importConfig.context);
     } catch (linkErr) {
       handleAndLogError(linkErr, {
         ...this.importConfig.context,
-        phase: 'AM 2.0 branch linking (linked_workspaces)',
+        phase: 'CS Assets branch linking (linked_workspaces)',
       });
     }
   }
@@ -570,7 +613,7 @@ export default class ImportAssets extends BaseClass {
       // 2. if there are multiple assets fetched with same query, then check the parent uid against mapper created while importing folders
       // 3. Replace matched assets
       this.rootFolder = {
-        uid: uuid(),
+        uid: generateUid(),
         name: `Import-${formatDate()}`,
         parent_uid: null,
         created_at: null,
