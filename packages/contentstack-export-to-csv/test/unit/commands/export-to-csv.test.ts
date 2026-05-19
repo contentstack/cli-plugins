@@ -10,9 +10,52 @@ import { messages } from '../../../src/messages';
 const nodeRequire = createRequire(path.join(__dirname, 'export-to-csv.test.ts'));
 const cliUtilsPath = nodeRequire.resolve('@contentstack/cli-utilities');
 const exportCmdPath = nodeRequire.resolve('../../../src/commands/cm/export-to-csv');
+const utilsPath = nodeRequire.resolve('../../../src/utils');
+const interactivePath = nodeRequire.resolve('../../../src/utils/interactive');
+
+/** Region stub for CI runners that have no local `csdx config:set:region`. */
+const DEFAULT_TEST_REGION = {
+  cma: 'api.contentstack.io',
+  cda: 'cdn.contentstack.io',
+  uiHost: 'app.contentstack.com',
+  developerHubUrl: 'developer.contentstack.com',
+  launchHubUrl: 'launch.contentstack.com',
+  personalizeUrl: 'personalize.contentstack.com',
+  composableStudioUrl: 'studio.contentstack.com',
+};
 
 function getCliUtilsCacheEntry(): NodeModule {
   return nodeRequire.cache[cliUtilsPath] as NodeModule;
+}
+
+/**
+ * Reload export command after stubbing interactive helpers (utils re-exports use getters).
+ */
+function reloadExportCommandWithUtilsStubs(
+  sandbox: sinon.SinonSandbox,
+  stubs: {
+    chooseOrganization?: { name: string; uid: string };
+    chooseStack?: { name: string; apiKey: string };
+  },
+): {
+  ExportCmd: typeof ExportToCsv;
+  interactiveMod: typeof import('../../../src/utils/interactive');
+} {
+  delete nodeRequire.cache[interactivePath];
+  delete nodeRequire.cache[utilsPath];
+  delete nodeRequire.cache[exportCmdPath];
+
+  const interactiveMod = nodeRequire(interactivePath) as typeof import('../../../src/utils/interactive');
+  if (stubs.chooseOrganization) {
+    sandbox.stub(interactiveMod, 'chooseOrganization').resolves(stubs.chooseOrganization);
+  }
+  if (stubs.chooseStack) {
+    sandbox.stub(interactiveMod, 'chooseStack').resolves(stubs.chooseStack);
+  }
+
+  nodeRequire(utilsPath);
+  const ExportCmd = nodeRequire(exportCmdPath).default;
+  return { ExportCmd, interactiveMod };
 }
 
 function patchCliUtilities(partial: Record<string, unknown>): () => void {
@@ -236,6 +279,13 @@ describe('cm:export-to-csv', () => {
     beforeEach(() => {
       sandbox = sinon.createSandbox();
       sandbox.stub(cliUtilities.cliux, 'loader').returns(undefined);
+      const configGet = cliUtilities.configHandler.get.bind(cliUtilities.configHandler);
+      sandbox.stub(cliUtilities.configHandler, 'get').callsFake((key: string) => {
+        if (key === 'region') {
+          return DEFAULT_TEST_REGION;
+        }
+        return configGet(key);
+      });
     });
 
     afterEach(() => {
@@ -845,21 +895,18 @@ describe('cm:export-to-csv', () => {
     it('getStackDetails returns stack when org and stackAPIKey are provided', async () => {
       const restoreCli = patchCliUtilities({ isAuthenticated: () => true });
       try {
-        const interactivePath = nodeRequire.resolve('../../../src/utils/interactive');
-        delete nodeRequire.cache[interactivePath];
-        const interactiveMod = nodeRequire(interactivePath) as typeof import('../../../src/utils/interactive');
-        sandbox.stub(interactiveMod, 'chooseStack').resolves({ name: 'MyStack', apiKey: 'stack-key-99' } as any);
-        const utilsPath = nodeRequire.resolve('../../../src/utils');
-        delete nodeRequire.cache[utilsPath];
-        delete nodeRequire.cache[exportCmdPath];
-        const ExportCmd = nodeRequire(exportCmdPath).default;
+        const { ExportCmd, interactiveMod } = reloadExportCommandWithUtilsStubs(sandbox, {
+          chooseStack: { name: 'MyStack', apiKey: 'stack-key-99' },
+        });
         const cmd = new ExportCmd([], minimalConfig);
         await cmd.init();
 
         const out = await cmd.getStackDetails({} as any, 'stack-key-99', 'org-uid-z');
 
         expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'stack-key-99' });
-        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'stack-key-99')).to.equal(true);
+        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'stack-key-99')).to.equal(
+          true,
+        );
       } finally {
         restoreCli();
       }
@@ -889,25 +936,20 @@ describe('cm:export-to-csv', () => {
     it('getStackDetails chooses org and stack when org and stack key are omitted', async () => {
       const restoreCli = patchCliUtilities({ isAuthenticated: () => true });
       try {
-        const interactivePath = nodeRequire.resolve('../../../src/utils/interactive');
-        delete nodeRequire.cache[interactivePath];
-        const interactiveMod = nodeRequire(interactivePath) as typeof import('../../../src/utils/interactive');
-        const chooseOrgStub = sandbox.stub(interactiveMod, 'chooseOrganization').resolves({ name: 'OrgA', uid: 'org-a' });
-        const chooseStackStub = sandbox.stub(interactiveMod, 'chooseStack').resolves({ name: 'StackA', apiKey: 'ak-a' } as any);
-        const utilsPath = nodeRequire.resolve('../../../src/utils');
-        delete nodeRequire.cache[utilsPath];
-        delete nodeRequire.cache[exportCmdPath];
-        const ExportCmd = nodeRequire(exportCmdPath).default;
+        const { ExportCmd, interactiveMod } = reloadExportCommandWithUtilsStubs(sandbox, {
+          chooseOrganization: { name: 'OrgA', uid: 'org-a' },
+          chooseStack: { name: 'StackA', apiKey: 'ak-a' },
+        });
         const cmd = new ExportCmd([], minimalConfig);
         await cmd.init();
 
         const out = await cmd.getStackDetails({} as any, undefined, undefined);
         expect(out).to.deep.equal({ name: 'StackA', apiKey: 'ak-a' });
-        expect(chooseOrgStub.calledOnce).to.equal(true);
-        expect(chooseOrgStub.firstCall.args[0]).to.deep.equal({});
-        expect(chooseStackStub.calledOnce).to.equal(true);
-        expect(chooseStackStub.firstCall.args[0]).to.deep.equal({});
-        expect(chooseStackStub.firstCall.args[1]).to.equal('org-a');
+        expect((interactiveMod.chooseOrganization as sinon.SinonStub).calledOnce).to.equal(true);
+        expect((interactiveMod.chooseOrganization as sinon.SinonStub).firstCall.args[0]).to.deep.equal({});
+        expect((interactiveMod.chooseStack as sinon.SinonStub).calledOnce).to.equal(true);
+        expect((interactiveMod.chooseStack as sinon.SinonStub).firstCall.args[0]).to.deep.equal({});
+        expect((interactiveMod.chooseStack as sinon.SinonStub).firstCall.args[1]).to.equal('org-a');
       } finally {
         restoreCli();
       }
