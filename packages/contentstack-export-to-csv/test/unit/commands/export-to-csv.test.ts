@@ -1234,6 +1234,13 @@ describe('cm:export-to-csv', () => {
 
     beforeEach(() => {
       sandbox = sinon.createSandbox();
+      const configGet = cliUtilities.configHandler.get.bind(cliUtilities.configHandler);
+      sandbox.stub(cliUtilities.configHandler, 'get').callsFake((key: string) => {
+        if (key === 'region') {
+          return DEFAULT_TEST_REGION;
+        }
+        return configGet(key);
+      });
     });
 
     afterEach(() => {
