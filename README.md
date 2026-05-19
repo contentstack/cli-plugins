@@ -15,6 +15,7 @@ CLI supports content management scripts through which you can perform the follow
 - Migrate HTML RTE to JSON RTE content
 - Change Master Locale
 - Use Bootstrap plugin
+- Manage Developer Hub apps (`app:*` via `@contentstack/apps-cli`)
 - Use Tsgen plugin
 
 

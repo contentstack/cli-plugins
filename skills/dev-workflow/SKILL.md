@@ -15,9 +15,22 @@ description: Branches, CI, pnpm workspace commands, PR expectations, and TDD wor
 
 Plugins live under `packages/` (pnpm workspaces: `packages/*`). Current packages include:
 
+- `contentstack-apps-cli` — Developer Hub apps (`app:*` commands); npm package `@contentstack/apps-cli`
 - `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-seed`, `contentstack-variants`
 
-Plugins typically depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`.
+Plugins typically depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`. Match dependency major/beta lines to the repo branch (`v1-dev` vs `v2-dev`).
+
+### Apps CLI package commands
+
+From repo root or the package directory:
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter @contentstack/apps-cli run build` | Compile `src/` → `lib/` |
+| `pnpm --filter @contentstack/apps-cli test` | Mocha unit tests + lint (`posttest`) |
+| `pnpm --filter @contentstack/apps-cli run test:unit:report` | Unit tests with nyc coverage |
+
+CI runs apps-cli tests in [`.github/workflows/unit-test.yml`](../../.github/workflows/unit-test.yml).
 
 ## Commands (root)
 

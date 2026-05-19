@@ -66,3 +66,7 @@ jobs:
       - name: Run tests for Contentstack Query Export
         working-directory: ./packages/contentstack-query-export
         run: npm run test:unit
+
+      - name: Run tests for Contentstack Apps CLI
+        working-directory: ./packages/contentstack-apps-cli
+        run: npm run test:unit:report:json
