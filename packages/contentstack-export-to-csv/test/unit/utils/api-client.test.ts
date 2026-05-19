@@ -13,15 +13,12 @@ import {
   getEnvironments,
   getAllTeams,
   exportOrgTeams,
+  getRoleData,
   getAllTaxonomies,
   getAllTermsOfTaxonomy,
   getTaxonomy,
   createImportableCSV,
 } from '../../../src/utils/api-client';
-
-// API client functions are tightly coupled to the Contentstack SDK
-// These tests verify the function signatures and basic structure
-// Full integration testing requires actual SDK mocking or E2E tests
 
 describe('api-client', () => {
   describe('module exports', () => {
@@ -39,6 +36,7 @@ describe('api-client', () => {
       expect(getEnvironments).to.be.a('function');
       expect(getAllTeams).to.be.a('function');
       expect(exportOrgTeams).to.be.a('function');
+      expect(getRoleData).to.be.a('function');
       expect(getAllTaxonomies).to.be.a('function');
       expect(getAllTermsOfTaxonomy).to.be.a('function');
       expect(getTaxonomy).to.be.a('function');
@@ -46,7 +44,5 @@ describe('api-client', () => {
     });
   });
 
-  // Note: Full functional tests for api-client require mocking the @contentstack/management SDK
-  // This is complex due to the SDK's internal structure. These tests are better suited for 
-  // integration testing with a test stack or using more sophisticated mocking tools.
+  // Note: Functional tests use mocked SDK chains; keep in a dedicated file when re-adding coverage.
 });
