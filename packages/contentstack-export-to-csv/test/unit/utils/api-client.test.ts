@@ -108,19 +108,19 @@ describe('api-client', () => {
 
   describe('getOrgUsers', () => {
     it('should paginate getInvitations for organization owners', async () => {
-      const page1 = Array.from({ length: 10 }, (_, i) => makeUser(i));
-      const page2 = Array.from({ length: 10 }, (_, i) => makeUser(i + 10));
-      const page3 = Array.from({ length: 5 }, (_, i) => makeUser(i + 20));
+      const page1 = Array.from({ length: config.limit }, (_, i) => makeUser(i));
+      const page2 = Array.from({ length: config.limit }, (_, i) => makeUser(i + config.limit));
+      const page3 = Array.from({ length: 25 }, (_, i) => makeUser(i + config.limit * 2));
 
       const { client, getInvitations, invitationParams } = createPaginatedMockClient(
         { is_owner: true },
-        [page1, page2, page3, []],
+        [page1, page2, page3],
       );
 
       const result = await getOrgUsers(client, ORG_UID);
 
-      expect(result.items).to.have.lengthOf(25);
-      expect(getInvitations.callCount).to.equal(4);
+      expect(result.items).to.have.lengthOf(225);
+      expect(getInvitations.callCount).to.equal(3);
       expect(invitationParams[0]).to.deep.equal({ skip: 0, page: 1, limit: config.limit });
       expect(invitationParams[1]).to.deep.equal({ skip: config.limit, page: 2, limit: config.limit });
       expect(invitationParams[2]).to.deep.equal({
@@ -131,19 +131,19 @@ describe('api-client', () => {
     });
 
     it('should paginate getInvitations for organization admins', async () => {
-      const page1 = Array.from({ length: 10 }, (_, i) => makeUser(i));
-      const page2 = Array.from({ length: 10 }, (_, i) => makeUser(i + 10));
-      const page3 = Array.from({ length: 5 }, (_, i) => makeUser(i + 20));
+      const page1 = Array.from({ length: config.limit }, (_, i) => makeUser(i));
+      const page2 = Array.from({ length: config.limit }, (_, i) => makeUser(i + config.limit));
+      const page3 = Array.from({ length: 25 }, (_, i) => makeUser(i + config.limit * 2));
 
       const { client, getInvitations, invitationParams } = createPaginatedMockClient(
         { is_owner: false, org_roles: [{ admin: true }] },
-        [page1, page2, page3, []],
+        [page1, page2, page3],
       );
 
       const result = await getOrgUsers(client, ORG_UID);
 
-      expect(result.items).to.have.lengthOf(25);
-      expect(getInvitations.callCount).to.equal(4);
+      expect(result.items).to.have.lengthOf(225);
+      expect(getInvitations.callCount).to.equal(3);
       expect(invitationParams[0]).to.deep.equal({ skip: 0, page: 1, limit: config.limit });
     });
 
