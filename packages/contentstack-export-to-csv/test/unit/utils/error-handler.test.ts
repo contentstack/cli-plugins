@@ -1,8 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
+import * as cliUtilities from '@contentstack/cli-utilities';
 import {
   formatError,
   wait,
+  handleErrorMsg,
+  handleTaxonomyErrorMsg,
+  exitProgram,
 } from '../../../src/utils/error-handler';
 
 describe('error-handler', () => {
@@ -167,7 +171,108 @@ describe('error-handler', () => {
     });
   });
 
-  // Note: handleErrorMsg, handleTaxonomyErrorMsg, and exitProgram call process.exit()
-  // Testing these would require stubbing process.exit which can be complex.
-  // For coverage purposes, we test formatError and wait which cover most logic.
+  describe('handleErrorMsg', () => {
+    let sandbox: sinon.SinonSandbox;
+    let printStub: sinon.SinonStub;
+    let exitStub: sinon.SinonStub;
+    let parseStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      exitStub = sandbox.stub(process, 'exit').callsFake(() => undefined as never);
+      printStub = sandbox.stub(cliUtilities.cliux, 'print');
+      parseStub = sandbox.stub(cliUtilities.messageHandler, 'parse').returns('fallback-api-failed');
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should print errorMessage and exit with 1', () => {
+      handleErrorMsg({ errorMessage: 'Bad request' }, { ctx: 'x' });
+      expect(printStub.calledWith('Error: Bad request', { color: 'red' })).to.be.true;
+      expect(exitStub.calledWith(1)).to.be.true;
+    });
+
+    it('should use message when errorMessage is absent', () => {
+      handleErrorMsg(new Error('Plain err'));
+      expect(printStub.calledWith('Error: Plain err', { color: 'red' })).to.be.true;
+      expect(exitStub.calledWith(1)).to.be.true;
+    });
+
+    it('should fall back to messageHandler when no message fields', () => {
+      handleErrorMsg({});
+      expect(parseStub.calledWith('CLI_EXPORT_CSV_API_FAILED')).to.be.true;
+      expect(printStub.calledWith('Error: fallback-api-failed', { color: 'red' })).to.be.true;
+      expect(exitStub.calledWith(1)).to.be.true;
+    });
+  });
+
+  describe('handleTaxonomyErrorMsg', () => {
+    let sandbox: sinon.SinonSandbox;
+    let printStub: sinon.SinonStub;
+    let exitStub: sinon.SinonStub;
+    let consoleStub: sinon.SinonStub;
+    let parseStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      exitStub = sandbox.stub(process, 'exit').callsFake(() => undefined as never);
+      printStub = sandbox.stub(cliUtilities.cliux, 'print');
+      parseStub = sandbox.stub(cliUtilities.messageHandler, 'parse').returns('taxonomy-fallback');
+      consoleStub = sandbox.stub(console, 'log');
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should prefer errorMessage', () => {
+      handleTaxonomyErrorMsg({ errorMessage: 'Tax failed' });
+      expect(printStub.calledWith('Error: Tax failed', { color: 'red' })).to.be.true;
+      expect(exitStub.calledWith(1)).to.be.true;
+    });
+
+    it('should use errors.taxonomy when branch taken via message', () => {
+      handleTaxonomyErrorMsg({ message: 'wrapper', errors: { taxonomy: 'bad tax' } });
+      expect(printStub.calledWith('Error: bad tax', { color: 'red' })).to.be.true;
+    });
+
+    it('should use errors.term when taxonomy absent but branch taken', () => {
+      handleTaxonomyErrorMsg({ message: 'wrapper', errors: { term: 'bad term' } });
+      expect(printStub.calledWith('Error: bad term', { color: 'red' })).to.be.true;
+    });
+
+    it('should use message when present on object', () => {
+      handleTaxonomyErrorMsg({ message: 'msg path' });
+      expect(printStub.calledWith('Error: msg path', { color: 'red' })).to.be.true;
+    });
+
+    it('should use fallback branch when no recognizable fields', () => {
+      handleTaxonomyErrorMsg({ foo: 1 });
+      expect(consoleStub.called).to.be.true;
+      expect(parseStub.calledWith('CLI_EXPORT_CSV_API_FAILED')).to.be.true;
+      expect(printStub.calledWith('Error: taxonomy-fallback', { color: 'red' })).to.be.true;
+      expect(exitStub.calledWith(1)).to.be.true;
+    });
+  });
+
+  describe('exitProgram', () => {
+    let sandbox: sinon.SinonSandbox;
+    let exitStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      exitStub = sandbox.stub(process, 'exit').callsFake(() => undefined as never);
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it('should exit with 0', () => {
+      exitProgram();
+      expect(exitStub.calledWith(0)).to.be.true;
+    });
+  });
 });
