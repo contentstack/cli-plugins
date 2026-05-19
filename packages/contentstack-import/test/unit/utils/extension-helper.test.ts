@@ -34,6 +34,7 @@ describe('Extension Helper', () => {
     contentDir: '/test/content',
     data: '/test/content',
     modules: {
+      apiConcurrency: 5,
       'composable-studio': {
         dirName: 'composable_studio',
         fileName: 'composable_studio.json',
