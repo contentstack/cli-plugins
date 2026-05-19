@@ -7,7 +7,7 @@
 | Field | Detail |
 | --- | --- |
 | **Name:** | Contentstack CLI plugins (pnpm monorepo; root package name `csdx`) |
-| **Purpose:** | OCLIF plugins that extend the Contentstack CLI (import/export, clone, migration, seed, audit, variants, etc.). |
+| **Purpose:** | OCLIF plugins that extend the Contentstack CLI (import/export, clone, migration, seed, audit, variants, Developer Hub apps, etc.). |
 | **Out of scope (if any):** | The **core** CLI aggregation lives in the separate `cli` monorepo; this repo ships plugin packages only. |
 
 ## Tech stack (at a glance)
@@ -39,6 +39,16 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 | Framework | [skills/framework/SKILL.md](skills/framework/SKILL.md) | Utilities, config, logging, errors |
 | Testing | [skills/testing/SKILL.md](skills/testing/SKILL.md) | Mocha/Chai, coverage, mocks |
 | Code review | [skills/code-review/SKILL.md](skills/code-review/SKILL.md) | PR review for this monorepo |
+| Contentstack Apps (Developer Hub) | [skills/contentstack-apps/SKILL.md](skills/contentstack-apps/SKILL.md) | Manifests, GraphQL, HTTP for `packages/contentstack-apps-cli` |
+| Apps CLI framework | [skills/apps-cli-framework/SKILL.md](skills/apps-cli-framework/SKILL.md) | `BaseCommand`, `AppCLIBaseCommand`, oclif flags for apps plugin |
+| Apps CLI TypeScript | [skills/apps-cli-typescript/SKILL.md](skills/apps-cli-typescript/SKILL.md) | TS/ESLint conventions for apps plugin |
+
+## Apps CLI plugin (`@contentstack/apps-cli`)
+
+- **Package path:** [packages/contentstack-apps-cli](packages/contentstack-apps-cli)
+- **npm name:** `@contentstack/apps-cli` (unchanged for consumers)
+- **Migrated from:** [contentstack/contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli) — see [APPS-CLI-MIGRATION.md](APPS-CLI-MIGRATION.md)
+- **v1 / v2:** Maintain on `v1-dev` (1.x CLI deps) and `v2-dev` / `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
 
 ## Using Cursor (optional)
 

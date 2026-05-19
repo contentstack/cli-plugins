@@ -9,6 +9,7 @@
     "migration": false,
     "seed": false,
     "bootstrap": false,
-    "branches": false
+    "branches": false,
+    "apps-cli": false
   }
 }
