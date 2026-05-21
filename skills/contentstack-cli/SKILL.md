@@ -1,6 +1,9 @@
 ---
 name: contentstack-cli
-description: Contentstack CLI development patterns, OCLIF commands, API integration, and authentication/configuration workflows. Use when working with Contentstack CLI plugins, OCLIF commands, CLI commands, or Contentstack API integration.
+description: >-
+  Contentstack CLI development patterns, OCLIF commands, API integration, and auth/config
+  workflows. Use for CLI plugins, OCLIF commands, or API integration—including Developer
+  Hub apps (packages/contentstack-apps-cli, app:* commands).
 ---
 
 # Contentstack CLI Development
@@ -477,3 +480,103 @@ cliux.print('🔄 Processing...', { color: 'blue' });
 // ... operation ...
 cliux.success('✅ Completed successfully');
 ```
+
+## Apps CLI commands (`app:*`)
+
+Package: **`packages/contentstack-apps-cli`** (`@contentstack/apps-cli`). SDK, config, HTTP, manifests, GraphQL: [framework](../framework/SKILL.md#apps-cli-plugin-contentstackapps-cli).
+
+### Command layout
+
+| Path | Command id | Purpose |
+| --- | --- | --- |
+| `src/commands/app/index.ts` | `app` | Topic help |
+| `src/commands/app/create.ts` | `app:create` | Create app + optional boilerplate |
+| `src/commands/app/get.ts` | `app:get` | Fetch app details |
+| `src/commands/app/update.ts` | `app:update` | Update from manifest |
+| `src/commands/app/delete.ts` | `app:delete` | Delete from marketplace |
+| `src/commands/app/install.ts` | `app:install` | Install on stack |
+| `src/commands/app/reinstall.ts` | `app:reinstall` | Reinstall on stack |
+| `src/commands/app/uninstall.ts` | `app:uninstall` | Uninstall (factory + strategy) |
+| `src/commands/app/deploy.ts` | `app:deploy` | Deploy (Launch / custom hosting) |
+
+OCLIF topic: `app` (`oclif.topics.app` in `package.json`). Short names in `csdxConfig.shortCommandName` (e.g. `app:create` → `APCRT`).
+
+### Base command hierarchy
+
+```typescript
+import { BaseCommand } from "../../base-command";
+import { AppCLIBaseCommand } from "../../app-cli-base-command";
+
+// Org-level or SDK-only commands
+export default class AppInstall extends BaseCommand<typeof AppInstall> {
+  static flags = { /* ... */, ...BaseCommand.baseFlags };
+  async run() { /* this.flags, this.managementSdk, this.marketplaceAppSdk ready after init */ }
+}
+
+// Commands that read manifest.json from cwd
+export default class AppUpdate extends AppCLIBaseCommand {
+  async run() {
+    // this.manifestData, this.manifestPath set in AppCLIBaseCommand.init
+  }
+}
+```
+
+- **`BaseCommand`** (`src/base-command.ts`) — `init()` parses flags/args, `registerConfig`, logger, `validateRegionAndAuth`, SDK init. **`baseFlags`**: `org`, `yes`. Also: `getValPrompt`, `messages` / `$t`, `catch` / `finally` (nonexistent flag → exit 2).
+- **`AppCLIBaseCommand`** — After `super.init()`, `getManifestData()` from `{cwd}/manifest.json`.
+
+Always call `await super.init()` first in `init()` overrides.
+
+### Command responsibilities
+
+- **CLI layer** — static `flags` / `examples`, prompts (`cliux`, `getValPrompt`, `src/util/inquirer.ts`), `this.log`, `this.error` / exit.
+- **Business logic** — `src/util/`, `src/factories/`, `src/strategies/`; keep `run()` small.
+
+### Parse and flags
+
+Parse runs inside **`BaseCommand.init`** only; do not re-parse in `run()`. After `init`, use `this.flags` and `this.args`. Inherit `BaseCommand.baseFlags` when `org` / `--yes` apply.
+
+OCLIF hook: `src/hooks/init/load-chalk.ts` (registered in `package.json` `oclif.hooks.init`).
+
+### Apps command example
+
+```typescript
+export default class AppGet extends BaseCommand<typeof AppGet> {
+  static description = "Get details of an app in developer hub";
+
+  static flags = {
+    "app-uid": Flags.string({ description: "App UID" }),
+    "app-type": Flags.string({
+      options: ["stack", "organization"],
+      default: "stack",
+    }),
+    ...BaseCommand.baseFlags,
+  };
+
+  async run(): Promise<void> {
+    const { org, "app-uid": appUid } = this.flags;
+    // Use this.marketplaceAppSdk / GraphQL / apiRequestHandler — see framework Apps CLI section
+    this.log(this.$t(this.messages.APP_FETCH_SUCCESS), "info");
+  }
+}
+```
+
+### External config and deploy
+
+- **`--config`** — JSON merged into `sharedConfig` (see `registerConfig` in `base-command.ts`). Used by create/deploy for Launch project settings.
+- **`--data-dir`** — Working directory for boilerplate clone and manifest paths.
+
+### Errors
+
+`BaseCommand.catch` handles `NonExistent flag` with exit code 2. Prefer actionable messages via `messages` / `$t` and existing util error helpers.
+
+### Build and test
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter @contentstack/apps-cli run build` | `tsc` → `lib/` |
+| `pnpm --filter @contentstack/apps-cli test` | Mocha + ESLint (`posttest`) |
+| `pnpm --filter @contentstack/apps-cli run test:unit:report` | Unit tests with nyc |
+
+### Testing apps commands
+
+Unit tests under `test/unit/commands/app/`. Use `stubAuthentication` from `test/unit/helpers/auth-stub-helper.ts` and nock Developer Hub hosts from `getDeveloperHubUrl()`. See [testing](../testing/SKILL.md) and [dev-workflow](../dev-workflow/SKILL.md).
