@@ -1,4 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-import/src/import/modules/assets.ts
+- filename: packages/contentstack-import/src/import/modules/assets.ts
   checksum: 8d6d1cadf9178f79aeae508f157c019342e1899f9c3f8116bd25b4ec27e593be
 version: '1.0'
