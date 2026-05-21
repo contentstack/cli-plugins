@@ -35,13 +35,10 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 | Skill | Path | What it covers |
 | --- | --- | --- |
 | Development workflow | [skills/dev-workflow/SKILL.md](skills/dev-workflow/SKILL.md) | pnpm commands, CI, TDD expectations, PR checklist |
-| Contentstack CLI | [skills/contentstack-cli/SKILL.md](skills/contentstack-cli/SKILL.md) | Plugin commands, OCLIF, Contentstack APIs |
-| Framework | [skills/framework/SKILL.md](skills/framework/SKILL.md) | Utilities, config, logging, errors |
+| Contentstack CLI | [skills/contentstack-cli/SKILL.md](skills/contentstack-cli/SKILL.md) | Plugin commands, OCLIF, Contentstack APIs (incl. `app:*` / `@contentstack/apps-cli`) |
+| Framework | [skills/framework/SKILL.md](skills/framework/SKILL.md) | Utilities, config, logging, errors (incl. Developer Hub SDK, manifests, GraphQL) |
 | Testing | [skills/testing/SKILL.md](skills/testing/SKILL.md) | Mocha/Chai, coverage, mocks |
 | Code review | [skills/code-review/SKILL.md](skills/code-review/SKILL.md) | PR review for this monorepo |
-| Contentstack Apps (Developer Hub) | [skills/contentstack-apps/SKILL.md](skills/contentstack-apps/SKILL.md) | Manifests, GraphQL, HTTP for `packages/contentstack-apps-cli` |
-| Apps CLI framework | [skills/apps-cli-framework/SKILL.md](skills/apps-cli-framework/SKILL.md) | `BaseCommand`, `AppCLIBaseCommand`, oclif flags for apps plugin |
-| Apps CLI TypeScript | [skills/apps-cli-typescript/SKILL.md](skills/apps-cli-typescript/SKILL.md) | TS/ESLint conventions for apps plugin |
 
 ## Apps CLI plugin (`@contentstack/apps-cli`)
 
@@ -49,6 +46,7 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 - **npm name:** `@contentstack/apps-cli` (unchanged for consumers)
 - **Migrated from:** [contentstack/contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli) — see [APPS-CLI-MIGRATION.md](APPS-CLI-MIGRATION.md)
 - **v1 / v2:** Maintain on `v1-dev` (1.x CLI deps) and `v2-dev` / `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
+- **Docs:** OCLIF / `app:*` commands → [contentstack-cli](skills/contentstack-cli/SKILL.md#apps-cli-commands-app); SDK, manifests, GraphQL, HTTP → [framework](skills/framework/SKILL.md#apps-cli-plugin-contentstackapps-cli)
 
 ## Using Cursor (optional)
 

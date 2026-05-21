@@ -43,7 +43,7 @@ pnpm --filter @contentstack/apps-cli run build
 pnpm --filter @contentstack/apps-cli test
 ```
 
-See [AGENTS.md](./AGENTS.md) and [skills/contentstack-apps/SKILL.md](./skills/contentstack-apps/SKILL.md) for contributor docs.
+See [AGENTS.md](./AGENTS.md), [skills/contentstack-cli/SKILL.md](./skills/contentstack-cli/SKILL.md#apps-cli-commands-app), and [skills/framework/SKILL.md](./skills/framework/SKILL.md#apps-cli-plugin-contentstackapps-cli) for contributor docs.
 
 ## Related migrations
 
