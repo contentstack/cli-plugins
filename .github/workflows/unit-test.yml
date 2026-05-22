@@ -70,3 +70,7 @@ jobs:
       - name: Run tests for Contentstack Apps CLI
         working-directory: ./packages/contentstack-apps-cli
         run: npm run test:unit:report:json
+
+      - name: Run tests for Contentstack Migrate RTE
+        working-directory: ./packages/contentstack-migrate-rte
+        run: npm test
