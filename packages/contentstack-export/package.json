@@ -1,14 +1,14 @@
 {
   "name": "@contentstack/cli-cm-export",
   "description": "Contentstack CLI plugin to export content from stack",
-  "version": "2.0.0-beta.17",
+  "version": "2.0.0-beta.18",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.7",
     "@contentstack/cli-utilities": "~2.0.0-beta.8",
     "@contentstack/cli-variants": "~2.0.0-beta.13",
-    "@contentstack/cli-asset-management": "~1.0.0-beta.1",
+    "@contentstack/cli-asset-management": "~1.0.0-beta.2",
     "@oclif/core": "^4.8.0",
     "async": "^3.2.6",
     "big-json": "^3.2.0",
@@ -83,7 +83,9 @@
   "oclif": {
     "commands": "./lib/commands",
     "hooks": {
-      "init": ["./lib/hooks/init/load-chalk"]
+      "init": [
+        "./lib/hooks/init/load-chalk"
+      ]
     },
     "bin": "csdx",
     "devPlugins": [
