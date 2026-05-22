@@ -5,7 +5,7 @@ Contentstack is a headless CMS with an API-first approach that puts content at t
 
 CLI supports content management scripts through which you can perform the following tasks:
 
-- Bulk publish content
+- Bulk publish content (`cm:stacks:bulk-*` via `@contentstack/cli-bulk-operations`)
 - Export content
 - Import content
 - Clone Stack

@@ -17,6 +17,7 @@ Plugins live under `packages/` (pnpm workspaces: `packages/*`). Current packages
 
 - `contentstack-apps-cli` — Developer Hub apps (`app:*` commands); npm `@contentstack/apps-cli`
 - `contentstack-migrate-rte` — HTML → JSON RTE (`cm:entries:migrate-html-rte`); npm `@contentstack/cli-cm-migrate-rte`
+- `contentstack-bulk-operations` — bulk publish/unpublish (`cm:stacks:bulk-*`); npm `@contentstack/cli-bulk-operations`
 - `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-seed`, `contentstack-variants`
 
 Plugins typically depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`. Match dependency major/beta lines to the repo branch (`v1-dev` vs `v2-dev`).
@@ -39,6 +40,13 @@ CI runs apps-cli tests in [`.github/workflows/unit-test.yml`](../../.github/work
 | --- | --- |
 | `pnpm --filter @contentstack/cli-cm-migrate-rte run build` | `oclif manifest` |
 | `pnpm --filter @contentstack/cli-cm-migrate-rte test` | Mocha + nyc |
+
+### Bulk operations package commands
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter @contentstack/cli-bulk-operations run build` | Compile `src/` → `lib/` |
+| `pnpm --filter @contentstack/cli-bulk-operations test` | Mocha + lint (`posttest`) |
 
 ## Commands (root)
 
