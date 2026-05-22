@@ -573,6 +573,7 @@ export class CloneHandler {
       // Resolve path to package root - go up 3 levels from __dirname (core/util -> package root)
       const packageRoot = path.resolve(__dirname, '../../..');
       const exportDir = path.join(packageRoot, 'contents');
+      this.config.contentDir = exportDir;
       log.debug(`Export directory: ${exportDir}`, this.config.cloneContext);
       const cmd: string[] = ['-k', exportConfig.apiKey || exportConfig.source_stack, '-d', exportDir];
       
@@ -807,7 +808,7 @@ export class CloneHandler {
         // Export root only (single-branch layout: modules live directly under -d, not pathDir/<branch>)
         const cloneTypePackageRoot = path.resolve(__dirname, '../../..');
         this.config.contentDir =
-          this.config.pathDir || path.join(cloneTypePackageRoot, 'contents');
+          this.config.contentDir || this.config.pathDir || path.join(cloneTypePackageRoot, 'contents');
         log.debug(`Clone content directory: ${this.config.contentDir}`, this.config.cloneContext);
 
         if (!this.config.cloneType) {
