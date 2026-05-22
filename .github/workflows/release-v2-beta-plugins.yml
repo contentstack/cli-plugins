@@ -142,3 +142,11 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-query-export/package.json
           tag: beta
+
+      # Apps CLI
+      - name: Publishing apps-cli (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-apps-cli/package.json
+          tag: beta
