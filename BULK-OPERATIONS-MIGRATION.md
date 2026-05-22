@@ -1,6 +1,16 @@
 # 🔄 Migration Guide: From Bulk Publish to Bulk Operations Commands
 
 > **Migrating from @contentstack/cli-cm-bulk-publish (v1.x) to New Unified Commands @contentstack/cli-bulk-operations (v1.x)**
+
+## Repository
+
+| Before | After |
+| --- | --- |
+| [contentstack/cli-bulk-operations](https://github.com/contentstack/cli-bulk-operations) | [contentstack/cli-plugins](https://github.com/contentstack/cli-plugins) → `packages/contentstack-bulk-operations` |
+| Issues on standalone repo | [cli-plugins issues](https://github.com/contentstack/cli-plugins/issues) |
+
+npm package name unchanged: **`@contentstack/cli-bulk-operations`**. Local dev: `pnpm --filter @contentstack/cli-bulk-operations run build` / `test` from cli-plugins (or cli-dev-workspace).
+
 ---
 
 ## What Changed?
