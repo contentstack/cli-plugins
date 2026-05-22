@@ -15,7 +15,8 @@ description: Branches, CI, pnpm workspace commands, PR expectations, and TDD wor
 
 Plugins live under `packages/` (pnpm workspaces: `packages/*`). Current packages include:
 
-- `contentstack-apps-cli` — Developer Hub apps (`app:*` commands); npm package `@contentstack/apps-cli`
+- `contentstack-apps-cli` — Developer Hub apps (`app:*` commands); npm `@contentstack/apps-cli`
+- `contentstack-migrate-rte` — HTML → JSON RTE (`cm:entries:migrate-html-rte`); npm `@contentstack/cli-cm-migrate-rte`
 - `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-seed`, `contentstack-variants`
 
 Plugins typically depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`. Match dependency major/beta lines to the repo branch (`v1-dev` vs `v2-dev`).
@@ -31,6 +32,13 @@ From repo root or the package directory:
 | `pnpm --filter @contentstack/apps-cli run test:unit:report` | Unit tests with nyc coverage |
 
 CI runs apps-cli tests in [`.github/workflows/unit-test.yml`](../../.github/workflows/unit-test.yml).
+
+### Migrate RTE package commands
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter @contentstack/cli-cm-migrate-rte run build` | `oclif manifest` |
+| `pnpm --filter @contentstack/cli-cm-migrate-rte test` | Mocha + nyc |
 
 ## Commands (root)
 
