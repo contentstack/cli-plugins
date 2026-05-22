@@ -127,6 +127,14 @@ jobs:
           package: ./packages/contentstack-bulk-publish/package.json
           tag: latest
 
+      # Bulk Operations
+      - name: Publishing bulk operations (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bulk-operations/package.json
+          tag: latest
+
       # Branches
       - name: Publishing branches (Production)
         uses: JS-DevTools/npm-publish@v3
