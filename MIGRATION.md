@@ -180,6 +180,14 @@ csdx cm:migrate-rte --help
 
 **Migration Action:** Refer to the detailed [Bulk Operations Migration Guide](./BULK-OPERATIONS-MIGRATION.md) for complete command mappings and examples.
 
+### 7. 📱 Apps CLI plugin repository move
+
+**What Changed:**
+- The Apps CLI plugin (`@contentstack/apps-cli`) source moved from the standalone [contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli) repository into this **cli-plugins** monorepo at `packages/contentstack-apps-cli`
+- The npm package name and `csdx app:*` commands are unchanged
+
+**Migration Action:** For repository location, branching (1.x vs 2.x), and issue tracking, see the [Apps CLI Migration Guide](./APPS-CLI-MIGRATION.md).
+
 **Quick Example:**
 ```bash
 # Before (1.x.x)
