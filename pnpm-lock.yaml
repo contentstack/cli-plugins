@@ -7,7 +7,6 @@ settings:
 overrides:
   tmp: 0.2.5
   follow-redirects: 1.16.0
-  axios: 1.16.1
   uuid: 14.0.0
 
 importers:
@@ -85,7 +84,7 @@ importers:
         specifier: ^8.58.2
         version: 8.59.4(eslint@8.57.1)(typescript@5.9.3)
       axios:
-        specifier: 1.16.1
+        specifier: ^1.15.0
         version: 1.16.1(debug@4.4.3)
       chai:
         specifier: ^4.5.0
@@ -465,11 +464,11 @@ importers:
   packages/contentstack-content-type:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ^1.8.2
-        version: 1.8.2(@types/node@22.19.19)
+        specifier: ~2.0.0-beta.7
+        version: 2.0.0-beta.7(@types/node@22.19.19)
       '@contentstack/cli-utilities':
-        specifier: ^1.18.3
-        version: 1.18.3(@types/node@22.19.19)
+        specifier: ~2.0.0-beta.8
+        version: 2.0.0-beta.8(@types/node@22.19.19)
       '@types/diff2html':
         specifier: ^3.0.3
         version: 3.0.3
@@ -486,7 +485,7 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       axios:
-        specifier: 1.16.1
+        specifier: ^1.16.1
         version: 1.16.1(debug@4.4.3)
       cli-ux:
         specifier: ^6.0.9
@@ -7723,16 +7722,6 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@1.8.2(@types/node@22.19.19)':
-    dependencies:
-      '@contentstack/cli-utilities': 1.18.3(@types/node@22.19.19)
-      '@oclif/core': 4.11.3
-      contentstack: 3.27.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - supports-color
-
   '@contentstack/cli-command@2.0.0-beta.7(@types/node@14.18.63)':
     dependencies:
       '@contentstack/cli-utilities': 2.0.0-beta.8(@types/node@14.18.63)
@@ -7875,43 +7864,6 @@ snapshots:
       dotenv: 16.6.1
       figures: 3.2.0
       inquirer: 8.2.7(@types/node@20.19.41)
-      inquirer-search-checkbox: 1.0.0
-      inquirer-search-list: 1.2.6
-      js-yaml: 4.1.1
-      klona: 2.0.6
-      lodash: 4.18.1
-      mkdirp: 1.0.4
-      open: 8.4.2
-      ora: 5.4.1
-      papaparse: 5.5.3
-      recheck: 4.4.5
-      rxjs: 6.6.7
-      short-uuid: 6.0.3
-      traverse: 0.6.11
-      tty-table: 4.2.3
-      unique-string: 2.0.0
-      uuid: 14.0.0
-      winston: 3.19.0
-      xdg-basedir: 4.0.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - supports-color
-
-  '@contentstack/cli-utilities@1.18.3(@types/node@22.19.19)':
-    dependencies:
-      '@contentstack/management': 1.30.2(debug@4.4.3)
-      '@contentstack/marketplace-sdk': 1.5.2(debug@4.4.3)
-      '@oclif/core': 4.11.3
-      axios: 1.16.1(debug@4.4.3)
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-progress: 3.12.0
-      cli-table: 0.3.11
-      conf: 10.2.0
-      dotenv: 16.6.1
-      figures: 3.2.0
-      inquirer: 8.2.7(@types/node@22.19.19)
       inquirer-search-checkbox: 1.0.0
       inquirer-search-list: 1.2.6
       js-yaml: 4.1.1
@@ -13434,26 +13386,6 @@ snapshots:
   inquirer@8.2.7(@types/node@20.19.41):
     dependencies:
       '@inquirer/external-editor': 1.0.3(@types/node@20.19.41)
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-width: 3.0.0
-      figures: 3.2.0
-      lodash: 4.18.1
-      mute-stream: 0.0.8
-      ora: 5.4.1
-      run-async: 2.4.1
-      rxjs: 7.8.2
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      through: 2.3.8
-      wrap-ansi: 6.2.0
-    transitivePeerDependencies:
-      - '@types/node'
-
-  inquirer@8.2.7(@types/node@22.19.19):
-    dependencies:
-      '@inquirer/external-editor': 1.0.3(@types/node@22.19.19)
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       cli-cursor: 3.1.0
