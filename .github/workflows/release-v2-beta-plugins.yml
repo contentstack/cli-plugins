@@ -150,3 +150,11 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-apps-cli/package.json
           tag: beta
+
+      # Tsgen
+      - name: Publishing tsgen (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-tsgen/package.json
+          tag: beta

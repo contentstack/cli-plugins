@@ -16,7 +16,8 @@ description: Branches, CI, pnpm workspace commands, PR expectations, and TDD wor
 Plugins live under `packages/` (pnpm workspaces: `packages/*`). Current packages include:
 
 - `contentstack-apps-cli` — Developer Hub apps (`app:*` commands); npm package `@contentstack/apps-cli`
-- `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-seed`, `contentstack-variants`
+- `contentstack-cli-tsgen` — TypeScript typings (`csdx tsgen`); npm package `contentstack-cli-tsgen`
+- `contentstack-audit`, `contentstack-bootstrap`, `contentstack-branches`, `contentstack-clone`, `contentstack-export`, `contentstack-export-to-csv`, `contentstack-import`, `contentstack-import-setup`, `contentstack-migration`, `contentstack-query-export`, `contentstack-seed`, `contentstack-variants`
 
 Plugins typically depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`. Match dependency major/beta lines to the repo branch (`v1-dev` vs `v2-dev`).
 
@@ -31,6 +32,16 @@ From repo root or the package directory:
 | `pnpm --filter @contentstack/apps-cli run test:unit:report` | Unit tests with nyc coverage |
 
 CI runs apps-cli tests in [`.github/workflows/unit-test.yml`](../../.github/workflows/unit-test.yml).
+
+### Tsgen package commands
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter contentstack-cli-tsgen run build` | Compile `src/` → `lib/` + OCLIF manifest |
+| `pnpm --filter contentstack-cli-tsgen test` | Jest + ESLint (`posttest`) |
+| `pnpm --filter contentstack-cli-tsgen run test:integration` | Live `csdx tsgen` integration tests |
+
+CI: integration in [`.github/workflows/tsgen-integration-test.yml`](../../.github/workflows/tsgen-integration-test.yml); lint in `unit-test.yml`.
 
 ## Commands (root)
 
@@ -53,7 +64,7 @@ Do not commit `test.only` / `test.skip`. Target **80%** coverage where `nyc` is 
 
 ## CI and hooks
 
-- Workflows: [`.github/workflows/`](../../../.github/workflows/) — e.g. `unit-test.yml`, `release-v2-beta-plugins.yml`, `sca-scan.yml`, `policy-scan.yml`, `codeql-analysis.yml`
+- Workflows: [`.github/workflows/`](../../../.github/workflows/) — e.g. `unit-test.yml`, `tsgen-integration-test.yml`, `release-v2-beta-plugins.yml`, `sca-scan.yml`, `policy-scan.yml`, `codeql-analysis.yml`
 - Husky: [`.husky/`](../../../.husky/) when present
 
 ## PR expectations
