@@ -20,6 +20,7 @@
     "launch": false,
     "branches": false,
     "apps-cli": false,
+    "content-type": false,
     "core": false
   }
 }

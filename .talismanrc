@@ -1,4 +1,42 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 89acb731dc98c886694fa4d267c11c188000b8ecbe5ee6e4809e5bc6ec33a2f3
+    checksum: b37c8a782a95412347394c79010601d99265163a590ad5dd15bee765142a3750
+  - filename: packages/contentstack-content-type/.eslintrc
+    checksum: 6a5fa2bef65bf5a62598c10d45d83dfdef2dc32675aca5827ef31c230fa29c97
+  - filename: packages/contentstack-content-type/src/commands/content-type/list.ts
+    checksum: a584f002cf6c8b124d832339b646dac492a9e2e9607c8b570f7e0df666bf5991
+  - filename: packages/contentstack-content-type/README.md
+    checksum: cfb10c8dd1848df7a4a47cf7eb8fa57a81b97994394a289a93c41a930f4b2a38
+  - filename: packages/contentstack-content-type/src/utils/index.ts
+    checksum: 3209ee03042b33b491443bd2aabd273125eb1808607c9ef0b231323f2616092e
+  - filename: packages/contentstack-content-type/skills/code-review/SKILL.md
+    checksum: e784c95e1efba37e79acc5d6187d26f25bea9228f9c28bbcac0dd9285c70381f
+  - filename: packages/contentstack-content-type/tests/commands/content-type/compare-remote.test.ts
+    checksum: 68beeddf34261799b38259925e8d9b5d2426bd827864ff1e5b5cdf3356fdfe5a
+  - filename: packages/contentstack-content-type/src/core/command.ts
+    checksum: ee30e78b945495baa9d064c96feee454ec73607420b8a3b1da2ecc3be4c9a85d
+  - filename: packages/contentstack-content-type/skills/contentstack-cli-content-type/SKILL.md
+    checksum: f52be931ec23638c76b44652921c4b45dbca9edf558f05bf465f33bcadf20790
+  - filename: packages/contentstack-content-type/skills/testing/SKILL.md
+    checksum: 1da781909a238a7e96dea43ed74ca97cd405e10d6a95dd2042a5280a7a9172f8
+  - filename: packages/contentstack-content-type/src/commands/content-type/audit.ts
+    checksum: 2b38703b8452222024188118c65e1a5beb792072cd5f4eb6deda12133fd4dfd2
+  - filename: packages/contentstack-content-type/src/commands/content-type/compare-remote.ts
+    checksum: 91f2a8cba4703a480086e6a257e4c96ac0c3d7fda5c5531e8ea0cb56be8b18e7
+  - filename: packages/contentstack-content-type/src/commands/content-type/compare.ts
+    checksum: 91f8eb42a2f8c4f3845940418ecdc07f11cbc62e732cfc0042b092d9cc3a8b03
+  - filename: packages/contentstack-content-type/src/commands/content-type/details.ts
+    checksum: 4fa7adeee4a82a8ab1b8206fa5c020babf3bb5341db351bc86069624028f911d
+  - filename: packages/contentstack-content-type/src/commands/content-type/diagram.ts
+    checksum: e6a2a5349421976e343c1cf149011e79e2bd319e61630e6d9f9edacb1e5b6be5
+  - filename: packages/contentstack-content-type/tests/commands/content-type/list.test.ts
+    checksum: 728221e17384a6940d0e8e38f3111522927b49e415daba9fafe13dc3507e8406
+  - filename: packages/contentstack-content-type/tests/core/command.test.ts
+    checksum: 65b8a60273110303467ce56438370f24d4803301c86fe1823c33233c523795d3
+  - filename: packages/contentstack-content-type/tests/core/contentstack/client.test.ts
+    checksum: 5c4b952c5bee5c4e05825e24a7f953cd9ddebbe07e7dbae73e4e959730683988
+  - filename: packages/contentstack-content-type/tests/core/content-type/diagram.test.ts
+    checksum: 75b5882e09a2f9f21d12236c8c64ed0d09bcbe9ff4a65f76b4b9f9b63b1a130c
+  - filename: packages/contentstack-content-type/tests/utils/index.test.ts
+    checksum: ba3137f99bba3d430145088fabf560ec9324a3fe14699eb7eacf1a863243f4b9
 version: '1.0'
