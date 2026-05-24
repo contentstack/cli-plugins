@@ -51,6 +51,7 @@ This is a **CLI plugins** monorepo with plugin packages under `packages/`, inclu
 - `contentstack-seed` - Seed stacks with generated data
 - `contentstack-variants` - Manage content variants
 - `contentstack-apps-cli` - Developer Hub apps (`app:*` commands; npm `@contentstack/apps-cli`)
+- `contentstack-cli-tsgen` - TypeScript typings (`csdx tsgen`; npm `contentstack-cli-tsgen`; Jest integration tests)
 
 All plugins depend on:
 - `@contentstack/cli-command` - Base Command class
