@@ -68,3 +68,4 @@ To get a more detailed documentation for every command, visit the [CLI section](
 ## Useful Plugins
 
 - [Generate TypeScript typings from a Stack](https://github.com/Contentstack-Solutions/contentstack-cli-tsgen)
+- [Manage Content Types (list, details, audit, compare, diagram)](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-content-type) (`contentstack-cli-content-type`)
