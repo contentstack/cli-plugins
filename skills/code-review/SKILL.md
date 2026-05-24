@@ -335,6 +335,11 @@ import { configHandler } from '../../../contentstack-utilities/src';
 - [ ] ESLint passes without warnings
 - [ ] Tests pass in CI environment
 
+### Tsgen plugin (`contentstack-cli-tsgen`)
+- [ ] Delivery-token wording correct (not CMA-centric); GraphQL paths require delivery token
+- [ ] Integration coverage for new flags when behavior is user-facing
+- [ ] See [package code-review skill](../packages/contentstack-cli-tsgen/skills/code-review/SKILL.md)
+
 ## Common Issues to Look For
 
 ### Security

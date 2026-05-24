@@ -1,6 +1,12 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: e5b5f8ab64f4f27a1483e426cc01d7388482263e1d6fe3baf1caafcf2878ebb2
-  - filename: skills/framework/SKILL.md
-    checksum: c5746de64b1e7d1df051c4337de5eb32de6a4c85c7297aa408838d304bb2d771
+    checksum: 4372202dbc918ff057d77df14383465c11b0b211afb408e74e33d6f036e928b3
+  - filename: packages/contentstack-cli-tsgen/AGENTS.md
+    checksum: 7291676dc95b70ba0c4f0ead220b88355534682d4392aecd75609f1740df4be1
+  - filename: packages/contentstack-cli-tsgen/src/lib/helper.ts
+    checksum: a7ead0030ead9d15b6b6e9623f61e7def77b00325e3988f0e3d73a145180dedc
+  - filename: packages/contentstack-cli-tsgen/skills/typescript-cli-tsgen/SKILL.md
+    checksum: 0434741d74f66edab28fbea1520a6a5d4d42e292cc014d3f9c804aa10809334b
+  - filename: packages/contentstack-cli-tsgen/src/commands/tsgen.ts
+    checksum: 054ea78f765edca62c785714cf8962df4fb91529c0851439d1ed61e963467408
 version: '1.0'

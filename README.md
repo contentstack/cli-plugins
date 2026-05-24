@@ -67,4 +67,4 @@ To get a more detailed documentation for every command, visit the [CLI section](
 
 ## Useful Plugins
 
-- [Generate TypeScript typings from a Stack](https://github.com/Contentstack-Solutions/contentstack-cli-tsgen)
+- [Generate TypeScript typings from a Stack](https://github.com/contentstack/cli-plugins/tree/v2-beta/packages/contentstack-cli-tsgen) (`contentstack-cli-tsgen`)
