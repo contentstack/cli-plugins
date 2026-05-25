@@ -21,6 +21,8 @@
     "branches": false,
     "apps-cli": false,
     "regex-validate": false,
+    "tsgen": false,
+    "bulk-operations": false,
     "core": false
   }
 }
