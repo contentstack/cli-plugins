@@ -580,3 +580,14 @@ export default class AppGet extends BaseCommand<typeof AppGet> {
 ### Testing apps commands
 
 Unit tests under `test/unit/commands/app/`. Use `stubAuthentication` from `test/unit/helpers/auth-stub-helper.ts` and nock Developer Hub hosts from `getDeveloperHubUrl()`. See [testing](../testing/SKILL.md) and [dev-workflow](../dev-workflow/SKILL.md).
+
+## Tsgen plugin (`contentstack-cli-tsgen`)
+
+Package: **`packages/contentstack-cli-tsgen`** (`contentstack-cli-tsgen`). Top-level command **`csdx tsgen`** (short **`TSGEN`**). Requires a **delivery token** alias (`-a` / `--token-alias`).
+
+Full flags, REST vs GraphQL, and library boundaries: [typescript-cli-tsgen](../../packages/contentstack-cli-tsgen/skills/typescript-cli-tsgen/SKILL.md). Integration tests (Jest): [package testing skill](../../packages/contentstack-cli-tsgen/skills/testing/SKILL.md). Repo move: [TSGEN-MIGRATION.md](../../TSGEN-MIGRATION.md).
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm --filter contentstack-cli-tsgen run build` | `tsc` → `lib/` + OCLIF manifest |
+| `pnpm --filter contentstack-cli-tsgen run test:integration` | Live stack integration tests |
