@@ -103,6 +103,14 @@ jobs:
           package: ./packages/contentstack-migration/package.json
           tag: latest
 
+      # Migrate RTE
+      - name: Publishing migrate RTE (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-migrate-rte/package.json
+          tag: latest
+
       # Seed
       - name: Publishing seed (Production)
         uses: JS-DevTools/npm-publish@v3
@@ -125,6 +133,14 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bulk-publish/package.json
+          tag: latest
+
+      # Bulk Operations
+      - name: Publishing bulk operations (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bulk-operations/package.json
           tag: latest
 
       # Branches

@@ -20,7 +20,8 @@
     "launch": false,
     "branches": false,
     "apps-cli": false,
-    "core": false,
-    "tsgen": false
+    "tsgen": false,
+    "bulk-operations": false,
+    "core": false
   }
 }
