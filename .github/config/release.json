@@ -10,6 +10,7 @@
     "seed": false,
     "bootstrap": false,
     "branches": false,
-    "apps-cli": false
+    "apps-cli": false,
+    "regex-validate": false
   }
 }
