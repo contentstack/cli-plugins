@@ -143,6 +143,14 @@ jobs:
           package: ./packages/contentstack-query-export/package.json
           tag: beta
 
+      # Content Type
+      - name: Publishing content-type (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-content-type/package.json
+          tag: beta
+
       # Apps CLI
       - name: Publishing apps-cli (Beta)
         uses: JS-DevTools/npm-publish@v3
@@ -157,4 +165,30 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-cli-tsgen/package.json
+          tag: beta
+      # Regex Validate
+      - name: Publishing regex-validate (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          access: public
+          tag: beta
+
+      # Migrate RTE
+      - name: Publishing migrate-rte (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-migrate-rte/package.json
+          access: public
+          tag: beta
+
+      # Bulk Operations
+      - name: Publishing bulk-operations (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bulk-operations/package.json
+          access: public
           tag: beta
