@@ -150,3 +150,11 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-apps-cli/package.json
           tag: beta
+
+      # Regex Validate
+      - name: Publishing regex-validate (Beta)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          tag: beta
