@@ -48,6 +48,16 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 - **v1 / v2:** Maintain on `v1-dev` (1.x CLI deps) and `v2-dev` / `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
 - **Docs:** OCLIF / `app:*` commands → [contentstack-cli](skills/contentstack-cli/SKILL.md#apps-cli-commands-app); SDK, manifests, GraphQL, HTTP → [framework](skills/framework/SKILL.md#apps-cli-plugin-contentstackapps-cli)
 
+## Regex Validate plugin (`@contentstack/cli-cm-regex-validate`)
+
+- **Package path:** [packages/contentstack-cli-cm-regex-validate](packages/contentstack-cli-cm-regex-validate)
+- **npm name:** `@contentstack/cli-cm-regex-validate`
+- **Migrated from:** [contentstack/cli-cm-regex-validate](https://github.com/contentstack/cli-cm-regex-validate) — see [REGEX-VALIDATE-MIGRATION.md](REGEX-VALIDATE-MIGRATION.md)
+- **v1 / v2:** Maintain on `v1-dev` / `main` (v1 CLI deps) and `v2-beta` (`~2.0.0-beta.7` / `~2.0.0-beta.8`, version `2.0.0-beta.0`); align with target CLI line.
+- **Tests:** Jest + ts-jest (unlike most other packages which use Mocha + Chai)
+- **Command:** Single command `cm:stacks:validate-regex` (short name `RGXVLD`)
+- **Docs:** [packages/contentstack-cli-cm-regex-validate/AGENTS.md](packages/contentstack-cli-cm-regex-validate/AGENTS.md)
+
 ## Migrate RTE plugin (`@contentstack/cli-cm-migrate-rte`)
 
 - **Package path:** [packages/contentstack-migrate-rte](packages/contentstack-migrate-rte)
