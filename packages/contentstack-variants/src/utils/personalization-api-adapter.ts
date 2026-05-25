@@ -155,6 +155,17 @@ export class PersonalizationAdapter<T> extends AdapterHelper<T, HttpClient> impl
           this.cmaAPIClient?.headers({ authtoken: token });
         }
       }
+
+      // Ensure the CMA client targets the configured branch. Variant groups, CT
+      // links and other stack-CMA endpoints are branch-scoped, so without this
+      // header the requests would fall back to the default (main) branch even
+      // when the import/export is running against a non-main branch.
+      const branchName = (this.config as any)?.branchName;
+      if (this.adapterConfig.cmaConfig && branchName) {
+        log.debug(`Setting branch header for CMA client: ${branchName}`, this.exportConfig?.context);
+        this.cmaAPIClient?.headers({ branch: branchName });
+      }
+
       log.debug('Personalization adapter initialization completed', this.exportConfig?.context);
     } catch (error: any) {
       log.debug(`Personalization adapter initialization failed: ${error}`, this.exportConfig?.context);
