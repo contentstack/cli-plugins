@@ -10,6 +10,8 @@
     "seed": false,
     "bootstrap": false,
     "branches": false,
-    "apps-cli": false
+    "apps-cli": false,
+    "migrate-rte": false,
+    "bulk-operations": false
   }
 }
