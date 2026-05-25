@@ -48,6 +48,15 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 - **v1 / v2:** Maintain on `v1-dev` (1.x CLI deps) and `v2-dev` / `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
 - **Docs:** OCLIF / `app:*` commands → [contentstack-cli](skills/contentstack-cli/SKILL.md#apps-cli-commands-app); SDK, manifests, GraphQL, HTTP → [framework](skills/framework/SKILL.md#apps-cli-plugin-contentstackapps-cli)
 
+## Content Type plugin (`contentstack-cli-content-type`)
+
+- **Package path:** [packages/contentstack-content-type](packages/contentstack-content-type)
+- **npm name:** `contentstack-cli-content-type`
+- **Migrated from:** [contentstack/contentstack-cli-content-type](https://github.com/contentstack/contentstack-cli-content-type) — see [CONTENT-TYPE-MIGRATION.md](CONTENT-TYPE-MIGRATION.md)
+- **v1 / v2:** Maintain on `v1-dev` / `main` (1.x CLI deps) and `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
+- **Tests:** Jest + ts-jest (unlike most other packages which use Mocha + Chai)
+- **Docs:** 6 commands under `content-type:*` → [packages/contentstack-content-type/AGENTS.md](packages/contentstack-content-type/AGENTS.md)
+
 ## Regex Validate plugin (`@contentstack/cli-cm-regex-validate`)
 
 - **Package path:** [packages/contentstack-cli-cm-regex-validate](packages/contentstack-cli-cm-regex-validate)
