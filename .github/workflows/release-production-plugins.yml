@@ -159,6 +159,14 @@ jobs:
           package: ./packages/contentstack-query-export/package.json
           tag: latest
 
+      # Content Type
+      - name: Publishing content-type (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-content-type/package.json
+          tag: latest
+
       # Regex Validate
       - name: Publishing regex-validate (Production)
         uses: JS-DevTools/npm-publish@v3
