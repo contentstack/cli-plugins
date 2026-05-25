@@ -1,4 +1,18 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 89acb731dc98c886694fa4d267c11c188000b8ecbe5ee6e4809e5bc6ec33a2f3
+    checksum: fa1dcf412ad0cdab8c7abf4b538cd300c1eb565d8f53721a6ac45a4e7610a9a5
+  - filename: skills/framework/SKILL.md
+    checksum: c5746de64b1e7d1df051c4337de5eb32de6a4c85c7297aa408838d304bb2d771
+  - filename: packages/contentstack-cli-cm-regex-validate/messages/index.json
+    checksum: 044b311bde624dcc3c12434174d6027dbb6b62eefdfae120570a1748f806c60c
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/code-review/SKILL.md
+    checksum: b92ea1c8e2f901c9e1e60f6ef6986d348a40a7869c236e3c1f3ca53b553dbb8e
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/contentstack-cli/SKILL.md
+    checksum: 9420a516ba6046b05748683c90e3817d091cef76c46e029cb3745d6c0c350838
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/dev-workflow/SKILL.md
+    checksum: b423dd35d0f7f0f25315e2a30198669b50db350f0ab2f917a1d3c4fbb0af0534
+  - filename: packages/contentstack-cli-cm-regex-validate/src/utils/connect-stack.ts
+    checksum: c77c7c25efc6d043b26e3dd0a516e22ac50142fa9fa5ff3a53a7c9fb8f24ebd6
+  - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts
+    checksum: 8fcd1dc2770a2a3f55ba462b7ffd3fc2e3cf45342c63e5b6dc5c1db4c2bd9738
 version: '1.0'

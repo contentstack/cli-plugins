@@ -143,7 +143,15 @@ jobs:
           package: ./packages/contentstack-query-export/package.json
           tag: latest
 
-      - name: Create Production Release
+      # Regex Validate
+      - name: Publishing regex-validate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          tag: latest
+
+            - name: Create Production Release
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}

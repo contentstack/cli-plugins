@@ -69,3 +69,7 @@ jobs:
       - name: Run tests for Contentstack Apps CLI
         working-directory: ./packages/contentstack-apps-cli
         run: npm run test:unit:report:json
+
+      - name: Run tests for Contentstack Regex Validate plugin
+        working-directory: ./packages/contentstack-cli-cm-regex-validate
+        run: npm run test:unit
