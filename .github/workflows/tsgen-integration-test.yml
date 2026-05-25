@@ -1,0 +1,52 @@
+name: Tsgen Integration Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  tsgen-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build tsgen plugin
+        run: pnpm --filter contentstack-cli-tsgen run build
+
+      - name: Install Contentstack CLI (v2 beta)
+        run: npm i -g @contentstack/cli@beta
+
+      - name: Configure CLI region
+        run: csdx config:set:region ${{ secrets.REGION }}
+
+      - name: Add delivery token
+        run: csdx auth:tokens:add -a ${{ secrets.TOKEN_ALIAS }} --delivery -k ${{ secrets.APIKEY }} --token ${{ secrets.DELIVERYKEY }} -e ${{ secrets.ENVIRONMENT }}
+
+      - name: Link tsgen plugin
+        working-directory: ./packages/contentstack-cli-tsgen
+        run: csdx plugins:link
+
+      - name: Run integration tests
+        run: pnpm --filter contentstack-cli-tsgen run test:integration
+        env:
+          TOKEN_ALIAS: ${{ secrets.TOKEN_ALIAS }}
+
+      - name: Unlink tsgen plugin
+        working-directory: ./packages/contentstack-cli-tsgen
+        run: csdx plugins:unlink
+        if: always()

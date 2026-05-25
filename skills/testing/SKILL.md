@@ -310,6 +310,14 @@ pnpm --filter @contentstack/cli-config test
 pnpm --filter @contentstack/cli-command test
 ```
 
+**Tsgen (`contentstack-cli-tsgen`)** uses **Jest** (not Mocha). Integration tests spawn live `csdx tsgen` and need `TOKEN_ALIAS` in `.env`:
+
+```bash
+pnpm --filter contentstack-cli-tsgen run test:integration
+```
+
+See [package testing skill](../packages/contentstack-cli-tsgen/skills/testing/SKILL.md).
+
 ### Run tests with coverage
 ```bash
 pnpm test:coverage
