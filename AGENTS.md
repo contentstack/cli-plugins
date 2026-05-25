@@ -7,7 +7,7 @@
 | Field | Detail |
 | --- | --- |
 | **Name:** | Contentstack CLI plugins (pnpm monorepo; root package name `csdx`) |
-| **Purpose:** | OCLIF plugins that extend the Contentstack CLI (import/export, clone, migration, seed, audit, variants, Developer Hub apps, etc.). |
+| **Purpose:** | OCLIF plugins that extend the Contentstack CLI (import/export, clone, migration, migrate RTE, bulk operations, seed, audit, variants, Developer Hub apps, etc.). |
 | **Out of scope (if any):** | The **core** CLI aggregation lives in the separate `cli` monorepo; this repo ships plugin packages only. |
 
 ## Tech stack (at a glance)
@@ -47,6 +47,20 @@ CI: [.github/workflows/unit-test.yml](.github/workflows/unit-test.yml) and other
 - **Migrated from:** [contentstack/contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli) — see [APPS-CLI-MIGRATION.md](APPS-CLI-MIGRATION.md)
 - **v1 / v2:** Maintain on `v1-dev` (1.x CLI deps) and `v2-dev` / `v2-beta` (2.x beta deps) branches; align `@contentstack/cli-command` and `@contentstack/cli-utilities` versions with the target CLI line.
 - **Docs:** OCLIF / `app:*` commands → [contentstack-cli](skills/contentstack-cli/SKILL.md#apps-cli-commands-app); SDK, manifests, GraphQL, HTTP → [framework](skills/framework/SKILL.md#apps-cli-plugin-contentstackapps-cli)
+
+## Migrate RTE plugin (`@contentstack/cli-cm-migrate-rte`)
+
+- **Package path:** [packages/contentstack-migrate-rte](packages/contentstack-migrate-rte)
+- **npm name:** `@contentstack/cli-cm-migrate-rte` (unchanged)
+- **Migrated from:** [contentstack/cli-cm-migrate-rte](https://github.com/contentstack/cli-cm-migrate-rte) — see [MIGRATE-RTE-MIGRATION.md](MIGRATE-RTE-MIGRATION.md)
+- **Command:** `csdx cm:entries:migrate-html-rte` — JS sources in `src/`; `pnpm --filter @contentstack/cli-cm-migrate-rte run build` (`oclif manifest`) and `test` (see [dev-workflow](skills/dev-workflow/SKILL.md))
+
+## Bulk operations plugin (`@contentstack/cli-bulk-operations`)
+
+- **Package path:** [packages/contentstack-bulk-operations](packages/contentstack-bulk-operations)
+- **npm name:** `@contentstack/cli-bulk-operations` (unchanged)
+- **Migrated from:** [contentstack/cli-bulk-operations](https://github.com/contentstack/cli-bulk-operations) — see [BULK-OPERATIONS-MIGRATION.md](BULK-OPERATIONS-MIGRATION.md) (commands + repository)
+- **Commands:** `csdx cm:stacks:bulk-entries`, `csdx cm:stacks:bulk-assets`, `csdx cm:stacks:bulk-taxonomies` — see [dev-workflow](skills/dev-workflow/SKILL.md)
 
 ## Using Cursor (optional)
 
