@@ -1,5 +1,5 @@
-import * as jsonexport from 'jsonexport'
-import * as Table from 'cli-table3'
+import jsonexport from 'jsonexport'
+import Table from 'cli-table3'
 import * as path from 'path'
 import * as fs from 'fs'
 import {cliux, sanitizePath} from '@contentstack/cli-utilities'
