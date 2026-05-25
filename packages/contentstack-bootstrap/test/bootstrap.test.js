@@ -47,8 +47,8 @@ const mock = {
     preview_token: 'test-preview-token',
   },
   appConfig: {
-    configKey: 'reactjs-starter',
-    displayName: 'React.js Starter',
+    configKey: 'kickstart-next',
+    displayName: 'Kickstart Next.js',
     source: 'contentstack/stack-starter-app',
     stack: 'contentstack/stack-starter-app',
     master_locale: 'en-us',
@@ -159,10 +159,10 @@ describe('Bootstrapping an app', () => {
     });
     sandbox.stub(cliux, 'prompt').callsFake((question) => {
       const responses = {
-        'app-name': 'reactjs-starter',
+        'app-name': 'kickstart-next',
         org: 'org-uid',
         'stack-name': 'test-bootstrap-cmd',
-        'app-type': 'reactjs-starter',
+        'app-type': 'kickstart-next',
         yes: true,
       };
       return Promise.resolve(responses[question.name] || {});
@@ -654,7 +654,7 @@ describe('Bootstrapping an app', () => {
       // Track Bootstrap instantiation
       sandbox.stub(require('../lib/bootstrap/index'), 'default').callsFake(function (_options) {
         // Verify that appConfig was retrieved using app-name
-        expect(config.getAppLevelConfigByName.calledWith('reactjs-starter')).to.be.true;
+        expect(config.getAppLevelConfigByName.calledWith('kickstart-next')).to.be.true;
         return {
           run: sandbox.stub().resolves(),
         };
@@ -664,7 +664,7 @@ describe('Bootstrapping an app', () => {
       command.parse = sandbox.stub().resolves({
         flags: {
           alias: undefined,
-          'app-name': 'reactjs-starter',
+          'app-name': 'kickstart-next',
           'app-type': undefined,
           'project-dir': undefined,
           'stack-api-key': undefined,

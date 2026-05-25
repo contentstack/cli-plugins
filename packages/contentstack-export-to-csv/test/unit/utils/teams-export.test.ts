@@ -16,6 +16,5 @@ describe('teams-export', () => {
     });
   });
 
-  // Note: Team export functions interact with the Contentstack SDK and filesystem
-  // These are better tested via integration tests with proper SDK mocking
+  // Note: Team export flows call the SDK and csv-writer; cover with integration tests or isolated mocks.
 });
