@@ -1,4 +1,20 @@
 fileignoreconfig:
+  - filename: pnpm-lock.yaml
+    checksum: 607e6b24e94919ad07de1d4716b24c5b818dd1a72f3b35ad2f0a40b32b001419
+  - filename: skills/framework/SKILL.md
+    checksum: c5746de64b1e7d1df051c4337de5eb32de6a4c85c7297aa408838d304bb2d771
+  - filename: packages/contentstack-cli-cm-regex-validate/messages/index.json
+    checksum: 044b311bde624dcc3c12434174d6027dbb6b62eefdfae120570a1748f806c60c
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/code-review/SKILL.md
+    checksum: b92ea1c8e2f901c9e1e60f6ef6986d348a40a7869c236e3c1f3ca53b553dbb8e
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/contentstack-cli/SKILL.md
+    checksum: 9420a516ba6046b05748683c90e3817d091cef76c46e029cb3745d6c0c350838
+  - filename: packages/contentstack-cli-cm-regex-validate/skills/dev-workflow/SKILL.md
+    checksum: b423dd35d0f7f0f25315e2a30198669b50db350f0ab2f917a1d3c4fbb0af0534
+  - filename: packages/contentstack-cli-cm-regex-validate/src/utils/connect-stack.ts
+    checksum: c77c7c25efc6d043b26e3dd0a516e22ac50142fa9fa5ff3a53a7c9fb8f24ebd6
+  - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts
+    checksum: 8fcd1dc2770a2a3f55ba462b7ffd3fc2e3cf45342c63e5b6dc5c1db4c2bd9738
   - filename: packages/contentstack-migrate-rte/test/dummy/expectedEntriesResponse.json
     checksum: a2784a3cb21780434958478d478dcb91d2d9a3a8025567d90fe8d74e9141b052
   - filename: packages/contentstack-migrate-rte/test/dummy/entriesResponse.json
@@ -73,4 +89,10 @@ fileignoreconfig:
     checksum: 178611b1f153b46a0020da22cc18293d5bd9c539ec2e54557fd8c1a3c2e796b3
   - filename: packages/contentstack-bulk-operations/test/unit/utils/bulk-operation-log-handler.test.ts
     checksum: cec7ba35157c6516d67931d41deb57b7a156d9fc05dbab93ca5116e89b95c820
+  - filename: packages/contentstack-cli-tsgen/AGENTS.md
+    checksum: 75b4f1414b547d0bd83df5ed4fb80020acc0ed849619bed2639491b565be7a1b
+  - filename: packages/contentstack-cli-tsgen/src/lib/helper.ts
+    checksum: a7ead0030ead9d15b6b6e9623f61e7def77b00325e3988f0e3d73a145180dedc
+  - filename: packages/contentstack-cli-tsgen/src/commands/tsgen.ts
+    checksum: 054ea78f765edca62c785714cf8962df4fb91529c0851439d1ed61e963467408
 version: '1.0'

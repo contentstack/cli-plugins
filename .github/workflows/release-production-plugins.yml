@@ -159,6 +159,14 @@ jobs:
           package: ./packages/contentstack-query-export/package.json
           tag: latest
 
+      # Regex Validate
+      - name: Publishing regex-validate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          tag: latest
+
       # Tsgen
       - name: Publishing tsgen (Production)
         uses: JS-DevTools/npm-publish@v3

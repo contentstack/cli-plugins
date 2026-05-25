@@ -55,4 +55,6 @@ To get a more detailed documentation for every command, visit the [CLI section](
 
 ## Useful Plugins
 
+- [Generate TypeScript typings from a Stack](https://github.com/Contentstack-Solutions/contentstack-cli-tsgen)
+- [Validate regex fields in Content Types and Global Fields](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-cli-cm-regex-validate) (`@contentstack/cli-cm-regex-validate`)
 - [Generate TypeScript typings from a Stack](https://github.com/contentstack/cli-plugins/tree/v1-dev/packages/contentstack-cli-tsgen) (`contentstack-cli-tsgen`)
