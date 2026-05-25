@@ -75,7 +75,6 @@ export default class ExportQueryCommand extends Command {
     await loadChalk();
     try {
       const { flags } = await this.parse(ExportQueryCommand);
-      this.initializeMessageHandler();
 
       // Setup export configuration
       const exportQueryConfig = await setupQueryExportConfig(flags);
@@ -115,9 +114,5 @@ export default class ExportQueryCommand extends Command {
     } catch (error) {
       handleAndLogError(error);
     }
-  }
-
-  initializeMessageHandler(): void {
-    messageHandler.init(this.context);
   }
 }

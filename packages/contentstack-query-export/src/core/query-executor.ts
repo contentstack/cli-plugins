@@ -101,16 +101,8 @@ export class QueryExporter {
     log.info('Starting export of referenced content types and dependent modules...', this.exportQueryConfig.context);
 
     try {
-      const ctPath = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'content_types',
-      );
-      const gfPath = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'global_fields',
-      );
+      const ctPath = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'content_types');
+      const gfPath = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'global_fields');
 
       const referencedHandler = new ReferencedContentTypesHandler(this.exportQueryConfig);
       const dependenciesHandler = new ContentTypeDependenciesHandler(this.stackAPIClient, this.exportQueryConfig);
@@ -212,7 +204,10 @@ export class QueryExporter {
         }
 
         if (!foundNewCTs && !foundNewGFs) {
-          log.info('Schema closure complete, no new content types or global fields found', this.exportQueryConfig.context);
+          log.info(
+            'Schema closure complete, no new content types or global fields found',
+            this.exportQueryConfig.context,
+          );
           break;
         }
       }
@@ -220,7 +215,10 @@ export class QueryExporter {
       // Personalize is a single global module exported once after the closure stabilises.
       await this.moduleExporter.exportModule('personalize');
 
-      log.success('Referenced content types and dependent modules exported successfully', this.exportQueryConfig.context);
+      log.success(
+        'Referenced content types and dependent modules exported successfully',
+        this.exportQueryConfig.context,
+      );
     } catch (error) {
       handleAndLogError(error, this.exportQueryConfig.context, 'Error during schema closure expansion');
       throw error;
@@ -266,11 +264,7 @@ export class QueryExporter {
     log.info('Starting export of referenced assets...', this.exportQueryConfig.context);
 
     try {
-      const assetsDir = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'assets',
-      );
+      const assetsDir = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'assets');
 
       const metadataFilePath = path.join(assetsDir, 'metadata.json');
       const assetFilePath = path.join(assetsDir, 'assets.json');

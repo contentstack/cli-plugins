@@ -10,11 +10,7 @@ export class AssetReferenceHandler {
 
   constructor(exportQueryConfig: QueryExportConfig) {
     this.exportQueryConfig = exportQueryConfig;
-    this.entriesDir = path.join(
-      sanitizePath(exportQueryConfig.exportDir),
-      sanitizePath(exportQueryConfig.branchName || ''),
-      'entries',
-    );
+    this.entriesDir = path.join(sanitizePath(exportQueryConfig.exportDir), 'entries');
   }
 
   /**
@@ -28,7 +24,6 @@ export class AssetReferenceHandler {
         log.warn('Entries directory does not exist', this.exportQueryConfig.context);
         return [];
       }
-
       // Global set to maintain unique asset UIDs across all files
       const globalAssetUIDs = new Set<string>();
 
