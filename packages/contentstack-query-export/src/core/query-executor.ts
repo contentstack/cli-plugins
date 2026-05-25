@@ -158,12 +158,10 @@ export class QueryExporter {
     try {
       const ctPath = path.join(
         sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
         'content_types',
       );
       const gfPath = path.join(
         sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
         'global_fields',
       );
 
