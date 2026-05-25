@@ -158,6 +158,8 @@ npm install -g @contentstack/cli-cm-migrate-rte
 csdx plugins:install @contentstack/cli-cm-migrate-rte@2.0.0-beta
 ```
 
+**Source repository:** Plugin code lives in [cli-plugins](https://github.com/contentstack/cli-plugins) at `packages/contentstack-migrate-rte` (formerly [cli-cm-migrate-rte](https://github.com/contentstack/cli-cm-migrate-rte)). See [MIGRATE-RTE-MIGRATION.md](./MIGRATE-RTE-MIGRATION.md).
+
 **Usage:**
 After installation, RTE migration commands will be available through the CLI:
 ```bash
