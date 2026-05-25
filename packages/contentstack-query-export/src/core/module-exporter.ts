@@ -73,7 +73,7 @@ export class ModuleExporter {
     if (options.alias) {
       cmd.push('-a', options.alias);
     } else if (this.exportQueryConfig.managementToken) {
-      cmd.push('-a', this.exportQueryConfig.managementToken);
+      cmd.push('-a', this.exportQueryConfig.alias);
     }
 
     // Branch
