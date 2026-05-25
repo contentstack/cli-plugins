@@ -20,6 +20,7 @@
     "launch": false,
     "branches": false,
     "apps-cli": false,
+    "regex-validate": false,
     "core": false
   }
 }
