@@ -11,6 +11,9 @@
     "bootstrap": false,
     "branches": false,
     "apps-cli": false,
-    "content-type": false
+    "content-type": false,
+    "regex-validate": false,
+    "migrate-rte": false,
+    "bulk-operations": false
   }
 }

@@ -5,7 +5,7 @@ Contentstack is a headless CMS with an API-first approach that puts content at t
 
 CLI supports content management scripts through which you can perform the following tasks:
 
-- Bulk publish content
+- Bulk publish content (`cm:stacks:bulk-*` via `@contentstack/cli-bulk-operations`)
 - Export content
 - Import content
 - Clone Stack
@@ -69,3 +69,4 @@ To get a more detailed documentation for every command, visit the [CLI section](
 
 - [Generate TypeScript typings from a Stack](https://github.com/Contentstack-Solutions/contentstack-cli-tsgen)
 - [Manage Content Types (list, details, audit, compare, diagram)](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-content-type) (`contentstack-cli-content-type`)
+- [Validate regex fields in Content Types and Global Fields](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-cli-cm-regex-validate) (`@contentstack/cli-cm-regex-validate`)
