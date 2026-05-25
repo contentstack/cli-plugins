@@ -1,0 +1,9 @@
+lib
+node_modules
+coverage
+*.log
+dist
+oclif.manifest.json
+tsconfig.tsbuildinfo
+
+
