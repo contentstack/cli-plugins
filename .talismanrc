@@ -73,4 +73,6 @@ fileignoreconfig:
     checksum: 56e10f1e0d2794fa13bcf5a6bb3e868b28277df1762fb3df0a8a82ad44f8045b
   - filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-entries.test.ts
     checksum: 845512e660813a6d7d96efd89dcff6eba4591a3f9ff371dc9b1aad38921e18a6
+  - filename: pnpm-lock.yaml
+    checksum: 47c3ff1b2883aa208e81fed6974ab911055b279944c95fde351c1a57c566354b
 version: '1.0'
