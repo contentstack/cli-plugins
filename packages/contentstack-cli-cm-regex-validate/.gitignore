@@ -1,0 +1,15 @@
+*-debug.log
+*-error.log
+*.log
+.dccache
+/.nyc_output
+/dist
+/lib
+/tmp
+/yarn.lock
+node_modules
+/coverage
+/results
+oclif.manifest.json
+.DS_Store
+tsconfig.tsbuildinfo
