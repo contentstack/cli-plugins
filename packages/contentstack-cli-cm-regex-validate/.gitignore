@@ -1,0 +1,13 @@
+*-debug.log
+*-error.log
+*.log
+/.nyc_output
+/dist
+/lib
+/tmp
+node_modules
+/coverage
+/results
+oclif.manifest.json
+.DS_Store
+tsconfig.tsbuildinfo
