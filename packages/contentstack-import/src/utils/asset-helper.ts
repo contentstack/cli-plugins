@@ -266,6 +266,12 @@ export const lookupAssets = function (
   }
 
   find(data.content_type.schema, data.entry);
+  // findFileUrls scans the whole entry object, but is only triggered inside find() when a
+  // text field has markdown/rich_text_type metadata. Content types with no such fields
+  // (e.g. those storing asset URLs in plain text fields) never call findFileUrls, so URLs
+  // in those fields are never collected. Calling it once unconditionally here ensures all
+  // asset URLs in the entry are always captured, regardless of schema shape.
+  findFileUrls({ field_metadata: {} }, data.entry, assetUrls);
   updateFileFields(data.entry, data, null, mappedAssetUids, matchedUids, unmatchedUids, mappedAssetUrls);
   assetUids = _.uniq(assetUids);
   assetUrls = _.uniq(assetUrls);
