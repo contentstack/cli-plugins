@@ -67,15 +67,19 @@
     "directory": "packages/contentstack-content-type"
   },
   "scripts": {
-    "build": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
-    "prepack": "pnpm run build",
+    "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "compile": "tsc -b tsconfig.json",
+    "copy-config": "[ -d src/config ] && cp -r src/config lib/ || true",
+    "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
     "postpack": "rm -f oclif.manifest.json",
+    "pretest": "[ -f test/tsconfig.json ] && tsc -p test || true",
     "test": "jest",
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "lint": "eslint . --ext .ts --config .eslintrc",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "lint": "eslint src/**/*.ts",
+    "format": "eslint src/**/*.ts --fix",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "version": "oclif readme && git add README.md"
   },
   "csdxConfig": {

@@ -68,13 +68,17 @@
     "directory": "packages/contentstack-migrate-rte"
   },
   "scripts": {
-    "build": "oclif manifest",
-    "prepare": "npx husky && chmod +x .husky/pre-commit",
+    "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "compile": "tsc -b tsconfig.json",
+    "copy-config": "[ -d src/config ] && cp -r src/config lib/ || true",
     "postpack": "rm -f oclif.manifest.json",
-    "prepack": "oclif manifest && oclif readme",
+    "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "pretest": "[ -f test/tsconfig.json ] && tsc -p test || true",
     "test": "nyc --check-coverage=false mocha --require test/setup.js --forbid-only \"test/**/*.test.js\"",
+    "lint": "eslint src/**/*.js",
+    "format": "eslint src/**/*.js --fix",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./node_modules tsconfig.build.tsbuildinfo"
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo"
   },
   "csdxConfig": {
     "shortCommandName": {

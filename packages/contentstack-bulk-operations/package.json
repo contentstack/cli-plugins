@@ -76,23 +76,25 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && shx rm -rf lib && tsc -b",
-    "lint": "eslint .",
+    "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "compile": "tsc -b tsconfig.json",
+    "copy-config": "[ -d src/config ] && cp -r src/config lib/ || true",
+    "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "eslint src/**/*.ts --fix",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "postpack": "shx rm -f oclif.manifest.json",
+    "postpack": "rm -f oclif.manifest.json",
     "posttest": "npm run lint",
-    "prepack": "npm run build && oclif manifest && oclif readme && npm run changelog",
+    "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "pretest": "tsc -p test",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
     "test:coverage": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "test:coverage:report": "nyc --reporter=lcov --reporter=text --reporter=clover --reporter=json-summary --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "test:json": "mocha --forbid-only \"test/**/*.test.ts\" --reporter json --reporter-options output=report.json",
     "test:safe": "[ -d test ] && npm test || echo 'No test directory found, skipping tests'",
-    "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json",
-    "prepare": "npx husky && chmod +x .husky/pre-commit"
+    "version": "oclif readme && git add README.md"
   },
   "engines": {
     "node": ">=20.19.0"

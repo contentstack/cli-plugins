@@ -56,13 +56,19 @@
   },
   "repository": "contentstack/cli-cm-regex-validate",
   "scripts": {
+    "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "compile": "tsc -b tsconfig.json",
+    "copy-config": "[ -d src/config ] && cp -r src/config lib/ || true",
+    "lint": "eslint src/**/*.ts",
     "mocha": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc",
-    "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
+    "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "pretest": "tsc -p test",
     "test": "jest --detectOpenHandles --silent",
     "version": "oclif-dev readme && git add README.md",
-    "prepare": "npx husky && chmod +x .husky/pre-commit"
+    "format": "eslint src/**/*.ts --fix"
   },
   "dependencies": {
     "@contentstack/cli-command": "^1.8.2",

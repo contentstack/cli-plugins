@@ -55,13 +55,16 @@
     "directory": "packages/contentstack-cli-tsgen"
   },
   "scripts": {
-    "build": "pnpm compile && oclif manifest && oclif readme",
+    "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
     "compile": "tsc -b tsconfig.json",
-    "lint": "eslint . --ext .ts --config .eslintrc.js",
+    "copy-config": "[ -d src/config ] && cp -r src/config lib/ || true",
+    "lint": "eslint src/**/*.ts",
+    "format": "eslint src/**/*.ts --fix",
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "eslint . --ext .ts --config .eslintrc.js --fix",
-    "prepack": "pnpm compile && oclif manifest && oclif readme",
+    "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
+    "pretest": "[ -f test/tsconfig.json ] && tsc -p test || true",
     "test": "jest --testPathPattern=tests",
     "test:integration": "jest --testPathPattern=tests/integration",
     "version": "oclif readme && git add README.md"
