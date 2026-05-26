@@ -50,7 +50,10 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
       headers: { 'X-Project-Uid': config.modules.personalize.project_id },
       cmaConfig: {
         baseURL: config.region.cma + `/v3`,
-        headers: { api_key: config.apiKey },
+        headers: {
+          api_key: config.apiKey,
+          ...(config.branchName ? { branch: config.branchName } : {}),
+        },
       },
     };
     super(Object.assign(config, conf));
