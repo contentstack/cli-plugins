@@ -7,12 +7,12 @@ module.exports = {
   ],
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
-    'node_modules/uuid/.+\\.js$': [
+    '(node_modules/.pnpm/uuid@[^/]+/node_modules/uuid|node_modules/uuid)/.+\\.js$': [
       'babel-jest',
       {presets: [['@babel/preset-env', {modules: 'commonjs'}]]},
     ],
   },
-  transformIgnorePatterns: ['/node_modules/(?!uuid/)'],
+  transformIgnorePatterns: ['/node_modules/(?!(.pnpm/uuid@[^/]+/node_modules/)?uuid/)'],
   verbose: true,
   collectCoverage: true,
 }

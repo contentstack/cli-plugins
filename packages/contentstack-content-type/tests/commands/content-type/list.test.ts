@@ -19,7 +19,6 @@ jest.mock('@contentstack/cli-utilities', () => ({
         jest.fn((opts: Record<string, unknown>) => ({ ...opts, __f: String(prop) })),
     }
   ),
-  printFlagDeprecation: jest.fn(() => () => undefined),
 }))
 
 jest.mock('../../../src/utils', () => ({

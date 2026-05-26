@@ -30,7 +30,7 @@
     "eslint": "^8.57.1",
     "eslint-config-oclif": "^6.0.162",
     "eslint-config-oclif-typescript": "^3.1.14",
-    "globby": "^10.0.2",
+    "globby": "^11.1.0",
     "jest": "^29.7.0",
     "oclif": "^4.23.0",
     "ts-jest": "^29.4.10",
