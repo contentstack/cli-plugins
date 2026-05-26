@@ -91,8 +91,7 @@
     "test:json": "mocha --forbid-only \"test/**/*.test.ts\" --reporter json --reporter-options output=report.json",
     "test:safe": "[ -d test ] && npm test || echo 'No test directory found, skipping tests'",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json",
-    "prepare": "npx husky && chmod +x .husky/pre-commit"
+    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json"
   },
   "engines": {
     "node": ">=20.19.0"
