@@ -1,6 +1,5 @@
-import {cli} from 'cli-ux'
 import * as contentstackSdk from '@contentstack/management'
-import {configHandler} from '@contentstack/cli-utilities'
+import {configHandler, ux} from '@contentstack/cli-utilities'
 import processStack from './process-stack'
 const regexMessages = require('../../messages/index.json').validateRegex
 
@@ -11,9 +10,7 @@ export default async function connectStack(
 ) {
   try {
     const startTime = Date.now()
-    cli.action.start(regexMessages.cliAction.connectStackStart, '', {
-      stdout: true,
-    })
+    ux.action.start(regexMessages.cliAction.connectStackStart)
 
     const option: contentstackSdk.ContentstackConfig = {
       host: host,
