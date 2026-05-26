@@ -16,7 +16,10 @@ export default class ExportExperiences extends PersonalizationAdapter<ExportConf
       headers: { 'X-Project-Uid': exportConfig.project_id },
       cmaConfig: {
         baseURL: exportConfig.region.cma + `/v3`,
-        headers: { api_key: exportConfig.apiKey },
+        headers: {
+          api_key: exportConfig.apiKey,
+          ...(exportConfig.branchName ? { branch: exportConfig.branchName } : {}),
+        },
       },
     });
     this.exportConfig = exportConfig;
