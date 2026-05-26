@@ -390,7 +390,7 @@ async function performBulkPublish(data, _config, queue) {
             delete bulkPublishObj.stack;
             console.log(chalk.red(`Bulk assets failed to publish. Error: ${formatError(error)}`));
 
-            displayAssetsDetails(sanitizedData, 'bulk_publish', mapping);
+            displayAssetsDetails(bulkPublishObj.assets, 'bulk_publish', mapping);
             addLogs(
               logger,
               { options: bulkPublishObj, api_key: stack.stackHeaders.api_key, alias: stack.alias, host: stack.host },
