@@ -347,6 +347,9 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3.3.1
         version: 3.3.5
+      '@oclif/core':
+        specifier: ^4.11.4
+        version: 4.11.4
       '@types/chai':
         specifier: ^5.2.3
         version: 5.2.3
