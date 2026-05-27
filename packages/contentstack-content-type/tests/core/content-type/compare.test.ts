@@ -1,9 +1,4 @@
-jest.mock('cli-ux', () => ({
-  __esModule: true,
-  default: {
-    open: jest.fn().mockResolvedValue(undefined),
-  },
-}))
+jest.mock('open', () => jest.fn().mockResolvedValue(undefined))
 
 jest.mock('tmp', () => ({
   file: jest.fn(

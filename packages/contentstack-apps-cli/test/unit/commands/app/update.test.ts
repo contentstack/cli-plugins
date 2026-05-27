@@ -1,4 +1,3 @@
-import { join } from "path";
 import { expect } from "chai";
 import { cliux, configHandler } from "@contentstack/cli-utilities";
 import { runCommand } from "@oclif/test";
@@ -8,25 +7,16 @@ import manifestData from "../../config/manifest.json";
 import sinon from "sinon";
 import nock from "nock";
 import fs from "fs";
+import { join } from "path";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 import Update from "../../../../src/commands/app/update";
 import { BaseCommand } from "../../../../src/base-command";
 
 const region = configHandler.get("region");
 
-// Commands run from lib/ (oclif); stub the same class the running command uses
-let BaseCommandToStub: typeof BaseCommand;
-let LibUpdate: typeof Update;
-try {
-  BaseCommandToStub = require(join(process.cwd(), "lib", "base-command")).BaseCommand;
-} catch {
-  BaseCommandToStub = BaseCommand;
-}
-try {
-  LibUpdate = require(join(process.cwd(), "lib", "commands", "app", "update")).default;
-} catch {
-  LibUpdate = Update;
-}
+// oclif loads commands from src/ (ts-node is registered), so stub the src classes directly
+const BaseCommandToStub = BaseCommand;
+const LibUpdate = Update;
 
 /** Optional override: return a custom marketplace SDK mock for this test. */
 let marketplaceMockOverride: any = null;
