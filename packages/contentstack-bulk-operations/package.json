@@ -75,23 +75,22 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && shx rm -rf lib && tsc -b",
+    "build": "pnpm clean && tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
-    "prepack": "npm run build && oclif manifest && oclif readme && npm run changelog",
+    "posttest": "pnpm lint",
+    "prepack": "pnpm build && oclif manifest && oclif readme && pnpm changelog",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
     "test:coverage": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "test:coverage:report": "nyc --reporter=lcov --reporter=text --reporter=clover --reporter=json-summary --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "test:json": "mocha --forbid-only \"test/**/*.test.ts\" --reporter json --reporter-options output=report.json",
-    "test:safe": "[ -d test ] && npm test || echo 'No test directory found, skipping tests'",
+    "test:safe": "[ -d test ] && pnpm test || echo 'No test directory found, skipping tests'",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json",
-    "prepare": "npx husky && chmod +x .husky/pre-commit"
+    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json"
   },
   "engines": {
     "node": ">=20.19.0"
