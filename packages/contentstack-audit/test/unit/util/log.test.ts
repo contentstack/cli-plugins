@@ -20,7 +20,7 @@ describe('Log utility', () => {
   describe('Stubbing winston createLogger', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
       .it('should create logger instance', () => {
         sinon.replace(winston, 'createLogger', () => ({} as unknown as winston.Logger));
         const logSpy = sinon.spy(winston, 'createLogger');
@@ -34,8 +34,8 @@ describe('Log utility', () => {
   describe('Stubbing winston logger method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'print', () => {})
-      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(ux, 'print', (stub) => stub.returns(undefined))
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
       .it('should log message', () => {
         const logSpy = sinon.spy();
         sinon.stub(winston, 'createLogger').returns({ log: logSpy, error: logSpy } as unknown as winston.Logger);
@@ -50,9 +50,9 @@ describe('Log utility', () => {
   describe('Replace sensitive data before log', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(ux, 'print', () => {})
-      .stub(winston, 'createLogger', () => {})
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(ux, 'print', (stub) => stub.returns(undefined))
+      .stub(winston, 'createLogger', (stub) => stub.returns(undefined))
       .it('should remove any credentials before log message', () => {
         const logSpy = sinon.spy();
         sinon.replace(winston, 'createLogger', () => ({} as unknown as winston.Logger));

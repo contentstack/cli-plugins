@@ -74,11 +74,11 @@ describe('Field Rules', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'prepareEntryMetaData', async () => {})
-      .stub(FieldRule.prototype, 'prerequisiteData', async () => {})
-      .stub(FieldRule.prototype, 'fixFieldRules', async () => {})
-      .stub(FieldRule.prototype, 'validateFieldRules', async () => {})
-      .stub(FieldRule.prototype, 'lookForReference', async () => {})
+      .stub(FieldRule.prototype, 'prepareEntryMetaData', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'prerequisiteData', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'fixFieldRules', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'validateFieldRules', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
       .it('should call lookForReference and return the call count for it', async () => {
         const frInstance = new FieldRule(constructorParam);
         const logSpy = sinon.spy(frInstance, 'lookForReference');
@@ -88,9 +88,9 @@ describe('Field Rules', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'lookForReference', async () => {})
-      .stub(FieldRule.prototype, 'fixFieldRules', async () => {})
-      .stub(FieldRule.prototype, 'validateFieldRules', async () => {})
+      .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'fixFieldRules', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'validateFieldRules', (stub) => stub.resolves())
       .it('should not break if empty schema passed', async () => {
         const frInstance = new FieldRule({ ...constructorParam, ctSchema: undefined as any });
         expect(await frInstance.run()).to.be.empty;
@@ -98,8 +98,8 @@ describe('Field Rules', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'lookForReference', async () => {})
-      .stub(FieldRule.prototype, 'fixFieldRules', async () => {})
+      .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'fixFieldRules', (stub) => stub.resolves())
       .it('should return schema', async () => {
         const ctInstance = new FieldRule(constructorParam);
         expect(await ctInstance.run()).to.deep.equals(missingRefs);
@@ -107,8 +107,8 @@ describe('Field Rules', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'lookForReference', async () => {})
-      .stub(FieldRule.prototype, 'writeFixContent', async () => {})
+      .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
+      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
         const ctInstance = new FieldRule({ ...constructorParam, fix: true });
         const logSpy = sinon.spy(ctInstance, 'writeFixContent');
@@ -117,9 +117,9 @@ describe('Field Rules', () => {
       });
 
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'writeFixContent', async () => {})
+      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('perform audit operation on the given CT schema field rules', async () => {
         const ctInstance = new AuditTempClass();
         await ctInstance.run();
@@ -129,9 +129,9 @@ describe('Field Rules', () => {
       });
 
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'writeFixContent', async () => {})
+      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('perform audit and fix operation on the given CT schema field rules', async () => {
         const ctInstance = new AuditFixTempClass();
         expect(JSON.stringify(await ctInstance.run())).includes(
@@ -143,8 +143,8 @@ describe('Field Rules', () => {
   describe('writeFixContent method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', () => {})
-      .stub(cliux, 'confirm', async () => true)
+      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should not write the file', async () => {
         const ctInstance = new FieldRule({ ...constructorParam, fix: true });
         const fsSpy = sinon.spy(fs, 'writeFileSync');
@@ -154,7 +154,7 @@ describe('Field Rules', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', () => {})
+      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .it('should prompt and ask confirmation', async () => {
         sinon.replace(cliux, 'confirm', async () => false);
         const ctInstance = new FieldRule({ ...constructorParam, fix: true });
@@ -166,9 +166,9 @@ describe('Field Rules', () => {
 
   describe('Test Other methods', () => {
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'writeFixContent', async () => {})
+      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('Check the calls for other methods', async () => {
         const frInstance = new AuditTempClass();
         const logSpy2 = sinon.spy(frInstance, 'validateFieldRules');
@@ -179,9 +179,9 @@ describe('Field Rules', () => {
       });
 
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(FieldRule.prototype, 'writeFixContent', async () => {})
+      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('Check the calls for other methods when field_rules are empty', async () => {
         const frInstance = new FieldRule({
           moduleName: 'content-types',

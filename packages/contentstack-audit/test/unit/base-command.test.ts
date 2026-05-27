@@ -106,15 +106,15 @@ describe('BaseCommand class', () => {
   describe('command', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.callsFake(createMockWinstonLogger))
       .do(() => Command.run([]))
       .do((output) => expect(output.stdout).to.equal('Test log\n'))
       .it('logs to stdout');
 
     fancy
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.callsFake(createMockWinstonLogger))
       .do(() => {
         class CMD extends BaseCommand<typeof CMD> {
           async run() {
@@ -131,8 +131,8 @@ describe('BaseCommand class', () => {
   describe('validate config file', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.callsFake(createMockWinstonLogger))
       .it('should log error', async (ctx) => {
         class CMD extends BaseCommand<typeof Command> {
           async run() {

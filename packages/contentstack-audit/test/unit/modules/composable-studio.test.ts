@@ -22,7 +22,7 @@ describe('ComposableStudio', () => {
   describe('run method with invalid path for composable-studio', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('Should validate the base path for composable-studio', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -37,7 +37,7 @@ describe('ComposableStudio', () => {
   describe('run method with valid path and valid composable-studio project', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('should load projects and report issues if references are invalid', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -58,7 +58,7 @@ describe('ComposableStudio', () => {
   describe('run method with invalid composable-studio projects', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('should detect invalid references', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -160,7 +160,7 @@ describe('ComposableStudio', () => {
   describe('run method with audit fix for composable-studio', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('should fix invalid projects and return fixed references', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -252,7 +252,7 @@ describe('ComposableStudio', () => {
   describe('Report data structure', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('should return properly formatted report data', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',

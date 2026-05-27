@@ -37,7 +37,7 @@ describe('Custom roles module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(CustomRoles.prototype, 'fixCustomRoleSchema', async () => {})
+      .stub(CustomRoles.prototype, 'fixCustomRoleSchema', (stub) => stub.resolves())
       .it('should call fixCustomRoleSchema', async () => {
         const customRoleInstance = new CustomRoles({
           ...constructorParam,
@@ -51,7 +51,7 @@ describe('Custom roles module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(CustomRoles.prototype, 'writeFixContent', async () => {})
+      .stub(CustomRoles.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
         const customRoleInstance = new CustomRoles({
           ...constructorParam,

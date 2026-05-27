@@ -42,7 +42,7 @@ describe('Global Fields', () => {
   describe('run method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('Should Validate the base path for global-fields', async () => {
         const gfInstance = new GlobalField({ ...constructorParam });
         try {
@@ -55,7 +55,7 @@ describe('Global Fields', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'lookForReference', async () => {})
+      .stub(GlobalField.prototype, 'lookForReference', (stub) => stub.resolves())
       .it('should call lookForReference', async () => {
         const gfInstance = new GlobalField(constructorParam);
         const logSpy = sinon.spy(gfInstance, 'lookForReference');
@@ -65,7 +65,7 @@ describe('Global Fields', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'lookForReference', async () => {})
+      .stub(GlobalField.prototype, 'lookForReference', (stub) => stub.resolves())
       .it('should return schema', async () => {
         const gfInstance = new GlobalField(constructorParam);
         expect(await gfInstance.run(true)).to.deep.equals(gfInstance.gfSchema);
@@ -73,8 +73,8 @@ describe('Global Fields', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'lookForReference', async () => {})
-      .stub(GlobalField.prototype, 'writeFixContent', async () => {})
+      .stub(GlobalField.prototype, 'lookForReference', (stub) => stub.resolves())
+      .stub(GlobalField.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
         const gfInstance = new GlobalField({ ...constructorParam, fix: true });
         const logSpy = sinon.spy(gfInstance, 'writeFixContent');
@@ -85,9 +85,9 @@ describe('Global Fields', () => {
 
   describe('fix nested global field references', () => {
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'writeFixContent', async () => {})
+      .stub(GlobalField.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('perform audit operation on the given GF schema', async () => {
         const gfInstance = new AuditFixTempClass();
 
@@ -98,9 +98,9 @@ describe('Global Fields', () => {
       });
 
     fancy
-      .stub(fs, 'rmSync', () => {})
+      .stub(fs, 'rmSync', (stub) => stub.returns(undefined))
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'writeFixContent', async () => {})
+      .stub(GlobalField.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('perform audit and fix operation on the given GF schema', async () => {
         const gfInstance = new AuditFixTempClass();
         expect(JSON.stringify(await gfInstance.run(true))).includes('"uid":"global_field_sample_2","schema":[]');

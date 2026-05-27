@@ -30,7 +30,7 @@ describe('Workflows', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it('Should Validate the base path for workflows', async () => {
         try {
           await wf.run();
@@ -51,7 +51,7 @@ describe('Workflows', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', async () => true)
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missingRefs equal to workflow which has missing refs, missingCts equal to missing Cts',
         async () => {
@@ -106,10 +106,10 @@ describe('Workflows', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(wf, 'log', async () => {})
-      .stub(ux, 'confirm', async () => true)
-      .stub(wf, 'WriteFileSync', () => {})
-      .stub(wf, 'writeFixContent', () => {})
+      .stub(wf, 'log', (stub) => stub.resolves())
+      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(wf, 'WriteFileSync', (stub) => stub.returns(undefined))
+      .stub(wf, 'writeFixContent', (stub) => stub.returns(undefined))
       .it('the run function should run and flow should go till fixWorkflowSchema', async () => {
         const fixedReference = await wf.run();
         expect(fixedReference).eql([

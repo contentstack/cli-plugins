@@ -13,9 +13,9 @@ describe('Audit command', () => {
   describe('Audit run method:', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', () => ({ log: () => {}, error: () => {} }))
-      .stub(AuditBaseCommand.prototype, 'start', () => {})
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.returns(({ log: () => {}, error: () => {} })))
+      .stub(AuditBaseCommand.prototype, 'start', (stub) => stub.returns(undefined))
       .it('should trigger AuditBaseCommand start method', async () => {
         const { stdout } = await runCommand(['cm:stacks:audit', 'd', 'mock'], { root: process.cwd() });
         expect(stdout).to.be.string;
@@ -24,9 +24,9 @@ describe('Audit command', () => {
     fancy
       .stderr({ print: false })
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', () => ({ log: console.log, error: console.error }))
-      .stub(AuditBaseCommand.prototype, 'start', () => Promise.reject('process failed'))
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.returns({ log: console.log, error: console.error }))
+      .stub(AuditBaseCommand.prototype, 'start', (stub) => stub.returns(Promise.reject('process failed')))
       .it('should log any error and exit with status code 1', async () => {
         await runCommand(['cm:stacks:audit', 'd', 'mock'], { root: process.cwd() });
       });
@@ -34,8 +34,8 @@ describe('Audit command', () => {
     fancy
       .stderr({ print: false })
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(winston.transports, 'File', () => fsTransport)
-      .stub(winston, 'createLogger', () => ({ log: console.log, error: console.error }))
+      .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
+      .stub(winston, 'createLogger', (stub) => stub.returns({ log: console.log, error: console.error }))
       .stub(AuditBaseCommand.prototype, 'start', async () => {
         Promise.reject('process failed');
       })
