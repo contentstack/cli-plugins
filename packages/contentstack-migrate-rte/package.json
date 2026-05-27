@@ -68,7 +68,6 @@
   },
   "scripts": {
     "build": "oclif manifest",
-    "prepare": "npx husky && chmod +x .husky/pre-commit",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "oclif manifest && oclif readme",
     "test": "nyc --check-coverage=false mocha --require test/setup.js --forbid-only \"test/**/*.test.js\"",
