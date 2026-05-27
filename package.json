@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "devDependencies": {
     "husky": "^9.1.7",
-    "pnpm": "^10.28.0"
+    "pnpm": "^10.28.0",
+    "@types/minimatch": "^3.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
