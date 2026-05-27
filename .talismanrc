@@ -1,6 +1,6 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: 23c1c139d0c9563a1d0c37aa55baca323087dc4889eca2ac7cca5dbc986f571b
+    checksum: d881f8432ecfdf25592189b6948f4dde6363a9aa88eee84773ba3e794c60ca9e
   - filename: packages/contentstack-cli-cm-regex-validate/messages/index.json
     checksum: 044b311bde624dcc3c12434174d6027dbb6b62eefdfae120570a1748f806c60c
   - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts

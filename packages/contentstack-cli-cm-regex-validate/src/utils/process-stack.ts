@@ -1,6 +1,7 @@
 import {ux} from '@contentstack/cli-utilities'
-import safeRegex from './safe-regex'
+
 import generateOutput from './generate-output'
+import safeRegex from './safe-regex'
 const regexMessages = require('../../messages/index.json').validateRegex
 
 export default async function processStack(flags: any, stack: any, startTime: number) {
