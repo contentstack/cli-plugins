@@ -61,8 +61,7 @@
     "posttest": "eslint . --ext .ts --config .eslintrc",
     "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
     "test": "jest --detectOpenHandles --silent",
-    "version": "oclif-dev readme && git add README.md",
-    "prepare": "npx husky && chmod +x .husky/pre-commit"
+    "version": "oclif-dev readme && git add README.md"
   },
   "dependencies": {
     "@contentstack/cli-command": "^1.8.2",
