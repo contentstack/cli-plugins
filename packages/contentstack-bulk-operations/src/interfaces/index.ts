@@ -7,6 +7,8 @@ type ManagementStack = ReturnType<ContentstackClient['stack']>;
 export enum OperationType {
   PUBLISH = 'publish',
   UNPUBLISH = 'unpublish',
+  DELETE = 'delete',
+  MOVE = 'move',
 }
 
 export enum PublishMode {
@@ -195,6 +197,14 @@ export interface CommandFlags {
   // Asset-specific flags
   'folder-uid'?: string;
 
+  /** AM bulk delete/move */
+  'space-uid'?: string;
+  'org-uid'?: string;
+  workspace?: string;
+  locale?: string;
+  'asset-uids-file'?: string;
+  'target-folder-uid'?: string;
+
   // Target environments and locales
   environments?: string[];
   locales?: string[];
@@ -244,6 +254,20 @@ export interface AssetPublishData {
   locale: string;
   version?: number;
   publish_details?: PublishDetails[];
+}
+
+/** One row for AM bulk-delete payload `{ uid, locale }[]`. */
+export interface AmBulkDeleteItem {
+  uid: string;
+  locale: string;
+}
+
+/** Normalized outcome from AM bulk delete/move calls (CLI layer). */
+export interface AmBulkOperationResult {
+  success: boolean;
+  notice?: string;
+  jobId?: string;
+  error?: string;
 }
 
 export interface BulkJobResult {

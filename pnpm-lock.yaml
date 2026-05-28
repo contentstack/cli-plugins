@@ -372,6 +372,9 @@ importers:
 
   packages/contentstack-bulk-operations:
     dependencies:
+      '@contentstack/cli-asset-management':
+        specifier: 1.0.0-beta.2
+        version: link:../contentstack-asset-management
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.7
         version: 2.0.0-beta.7(@types/node@20.19.41)
