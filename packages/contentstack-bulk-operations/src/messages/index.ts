@@ -213,6 +213,38 @@ const bulkAssetsMsg = {
 };
 
 /**
+ * AM bulk delete/move (CS Assets API) messages
+ */
+const amBulkAssetsMsg = {
+  BULK_AM_ASSETS_DESCRIPTION:
+    'Bulk delete or move assets via Asset Management API (AM-enabled regions). Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
+  AM_URL_NOT_CONFIGURED:
+    'AM operations require assetManagementUrl in your region settings. Ensure your region is configured correctly.',
+  SPACE_UID_REQUIRED: '--space-uid is required for AM operations',
+  ORG_UID_REQUIRED: '--org-uid is required for AM operations (organization_uid header)',
+  TARGET_FOLDER_REQUIRED: '--target-folder-uid is required for bulk move',
+  AM_LOCALE_REQUIRED: '--locale is required for bulk delete (AM deletes per asset and locale)',
+  AM_ASSET_UIDS_FILE_REQUIRED: '--asset-uids-file is required (path to JSON `{ "uids": string[] }`)',
+  AM_ASSET_UIDS_FILE_READ_FAILED: 'Failed to read asset UIDs file "{path}": {detail}',
+  AM_ASSET_UIDS_FILE_INVALID: 'Invalid asset UIDs file "{path}": {detail}',
+  AM_DELETING_ASSETS: 'Deleting {count} asset/locale pair(s) from space {spaceUid}...',
+  AM_MOVING_ASSETS: 'Moving {count} asset(s) to folder {targetFolderUid}...',
+  AM_DELETE_SUBMITTED: 'Bulk delete job submitted. Job ID: {jobId}',
+  AM_MOVE_SUBMITTED: 'Bulk move initiated successfully.',
+  AM_OPERATION_NOTICE: '{notice}',
+  AM_OPERATION_FLAG: 'Operation: delete (AM bulk delete) or move (AM bulk move)',
+  AM_SPACE_UID_FLAG: 'Asset Management space UID',
+  AM_ORG_UID_FLAG: 'Organization UID for AM API (organization_uid header)',
+  AM_WORKSPACE_FLAG: 'AM workspace query parameter (default: main)',
+  AM_ASSET_UIDS_FILE_FLAG:
+    'Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string array, no trimming; large lists: see docs for NODE_OPTIONS)',
+  AM_LOCALE_FLAG: 'Locale code for bulk delete (single locale per run)',
+  AM_TARGET_FOLDER_FLAG: 'Destination AM folder UID (required for move)',
+  AM_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
+  AM_CONFIRM_SUMMARY: 'Proceed with AM {operation} on {count} item(s)?',
+};
+
+/**
  * Bulk operation service messages
  */
 const bulkOperationServiceMsg = {
@@ -371,6 +403,7 @@ const commandInfo = {
   BULK_ASSETS_DESCRIPTION: 'Bulk operations for assets (publish/unpublish/cross-publish)',
   BULK_TAXONOMIES_DESCRIPTION:
     'Publish taxonomies to environments and locales (CMA POST /v3/taxonomies/publish; initiates a publish job)',
+  BULK_AM_ASSETS_DESCRIPTION: amBulkAssetsMsg.BULK_AM_ASSETS_DESCRIPTION,
 };
 
 /**
@@ -386,7 +419,8 @@ const messages: typeof errors &
   typeof summaryMsg &
   typeof interactiveMsg &
   typeof flagDescriptions &
-  typeof commandInfo = {
+  typeof commandInfo &
+  typeof amBulkAssetsMsg = {
   ...errors,
   ...commonMsg,
   ...entryServiceMsg,
@@ -398,6 +432,7 @@ const messages: typeof errors &
   ...interactiveMsg,
   ...flagDescriptions,
   ...commandInfo,
+  ...amBulkAssetsMsg,
 };
 
 /**
