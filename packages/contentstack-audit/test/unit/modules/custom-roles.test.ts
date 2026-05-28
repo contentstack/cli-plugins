@@ -37,28 +37,26 @@ describe('Custom roles module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(CustomRoles.prototype, 'fixCustomRoleSchema', (stub) => stub.resolves())
       .it('should call fixCustomRoleSchema', async () => {
+        const logSpy = Sinon.stub(CustomRoles.prototype, 'fixCustomRoleSchema').resolves();
         const customRoleInstance = new CustomRoles({
           ...constructorParam,
           config: { ...constructorParam.config, branch: 'test' },
           fix: true,
         });
-        const logSpy = Sinon.spy(customRoleInstance, 'fixCustomRoleSchema');
         await customRoleInstance.run();
         expect(logSpy.callCount).to.be.equals(1);
       });
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(CustomRoles.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
+        const logSpy = Sinon.stub(CustomRoles.prototype, 'writeFixContent').resolves();
         const customRoleInstance = new CustomRoles({
           ...constructorParam,
           config: { ...constructorParam.config, branch: 'test' },
           fix: true,
         });
-        const logSpy = Sinon.spy(customRoleInstance, 'writeFixContent');
         await customRoleInstance.run();
         expect(logSpy.callCount).to.be.equals(1);
       });

@@ -78,10 +78,9 @@ describe('Field Rules', () => {
       .stub(FieldRule.prototype, 'prerequisiteData', (stub) => stub.resolves())
       .stub(FieldRule.prototype, 'fixFieldRules', (stub) => stub.resolves())
       .stub(FieldRule.prototype, 'validateFieldRules', (stub) => stub.resolves())
-      .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
       .it('should call lookForReference and return the call count for it', async () => {
+        const logSpy = sinon.stub(FieldRule.prototype, 'lookForReference').resolves();
         const frInstance = new FieldRule(constructorParam);
-        const logSpy = sinon.spy(frInstance, 'lookForReference');
         await frInstance.run();
         expect(logSpy.callCount).to.be.equals(frInstance.ctSchema.length);
       });
@@ -108,10 +107,9 @@ describe('Field Rules', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
       .stub(FieldRule.prototype, 'lookForReference', (stub) => stub.resolves())
-      .stub(FieldRule.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
+        const logSpy = sinon.stub(FieldRule.prototype, 'writeFixContent').resolves();
         const ctInstance = new FieldRule({ ...constructorParam, fix: true });
-        const logSpy = sinon.spy(ctInstance, 'writeFixContent');
         await ctInstance.run();
         expect(logSpy.callCount).to.be.equals(1);
       });
@@ -143,11 +141,10 @@ describe('Field Rules', () => {
   describe('writeFixContent method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should not write the file', async () => {
+        const fsSpy = sinon.stub(fs, 'writeFileSync').returns(undefined);
         const ctInstance = new FieldRule({ ...constructorParam, fix: true });
-        const fsSpy = sinon.spy(fs, 'writeFileSync');
         await ctInstance.writeFixContent();
         expect(fsSpy.callCount).to.be.equals(1);
       });

@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux } from '@contentstack/cli-utilities';
+import { cliux } from '@contentstack/cli-utilities';
 
 import config from '../../../src/config';
 import { GlobalField } from '../../../src/modules';
@@ -42,7 +42,7 @@ describe('Global Fields', () => {
   describe('run method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('Should Validate the base path for global-fields', async () => {
         const gfInstance = new GlobalField({ ...constructorParam });
         try {
@@ -55,10 +55,9 @@ describe('Global Fields', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(GlobalField.prototype, 'lookForReference', (stub) => stub.resolves())
       .it('should call lookForReference', async () => {
+        const logSpy = sinon.stub(GlobalField.prototype, 'lookForReference').resolves();
         const gfInstance = new GlobalField(constructorParam);
-        const logSpy = sinon.spy(gfInstance, 'lookForReference');
         await gfInstance.run();
         expect(logSpy.callCount).to.be.equals(gfInstance.gfSchema.length);
       });
@@ -74,10 +73,9 @@ describe('Global Fields', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
       .stub(GlobalField.prototype, 'lookForReference', (stub) => stub.resolves())
-      .stub(GlobalField.prototype, 'writeFixContent', (stub) => stub.resolves())
       .it('should call writeFixContent', async () => {
+        const logSpy = sinon.stub(GlobalField.prototype, 'writeFixContent').resolves();
         const gfInstance = new GlobalField({ ...constructorParam, fix: true });
-        const logSpy = sinon.spy(gfInstance, 'writeFixContent');
         await gfInstance.run();
         expect(logSpy.callCount).to.be.equals(1);
       });

@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux, cliux } from '@contentstack/cli-utilities';
+import { cliux } from '@contentstack/cli-utilities';
 
 import config from '../../../src/config';
 import { Extensions } from '../../../src/modules';
@@ -100,7 +100,7 @@ describe('Extensions scope containing content_types uids', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('Should Validate the base path for workflows', async () => {
         try {
           await ext.run();
@@ -121,7 +121,7 @@ describe('Extensions scope containing content_types uids', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missing Cts to the ones that are not present in the schema, and MissingCts in extension equal to the extensions which has Cts that are not present',
         async () => {
@@ -209,7 +209,7 @@ describe('Extensions scope containing content_types uids', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missingRefs equal to empty array, expect entire workflow schema and empty missingCts',
         async () => {
@@ -230,7 +230,7 @@ describe('Extensions scope containing content_types uids', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missingRefs equal to empty array, expect entire workflow schema and empty missingCts',
         async () => {
@@ -263,7 +263,6 @@ describe('Extensions scope containing content_types uids', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
       .stub(cliux, 'confirm', (stub) => stub.resolves(true))
-      .stub(ext, 'writeFileSync', (stub) => stub.returns(undefined))
       .it(
         'missingCts in extension to extensionSchema containing, extensions with fixed scope, missing Cts to the Cts that are not present in Ct Schema, And the fixed extensions that would be overwritten in the file',
         async () => {
@@ -351,8 +350,6 @@ describe('Extensions scope containing content_types uids', () => {
       .stdout({ print: process.env.PRINT === 'true' || true })
       .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .stub(ext, 'writeFixContent', (stub) => stub.resolves())
-      .stub(ext, 'writeFileSync', (stub) => stub.returns(undefined))
-      .stub(ext, 'writeFixContent', (stub) => stub.resolves()) 
       .it(
         'missingCts in extension to extensionSchema containing, extensions with fixed scope, missing Cts to the Cts that are not present in Ct Schema, Not overwriting to the file',
         async () => {
@@ -375,8 +372,7 @@ describe('Extensions scope containing content_types uids', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
-      .stub(ext, 'writeFileSync', (stub) => stub.returns(undefined))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missingRefs equal to empty array, expect entire workflow schema and empty missingCts',
         async () => {

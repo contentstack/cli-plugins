@@ -98,7 +98,7 @@ describe('AuditBaseCommand class', () => {
       .stub(winston, 'createLogger', (stub) => stub.callsFake(createMockWinstonLogger))
       .stub(fs, 'mkdirSync', (stub) => stub.returns(undefined))
       .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
-      .stub(ux, 'table', (stub) => stub.returns(undefined))
+      .stub(cliux, 'table', (stub) => stub.returns(undefined))
       .stub(ux.action, 'stop', (stub) => stub.returns(undefined))
       .stub(ux.action, 'start', (stub) => stub.returns(undefined))
       .stub(cliux, 'inquire', (stub) => stub.returns(resolve(__dirname, 'mock', 'contents')))
@@ -143,10 +143,9 @@ describe('AuditBaseCommand class', () => {
       .stub(fs, 'mkdirSync', (stub) => stub.returns(undefined))
       .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .stub(AuditBaseCommand.prototype, 'showOutputOnScreenWorkflowsAndExtension', (stub) => stub.returns(undefined))
-      .stub(ux, 'table', (stub) => stub.callsFake((...args: any) => {
+      .stub(cliux, 'table', (stub) => stub.callsFake((...args: any) => {
         args[1].missingRefs.get({ missingRefs: ['gf_0'] });
       }))
-      .stub(AuditBaseCommand.prototype, 'showOutputOnScreenWorkflowsAndExtension', (stub) => stub.returns(undefined))
       .stub(ux.action, 'stop', (stub) => stub.returns(undefined))
       .stub(ux.action, 'start', (stub) => stub.returns(undefined))
       .stub(AuditBaseCommand.prototype, 'scanAndFix', (stub) => stub.returns({
@@ -172,7 +171,6 @@ describe('AuditBaseCommand class', () => {
         missingFieldRules: {},
         missingMultipleFields: {}
       }))
-      .stub(fs, 'createBackUp', (stub) => stub.returns(undefined))
       .stub(fs, 'createWriteStream', (stub) => stub.callsFake(() => new PassThrough()))
       .stub(AuditBaseCommand.prototype, 'createBackUp', (stub) => stub.returns(undefined))
       .it('should print missing ref and fix status on table formate', async (ctx) => {

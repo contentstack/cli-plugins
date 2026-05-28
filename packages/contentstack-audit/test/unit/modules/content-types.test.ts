@@ -145,11 +145,10 @@ describe('Content types', () => {
   describe('writeFixContent method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should not write the file', async () => {
+        const fsSpy = sinon.stub(fs, 'writeFileSync').returns(undefined);
         const ctInstance = new ContentType({ ...constructorParam, fix: true });
-        const fsSpy = sinon.spy(fs, 'writeFileSync');
         await ctInstance.writeFixContent();
         expect(fsSpy.callCount).to.be.equals(1);
       });
@@ -169,12 +168,13 @@ describe('Content types', () => {
   describe('lookForReference method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ContentType.prototype, 'validateReferenceField', (stub) => stub.returns([]))
-      .stub(ContentType.prototype, 'validateGlobalField', (stub) => stub.returns(undefined))
-      .stub(ContentType.prototype, 'validateJsonRTEFields', (stub) => stub.returns([]))
-      .stub(ContentType.prototype, 'validateGroupField', (stub) => stub.returns([]))
-      .stub(ContentType.prototype, 'validateModularBlocksField', (stub) => stub.returns([]))
       .it('should call all CT type audit methods', async () => {
+        const validateReferenceFieldSpy = sinon.stub(ContentType.prototype, 'validateReferenceField').returns([] as any);
+        const validateGlobalFieldSpy = sinon.stub(ContentType.prototype, 'validateGlobalField').resolves();
+        const validateJsonRTEFieldsSpy = sinon.stub(ContentType.prototype, 'validateJsonRTEFields').returns([] as any);
+        const validateGroupFieldSpy = sinon.stub(ContentType.prototype, 'validateGroupField').resolves();
+        const validateModularBlocksFieldSpy = sinon.stub(ContentType.prototype, 'validateModularBlocksField').resolves();
+
         const ctInstance = new (class TempClass extends ContentType {
           constructor() {
             super(constructorParam);
@@ -182,11 +182,6 @@ describe('Content types', () => {
             this.missingRefs['test'] = [];
           }
         })();
-        const validateReferenceFieldSpy = sinon.spy(ctInstance, 'validateReferenceField');
-        const validateGlobalFieldSpy = sinon.spy(ctInstance, 'validateGlobalField');
-        const validateJsonRTEFieldsSpy = sinon.spy(ctInstance, 'validateJsonRTEFields');
-        const validateModularBlocksFieldSpy = sinon.spy(ctInstance, 'validateModularBlocksField');
-        const validateGroupFieldSpy = sinon.spy(ctInstance, 'validateGroupField');
 
         // NOTE dummy CT schema
         const schema = [
@@ -207,13 +202,12 @@ describe('Content types', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ContentType.prototype, 'runFixOnSchema', (stub) => stub.returns([]))
       .it('should call runFixOnSchema method', async () => {
+        const runFixOnSchemaSpy = sinon.stub(ContentType.prototype, 'runFixOnSchema').returns([]);
         const ctInstance = new ContentType({ ...constructorParam, fix: true });
-        const validateReferenceFieldSpy = sinon.spy(ctInstance, 'runFixOnSchema');
         await ctInstance.lookForReference([], { schema: [] } as unknown as CtType);
 
-        expect(validateReferenceFieldSpy.callCount).to.be.equals(1);
+        expect(runFixOnSchemaSpy.callCount).to.be.equals(1);
       });
   });
 

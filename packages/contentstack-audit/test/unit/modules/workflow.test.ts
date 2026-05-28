@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux } from '@contentstack/cli-utilities';
+import { cliux } from '@contentstack/cli-utilities';
 import sinon from 'sinon';
 
 import config from '../../../src/config';
@@ -30,7 +30,7 @@ describe('Workflows', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('Should Validate the base path for workflows', async () => {
         try {
           await wf.run();
@@ -51,7 +51,7 @@ describe('Workflows', () => {
     });
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it(
         'should expect missingRefs equal to workflow which has missing refs, missingCts equal to missing Cts',
         async () => {
@@ -106,9 +106,7 @@ describe('Workflows', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || true })
-      .stub(wf, 'log', (stub) => stub.resolves())
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
-      .stub(wf, 'WriteFileSync', (stub) => stub.returns(undefined))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .stub(wf, 'writeFixContent', (stub) => stub.returns(undefined))
       .it('the run function should run and flow should go till fixWorkflowSchema', async () => {
         const fixedReference = await wf.run();

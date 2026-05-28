@@ -33,20 +33,13 @@ describe('Entries module', () => {
       gfSchema: cloneDeep(require('../mock/contents/global_fields/globalfields.json')),
       config: Object.assign(config, { basePath: resolve(__dirname, '..', 'mock', 'contents'), flags: {} }),
     };
-    
-    // Mock the logger for all tests
     Sinon.stub(require('@contentstack/cli-utilities'), 'log').value(mockLogger);
-  });
-
-  before(() => {
     ctStub = Sinon.stub(ContentType.prototype, 'run').resolves({ ct1: [{}] });
     gfStub = Sinon.stub(GlobalField.prototype, 'run').resolves({ gf1: [{}] });
   });
 
-  after(() => {
-    Sinon.restore(); // Clears Sinon spies/stubs/mocks
-    ctStub.restore();
-    gfStub.restore();
+  afterEach(() => {
+    Sinon.restore();
   });
 
   describe('run method', () => {
@@ -71,12 +64,12 @@ describe('Entries module', () => {
       .stub(Entries.prototype, 'fixPrerequisiteData', (stub) => stub.resolves())
       .stub(Entries.prototype, 'writeFixContent', (stub) => stub.resolves())
       .stub(Entries.prototype, 'lookForReference', (stub) => stub.resolves())
-      .stub(Entries.prototype, 'locales', [{ code: 'en-us' }] as any)
       .it('should return missing refs', async () => {
         const ctInstance = new (class Class extends Entries {
           constructor() {
             super(constructorParam);
             this.missingRefs['test-entry-id'] = [{ uid: 'test', treeStr: 'gf_0' }];
+            this.locales = [{ code: 'en-us' }] as any;
           }
         })();
         const missingRefs = await ctInstance.run();
@@ -86,17 +79,13 @@ describe('Entries module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'prepareEntryMetaData', (stub) => stub.resolves())
-      .stub(Entries.prototype, 'fixPrerequisiteData', (stub) => stub.resolves())
-      .stub(Entries.prototype, 'lookForReference', (stub) => stub.resolves())
-      .stub(Entries.prototype, 'writeFixContent', (stub) => stub.resolves())
-      .stub(Entries.prototype, 'locales', [{ code: 'en-us' }] as any)
       .it('should call prepareEntryMetaData & fixPrerequisiteData methods', async () => {
-        const prepareEntryMetaData = Sinon.spy(Entries.prototype, 'prepareEntryMetaData');
-        const fixPrerequisiteData = Sinon.spy(Entries.prototype, 'fixPrerequisiteData');
-        const lookForReference = Sinon.spy(Entries.prototype, 'lookForReference');
-        const writeFixContent = Sinon.spy(Entries.prototype, 'writeFixContent');
+        const prepareEntryMetaData = Sinon.stub(Entries.prototype, 'prepareEntryMetaData').resolves();
+        const fixPrerequisiteData = Sinon.stub(Entries.prototype, 'fixPrerequisiteData').resolves();
+        const lookForReference = Sinon.stub(Entries.prototype, 'lookForReference').resolves();
+        const writeFixContent = Sinon.stub(Entries.prototype, 'writeFixContent').resolves();
         const ctInstance = new Entries({ ...constructorParam, fix: true });
+        ctInstance.locales = [{ code: 'en-us' }] as any;
         const missingRefs = await ctInstance.run();
         expect((missingRefs as any).missingEntryRefs).to.be.empty;
         expect(writeFixContent.callCount).to.be.equals(1);
@@ -126,10 +115,9 @@ describe('Entries module', () => {
   describe('writeFixContent method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should ask confirmation adn write content in given path', async ({}) => {
-        const writeFileSync = Sinon.spy(fs, 'writeFileSync');
+        const writeFileSync = Sinon.stub(fs, 'writeFileSync').returns(undefined);
         const ctInstance = new Entries({ ...constructorParam, fix: true });
         await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents'), {});
 
@@ -138,9 +126,8 @@ describe('Entries module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(fs, 'writeFileSync', (stub) => stub.returns(undefined))
       .it("should skip confirmation if 'yes' flag passed", async ({}) => {
-        const writeFileSync = Sinon.spy(fs, 'writeFileSync');
+        const writeFileSync = Sinon.stub(fs, 'writeFileSync').returns(undefined);
         const ctInstance = new Entries({ ...constructorParam, fix: true });
         ctInstance.config.flags.yes = true;
         await ctInstance.writeFixContent(resolve(__dirname, '..', 'mock', 'contents'), {});
@@ -154,13 +141,13 @@ describe('Entries module', () => {
   describe('lookForReference method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'runFixOnSchema', (stub) => stub.returns(emptyEntries))
-      .stub(Entries.prototype, 'validateReferenceField', (stub) => stub.returns([]))
-      .stub(Entries.prototype, 'validateGlobalField', (stub) => stub.returns(undefined))
-      .stub(Entries.prototype, 'validateJsonRTEFields', (stub) => stub.returns(undefined))
-      .stub(Entries.prototype, 'validateModularBlocksField', (stub) => stub.returns(undefined))
-      .stub(Entries.prototype, 'validateGroupField', (stub) => stub.returns(undefined))
       .it('should call datatype specific methods', async ({}) => {
+        const runFixOnSchema = Sinon.stub(Entries.prototype, 'runFixOnSchema').returns(emptyEntries as any);
+        const validateReferenceField = Sinon.stub(Entries.prototype, 'validateReferenceField').returns([] as any);
+        const validateGlobalField = Sinon.stub(Entries.prototype, 'validateGlobalField').resolves();
+        const validateJsonRTEFields = Sinon.stub(Entries.prototype, 'validateJsonRTEFields').returns([] as any);
+        const validateModularBlocksField = Sinon.stub(Entries.prototype, 'validateModularBlocksField').resolves();
+        const validateGroupField = Sinon.stub(Entries.prototype, 'validateGroupField').resolves();
         const ctInstance = new (class Class extends Entries {
           constructor() {
             super({ ...constructorParam, fix: true });
@@ -169,12 +156,6 @@ describe('Entries module', () => {
             this.missingMandatoryFields['reference'] = [];
           }
         })();
-        const runFixOnSchema = Sinon.spy(ctInstance, 'runFixOnSchema');
-        const validateReferenceField = Sinon.spy(ctInstance, 'validateReferenceField');
-        const validateGlobalField = Sinon.spy(ctInstance, 'validateGlobalField');
-        const validateJsonRTEFields = Sinon.spy(ctInstance, 'validateJsonRTEFields');
-        const validateModularBlocksField = Sinon.spy(ctInstance, 'validateModularBlocksField');
-        const validateGroupField = Sinon.spy(ctInstance, 'validateGroupField');
         await ctInstance.lookForReference([], { schema } as any, {});
 
         expect(runFixOnSchema.callCount).to.be.equals(1);
@@ -199,10 +180,8 @@ describe('Entries module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'validateReferenceValues', (stub) => stub.returns(undefined))
-
       .it('should call validateReferenceField method', async ({}) => {
-        const validateReferenceValues = Sinon.spy(Entries.prototype, 'validateReferenceValues');
+        const validateReferenceValues = Sinon.stub(Entries.prototype, 'validateReferenceValues').returns(undefined as any);
         const ctInstance = new Class();
 
         await ctInstance.validateReferenceField([], ctInstance.ctSchema[3].schema as any, ctInstance.entries as any);
@@ -282,9 +261,8 @@ describe('Entries module', () => {
   describe('validateJsonRTEFields method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'jsonRefCheck', (stub) => stub.returns(undefined))
       .it('should do recursive call on validateJsonRTEFields method', async ({}) => {
-        const jsonRefCheck = Sinon.spy(Entries.prototype, 'jsonRefCheck');
+        const jsonRefCheck = Sinon.stub(Entries.prototype, 'jsonRefCheck').returns(undefined as any);
         const validateJsonRTEFields = Sinon.spy(Entries.prototype, 'validateJsonRTEFields');
         const ctInstance = new Entries(constructorParam);
         (ctInstance as any).currentUid = 'test-entry';
@@ -302,14 +280,11 @@ describe('Entries module', () => {
   describe('validateModularBlocksField method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'modularBlockRefCheck', (stub) => stub.returns(undefined))
-      .stub(Entries.prototype, 'lookForReference', (stub) => stub.returns(undefined))
-
       .it(
         'should iterate each blocks and call modularBlockRefCheck & lookForReference methods number of blocks exist in the entry times',
         async ({}) => {
-          const modularBlockRefCheck = Sinon.spy(Entries.prototype, 'modularBlockRefCheck');
-          const lookForReference = Sinon.spy(Entries.prototype, 'lookForReference');
+          const modularBlockRefCheck = Sinon.stub(Entries.prototype, 'modularBlockRefCheck').returns(undefined as any);
+          const lookForReference = Sinon.stub(Entries.prototype, 'lookForReference').returns(undefined as any);
           const ctInstance = new Entries(constructorParam);
         (ctInstance as any).currentUid = 'test-entry';
         (ctInstance as any).missingRefs = { 'test-entry': [] };
@@ -334,9 +309,8 @@ describe('Entries module', () => {
   describe('validateGroupField method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'lookForReference', (stub) => stub.returns(undefined))
       .it('should call lookForReference method to iterate GroupField schema', async ({}) => {
-        const lookForReference = Sinon.spy(Entries.prototype, 'lookForReference');
+        const lookForReference = Sinon.stub(Entries.prototype, 'lookForReference').returns(undefined as any);
         const ctInstance = new Entries(constructorParam);
         (ctInstance as any).currentUid = 'test-entry';
         (ctInstance as any).missingRefs = { 'test-entry': [] };
@@ -349,11 +323,10 @@ describe('Entries module', () => {
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'lookForReference', (stub) => stub.returns(undefined))
       .it(
         'should iterate all group entries and call lookForReference method to iterate GroupField schema',
         async ({}) => {
-          const lookForReference = Sinon.spy(Entries.prototype, 'lookForReference');
+          const lookForReference = Sinon.stub(Entries.prototype, 'lookForReference').returns(undefined as any);
 
           const ctInstance = new Entries(constructorParam);
         (ctInstance as any).currentUid = 'test-entry';
@@ -377,9 +350,8 @@ describe('Entries module', () => {
   describe('fixGlobalFieldReferences method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(Entries.prototype, 'runFixOnSchema', (...args: any[]) => args[2])
       .it('should call runFixOnSchema for single global field entry', async ({}) => {
-        const runFixOnSchema = Sinon.spy(Entries.prototype, 'runFixOnSchema');
+        const runFixOnSchema = Sinon.stub(Entries.prototype, 'runFixOnSchema').callsFake((...args: any[]) => args[2]);
         const ctInstance = new Entries({ ...constructorParam, fix: true });
         
         const globalFieldSchema = {
