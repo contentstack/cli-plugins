@@ -6,6 +6,13 @@ const invalidTableOutput = require('../data/tableData.json')
 const regexMessages = require('../../messages/index.json').validateRegex
 
 jest.mock('fs')
+jest.mock('path', () => {
+  const actualPath = jest.requireActual('path') as typeof import('path')
+  return {
+    ...actualPath,
+    resolve: jest.fn(actualPath.resolve),
+  }
+})
 jest.mock('@contentstack/cli-utilities', () => ({
   cliux: {
     print: jest.fn(),
@@ -15,7 +22,8 @@ jest.mock('@contentstack/cli-utilities', () => ({
 
 describe('Generate Output after Stack is Processed', () => {
   beforeEach(() => {
-    jest.restoreAllMocks()
+    jest.restoreAllMocks();
+    (path.resolve as jest.Mock).mockClear()
   })
 
   test('Filepath Flag is not set & Invalid Regex is found', async () => {
