@@ -75,7 +75,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm clean",
+    "build": "pnpm clean && tsc -b",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
