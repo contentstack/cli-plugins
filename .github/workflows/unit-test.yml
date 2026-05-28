@@ -66,10 +66,6 @@ jobs:
         working-directory: ./packages/contentstack-query-export
         run: npm run test:unit
 
-      - name: Run tests for Contentstack Apps CLI
-        working-directory: ./packages/contentstack-apps-cli
-        run: npm run test:unit:report:json
-
       - name: Run tests for Contentstack Content Type plugin
         working-directory: ./packages/contentstack-content-type
         run: npm run test:unit
@@ -78,14 +74,14 @@ jobs:
         working-directory: ./packages/contentstack-cli-cm-regex-validate
         run: npm run test:unit
         
-      - name: Run tests for Contentstack Tsgen plugin
-        working-directory: ./packages/contentstack-cli-tsgen
-        run: npm run test
-        
       - name: Run tests for Contentstack Migrate RTE
         working-directory: ./packages/contentstack-migrate-rte
-        run: npm test
+        run: npm run test
 
       - name: Run tests for Contentstack Bulk Operations
         working-directory: ./packages/contentstack-bulk-operations
-        run: npm test
+        run: npm run test
+
+      - name: Run tests for Contentstack Apps CLI
+        working-directory: ./packages/contentstack-apps-cli
+        run: npm run test:unit:report:json
