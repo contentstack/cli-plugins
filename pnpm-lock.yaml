@@ -99,6 +99,9 @@ importers:
       eslint-config-oclif-typescript:
         specifier: ^3.1.14
         version: 3.1.14(eslint@8.57.1)(typescript@5.9.3)
+      fancy-test:
+        specifier: 3.0.16
+        version: 3.0.16
       mocha:
         specifier: ^10.8.2
         version: 10.8.2
@@ -385,6 +388,9 @@ importers:
       eslint-plugin-prettier:
         specifier: ^5.5.5
         version: 5.5.5(eslint-config-prettier@10.1.8(eslint@10.4.0))(eslint@10.4.0)(prettier@3.8.3)
+      fancy-test:
+        specifier: 3.0.16
+        version: 3.0.16
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -1208,6 +1214,9 @@ importers:
       eslint-config-oclif:
         specifier: ^6.0.165
         version: 6.0.166(eslint@8.57.1)(typescript@6.0.3)
+      fancy-test:
+        specifier: ^2.0.42
+        version: 2.0.42
       husky:
         specifier: ^9.1.7
         version: 9.1.7
