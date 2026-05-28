@@ -72,7 +72,7 @@ jobs:
         
       - name: Run tests for Contentstack Regex Validate plugin
         working-directory: ./packages/contentstack-cli-cm-regex-validate
-        run: npm run test:unit
+        run: npm run test
         
       - name: Run tests for Contentstack Migrate RTE
         working-directory: ./packages/contentstack-migrate-rte
