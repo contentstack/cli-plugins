@@ -36,9 +36,9 @@ describe('Audit command', () => {
       .stdout({ print: process.env.PRINT === 'true' || false })
       .stub(winston.transports, 'File', (stub) => stub.returns(fsTransport))
       .stub(winston, 'createLogger', (stub) => stub.returns({ log: console.log, error: console.error }))
-      .stub(AuditBaseCommand.prototype, 'start', async () => {
+      .stub(AuditBaseCommand.prototype, 'start', (stub) => stub.callsFake(async () => {
         Promise.reject('process failed');
-      })
+      }))
       .it('should log the error objet message and exit with status code 1', async () => {
         await runCommand(['cm:stacks:audit', 'd', 'mock'], { root: process.cwd() });
       });
