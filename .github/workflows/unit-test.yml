@@ -71,10 +71,6 @@ jobs:
         working-directory: ./packages/contentstack-apps-cli
         run: npm run test:unit:report
 
-      - name: Run tests for Contentstack Tsgen plugin
-        working-directory: ./packages/contentstack-cli-tsgen
-        run: npm run test
-        
       - name: Run tests for Contentstack Content Type plugin
         working-directory: ./packages/contentstack-content-type
         run: npm run test:unit

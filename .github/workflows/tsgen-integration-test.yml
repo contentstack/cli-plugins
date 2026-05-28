@@ -42,7 +42,7 @@ jobs:
         run: csdx plugins:link
 
       - name: Run integration tests
-        run: pnpm --filter contentstack-cli-tsgen run test:integration
+        run: pnpm --filter contentstack-cli-tsgen run test
         env:
           TOKEN_ALIAS: ${{ secrets.TOKEN_ALIAS }}
 
