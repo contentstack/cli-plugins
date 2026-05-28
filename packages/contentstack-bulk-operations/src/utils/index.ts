@@ -46,6 +46,12 @@ import {
 import { generateBulkPublishStatusUrl } from './bulk-publish-url-generator';
 import { validateBranch, validateEnvironments } from './validators';
 import {
+  loadAssetUidsFromFile,
+  loadBulkDeleteItemsFromFile,
+  validateAndBuildBulkDeleteItems,
+  LoadAssetUidsError,
+} from './asset-uids-from-file';
+import {
   compareFieldValues,
   compareNonLocalizedFields,
   checkReferenceFieldChanges,
@@ -107,4 +113,8 @@ export {
   hasNonLocalizedFields,
   checkNonLocalizedFieldChanges,
   identifyNonLocalizedFields,
+  loadAssetUidsFromFile,
+  loadBulkDeleteItemsFromFile,
+  validateAndBuildBulkDeleteItems,
+  LoadAssetUidsError,
 };
