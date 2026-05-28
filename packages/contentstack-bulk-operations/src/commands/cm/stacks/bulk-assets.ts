@@ -1,4 +1,4 @@
-import { flags, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, FlagInput, handleAndLogError } from '@contentstack/cli-utilities';
 
 import { ResourceType } from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
@@ -34,7 +34,7 @@ export default class BulkAssets extends BaseBulkCommand {
     '<%= config.bin %> <%= command.id %> --revert ./bulk-operation -a myAlias',
   ];
 
-  static flags = {
+  static flags: FlagInput = {
     ...BaseBulkCommand.baseFlags,
     'folder-uid': flags.string({
       description: messages.FOLDER_UID,
