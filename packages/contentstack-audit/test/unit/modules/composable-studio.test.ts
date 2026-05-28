@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux } from '@contentstack/cli-utilities';
+import { cliux } from '@contentstack/cli-utilities';
 import sinon from 'sinon';
 
 import config from '../../../src/config';
@@ -22,7 +22,7 @@ describe('ComposableStudio', () => {
   describe('run method with invalid path for composable-studio', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('Should validate the base path for composable-studio', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -37,7 +37,7 @@ describe('ComposableStudio', () => {
   describe('run method with valid path and valid composable-studio project', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should load projects and report issues if references are invalid', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -58,7 +58,7 @@ describe('ComposableStudio', () => {
   describe('run method with invalid composable-studio projects', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should detect invalid references', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -160,7 +160,7 @@ describe('ComposableStudio', () => {
   describe('run method with audit fix for composable-studio', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should fix invalid projects and return fixed references', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',
@@ -252,7 +252,7 @@ describe('ComposableStudio', () => {
   describe('Report data structure', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ux, 'confirm', (stub) => stub.resolves(true))
+      .stub(cliux, 'confirm', (stub) => stub.resolves(true))
       .it('should return properly formatted report data', async () => {
         const cs = new ComposableStudio({
           moduleName: 'composable-studio',

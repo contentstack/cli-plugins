@@ -82,15 +82,13 @@ describe('Content types', () => {
       }
     });
 
-    fancy
-      .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ContentType.prototype, 'lookForReference', (stub) => stub.resolves())
-      .it('should call lookForReference', async () => {
-        const ctInstance = new ContentType(constructorParam);
-        const logSpy = sinon.spy(ctInstance, 'lookForReference');
-        await ctInstance.run();
-        expect(logSpy.callCount).to.be.equals(ctInstance.ctSchema.length);
-      });
+    it('should call lookForReference', async () => {
+      const stub = sinon.stub(ContentType.prototype, 'lookForReference').resolves();
+      const ctInstance = new ContentType(constructorParam);
+      await ctInstance.run();
+      expect(stub.callCount).to.be.equals(ctInstance.ctSchema.length);
+      stub.restore();
+    });
 
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })
@@ -108,16 +106,15 @@ describe('Content types', () => {
         expect(await ctInstance.run(true)).to.deep.equals(ctInstance.ctSchema);
       });
 
-    fancy
-      .stdout({ print: process.env.PRINT === 'true' || false })
-      .stub(ContentType.prototype, 'lookForReference', (stub) => stub.resolves())
-      .stub(ContentType.prototype, 'writeFixContent', (stub) => stub.resolves())
-      .it('should call writeFixContent', async () => {
-        const ctInstance = new ContentType({ ...constructorParam, fix: true });
-        const logSpy = sinon.spy(ctInstance, 'writeFixContent');
-        await ctInstance.run();
-        expect(logSpy.callCount).to.be.equals(1);
-      });
+    it('should call writeFixContent', async () => {
+      const refStub = sinon.stub(ContentType.prototype, 'lookForReference').resolves();
+      const fixStub = sinon.stub(ContentType.prototype, 'writeFixContent').resolves();
+      const ctInstance = new ContentType({ ...constructorParam, fix: true });
+      await ctInstance.run();
+      expect(fixStub.callCount).to.be.equals(1);
+      refStub.restore();
+      fixStub.restore();
+    });
 
     fancy
       .stub(fs, 'rmSync', (stub) => stub.returns(undefined))

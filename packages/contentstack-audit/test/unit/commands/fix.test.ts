@@ -12,13 +12,20 @@ describe('AuditFix command', () => {
     filename!: string;
   } as FileTransportInstance;
 
-  // Check this test case later
   describe('AuditFix run method', () => {
-    sinon.stub(fs, 'rmSync').callsFake(() => {});
-    sinon.stub(winston.transports, 'File').callsFake(() => fsTransport);
-    sinon.stub(winston, 'createLogger').call(() => ({ log: () => {}, error: () => {} }));
-    const startSpy = sinon.stub(AuditBaseCommand.prototype, 'start').callsFake(() => {
-      return Promise.resolve(true);
+    let startSpy: sinon.SinonStub;
+
+    beforeEach(() => {
+      sinon.stub(fs, 'rmSync').callsFake(() => {});
+      sinon.stub(winston.transports, 'File').callsFake(() => fsTransport);
+      sinon.stub(winston, 'createLogger').callsFake(() => ({ log: () => {}, error: () => {} }));
+      startSpy = sinon.stub(AuditBaseCommand.prototype, 'start').callsFake(() => {
+        return Promise.resolve(true);
+      });
+    });
+
+    afterEach(() => {
+      sinon.restore();
     });
 
     it('should trigger AuditBaseCommand start method', async () => {
