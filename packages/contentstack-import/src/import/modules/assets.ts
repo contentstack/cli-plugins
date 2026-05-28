@@ -197,6 +197,13 @@ export default class ImportAssets extends BaseClass {
 
       this.completeProgress(true);
       log.success('Assets imported successfully!', this.importConfig.context);
+
+      if (this.importConfig.assetScanningEnabled) {
+        log.info('   Asset Scanning is enabled for this stack.', this.importConfig.context);
+        log.info('   Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
+        log.info('   Once scanning is done, publish your assets using:', this.importConfig.context);
+        log.info('   csdx cm:stacks:bulk-assets --data-dir ./content --stack-api-key <key>', this.importConfig.context);
+      }
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset import failed');
       handleAndLogError(error, { ...this.importConfig.context });
