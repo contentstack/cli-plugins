@@ -18,7 +18,7 @@ describe('AuditFix command', () => {
     beforeEach(() => {
       sinon.stub(fs, 'rmSync').callsFake(() => {});
       sinon.stub(winston.transports, 'File').callsFake(() => fsTransport);
-      sinon.stub(winston, 'createLogger').callsFake(() => ({ log: () => {}, error: () => {} }));
+      sinon.stub(winston, 'createLogger').callsFake(() => ({ log: () => {}, error: () => {} } as any));
       startSpy = sinon.stub(AuditBaseCommand.prototype, 'start').callsFake(() => {
         return Promise.resolve(true);
       });
