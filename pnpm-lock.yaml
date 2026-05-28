@@ -1497,7 +1497,7 @@ importers:
         specifier: ~1.18.3
         version: 1.18.3(@types/node@20.19.41)
       '@oclif/core':
-        specifier: ^4.10.5
+        specifier: ^4.11.4
         version: 4.11.4
       lodash:
         specifier: ^4.18.1
