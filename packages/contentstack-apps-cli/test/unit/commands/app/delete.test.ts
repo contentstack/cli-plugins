@@ -8,9 +8,8 @@ import { getDeveloperHubUrl } from "../../../../src/util/inquirer";
 import nock from "nock";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 
-const region: { cma: string; name: string; cda: string } =
-  configHandler.get("region");
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region: { cma: string; name: string; cda: string };
+let developerHubBaseUrl: string;
 
 describe("app:delete", () => {
   let sandbox: sinon.SinonSandbox;
@@ -19,6 +18,8 @@ describe("app:delete", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
 
     nock(region.cma)
       .get("/v3/organizations?limit=100&asc=name&include_count=true&skip=0")

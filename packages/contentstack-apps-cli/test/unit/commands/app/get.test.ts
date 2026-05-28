@@ -12,8 +12,8 @@ import { getDeveloperHubUrl } from "../../../../src/util/inquirer";
 import config from "../../../../src/config";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 
-const region = configHandler.get("region");
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region: { cma: string; name: string; cda: string };
+let developerHubBaseUrl: string;
 
 describe("app:get", () => {
   let sandbox: sinon.SinonSandbox;
@@ -23,6 +23,8 @@ describe("app:get", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
 
     sandbox.stub(cliux, "loader").callsFake(() => {});
     sandbox.stub(fs, "writeFileSync").callsFake(() => {});

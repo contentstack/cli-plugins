@@ -19,9 +19,8 @@ import { stubAuthentication } from "../../helpers/auth-stub-helper";
 
 const { origin, pathname } = new URL(config.appBoilerplateGithubUrl);
 const zipPath = join(process.cwd(), "test", "unit", "mock", "boilerplate.zip");
-const region: { cma: string; name: string; cda: string } =
-  configHandler.get("region");
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region: { cma: string; name: string; cda: string };
+let developerHubBaseUrl: string;
 
 class MockWriteStream extends PassThrough implements fs.WriteStream {
   close() {}
@@ -39,6 +38,8 @@ describe("app:create", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
 
     writeStreamMock = new MockWriteStream();
     sandbox.stub(fs, "renameSync").callsFake(() => {});

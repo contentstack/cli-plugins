@@ -11,7 +11,7 @@ import Deploy from "../../../../src/commands/app/deploy";
 import { BaseCommand } from "../../../../src/base-command";
 import { join } from "path";
 
-const region = configHandler.get("region");
+let region: { cma: string; name: string; cda: string };
 // Commands run from lib/ (oclif.commands); stub the same classes/modules the running command uses
 let BaseCommandToStub: typeof BaseCommand;
 let LibDeploy: typeof Deploy;
@@ -37,7 +37,7 @@ try {
 } catch {
   libInquirer = require("../../../../src/util/inquirer");
 }
-const developerHubBaseUrl = getDeveloperHubUrl();
+let developerHubBaseUrl: string;
 
 describe("app:deploy", () => {
   let sandbox: sinon.SinonSandbox;
@@ -52,6 +52,8 @@ describe("app:deploy", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
 
     sandbox.stub(cliux, "loader").callsFake(() => {});
     sandbox.stub(cliux, "inquire").callsFake((prompt: any) => {

@@ -8,8 +8,8 @@ import { getDeveloperHubUrl } from "../../../../src/util/inquirer";
 const mock = (global as any).commonMock;
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 
-const region = configHandler.get("region");
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region: { cma: string; name: string; cda: string };
+let developerHubBaseUrl: string;
 
 describe("app:uninstall", () => {
   let sandbox: sinon.SinonSandbox;
@@ -19,6 +19,8 @@ describe("app:uninstall", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
 
     sandbox.stub(cliux, "loader").callsFake(() => {});
 

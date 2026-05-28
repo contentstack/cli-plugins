@@ -13,9 +13,10 @@ import { LogFn } from "../../../src/types";
 import { fetchApps, getOrganizations } from "../../../src/util/common-utils";
 const mock = (global as any).commonMock;
 import { getDeveloperHubUrl } from "../../../src/util/inquirer";
+import { stubAuthentication } from "../helpers/auth-stub-helper";
 
-const region = configHandler.get("region");
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region: { cma: string; name: string; cda: string };
+let developerHubBaseUrl: string;
 
 describe("common utils", () => {
   let sandbox: sinon.SinonSandbox;
@@ -25,13 +26,16 @@ describe("common utils", () => {
   let marketplaceAppSdk: ContentstackMarketplaceClient;
 
   beforeEach(async () => {
+    sandbox = sinon.createSandbox();
+    stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = getDeveloperHubUrl();
     managementSdk = await managementSDKClient({
       host: region.cma.replace("https://", ""),
     });
     marketplaceAppSdk = await marketplaceSDKClient({
       host: developerHubBaseUrl,
     });
-    sandbox = sinon.createSandbox();
     sandbox.stub(cliux, "loader").callsFake(() => {});
   });
 
