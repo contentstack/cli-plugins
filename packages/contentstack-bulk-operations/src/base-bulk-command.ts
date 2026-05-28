@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, getLogPath, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, FlagInput, log, createLogContext, getLogPath, handleAndLogError } from '@contentstack/cli-utilities';
 
 import config from './config';
 import messages, { $t } from './messages';
@@ -54,7 +54,7 @@ export abstract class BaseBulkCommand extends Command {
   protected abstract resourceType: ResourceType;
 
   // Common flags for all bulk operations
-  static baseFlags = {
+  static baseFlags: FlagInput = {
     alias: flags.string({
       char: 'a',
       description: messages.ALIAS,

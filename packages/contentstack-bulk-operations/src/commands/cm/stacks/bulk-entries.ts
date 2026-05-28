@@ -1,4 +1,4 @@
-import { flags, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, FlagInput, handleAndLogError } from '@contentstack/cli-utilities';
 
 import { BaseBulkCommand } from '../../../base-bulk-command';
 import { ResourceType, FilterType } from '../../../interfaces';
@@ -49,7 +49,7 @@ export default class BulkEntries extends BaseBulkCommand {
     '<%= config.bin %> <%= command.id %> --revert ./bulk-operation',
   ];
 
-  static flags = {
+  static flags: FlagInput = {
     ...BaseBulkCommand.baseFlags,
     'content-types': flags.string({
       description: messages.CONTENT_TYPES,
