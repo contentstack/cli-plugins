@@ -4,40 +4,15 @@ import { runCommand } from "@oclif/test";
 import { cliux, configHandler } from "@contentstack/cli-utilities";
 import messages, { $t } from "../../../../src/messages";
 const mock = (global as any).commonMock;
-import { getDeveloperHubUrl } from "../../../../src/util/inquirer";
 import sinon from "sinon";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 import Deploy from "../../../../src/commands/app/deploy";
 import { BaseCommand } from "../../../../src/base-command";
-import { join } from "path";
+import * as libCommonUtils from "../../../../src/util/common-utils";
+import * as libInquirer from "../../../../src/util/inquirer";
 
-const region = configHandler.get("region");
-// Commands run from lib/ (oclif.commands); stub the same classes/modules the running command uses
-let BaseCommandToStub: typeof BaseCommand;
-let LibDeploy: typeof Deploy;
-let libCommonUtils: any;
-let libInquirer: any;
-try {
-  BaseCommandToStub = require(join(process.cwd(), "lib", "base-command")).BaseCommand;
-} catch {
-  BaseCommandToStub = BaseCommand;
-}
-try {
-  LibDeploy = require(join(process.cwd(), "lib", "commands", "app", "deploy")).default;
-} catch {
-  LibDeploy = Deploy;
-}
-try {
-  libCommonUtils = require(join(process.cwd(), "lib", "util", "common-utils"));
-} catch {
-  libCommonUtils = require("../../../../src/util/common-utils");
-}
-try {
-  libInquirer = require(join(process.cwd(), "lib", "util", "inquirer"));
-} catch {
-  libInquirer = require("../../../../src/util/inquirer");
-}
-const developerHubBaseUrl = getDeveloperHubUrl();
+let region!: { cma: string; name: string; cda: string };
+let developerHubBaseUrl!: string;
 
 describe("app:deploy", () => {
   let sandbox: sinon.SinonSandbox;
@@ -52,6 +27,8 @@ describe("app:deploy", () => {
 
     // Stub authentication using shared helper
     stubAuthentication(sandbox);
+    region = configHandler.get("region");
+    developerHubBaseUrl = libInquirer.getDeveloperHubUrl();
 
     sandbox.stub(cliux, "loader").callsFake(() => {});
     sandbox.stub(cliux, "inquire").callsFake((prompt: any) => {
@@ -64,7 +41,7 @@ describe("app:deploy", () => {
       return Promise.resolve(cases[prompt.name]);
     });
 
-    // Stub utilities used by the running command (lib/util); stub same module it requires
+    // Stub utilities used by the running command (src/util); same module instances oclif loads via tsPath
     sandbox.stub(libCommonUtils, "getProjects").resolves([]);
     sandbox.stub(libCommonUtils, "updateApp").resolves();
     sandbox.stub(libCommonUtils, "disconnectApp").resolves();
@@ -76,14 +53,14 @@ describe("app:deploy", () => {
     sandbox.stub(libInquirer, "getAppUrl").resolves("https://example.com");
     sandbox.stub(libInquirer, "askProjectType").resolves("existing");
     sandbox.stub(libInquirer, "askConfirmation").resolves(false);
-    sandbox.stub(libInquirer, "selectProject").resolves(null);
+    sandbox.stub(libInquirer, "selectProject").resolves(undefined);
     sandbox.stub(libInquirer, "askProjectName").resolves("test-project");
 
     // Stub Launch.run
     sandbox.stub(require("@contentstack/cli-launch").Launch, "run").resolves();
 
-    // Stub getApolloClient on the class that actually runs (lib Deploy) so no real GraphQL runs
-    sandbox.stub(LibDeploy.prototype, "getApolloClient").resolves({
+    // Stub getApolloClient so no real GraphQL runs
+    sandbox.stub(Deploy.prototype, "getApolloClient").resolves({
       query: () =>
         Promise.resolve({
           data: {
@@ -94,7 +71,7 @@ describe("app:deploy", () => {
         }),
     } as any);
 
-    // Stub SDK init so no real HTTP is made (cli-utilities exports use getters so we can't stub those).
+    // Stub SDK init so no real HTTP is made
     const mockManagementSdk = {
       organization: () => ({
         fetchAll: () =>
@@ -116,15 +93,15 @@ describe("app:deploy", () => {
         }),
       }),
     };
-    sandbox.stub(BaseCommandToStub.prototype, "initCmaSDK").callsFake(async function (this: any) {
+    sandbox.stub(BaseCommand.prototype, "initCmaSDK").callsFake(async function (this: any) {
       this.managementSdk = mockManagementSdk;
       this.managementAppSdk = mockManagementSdk;
     });
-    sandbox.stub(BaseCommandToStub.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
+    sandbox.stub(BaseCommand.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
       this.marketplaceAppSdk = mockMarketplaceSdk;
     });
 
-    // Nock CMA and developer hub (SDK may use :443 or different param order)
+    // Nock CMA and developer hub
     const cmaOrigin = region.cma.replace(/\/$/, "");
     const orgReply = {
       organizations: mock.organizations,
@@ -213,7 +190,7 @@ describe("app:deploy", () => {
       sandbox.stub(process, "exit").callsFake(((code?: number) => {
         throw new Error(`process.exit(${code})`);
       }) as any);
-      sandbox.stub(LibDeploy.prototype, "getApolloClient").resolves({
+      sandbox.stub(Deploy.prototype, "getApolloClient").resolves({
         query: () =>
           Promise.resolve({
             data: { projects: { edges: [] } },
@@ -240,11 +217,11 @@ describe("app:deploy", () => {
           }),
         }),
       };
-      sandbox.stub(BaseCommandToStub.prototype, "initCmaSDK").callsFake(async function (this: any) {
+      sandbox.stub(BaseCommand.prototype, "initCmaSDK").callsFake(async function (this: any) {
         this.managementSdk = mockMgmt;
         this.managementAppSdk = mockMgmt;
       });
-      sandbox.stub(BaseCommandToStub.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
+      sandbox.stub(BaseCommand.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
         this.marketplaceAppSdk = mockMkt;
       });
       stubAuthentication(sandbox);
@@ -287,7 +264,7 @@ describe("app:deploy", () => {
       sandbox.stub(process, "exit").callsFake(((code?: number) => {
         throw new Error(`process.exit(${code})`);
       }) as any);
-      sandbox.stub(LibDeploy.prototype, "getApolloClient").resolves({
+      sandbox.stub(Deploy.prototype, "getApolloClient").resolves({
         query: () =>
           Promise.resolve({
             data: {
@@ -330,11 +307,11 @@ describe("app:deploy", () => {
           }),
         }),
       };
-      sandbox.stub(BaseCommandToStub.prototype, "initCmaSDK").callsFake(async function (this: any) {
+      sandbox.stub(BaseCommand.prototype, "initCmaSDK").callsFake(async function (this: any) {
         this.managementSdk = mockMgmt;
         this.managementAppSdk = mockMgmt;
       });
-      sandbox.stub(BaseCommandToStub.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
+      sandbox.stub(BaseCommand.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
         this.marketplaceAppSdk = mockMkt;
       });
       stubAuthentication(sandbox);
@@ -355,7 +332,7 @@ describe("app:deploy", () => {
       sandbox.stub(libInquirer, "askProjectType").resolves("new");
       sandbox.stub(libInquirer, "askProjectName").resolves("new-project");
       sandbox.stub(libInquirer, "askConfirmation").resolves(false);
-      sandbox.stub(libInquirer, "selectProject").resolves(null);
+      sandbox.stub(libInquirer, "selectProject").resolves(undefined);
 
       sandbox.stub(libCommonUtils, "getProjects").resolves([
         {
@@ -363,6 +340,7 @@ describe("app:deploy", () => {
           uid: "project-2",
           url: "https://new-project.com",
           environmentUid: "env-2",
+          developerHubAppUid: null,
         },
       ]);
       sandbox.stub(libCommonUtils, "setupConfig").returns({
