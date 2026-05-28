@@ -30,6 +30,25 @@ export default interface DefaultConfig {
       dependencies?: Modules[];
       fetchConcurrency: number;
     };
+    'asset-management': {
+      dirName: string;
+      fieldsDir: string;
+      assetTypesDir: string;
+      fieldsFileName: string;
+      assetTypesFileName: string;
+      foldersFileName: string;
+      assetsFileName: string;
+      fieldsImportInvalidKeys: string[];
+      assetTypesImportInvalidKeys: string[];
+      mapperRootDir: string;
+      mapperAssetsModuleDir: string;
+      mapperUidFileName: string;
+      mapperUrlFileName: string;
+      mapperSpaceUidFileName: string;
+      uploadAssetsConcurrency: number;
+      importFoldersConcurrency: number;
+      dependencies?: Modules[];
+    };
     'content-types': {
       dirName: string;
       fileName: string;
