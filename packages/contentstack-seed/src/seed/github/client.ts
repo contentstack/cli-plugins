@@ -9,7 +9,6 @@ import GithubError from './error';
 
 export default class GitHubClient {
   readonly gitHubRepoUrl: string;
-  readonly gitHubUserUrl: string;
   private readonly httpClient: HttpClient;
 
   static parsePath(path?: string) {
@@ -30,19 +29,9 @@ export default class GitHubClient {
     return result;
   }
 
-  constructor(public username: string, defaultStackPattern: string) {
+  constructor(public username: string) {
     this.gitHubRepoUrl = `https://api.github.com/repos/${username}`;
-    this.gitHubUserUrl = `https://api.github.com/search/repositories?q=org%3A${username}+in:name+${defaultStackPattern}`;
     this.httpClient = HttpClient.create();
-  }
-
-  async getAllRepos(count = 100) {
-    try {
-      const response = await this.httpClient.get(`${this.gitHubUserUrl}&per_page=${count}`);
-      return response.data.items;
-    } catch (error) {
-      throw this.buildError(error);
-    }
   }
 
   async getLatest(repo: string, destination: string): Promise<void> {
