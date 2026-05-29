@@ -7,26 +7,6 @@ const regexMessages = require('../../../../messages/index.json').validateRegex
 
 export default class ValidateRegex extends Command {
   static description = regexMessages.command.description
-
-  static flags: any = {
-    alias: flags.string({
-      char: 'a',
-      description: regexMessages.command.alias,
-    }),
-    contentType: flags.boolean({
-      char: 'c',
-      description: regexMessages.command.contentTypes,
-    }),
-    globalField: flags.boolean({
-      char: 'g',
-      description: regexMessages.command.globalFields,
-    }),
-    filePath: flags.string({
-      char: 'f',
-      description: regexMessages.command.filePath,
-    }),
-  }
-
   static examples = [
     '$ csdx cm:stacks:validate-regex',
     '$ csdx cm:stacks:validate-regex -a <management_token_alias>',
@@ -36,6 +16,24 @@ export default class ValidateRegex extends Command {
     '$ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g',
     '$ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g -f <path/to/the/directory>',
   ]
+  static flags: any = {
+    alias: flags.string({
+      char: 'a',
+      description: regexMessages.command.alias,
+    }),
+    contentType: flags.boolean({
+      char: 'c',
+      description: regexMessages.command.contentTypes,
+    }),
+    filePath: flags.string({
+      char: 'f',
+      description: regexMessages.command.filePath,
+    }),
+    globalField: flags.boolean({
+      char: 'g',
+      description: regexMessages.command.globalFields,
+    }),
+  }
 
   async run() {
     const commandObject = await this.parse(ValidateRegex)

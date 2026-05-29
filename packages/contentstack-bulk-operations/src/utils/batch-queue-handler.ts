@@ -21,7 +21,7 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
     }
 
     logger.info(
-      `Processing batch ${batch.batchNumber}/${batch.totalBatches}: ` +
+      `Processing batch ${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0}: ` +
         `${batch.items.length} items, ` +
         `${batch.locales.length} locales, ` +
         `${batch.environments.length} environments`
@@ -76,7 +76,7 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
     if (!batch) return;
 
     handleAndLogError(error, {
-      batchNumber: `${batch.batchNumber}/${batch.totalBatches}`,
+      batchNumber: `${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0}`,
       itemCount: batch.items.length,
     });
 
@@ -109,7 +109,7 @@ async function handleRetryOrFailure({
       : retryStrategy.getDelay(item.retryCount);
 
     logger.warn(
-      `Batch ${batch.batchNumber}/${batch.totalBatches} failed with ${
+      `Batch ${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0} failed with ${
         isRateLimit ? '429 Rate Limit' : getErrorCode(error)
       }, retrying in ${Math.ceil(delay / 1000)}s`
     );

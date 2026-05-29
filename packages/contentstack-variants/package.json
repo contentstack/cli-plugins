@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@contentstack/cli-utilities": "~2.0.0-beta.8",
-    "@oclif/core": "^4.3.0",
+    "@oclif/core": "^4.11.4",
     "lodash": "^4.18.1",
     "mkdirp": "^1.0.4",
     "winston": "^3.19.0"

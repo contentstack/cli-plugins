@@ -9,34 +9,12 @@ import sinon from "sinon";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 import Deploy from "../../../../src/commands/app/deploy";
 import { BaseCommand } from "../../../../src/base-command";
-import { join } from "path";
+import * as libCommonUtils from "../../../../src/util/common-utils";
+import * as libInquirer from "../../../../src/util/inquirer";
 
 const region = configHandler.get("region");
-// Commands run from lib/ (oclif.commands); stub the same classes/modules the running command uses
-let BaseCommandToStub: typeof BaseCommand;
-let LibDeploy: typeof Deploy;
-let libCommonUtils: any;
-let libInquirer: any;
-try {
-  BaseCommandToStub = require(join(process.cwd(), "lib", "base-command")).BaseCommand;
-} catch {
-  BaseCommandToStub = BaseCommand;
-}
-try {
-  LibDeploy = require(join(process.cwd(), "lib", "commands", "app", "deploy")).default;
-} catch {
-  LibDeploy = Deploy;
-}
-try {
-  libCommonUtils = require(join(process.cwd(), "lib", "util", "common-utils"));
-} catch {
-  libCommonUtils = require("../../../../src/util/common-utils");
-}
-try {
-  libInquirer = require(join(process.cwd(), "lib", "util", "inquirer"));
-} catch {
-  libInquirer = require("../../../../src/util/inquirer");
-}
+const BaseCommandToStub = BaseCommand;
+const LibDeploy = Deploy;
 const developerHubBaseUrl = getDeveloperHubUrl();
 
 describe("app:deploy", () => {
@@ -76,7 +54,7 @@ describe("app:deploy", () => {
     sandbox.stub(libInquirer, "getAppUrl").resolves("https://example.com");
     sandbox.stub(libInquirer, "askProjectType").resolves("existing");
     sandbox.stub(libInquirer, "askConfirmation").resolves(false);
-    sandbox.stub(libInquirer, "selectProject").resolves(null);
+    sandbox.stub(libInquirer, "selectProject").resolves(undefined);
     sandbox.stub(libInquirer, "askProjectName").resolves("test-project");
 
     // Stub Launch.run
@@ -355,7 +333,7 @@ describe("app:deploy", () => {
       sandbox.stub(libInquirer, "askProjectType").resolves("new");
       sandbox.stub(libInquirer, "askProjectName").resolves("new-project");
       sandbox.stub(libInquirer, "askConfirmation").resolves(false);
-      sandbox.stub(libInquirer, "selectProject").resolves(null);
+      sandbox.stub(libInquirer, "selectProject").resolves(undefined);
 
       sandbox.stub(libCommonUtils, "getProjects").resolves([
         {
@@ -363,6 +341,7 @@ describe("app:deploy", () => {
           uid: "project-2",
           url: "https://new-project.com",
           environmentUid: "env-2",
+          developerHubAppUid: null,
         },
       ]);
       sandbox.stub(libCommonUtils, "setupConfig").returns({
