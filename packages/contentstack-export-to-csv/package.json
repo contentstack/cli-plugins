@@ -7,7 +7,7 @@
   "dependencies": {
     "@contentstack/cli-command": "~1.8.2",
     "@contentstack/cli-utilities": "~1.18.3",
-    "@oclif/core": "^4.10.5",
+    "@oclif/core": "^4.11.4",
     "fast-csv": "^4.3.6",
     "inquirer": "8.2.7",
     "inquirer-checkbox-plus-prompt": "1.4.2"
@@ -24,7 +24,7 @@
     "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.17.46",
+    "oclif": "^4.23.8",
     "sinon": "^19.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

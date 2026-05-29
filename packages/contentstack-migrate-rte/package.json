@@ -10,7 +10,7 @@
     "@contentstack/cli-command": "1.8.2",
     "@contentstack/cli-utilities": "1.18.3",
     "@contentstack/json-rte-serializer": "~2.1.0",
-    "@oclif/core": "^4.3.0",
+    "@oclif/core": "^4.11.4",
     "@oclif/plugin-help": "^6.2.37",
     "chalk": "^4.1.2",
     "collapse-whitespace": "^1.1.7",
