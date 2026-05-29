@@ -1,0 +1,87 @@
+{
+  "name": "@contentstack/cli-cm-regex-validate",
+  "description": "Validate Fields with Regex Property of Content Type and Global Field in a Stack",
+  "version": "2.0.0-beta.0",
+  "author": "Contentstack",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
+  "dependencies": {
+    "@contentstack/cli-command": "~2.0.0-beta.7",
+    "@contentstack/cli-utilities": "~2.0.0-beta.8",
+    "@contentstack/management": "^1.30.2",
+    "cli-table3": "^0.6.5",
+    "inquirer": "12.11.1",
+    "jsonexport": "^3.2.0",
+    "safe-regex": "^2.1.1",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.29.5",
+    "@oclif/plugin-help": "^6.2.49",
+    "@oclif/test": "^4.1.18",
+    "@types/chai": "^4.3.20",
+    "@types/jest": "^30.0.0",
+    "@types/jsonexport": "^3.0.5",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^18.19.130",
+    "@types/safe-regex": "^1.1.6",
+    "chai": "^4.5.0",
+    "eslint": "^9.26.0",
+    "eslint-config-oclif": "^6.0.62",
+    "eslint-config-oclif-typescript": "^3.1.14",
+    "globby": "^11.1.0",
+    "jest": "^30.4.2",
+    "mocha": "^10.8.2",
+    "nyc": "^15.1.0",
+    "oclif": "^4.23.8",
+    "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/messages",
+    "/oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-cli-cm-regex-validate",
+  "keywords": [
+    "contentstack",
+    "cli",
+    "plugin",
+    "regex"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "csdx",
+    "devPlugins": [
+      "@oclif/plugin-help"
+    ],
+    "repositoryPrefix": "https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/<%- commandPath %>"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-cli-cm-regex-validate"
+  },
+  "scripts": {
+    "build": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
+    "prepack": "pnpm run build",
+    "postpack": "rm -f oclif.manifest.json",
+    "test": "jest --detectOpenHandles --silent",
+    "test:unit": "jest --detectOpenHandles --silent",
+    "posttest": "eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "version": "oclif readme && git add README.md"
+  },
+  "csdxConfig": {
+    "shortCommandName": {
+      "cm:stacks:validate-regex": "RGXVLD"
+    }
+  }
+}

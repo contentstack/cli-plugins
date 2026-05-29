@@ -1,0 +1,16 @@
+*-debug.log
+*-error.log
+/.nyc_output
+/dist
+/tmp
+/logs
+/yarn.lock
+node_modules
+/coverage
+.DS_Store
+# Snyk Security Extension - AI Rules (auto-generated)
+.cursor/rules/snyk_rules.mdc
+oclif.manifest.json
+# Husky 9 internal folder (created by "husky" on install; do not commit)
+.husky/_
+*.log

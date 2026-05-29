@@ -9,7 +9,8 @@ alwaysApply: true
 ## Monorepo Structure
 
 ### Package Organization
-- **11 plugin packages** under `packages/`
+- **12+ plugin packages** under `packages/`
+- `contentstack-cli-cm-regex-validate` - Regex validation for Content Type/Global Field fields (`cm:stacks:validate-regex`; npm `@contentstack/cli-cm-regex-validate`; Jest tests)
 - **pnpm workspaces** with `workspaces: ["packages/*"]`
 - **Shared dependencies**: `@contentstack/cli-command`, `@contentstack/cli-utilities`
 - **Build artifacts**: `lib/` directory (compiled from `src/`)

@@ -158,6 +158,8 @@ npm install -g @contentstack/cli-cm-migrate-rte
 csdx plugins:install @contentstack/cli-cm-migrate-rte@2.0.0-beta
 ```
 
+**Source repository:** Plugin code lives in [cli-plugins](https://github.com/contentstack/cli-plugins) at `packages/contentstack-migrate-rte` (formerly [cli-cm-migrate-rte](https://github.com/contentstack/cli-cm-migrate-rte)). See [MIGRATE-RTE-MIGRATION.md](./MIGRATE-RTE-MIGRATION.md).
+
 **Usage:**
 After installation, RTE migration commands will be available through the CLI:
 ```bash
@@ -179,6 +181,14 @@ csdx cm:migrate-rte --help
 - Operation flag (`--operation`) is now required
 
 **Migration Action:** Refer to the detailed [Bulk Operations Migration Guide](./BULK-OPERATIONS-MIGRATION.md) for complete command mappings and examples.
+
+### 7. 📱 Apps CLI plugin repository move
+
+**What Changed:**
+- The Apps CLI plugin (`@contentstack/apps-cli`) source moved from the standalone [contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli) repository into this **cli-plugins** monorepo at `packages/contentstack-apps-cli`
+- The npm package name and `csdx app:*` commands are unchanged
+
+**Migration Action:** For repository location, branching (1.x vs 2.x), and issue tracking, see the [Apps CLI Migration Guide](./APPS-CLI-MIGRATION.md).
 
 **Quick Example:**
 ```bash
