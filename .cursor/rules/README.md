@@ -37,7 +37,7 @@ Context-aware rules that load automatically based on the files you're editing, o
 
 ### Monorepo Structure
 
-This is a **CLI plugins** monorepo with 12 plugin packages under `packages/`:
+This is a **CLI plugins** monorepo with plugin packages under `packages/`, including:
 - `contentstack-audit` - Stack audit and fix operations
 - `contentstack-bootstrap` - Seed/bootstrap stacks with content
 - `contentstack-branches` - Git-based branch management for stacks
@@ -50,6 +50,9 @@ This is a **CLI plugins** monorepo with 12 plugin packages under `packages/`:
 - `contentstack-migration` - Content migration workflows
 - `contentstack-seed` - Seed stacks with generated data
 - `contentstack-variants` - Manage content variants
+- `contentstack-apps-cli` - Developer Hub apps (`app:*` commands; npm `@contentstack/apps-cli`)
+- `contentstack-content-type` - Content Type introspection (`content-type:*` commands; npm `contentstack-cli-content-type`; Jest tests)
+- `contentstack-cli-tsgen` - TypeScript typings (`csdx tsgen`; npm `contentstack-cli-tsgen`; Jest integration tests)
 
 All plugins depend on:
 - `@contentstack/cli-command` - Base Command class
