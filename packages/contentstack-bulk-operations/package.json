@@ -6,7 +6,7 @@
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-bulk-operations",
   "license": "MIT",
   "bin": {
-    "bulk": "bin/run"
+    "bulk": "bin/run.js"
   },
   "repository": {
     "type": "git",
