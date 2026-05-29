@@ -112,6 +112,7 @@
   },
   "csdxConfig": {
     "shortCommandName": {
+      "cm:stacks:bulk-am-assets": "BOAM",
       "cm:stacks:bulk-assets": "BOA",
       "cm:stacks:bulk-entries": "BOE",
       "cm:stacks:bulk-taxonomies": "BOT"
