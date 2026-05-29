@@ -6945,6 +6945,9 @@ packages:
   lodash.truncate@4.4.2:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
 
+  lodash.truncate@4.4.2:
+    resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
+
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
 
@@ -7227,6 +7230,10 @@ packages:
 
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
+    engines: {node: '>= 0.6'}
+
+  negotiator@0.6.4:
+    resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
     engines: {node: '>= 0.6'}
 
   neo-async@2.6.2:
@@ -8089,6 +8096,10 @@ packages:
     resolution: {integrity: sha512-vFILCw+lzUtiwBAHV8/Ex8JsFjelFMdhONIsgKNLgTzeRckp2AOYRQtHJE/9LhNvdMmE27AGtzWx0+DHpwIwSw==}
     engines: {node: '>= 4.0.0'}
 
+  shelljs.exec@1.1.8:
+    resolution: {integrity: sha512-vFILCw+lzUtiwBAHV8/Ex8JsFjelFMdhONIsgKNLgTzeRckp2AOYRQtHJE/9LhNvdMmE27AGtzWx0+DHpwIwSw==}
+    engines: {node: '>= 4.0.0'}
+
   shelljs@0.10.0:
     resolution: {integrity: sha512-Jex+xw5Mg2qMZL3qnzXIfaxEtBaC4n7xifqaqtrZDdlheR70OGkydrPJWT0V1cA1k3nanC86x9FwAmQl6w3Klw==}
     engines: {node: '>=18'}
@@ -8486,8 +8497,8 @@ packages:
   tiny-warning@1.0.3:
     resolution: {integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==}
 
-  tinyexec@1.2.2:
-    resolution: {integrity: sha512-M/Q0B2cp4K7kynaT/vnED1j8TlLY+Pp7C6Wl2bl/7u/F0mUVwdyOpwomQb8JpYLitHUssAJRmLZdMCGsrx7i+g==}
+  tinyexec@1.2.3:
+    resolution: {integrity: sha512-g62dB+w1/OEFnPvmX0yd/HnetYITOL+1nJW7kitOycOeAvmbWC/nu0fwmmQ/kupNojqExzyC/T++pST/jRJ2mQ==}
     engines: {node: '>=18'}
 
   tinyglobby@0.2.16:
@@ -11949,6 +11960,15 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
+  '@oclif/plugin-not-found@3.2.86':
+    dependencies:
+      '@inquirer/prompts': 7.10.1
+      '@oclif/core': 4.11.4
+      ansis: 3.17.0
+      fast-levenshtein: 3.0.0
+    transitivePeerDependencies:
+      - '@types/node'
+
   '@oclif/plugin-not-found@3.2.86(@types/node@14.18.63)':
     dependencies:
       '@inquirer/prompts': 7.10.1(@types/node@14.18.63)
@@ -13581,6 +13601,17 @@ snapshots:
       '@typescript-eslint/types': 7.18.0
       '@typescript-eslint/typescript-estree': 7.18.0(typescript@6.0.3)
       eslint: 10.4.0
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  '@typescript-eslint/utils@7.18.0(eslint@8.57.1)(typescript@4.9.5)':
+    dependencies:
+      '@eslint-community/eslint-utils': 4.9.1(eslint@8.57.1)
+      '@typescript-eslint/scope-manager': 7.18.0
+      '@typescript-eslint/types': 7.18.0
+      '@typescript-eslint/typescript-estree': 7.18.0(typescript@4.9.5)
+      eslint: 8.57.1
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -19089,7 +19120,7 @@ snapshots:
       listr2: 10.2.1
       picomatch: 4.0.4
       string-argv: 0.3.2
-      tinyexec: 1.2.2
+      tinyexec: 1.2.3
     optionalDependencies:
       yaml: 2.9.0
 
@@ -19189,6 +19220,8 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   lodash.padend@4.6.1: {}
+
+  lodash.truncate@4.4.2: {}
 
   lodash.truncate@4.4.2: {}
 
@@ -19451,6 +19484,8 @@ snapshots:
   natural-orderby@5.0.0: {}
 
   negotiator@0.6.3: {}
+
+  negotiator@0.6.4: {}
 
   neo-async@2.6.2: {}
 
@@ -20559,6 +20594,8 @@ snapshots:
 
   shelljs.exec@1.1.8: {}
 
+  shelljs.exec@1.1.8: {}
+
   shelljs@0.10.0:
     dependencies:
       execa: 5.1.1
@@ -21029,7 +21066,7 @@ snapshots:
 
   tiny-warning@1.0.3: {}
 
-  tinyexec@1.2.2: {}
+  tinyexec@1.2.3: {}
 
   tinyglobby@0.2.16:
     dependencies:
