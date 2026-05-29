@@ -6,7 +6,7 @@
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
     "@contentstack/cli-command": "~1.8.2",
-    "@oclif/core": "^4.10.5",
+    "@oclif/core": "^4.11.4",
     "@contentstack/cli-variants": "~1.5.0",
     "@contentstack/cli-utilities": "~1.18.3",
     "async": "^3.2.6",
@@ -38,7 +38,7 @@
     "eslint": "^9.26.0",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.17.46",
+    "oclif": "^4.23.8",
     "sinon": "^17.0.1",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
