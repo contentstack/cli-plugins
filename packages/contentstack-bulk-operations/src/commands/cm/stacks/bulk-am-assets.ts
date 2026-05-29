@@ -27,7 +27,7 @@ export default class BulkAmAssets extends Command {
     '<%= config.bin %> <%= command.id %> --operation delete --space-uid am123 --org-uid bltcOrg --workspace main --locale en-us --asset-uids-file ./uids.json -y',
   ];
 
-  static flags:FlagInput = {
+  static flags: FlagInput = {
     operation: flags.string({
       description: messages.AM_OPERATION_FLAG,
       options: ['delete', 'move'],
