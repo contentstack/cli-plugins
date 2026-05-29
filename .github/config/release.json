@@ -1,6 +1,8 @@
 {
   "releaseAll": true,
   "plugins": {
+    "variants": false,
+    "query-export": false,
     "utilities": false,
     "command": false,
     "config": false,
@@ -17,6 +19,11 @@
     "dev-dependencies": false,
     "launch": false,
     "branches": false,
+    "apps-cli": false,
+    "content-type": false,
+    "regex-validate": false,
+    "tsgen": false,
+    "bulk-operations": false,
     "core": false
   }
 }

@@ -1,0 +1,110 @@
+{
+  "name": "@contentstack/apps-cli",
+  "version": "1.7.0",
+  "description": "App ClI",
+  "author": "Contentstack CLI",
+  "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-apps-cli",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "bin": {
+    "app": "bin/run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-apps-cli"
+  },
+  "files": [
+    "/bin",
+    "/lib",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "dependencies": {
+    "@apollo/client": "^3.14.1",
+    "@contentstack/cli-command": "~1.8.2",
+    "@contentstack/cli-launch": "^1.9.9",
+    "@contentstack/cli-utilities": "~1.18.3",
+    "adm-zip": "^0.5.17",
+    "chalk": "^4.1.2",
+    "lodash": "^4.18.1",
+    "shelljs": "^0.10.0",
+    "tmp": "^0.2.7",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@oclif/test": "^4.1.18",
+    "@types/adm-zip": "^0.5.8",
+    "@types/chai": "^4.3.20",
+    "@types/lodash": "^4.17.24",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.41",
+    "@types/shelljs": "^0.10.0",
+    "@types/tmp": "^0.2.6",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "axios": "^1.16.1",
+    "chai": "^4.5.0",
+    "dotenv": "^16.6.1",
+    "eslint": "^8.57.1",
+    "eslint-config-oclif": "^6.0.157",
+    "eslint-config-oclif-typescript": "^3.1.14",
+    "mocha": "^10.8.2",
+    "nyc": "^15.1.0",
+    "oclif": "^4.23.8",
+    "shx": "^0.4.0",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
+  },
+  "oclif": {
+    "bin": "csdx",
+    "dirname": "apps-cli",
+    "commands": "./lib/commands",
+    "plugins": [],
+    "topicSeparator": ":",
+    "additionalHelpFlags": [
+      "-h"
+    ],
+    "additionalVersionFlags": [
+      "-v"
+    ],
+    "topics": {
+      "app": {
+        "description": "Perform developer-hub app related activities"
+      }
+    }
+  },
+  "scripts": {
+    "build": "pnpm clean && tsc -b",
+    "lint": "eslint . --ext .ts --config .eslintrc",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "pnpm lint",
+    "prepack": "pnpm build && oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json",
+    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
+    "test:unit:report:json": "mocha --reporter json --reporter-options output=report.json --forbid-only \"test/unit/**/*.test.ts\" && nyc --reporter=clover --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
+  "keywords": [
+    "oclif"
+  ],
+  "types": "./lib/index.d.ts",
+  "csdxConfig": {
+    "shortCommandName": {
+      "app:get": "APGT",
+      "app:create": "APCRT",
+      "app:update": "APUPT",
+      "app:delete": "APDLT",
+      "app:install": "API",
+      "app:uninstall": "APUI",
+      "app:reinstall": "APRI",
+      "app:deploy": "APDP"
+    }
+  }
+}
