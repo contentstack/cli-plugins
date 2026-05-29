@@ -1,16 +1,9 @@
-// Mock utilities before importing anything that uses them
-jest.mock('@contentstack/cli-utilities', () => {
-  const actual = jest.requireActual('@contentstack/cli-utilities');
-  return {
-    ...actual,
-    configHandler: {
-      get: jest.fn().mockReturnValue(null),
-    },
-    HttpClient: {
-      create: jest.fn(),
-    },
-  };
-});
+// Shallow mock: avoid jest.requireActual (pulls uuid ESM in Jest without extra transform config).
+jest.mock('@contentstack/cli-utilities', () => ({
+  HttpClient: {
+    create: jest.fn(),
+  },
+}));
 
 // Mock dependencies
 jest.mock('tar');
@@ -30,7 +23,6 @@ import { Stream } from 'stream';
 describe('GitHubClient', () => {
   let mockHttpClient: any;
   let githubClient: GitHubClient;
-  const DEFAULT_STACK_PATTERN = 'stack-';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -44,16 +36,14 @@ describe('GitHubClient', () => {
 
     (HttpClient.create as jest.Mock) = jest.fn().mockReturnValue(mockHttpClient);
 
-    githubClient = new GitHubClient('testuser', DEFAULT_STACK_PATTERN);
+    githubClient = new GitHubClient('testuser');
   });
 
   describe('constructor', () => {
-    it('should initialize with username and default stack pattern', () => {
-      const client = new GitHubClient('testuser', DEFAULT_STACK_PATTERN);
+    it('should initialize with username', () => {
+      const client = new GitHubClient('testuser');
       expect(client.username).toBe('testuser');
       expect(client.gitHubRepoUrl).toBe('https://api.github.com/repos/testuser');
-      expect(client.gitHubUserUrl).toContain('testuser');
-      expect(client.gitHubUserUrl).toContain(DEFAULT_STACK_PATTERN);
     });
 
     it('should create HttpClient instance', () => {
@@ -86,53 +76,6 @@ describe('GitHubClient', () => {
       expect(result.repo).toBe('');
     });
 
-  });
-
-  describe('getAllRepos', () => {
-    it('should fetch all repositories successfully', async () => {
-      const mockRepos = {
-        data: {
-          items: [
-            { name: 'stack-repo1', html_url: 'https://github.com/testuser/stack-repo1' },
-            { name: 'stack-repo2', html_url: 'https://github.com/testuser/stack-repo2' },
-          ],
-        },
-      };
-
-      mockHttpClient.get.mockResolvedValue(mockRepos);
-
-      const result = await githubClient.getAllRepos();
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('testuser'),
-      );
-      expect(result).toEqual(mockRepos.data.items);
-    });
-
-    it('should handle custom count parameter', async () => {
-      const mockRepos = { data: { items: [] } };
-      mockHttpClient.get.mockResolvedValue(mockRepos);
-
-      await githubClient.getAllRepos(50);
-
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('per_page=50'),
-      );
-    });
-
-    it('should throw GithubError on API failure', async () => {
-      const mockError = {
-        response: {
-          status: 404,
-          statusText: 'Not Found',
-          data: { error_message: 'Repository not found' },
-        },
-      };
-
-      mockHttpClient.get.mockRejectedValue(mockError);
-
-      await expect(githubClient.getAllRepos()).rejects.toThrow(GithubError);
-    });
   });
 
   describe('getLatestTarballUrl', () => {

@@ -138,22 +138,16 @@ export function getOrgUsers(managementAPIClient: ManagementClient, orgUid: strin
           return reject(new Error('Org UID not found.'));
         }
 
-        if (organization.is_owner === true) {
-          return managementAPIClient
-            .organization(organization.uid)
-            .getInvitations()
-            .then((data: unknown) => {
-              resolve(data as OrgUsersResponse);
-            })
-            .catch(reject);
-        }
-
-        if (!organization.getInvitations && !find(organization.org_roles, 'admin')) {
+        if (!organization.is_owner && !find(organization.org_roles, 'admin')) {
           return reject(new Error(messages.ERROR_ADMIN_ACCESS_DENIED));
         }
 
         try {
-          const users = await getUsers(managementAPIClient, { uid: organization.uid }, { skip: 0, page: 1, limit: 100 });
+          const users = await getUsers(
+            managementAPIClient,
+            { uid: organization.uid },
+            { skip: 0, page: 1, limit: config.limit },
+          );
           return resolve({ items: users || [] });
         } catch (error) {
           return reject(error);
@@ -175,15 +169,18 @@ async function getUsers(
   try {
     const users = await managementAPIClient.organization(organization.uid).getInvitations(params) as unknown as OrgUsersResponse;
 
-    if (!users.items || (users.items && !users.items.length)) {
+    if (!users.items || users.items.length < params.limit) {
+      if (users.items?.length) {
+        result = result.concat(users.items);
+      }
       return result;
-    } else {
-      result = result.concat(users.items);
-      params.skip = params.page * params.limit;
-      params.page++;
-      await wait(200);
-      return getUsers(managementAPIClient, organization, params, result);
     }
+
+    result = result.concat(users.items);
+    params.skip = params.page * params.limit;
+    params.page++;
+    await wait(200);
+    return getUsers(managementAPIClient, organization, params, result);
   } catch {
     return result;
   }

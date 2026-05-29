@@ -1,17 +1,10 @@
-// Mock utilities before importing
-jest.mock('@contentstack/cli-utilities', () => {
-  const actual = jest.requireActual('@contentstack/cli-utilities');
-  return {
-    ...actual,
-    configHandler: {
-      get: jest.fn().mockReturnValue(null),
-    },
-  };
-});
-
-// Mock dependencies
-jest.mock('@contentstack/cli-cm-import');
-jest.mock('@contentstack/cli-utilities');
+jest.mock('@contentstack/cli-utilities', () => ({
+  configHandler: {
+    get: jest.fn().mockReturnValue(null),
+  },
+  pathValidator: jest.fn((p: string) => p),
+  sanitizePath: jest.fn((p: string) => p),
+}));
 
 import * as fs from 'fs';
 import * as importer from '../../src/seed/importer';
@@ -31,9 +24,9 @@ describe('Importer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(cliUtilities, 'pathValidator').mockImplementation((p: any) => p);
-    jest.spyOn(cliUtilities, 'sanitizePath').mockImplementation((p: any) => p);
-    (ImportCommand.run as jest.Mock) = jest.fn().mockResolvedValue(undefined);
+    (ImportCommand.run as jest.Mock).mockResolvedValue(undefined);
+    (cliUtilities.pathValidator as jest.Mock).mockImplementation((p: any) => p);
+    (cliUtilities.sanitizePath as jest.Mock).mockImplementation((p: any) => p);
     // Mock fs.existsSync: stack folder exists (standard repo structure)
     jest.spyOn(fs, 'existsSync').mockImplementation((checkPath: fs.PathLike) => {
       const p = typeof checkPath === 'string' ? checkPath : checkPath.toString();
@@ -155,7 +148,7 @@ describe('Importer', () => {
 
     it('should handle import command errors', async () => {
       const mockError = new Error('Import failed');
-      (ImportCommand.run as jest.Mock) = jest.fn().mockRejectedValue(mockError);
+      (ImportCommand.run as jest.Mock).mockRejectedValueOnce(mockError);
 
       await expect(importer.run(mockOptions)).rejects.toThrow('Import failed');
     });
