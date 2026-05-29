@@ -48,6 +48,10 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   createBackupDir?: string;
   region: any;
   authenticationMethod?: string;
+  /** Set when export layout is Asset Management (`spaces/` + stack settings key `am_v2`). */
+  csAssetsEnabled?: boolean;
+  /** AM 2.0 base URL from region / detection (`detectAssetManagementExportFromContentDir`). */
+  csAssetsUrl?: string;
 }
 
 type branch = {
