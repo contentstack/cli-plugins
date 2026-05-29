@@ -21,6 +21,7 @@ import {
   aggregateBatchResults,
   createOperationResult,
   logSummary,
+  categorizeByScanStatus,
 } from './helpers';
 import { setupBatchQueueListeners } from './batch-queue-handler';
 import { confirmOperation } from './operation-confirmation';
@@ -51,6 +52,8 @@ import {
   validateAndBuildBulkDeleteItems,
   LoadAssetUidsError,
 } from './asset-uids-from-file';
+import { scanDataDirStats } from './data-dir-asset-fetcher';
+import type { DataDirScanStats } from './data-dir-asset-fetcher';
 import {
   compareFieldValues,
   compareNonLocalizedFields,
@@ -90,6 +93,7 @@ export {
   fetchAssets,
   fetchEntries,
   logSummary,
+  categorizeByScanStatus,
   logOperationInfo,
   validateBatch,
   enqueueIndividualItems,
@@ -117,4 +121,6 @@ export {
   loadBulkDeleteItemsFromFile,
   validateAndBuildBulkDeleteItems,
   LoadAssetUidsError,
+  scanDataDirStats,
 };
+export type { DataDirScanStats };

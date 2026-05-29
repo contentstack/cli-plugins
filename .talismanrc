@@ -5,4 +5,8 @@ fileignoreconfig:
   checksum: 580932f192dd3fdd8bb2c55b7a7a78f1694f646ef5c5041f86c75668778f7ecb
 - filename: packages/contentstack-bulk-operations/test/unit/utils/asset-uids-from-file.test.ts
   checksum: 8123f7a675a0275795b59b15d0f2d5f8f1e57ccbecf3f97249a0dc5a037b9203
+- filename: packages/contentstack-bulk-operations/src/utils/data-dir-asset-fetcher.ts
+  checksum: ddcf4601ac47be300eba0eb901e4d45d748c2c4eab676c56677cb9a802fe3db0
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: c8767e79c1010cccf984d2124b2c6252b7cba1fb1b6a9f216fa7ddb5b195a935
 version: '1.0'

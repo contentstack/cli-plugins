@@ -37,7 +37,7 @@ export class AssetService {
           const batchUids = uids.slice(i, i + BATCH_CONSTANTS.assetFetchBatchSize);
           const batchPromises = batchUids.map(async (uid) => {
             try {
-              const asset = this.deliveryStack ? await this.deliveryStack.asset(uid).fetch() : undefined;
+              const asset = await this.deliveryStack?.asset(uid).fetch();
               return asset;
             } catch (error: any) {
               // Asset might not exist or not be published to this environment
@@ -125,7 +125,13 @@ export class AssetService {
 
     try {
       while (hasMore) {
-        const queryOptions: any = { skip, limit, include_count: true, include_publish_details: true };
+        const queryOptions: any = {
+          skip,
+          limit,
+          include_count: true,
+          include_publish_details: true,
+          include_asset_scan_status: true,
+        };
 
         // Add any filters from options
         if (options.query) {
@@ -207,7 +213,14 @@ export class AssetService {
       while (hasMore) {
         const query = this.stack
           .asset()
-          .query({ skip, limit, include_count: true, include_publish_details: true, folder: folderUid });
+          .query({
+            skip,
+            limit,
+            include_count: true,
+            include_publish_details: true,
+            include_asset_scan_status: true,
+            folder: folderUid,
+          });
         const response = await query.find();
         const assets = response.items || [];
 
@@ -272,5 +285,35 @@ export class AssetService {
       this.logger.error($t(messages.FETCH_ASSET_FAILED, { uid }), error);
       throw error;
     }
+  }
+
+  /**
+   * Fetch scan status for a specific list of asset UIDs.
+   * Batches requests at 100 UIDs per call to stay within API limits.
+   * Returns a Map<uid, _asset_scan_status> — undefined means scanning is not enabled on the stack.
+   */
+  async fetchScanStatusByUIDs(uids: string[]): Promise<Map<string, string | undefined>> {
+    const statusMap = new Map<string, string | undefined>();
+    if (uids.length === 0) return statusMap;
+
+    this.logger.info($t(messages.SCAN_STATUS_FETCHING, { count: uids.length }));
+
+    const BATCH = 100;
+    for (let i = 0; i < uids.length; i += BATCH) {
+      const batch = uids.slice(i, i + BATCH);
+      try {
+        const response = await this.stack
+          .asset()
+          .query({ uid: { $in: batch }, include_asset_scan_status: true, limit: BATCH })
+          .find();
+        for (const asset of response.items || []) {
+          statusMap.set(asset.uid, asset._asset_scan_status);
+        }
+      } catch (error: any) {
+        this.logger.warn(`Failed to fetch scan status for batch starting at index ${i}: ${error?.message}`);
+      }
+    }
+
+    return statusMap;
   }
 }
