@@ -37,7 +37,7 @@ export class AssetService {
           const batchUids = uids.slice(i, i + BATCH_CONSTANTS.assetFetchBatchSize);
           const batchPromises = batchUids.map(async (uid) => {
             try {
-              const asset = await this.deliveryStack?.asset(uid).fetch();
+              const asset = this.deliveryStack ? await this.deliveryStack.asset(uid).fetch() : undefined;
               return asset;
             } catch (error: any) {
               // Asset might not exist or not be published to this environment

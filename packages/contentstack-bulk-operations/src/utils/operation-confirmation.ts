@@ -27,7 +27,7 @@ export async function confirmOperation(
   const publishMode = config.publishMode || PublishMode.BULK;
 
   console.log(chalk.yellow(`\n${$t(messages.OPERATION_CONFIG_HEADER)}\n`));
-  console.log(`   ${$t(messages.OPERATION_LABEL)}: ${config.operation}`);
+  console.log(`   ${$t(messages.OPERATION_LABEL)}: ${config.operation ?? ''}`);
   console.log(`   ${$t(messages.RESOURCE_TYPE_LABEL)}: ${resourceType}`);
   console.log(`   ${$t(messages.TOTAL_ITEMS_LABEL)}: ${itemCount}`);
 
