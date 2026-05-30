@@ -1,0 +1,15 @@
+*-debug.log
+*-error.log
+/.nyc_output
+/dist
+/lib
+/tmp
+node_modules
+.DS_Store
+coverage
+.env
+oclif.manifest.json
+talisman_output.log
+snyk_output.log
+tsconfig.tsbuildinfo
+tests/integration/generated.d.ts

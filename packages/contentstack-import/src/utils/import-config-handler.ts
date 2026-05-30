@@ -138,14 +138,14 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
     try {
-      const stackSettings = JSON.parse(readFileSync(stackSettingsPath));
+      const stackSettings = readFileSync(stackSettingsPath);
       if (stackSettings?.am_v2) {
         config.csAssetsEnabled = true;
         config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
 
         if (existsSync(stackJsonPath)) {
           try {
-            const stackData = JSON.parse(readFileSync(stackJsonPath));
+            const stackData = readFileSync(stackJsonPath);
             const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
             if (apiKey) {
               config.source_stack = apiKey;
