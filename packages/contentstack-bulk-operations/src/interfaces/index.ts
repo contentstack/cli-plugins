@@ -271,6 +271,18 @@ export interface AmBulkOperationResult {
   error?: string;
 }
 
+/** Typed flags for the bulk-am-assets command. */
+export interface AmAssetFlags {
+  operation: string;
+  'space-uid': string;
+  'org-uid': string;
+  workspace: string;
+  'asset-uids-file': string;
+  locale?: string;
+  'target-folder-uid'?: string;
+  yes: boolean;
+}
+
 export interface BulkJobResult {
   success: number;
   failed: number;
