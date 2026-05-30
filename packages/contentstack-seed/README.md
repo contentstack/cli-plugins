@@ -1,11 +1,11 @@
 ## Description
 The “seed” command in Contentstack CLI allows users to import content to your stack, from Github repositories. It's an effective command that can help you to migrate content to your stack with minimal steps.
 
-To import content to your stack, you can choose from the following two sources:
+To import content to your stack, you can use either of the following:
 
-**Contentstack’s organization**: In this organization, we have provided sample content, which you can import directly to your stack using the seed command.
+**Curated official stacks**: When you run the seed command without a full `owner/repo` on `--repo`, the CLI offers a fixed list of official Contentstack seed repositories on GitHub (no GitHub search API).
 
-**Github’s repository**: You can import content available on Github’s repository belonging to an organization or an individual.
+**Any GitHub repository**: You can also import content from another GitHub repository by passing `--repo` in `owner/repository` form (organization, user, or enterprise account).
 
 <!-- usagestop -->
 ## Commands

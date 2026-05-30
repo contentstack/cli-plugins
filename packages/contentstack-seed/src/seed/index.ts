@@ -4,17 +4,17 @@ import { cliux } from '@contentstack/cli-utilities';
 import * as importer from '../seed/importer';
 import ContentstackClient, { Organization, Stack } from '../seed/contentstack/client';
 import {
+  inquireOfficialSeedStack,
   inquireOrganization,
   inquireProceed,
-  inquireRepo,
   inquireStack,
   InquireStackResponse,
 } from '../seed/interactive';
 import GitHubClient from './github/client';
 import GithubError from './github/error';
+import { OFFICIAL_SEED_STACKS } from './seed-stacks';
 
 const DEFAULT_OWNER = 'contentstack';
-const DEFAULT_STACK_PATTERN = 'stack-';
 
 export const ENGLISH_LOCALE = 'en-us';
 
@@ -38,7 +38,7 @@ export default class ContentModelSeeder {
   private readonly parent: any = null;
   private readonly csClient: ContentstackClient;
 
-  private readonly ghClient: GitHubClient;
+  private ghClient: GitHubClient;
 
   private readonly _options: ContentModelSeederOptions;
 
@@ -61,7 +61,7 @@ export default class ContentModelSeeder {
     this.managementToken = options.managementToken;
 
     this.csClient = new ContentstackClient(options.cmaHost, limit);
-    this.ghClient = new GitHubClient(this.ghUsername, DEFAULT_STACK_PATTERN);
+    this.ghClient = new GitHubClient(this.ghUsername);
   }
 
   async run() {
@@ -233,15 +233,9 @@ export default class ContentModelSeeder {
   }
 
   async inquireGitHubRepo() {
-    try {
-      const allRepos = await this.ghClient.getAllRepos();
-      const stackRepos = allRepos.filter((repo: any) => repo.name.startsWith(DEFAULT_STACK_PATTERN));
-      const repoResponse = await inquireRepo(stackRepos);
-      this.ghRepo = repoResponse.choice;
-    } catch (error) {
-      cliux.error(
-        `Unable to find any Stack repositories within the '${this.ghUsername}' GitHub account. Please re-run this command with a GitHub repository in the 'account/repo' format. You can also re-run the command without arguments to pull from the official Stack list.`,
-      );
-    }
+    const selected = await inquireOfficialSeedStack(OFFICIAL_SEED_STACKS);
+    this.ghUsername = selected.owner;
+    this.ghRepo = selected.repo;
+    this.ghClient = new GitHubClient(this.ghUsername);
   }
 }
