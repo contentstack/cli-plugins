@@ -1,8 +1,4 @@
 fileignoreconfig:
-- filename: packages/contentstack-bulk-operations/src/services/am-asset-service.ts
-  checksum: 5f6c0ecba74e27399a7079ca15e65e77ef692697093c9fb1d57213728c4fe985
-- filename: packages/contentstack-bulk-operations/src/utils/asset-uids-from-file.ts
-  checksum: 580932f192dd3fdd8bb2c55b7a7a78f1694f646ef5c5041f86c75668778f7ecb
-- filename: packages/contentstack-bulk-operations/test/unit/utils/asset-uids-from-file.test.ts
-  checksum: 8123f7a675a0275795b59b15d0f2d5f8f1e57ccbecf3f97249a0dc5a037b9203
+- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-am-assets.test.ts
+  checksum: a26defc1f356308c3f46607e68714bfa2de174e58237cb6b949bd43f2494a818
 version: '1.0'

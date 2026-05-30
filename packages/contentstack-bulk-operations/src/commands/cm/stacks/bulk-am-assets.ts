@@ -2,14 +2,14 @@ import chalk from 'chalk';
 import { flags, log, createLogContext, cliux, handleAndLogError, FlagInput } from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../../../messages';
-import { BaseBulkCommand } from '../../../base-bulk-command';
+import { BaseAmCommand } from '../../../base-am-command';
 import { AmAssetService } from '../../../services';
 import {
   loadAssetUidsFromFile,
   loadBulkDeleteItemsFromFile,
   LoadAssetUidsError,
 } from '../../../utils/asset-uids-from-file';
-import { AmBulkDeleteItem, ResourceType } from '../../../interfaces';
+import { AmBulkDeleteItem } from '../../../interfaces';
 
 const COMMAND_ID = 'cm:stacks:bulk-am-assets';
 
@@ -18,7 +18,7 @@ type RegionWithOptionalAmUrl = { csAssetsUrl?: string };
 /**
  * AM bulk delete (job) / bulk move — CS Assets API only; asset UIDs come from a JSON file `{ "uids": [...] }`.
  */
-export default class BulkAmAssets extends BaseBulkCommand {
+export default class BulkAmAssets extends BaseAmCommand {
   static description = messages.BULK_AM_ASSETS_DESCRIPTION;
 
   static examples = [
@@ -57,8 +57,6 @@ export default class BulkAmAssets extends BaseBulkCommand {
       default: false,
     }),
   };
-
-  protected resourceType = ResourceType.AM_ASSET;
 
   private printAmSummary(op: 'delete' | 'move', opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string }): void {
     if (opts.error) {
@@ -108,26 +106,9 @@ export default class BulkAmAssets extends BaseBulkCommand {
         return;
       }
 
-      const spaceUid = (f['space-uid'] ?? '').trim();
-      if (!spaceUid) {
-        log.error($t(messages.SPACE_UID_REQUIRED), this.loggerContext);
-        process.exitCode = 1;
-        return;
-      }
-
-      const orgUid = (f['org-uid'] ?? '').trim();
-      if (!orgUid) {
-        log.error($t(messages.ORG_UID_REQUIRED), this.loggerContext);
-        process.exitCode = 1;
-        return;
-      }
-
-      const assetUidsPath = (f['asset-uids-file'] ?? '').trim();
-      if (!assetUidsPath) {
-        log.error($t(messages.AM_ASSET_UIDS_FILE_REQUIRED), this.loggerContext);
-        process.exitCode = 1;
-        return;
-      }
+      const spaceUid = f['space-uid'].trim();
+      const orgUid = f['org-uid'].trim();
+      const assetUidsPath = f['asset-uids-file'].trim();
 
       let deleteRows: AmBulkDeleteItem[];
 

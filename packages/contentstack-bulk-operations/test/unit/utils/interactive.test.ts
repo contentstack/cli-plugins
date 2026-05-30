@@ -416,4 +416,226 @@ describe('Interactive Prompts', () => {
       expect(validValidation).to.be.true;
     });
   });
+
+  describe('fillMissingAmFlags', () => {
+    // We need to import fillMissingAmFlags separately
+    let fillMissingAmFlags: typeof import('../../../src/utils/interactive').fillMissingAmFlags;
+    let originalIsTTY: boolean | undefined;
+
+    before(async () => {
+      ({ fillMissingAmFlags } = await import('../../../src/utils/interactive'));
+    });
+
+    beforeEach(() => {
+      originalIsTTY = process.stdin.isTTY;
+    });
+
+    afterEach(() => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: originalIsTTY, configurable: true });
+    });
+
+    it('should return flags unchanged when all required flags are provided (delete)', async () => {
+      const flags = {
+        operation: 'delete',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+        locale: 'en-us',
+        workspace: 'main',
+        yes: false,
+      };
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result).to.deep.equal(flags);
+      expect(inquireStub.called).to.be.false;
+      expect(printStub.called).to.be.false;
+    });
+
+    it('should return flags unchanged when all required flags are provided (move)', async () => {
+      const flags = {
+        operation: 'move',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+        'target-folder-uid': 'folderABC',
+        workspace: 'main',
+        yes: false,
+      };
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result).to.deep.equal(flags);
+      expect(inquireStub.called).to.be.false;
+    });
+
+    it('should throw in non-TTY when required base flags are missing', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+
+      const flags = { workspace: 'main', yes: false };
+
+      try {
+        await fillMissingAmFlags(flags);
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.message).to.include('--operation');
+        expect(error.message).to.include('--space-uid');
+        expect(error.message).to.include('--org-uid');
+        expect(error.message).to.include('--asset-uids-file');
+        expect(error.message).to.include('non-interactive');
+      }
+    });
+
+    it('should throw in non-TTY and include --locale when operation=delete and locale missing', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+
+      const flags = {
+        operation: 'delete',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+      };
+
+      try {
+        await fillMissingAmFlags(flags);
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.message).to.include('--locale');
+      }
+    });
+
+    it('should throw in non-TTY and include --target-folder-uid when operation=move and folder missing', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+
+      const flags = {
+        operation: 'move',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+      };
+
+      try {
+        await fillMissingAmFlags(flags);
+        expect.fail('Should have thrown');
+      } catch (error: any) {
+        expect(error.message).to.include('--target-folder-uid');
+      }
+    });
+
+    it('should prompt for all missing base flags in TTY and show interactive header/footer', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {};
+
+      inquireStub.onCall(0).resolves('delete');        // operation
+      inquireStub.onCall(1).resolves('sp123');          // space-uid
+      inquireStub.onCall(2).resolves('org456');         // org-uid
+      inquireStub.onCall(3).resolves('./assets.json');  // asset-uids-file
+      inquireStub.onCall(4).resolves('en-us');          // locale (delete-conditional)
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result.operation).to.equal('delete');
+      expect(result['space-uid']).to.equal('sp123');
+      expect(result['org-uid']).to.equal('org456');
+      expect(result['asset-uids-file']).to.equal('./assets.json');
+      expect(result.locale).to.equal('en-us');
+      expect(printStub.calledTwice).to.be.true;
+    });
+
+    it('should prompt for locale only when operation=delete and locale is missing', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {
+        operation: 'delete',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+      };
+
+      inquireStub.onCall(0).resolves('en-us');  // locale
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result.locale).to.equal('en-us');
+      expect(inquireStub.calledOnce).to.be.true;
+      expect(inquireStub.firstCall.args[0].name).to.equal('locale');
+    });
+
+    it('should prompt for target-folder-uid only when operation=move and folder is missing', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {
+        operation: 'move',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+      };
+
+      inquireStub.onCall(0).resolves('folderABC');  // target-folder-uid
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result['target-folder-uid']).to.equal('folderABC');
+      expect(inquireStub.calledOnce).to.be.true;
+      expect(inquireStub.firstCall.args[0].name).to.equal('targetFolderUid');
+    });
+
+    it('should NOT prompt for locale when operation=move', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {
+        operation: 'move',
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+        'target-folder-uid': 'folderABC',
+      };
+
+      const result = await fillMissingAmFlags(flags);
+
+      expect(result.locale).to.be.undefined;
+      expect(inquireStub.called).to.be.false;
+    });
+
+    it('should present delete/move choices for the operation prompt', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {
+        'space-uid': 'sp123',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+        'target-folder-uid': 'folderABC',
+      };
+
+      inquireStub.onCall(0).resolves('move');  // operation
+
+      await fillMissingAmFlags(flags);
+
+      const operationCall = inquireStub.firstCall.args[0];
+      expect(operationCall.type).to.equal('list');
+      const values = operationCall.choices.map((c: any) => c.value);
+      expect(values).to.include('delete');
+      expect(values).to.include('move');
+    });
+
+    it('should validate that space-uid is not blank', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+
+      const flags = {
+        operation: 'delete',
+        'org-uid': 'org456',
+        'asset-uids-file': './assets.json',
+        locale: 'en-us',
+      };
+
+      inquireStub.onCall(0).resolves('sp123');
+
+      await fillMissingAmFlags(flags);
+
+      const spaceUidCall = inquireStub.firstCall.args[0];
+      expect(spaceUidCall.validate('')).to.not.equal(true);
+      expect(spaceUidCall.validate('sp123')).to.equal(true);
+    });
+  });
 });
