@@ -1,7 +1,7 @@
 {
   "name": "@contentstack/cli-cm-branches",
   "description": "Contentstack CLI plugin to do branches operations",
-  "version": "2.0.0-beta.7",
+  "version": "2.0.0-beta.8",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
@@ -14,14 +14,14 @@
   },
   "devDependencies": {
     "chai": "^4.5.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "dotenv-expand": "^9.0.0",
     "eslint": "^9.26.0",
     "eslint-config-oclif": "^6.0.62",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.8",
-    "sinon": "^21.0.1",
+    "sinon": "^21.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5"
   },

@@ -1,6 +1,8 @@
-// Mock inquirer before importing anything
+// Mock inquirer before importing anything.
+// cli-utilities loads inquirer and calls registerPrompt; the mock must implement it.
 const mockInquirer = {
   prompt: jest.fn(),
+  registerPrompt: jest.fn(),
 };
 
 jest.mock('inquirer', () => ({
@@ -8,12 +10,93 @@ jest.mock('inquirer', () => ({
   default: mockInquirer,
 }));
 
+jest.mock('@contentstack/cli-utilities', () => ({
+  cliux: {
+    print: jest.fn(),
+    loader: jest.fn(),
+    error: jest.fn(),
+  },
+  HttpClient: {
+    create: jest.fn(() => ({
+      get: jest.fn(),
+      options: jest.fn().mockReturnThis(),
+      resetConfig: jest.fn(),
+    })),
+  },
+  managementSDKClient: jest.fn(),
+  configHandler: {
+    get: jest.fn(),
+  },
+  ContentstackClient: jest.fn(),
+}));
+
 import * as interactive from '../../src/seed/interactive';
 import { Organization, Stack } from '../../src/seed/contentstack/client';
+import { cliux } from '@contentstack/cli-utilities';
 
 describe('Interactive', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('inquireOfficialSeedStack', () => {
+    const sampleStacks = [
+      { displayName: 'Alpha Stack', owner: 'contentstack', repo: 'alpha-repo' },
+      { displayName: 'Beta Stack', owner: 'contentstack', repo: 'beta-repo' },
+    ];
+
+    beforeEach(() => {
+      jest.spyOn(cliux, 'print').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should throw when catalog is empty', async () => {
+      await expect(interactive.inquireOfficialSeedStack([])).rejects.toThrow(
+        'Precondition failed: No official seed stacks configured.',
+      );
+    });
+
+    it('should prompt with list and official message', async () => {
+      mockInquirer.prompt = jest.fn().mockResolvedValue({
+        stack: sampleStacks[0],
+      });
+
+      const result = await interactive.inquireOfficialSeedStack(sampleStacks);
+
+      expect(mockInquirer.prompt).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: 'list',
+          name: 'stack',
+          message: interactive.OFFICIAL_SEED_STACK_SELECTION_MESSAGE,
+        }),
+      ]);
+      const promptArg = (mockInquirer.prompt as jest.Mock).mock.calls[0][0][0];
+      expect(promptArg.choices).toHaveLength(3);
+      expect(result).toEqual({ owner: 'contentstack', repo: 'alpha-repo' });
+    });
+
+    it('should include Exit in choices', async () => {
+      mockInquirer.prompt = jest.fn().mockResolvedValue({
+        stack: sampleStacks[1],
+      });
+
+      await interactive.inquireOfficialSeedStack(sampleStacks);
+
+      const promptArg = (mockInquirer.prompt as jest.Mock).mock.calls[0][0][0];
+      expect(promptArg.choices).toContain('Exit');
+    });
+
+    it('should print and throw on Exit', async () => {
+      mockInquirer.prompt = jest.fn().mockResolvedValue({
+        stack: 'Exit',
+      });
+
+      await expect(interactive.inquireOfficialSeedStack(sampleStacks)).rejects.toThrow('Exit');
+      expect(cliux.print).toHaveBeenCalledWith('Exiting...');
+    });
   });
 
   describe('inquireRepo', () => {
