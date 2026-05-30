@@ -20,6 +20,7 @@ export enum ResourceType {
   ENTRY = 'entry',
   ASSET = 'asset',
   TAXONOMY = 'taxonomy',
+  AM_ASSET = 'am-asset',
 }
 
 export enum FilterType {

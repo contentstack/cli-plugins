@@ -28,6 +28,7 @@ import {
   buildBulkModeResult,
   handleOperationError,
   fillMissingFlags,
+  fillMissingAmFlags,
   getLogPaths,
   clearLogs,
   generateBulkPublishStatusUrl,
@@ -51,7 +52,7 @@ import {
  * Provides common functionality for bulk-entries and bulk-assets
  */
 export abstract class BaseBulkCommand extends Command {
-  protected abstract resourceType: ResourceType;
+  protected resourceType?: ResourceType;
 
   // Common flags for all bulk operations
   static baseFlags: FlagInput = {
@@ -145,6 +146,15 @@ export abstract class BaseBulkCommand extends Command {
 
     this.parsedFlags = flags;
 
+    // AM assets uses a different API surface — prompt for AM-specific flags and skip
+    // the publish/unpublish stack setup, queue init, and config build.
+    if (this.resourceType === ResourceType.AM_ASSET) {
+      this.logger = log;
+      this.loggerContext = { module: this.id };
+      this.parsedFlags = await fillMissingAmFlags(flags);
+      return;
+    }
+
     const commandName = `cm:stacks:bulk-${this.resourceType === ResourceType.ENTRY ? 'entries' : 'assets'}`;
     createLogContext(
       this.context?.info?.command || commandName,
@@ -177,7 +187,7 @@ export abstract class BaseBulkCommand extends Command {
     await this.setupStack();
     await this.initializeComponents();
 
-    this.logger.debug($t(messages.INITIALIZING, { resourceType: this.resourceType }), this.loggerContext);
+    this.logger.debug($t(messages.INITIALIZING, { resourceType: this.resourceType! }), this.loggerContext);
   }
 
   /**
@@ -189,7 +199,7 @@ export abstract class BaseBulkCommand extends Command {
     const isRetry = !!flags['retry-failed'];
 
     // Load config from log file
-    const logFileConfig = loadConfigFromLogFile(logPath, isRetry, this.resourceType);
+    const logFileConfig = loadConfigFromLogFile(logPath, isRetry, this.resourceType!);
 
     if (!logFileConfig) {
       throw new Error($t(messages.NO_CONFIG_IN_LOG));
@@ -334,7 +344,7 @@ export abstract class BaseBulkCommand extends Command {
         batchResults: this.batchResults,
         logger: this.logger,
         retryStrategy: this.retryStrategy,
-        resourceType: this.resourceType,
+        resourceType: this.resourceType!,
         logFolderPath: this.bulkOperationConfig.bulkOperationFolder,
         apiKey: this.bulkOperationConfig.apiKey || this.bulkOperationConfig.stackApiKey,
         branch: this.bulkOperationConfig.branch,
@@ -352,7 +362,7 @@ export abstract class BaseBulkCommand extends Command {
     const flags = this.parsedFlags || (await this.parse(this.constructor as typeof BaseBulkCommand)).flags;
     const itemCount = items?.length || 0;
 
-    return await confirmOperationUtil(this.bulkOperationConfig, itemCount, this.resourceType, flags.yes);
+    return await confirmOperationUtil(this.bulkOperationConfig, itemCount, this.resourceType!, flags.yes);
   }
 
   /**
@@ -493,7 +503,7 @@ export abstract class BaseBulkCommand extends Command {
     const result = await handleRevertOrRetry(
       logPath,
       isRetry,
-      this.resourceType,
+      this.resourceType!,
       this.bulkOperationConfig,
       flags.yes,
       this.executeBulkOperation.bind(this),
@@ -518,14 +528,14 @@ export abstract class BaseBulkCommand extends Command {
         targetEnvs: flags.environments as string[],
         locales: flags.locales as string[],
         contentTypes: flags['content-types'] as string[] | undefined,
-        resourceType: this.resourceType,
+        resourceType: this.resourceType!,
         deliveryStack: this.deliveryStack!, // Required: initialized via source-alias delivery token
       },
       this.logger
     );
 
     if (itemsToPublish.length === 0) {
-      this.logger.warn($t(messages.NO_ITEMS_FOUND, { resourceType: this.resourceType }), this.loggerContext);
+      this.logger.warn($t(messages.NO_ITEMS_FOUND, { resourceType: this.resourceType! }), this.loggerContext);
       return;
     }
 
