@@ -223,3 +223,82 @@ export async function fillMissingFlags(flags: any): Promise<any> {
 
   return updatedFlags;
 }
+
+/**
+ * Fills in missing flags for the bulk-am-assets command by prompting the user.
+ * Handles AM-specific required flags including operation-conditional ones
+ * (locale for delete, target-folder-uid for move).
+ */
+export async function fillMissingAmFlags(flags: any): Promise<any> {
+  const f = { ...flags };
+
+  const needsLocale = f.operation === 'delete' && !f.locale;
+  const needsFolderUid = f.operation === 'move' && !f['target-folder-uid'];
+  const needsPrompt =
+    !f.operation || !f['space-uid'] || !f['org-uid'] || !f['asset-uids-file'] || needsLocale || needsFolderUid;
+
+  if (!needsPrompt) return f;
+
+  cliux.print(messages.INTERACTIVE_MODE_START, { color: 'cyan' });
+
+  if (!f.operation) {
+    f.operation = await cliux.inquire<string>({
+      type: 'list',
+      name: 'operation',
+      message: messages.AM_SELECT_OPERATION,
+      choices: [
+        { name: 'Delete (AM bulk delete)', value: 'delete' },
+        { name: 'Move (AM bulk move)', value: 'move' },
+      ],
+    });
+  }
+
+  if (!f['space-uid']) {
+    f['space-uid'] = await cliux.inquire<string>({
+      type: 'input',
+      name: 'spaceUid',
+      message: messages.AM_ENTER_SPACE_UID,
+      validate: (v: string) => (!v?.trim() ? messages.SPACE_UID_REQUIRED : true),
+    });
+  }
+
+  if (!f['org-uid']) {
+    f['org-uid'] = await cliux.inquire<string>({
+      type: 'input',
+      name: 'orgUid',
+      message: messages.AM_ENTER_ORG_UID,
+      validate: (v: string) => (!v?.trim() ? messages.ORG_UID_REQUIRED : true),
+    });
+  }
+
+  if (!f['asset-uids-file']) {
+    f['asset-uids-file'] = await cliux.inquire<string>({
+      type: 'input',
+      name: 'assetUidsFile',
+      message: messages.AM_ENTER_ASSET_UIDS_FILE,
+      validate: (v: string) => (!v?.trim() ? messages.AM_ASSET_UIDS_FILE_REQUIRED : true),
+    });
+  }
+
+  if (f.operation === 'delete' && !f.locale) {
+    f.locale = await cliux.inquire<string>({
+      type: 'input',
+      name: 'locale',
+      message: messages.AM_ENTER_LOCALE,
+      validate: (v: string) => (!v?.trim() ? messages.AM_LOCALE_REQUIRED : true),
+    });
+  }
+
+  if (f.operation === 'move' && !f['target-folder-uid']) {
+    f['target-folder-uid'] = await cliux.inquire<string>({
+      type: 'input',
+      name: 'targetFolderUid',
+      message: messages.AM_ENTER_TARGET_FOLDER,
+      validate: (v: string) => (!v?.trim() ? messages.TARGET_FOLDER_REQUIRED : true),
+    });
+  }
+
+  cliux.print(messages.INTERACTIVE_MODE_COMPLETE, { color: 'green' });
+
+  return f;
+}

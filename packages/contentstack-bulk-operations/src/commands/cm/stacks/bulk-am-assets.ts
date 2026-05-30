@@ -1,15 +1,15 @@
 import chalk from 'chalk';
-import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, handleAndLogError, cliux, FlagInput } from '@contentstack/cli-utilities';
+import { flags, log, createLogContext, cliux, handleAndLogError, FlagInput } from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../../../messages';
+import { BaseBulkCommand } from '../../../base-bulk-command';
 import { AmAssetService } from '../../../services';
 import {
   loadAssetUidsFromFile,
   loadBulkDeleteItemsFromFile,
   LoadAssetUidsError,
 } from '../../../utils/asset-uids-from-file';
-import { AmBulkDeleteItem } from '../../../interfaces';
+import { AmBulkDeleteItem, ResourceType } from '../../../interfaces';
 
 const COMMAND_ID = 'cm:stacks:bulk-am-assets';
 
@@ -18,7 +18,7 @@ type RegionWithOptionalAmUrl = { csAssetsUrl?: string };
 /**
  * AM bulk delete (job) / bulk move — CS Assets API only; asset UIDs come from a JSON file `{ "uids": [...] }`.
  */
-export default class BulkAmAssets extends Command {
+export default class BulkAmAssets extends BaseBulkCommand {
   static description = messages.BULK_AM_ASSETS_DESCRIPTION;
 
   static examples = [
@@ -31,15 +31,12 @@ export default class BulkAmAssets extends Command {
     operation: flags.string({
       description: messages.AM_OPERATION_FLAG,
       options: ['delete', 'move'],
-      required: true,
     }),
     'space-uid': flags.string({
       description: messages.AM_SPACE_UID_FLAG,
-      required: true,
     }),
     'org-uid': flags.string({
       description: messages.AM_ORG_UID_FLAG,
-      required: true,
     }),
     workspace: flags.string({
       default: 'main',
@@ -47,7 +44,6 @@ export default class BulkAmAssets extends Command {
     }),
     'asset-uids-file': flags.string({
       description: messages.AM_ASSET_UIDS_FILE_FLAG,
-      required: true,
     }),
     locale: flags.string({
       description: messages.AM_LOCALE_FLAG,
@@ -62,7 +58,24 @@ export default class BulkAmAssets extends Command {
     }),
   };
 
-  private readonly loggerContext = { module: COMMAND_ID };
+  protected resourceType = ResourceType.AM_ASSET;
+
+  private printAmSummary(op: 'delete' | 'move', opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string }): void {
+    if (opts.error) {
+      log.error($t(messages.AM_OPERATION_FAILED, { operation: op }), this.loggerContext);
+      log.error(opts.error, this.loggerContext);
+    } else if (op === 'delete') {
+      log.success($t(messages.AM_DELETE_SUCCESS), this.loggerContext);
+      if (opts.jobId) log.info($t(messages.AM_DELETE_JOB_ID, { jobId: opts.jobId }), this.loggerContext);
+      log.info($t(messages.AM_DELETE_ASYNC_NOTE), this.loggerContext);
+    } else {
+      log.success($t(messages.AM_MOVE_SUCCESS), this.loggerContext);
+      if (opts.count !== undefined && opts.folderUid) {
+        log.info($t(messages.AM_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }), this.loggerContext);
+      }
+    }
+    if (opts.notice) log.info(opts.notice, this.loggerContext);
+  }
 
   private handleAssetUidsFileError(e: LoadAssetUidsError): void {
     const pathShown = e.filePath;
@@ -79,7 +92,7 @@ export default class BulkAmAssets extends Command {
 
   async run(): Promise<void> {
     try {
-      const { flags: f } = await this.parse(BulkAmAssets);
+      const f = this.parsedFlags;
 
       const amBaseUrl = (this.region as RegionWithOptionalAmUrl).csAssetsUrl?.trim();
       if (!amBaseUrl) {
@@ -166,16 +179,17 @@ export default class BulkAmAssets extends Command {
         log.info($t(messages.AM_DELETING_ASSETS, { count: deleteRows.length, spaceUid }), this.loggerContext);
         const result = await amService.bulkDelete(spaceUid, workspace, deleteRows);
         if (!result.success) {
-          log.error(result.error ?? 'AM bulk delete failed', this.loggerContext);
+          this.printAmSummary('delete', { error: result.error ?? 'AM bulk delete failed' });
           process.exitCode = 1;
           return;
         }
-        if (result.notice) {
-          log.info($t(messages.AM_OPERATION_NOTICE, { notice: result.notice }), this.loggerContext);
-        }
-        if (result.jobId) {
-          log.info($t(messages.AM_DELETE_SUBMITTED, { jobId: result.jobId }), this.loggerContext);
-        }
+        this.printAmSummary('delete', { jobId: result.jobId, notice: result.notice });
+        return;
+      }
+
+      if (f.locale) {
+        log.error($t(messages.AM_LOCALE_NOT_ALLOWED_FOR_MOVE), this.loggerContext);
+        process.exitCode = 1;
         return;
       }
 
@@ -231,14 +245,11 @@ export default class BulkAmAssets extends Command {
       );
       const result = await amService.bulkMove(spaceUid, workspace, uids, moveFolderUid);
       if (!result.success) {
-        log.error(result.error ?? 'AM bulk move failed', this.loggerContext);
+        this.printAmSummary('move', { error: result.error ?? 'AM bulk move failed' });
         process.exitCode = 1;
         return;
       }
-      if (result.notice) {
-        log.info($t(messages.AM_OPERATION_NOTICE, { notice: result.notice }), this.loggerContext);
-      }
-      log.info($t(messages.AM_MOVE_SUBMITTED), this.loggerContext);
+      this.printAmSummary('move', { count: uids.length, folderUid: moveFolderUid, notice: result.notice });
     } catch (error) {
       handleAndLogError(error);
     }
