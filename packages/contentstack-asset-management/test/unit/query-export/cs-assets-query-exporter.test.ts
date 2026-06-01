@@ -38,7 +38,9 @@ describe('CsAssetsQueryExporter', () => {
       space: { uid: 'space-1', title: 'Test Space' },
     });
     searchAssetsStub = sinon.stub(CSAssetsExportAdapter.prototype, 'searchAssets').resolves({
-      assets: [
+      count: 2,
+      relation: 'eq',
+      results: [
         { uid: 'asset-1', url: 'https://cdn.example.com/a1.png', file_name: 'a1.png', is_dir: false },
         { uid: 'asset-2', url: 'https://cdn.example.com/a2.png', file_name: 'a2.png', is_dir: false },
       ],
@@ -120,7 +122,7 @@ describe('CSAssetsAdapter.searchAssets', () => {
     sinon.restore();
   });
 
-  it('should POST to /api/search with uid $in query', async () => {
+  it('should POST to /api/search with $and-wrapped uid $in query and required fields', async () => {
     const adapter = new CSAssetsAdapter(baseConfig);
     await adapter.searchAssets({
       assetUIDs: ['uid-1', 'uid-2'],
@@ -134,8 +136,12 @@ describe('CSAssetsAdapter.searchAssets', () => {
     expect(url).to.equal('https://am.example.com/api/search');
     expect(init.method).to.equal('POST');
     const body = JSON.parse(init.body);
-    expect(body.query).to.deep.equal({ uid: { $in: ['uid-1', 'uid-2'] } });
+    expect(body.query).to.deep.equal({ $and: [{ uid: { $in: ['uid-1', 'uid-2'] } }] });
     expect(body.object_type).to.equal('asset');
+    expect(body.desc).to.equal('updated_at');
+    expect(body.search_text).to.equal('');
+    expect(body.search_field).to.equal('all');
+    expect(body.search_terms_operator).to.equal('or');
     expect(body.spaces).to.deep.equal([{ space_uid: 'space-1', workspace: 'main' }]);
   });
 

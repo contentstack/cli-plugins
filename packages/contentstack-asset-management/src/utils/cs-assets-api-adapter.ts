@@ -263,10 +263,16 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       return { count: 0, assets: [] };
     }
     const body = {
-      query: { uid: { $in: assetUIDs } },
+      query: {
+        $and: [{ uid: { $in: assetUIDs } }],
+      },
       skip,
       limit,
+      desc: 'updated_at',
+      search_text: '',
+      search_field: 'all',
       object_type: 'asset',
+      search_terms_operator: 'or',
       fields: [...DEFAULT_SEARCH_ASSET_FIELDS],
       spaces,
     };
