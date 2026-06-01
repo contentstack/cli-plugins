@@ -4,18 +4,28 @@ import { isAuthenticated, configHandler, cliux } from '@contentstack/cli-utiliti
 
 // Mock dependencies
 jest.mock('../../../../src/seed/index');
-jest.mock('@contentstack/cli-utilities', () => ({
-  ...jest.requireActual('@contentstack/cli-utilities'),
-  isAuthenticated: jest.fn(),
-  configHandler: {
-    get: jest.fn(),
-  },
-  cliux: {
-    print: jest.fn(),
-    loader: jest.fn(),
-    error: jest.fn(),
-  },
-}));
+jest.mock('@contentstack/cli-utilities', () => {
+  const { Flags, Command } = require('@oclif/core');
+  return {
+    flags: Flags,
+    Command,
+    CLIError: class CLIError extends Error {
+      constructor(message: string) {
+        super(message);
+        this.name = 'CLIError';
+      }
+    },
+    isAuthenticated: jest.fn(),
+    configHandler: {
+      get: jest.fn(),
+    },
+    cliux: {
+      print: jest.fn(),
+      loader: jest.fn(),
+      error: jest.fn(),
+    },
+  };
+});
 
 describe('SeedCommand', () => {
   let mockSeeder: jest.Mocked<ContentModelSeeder>;

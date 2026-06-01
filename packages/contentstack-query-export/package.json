@@ -1,14 +1,14 @@
 {
   "name": "@contentstack/cli-cm-export-query",
   "description": "Contentstack CLI plugin to export content from stack",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-cm-export": "~2.0.0-beta.18",
-    "@contentstack/cli-command": "~2.0.0-beta.7",
-    "@contentstack/cli-utilities": "~2.0.0-beta.8",
-    "@oclif/core": "^4.10.5",
+    "@contentstack/cli-cm-export": "~2.0.0-beta.19",
+    "@contentstack/cli-command": "~2.0.0-beta.8",
+    "@contentstack/cli-utilities": "~2.0.0-beta.9",
+    "@oclif/core": "^4.11.4",
     "async": "^3.2.6",
     "big-json": "^3.2.0",
     "bluebird": "^3.7.2",
@@ -21,11 +21,11 @@
     "winston": "^3.19.0"
   },
   "overrides": {
-    "brace-expansion": "^5.0.5"
+    "brace-expansion": "^5.0.6"
   },
   "devDependencies": {
     "@contentstack/cli-dev-dependencies": "~1.3.1",
-    "@oclif/plugin-help": "^6.2.44",
+    "@oclif/plugin-help": "^6.2.49",
     "@oclif/test": "^4.1.18",
     "@types/big-json": "^3.2.5",
     "@types/chai": "^4.3.20",
@@ -42,7 +42,7 @@
     "husky": "^9.1.7",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.17.46",
+    "oclif": "^4.23.8",
     "sinon": "^17.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5"

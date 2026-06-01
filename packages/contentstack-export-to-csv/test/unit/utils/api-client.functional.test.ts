@@ -131,7 +131,8 @@ describe('api-client functional', () => {
         }),
       } as any;
       const res = await getOrgUsers(client, 'org-1');
-      expect(res).to.equal(invitations);
+      expect(res.items).to.have.lengthOf(1);
+      expect(res.items[0].email).to.equal('a@b.com');
     });
 
     it('getOrgUsers rejects when org uid missing', async () => {
@@ -148,8 +149,8 @@ describe('api-client functional', () => {
 
     it('getOrgUsers resolves paginated invitations for non-owner admin org', async () => {
       const getInvitations = sandbox.stub();
-      getInvitations.onFirstCall().resolves({ items: [{ email: 'a@b.com' }] });
-      getInvitations.onSecondCall().resolves({ items: [] });
+      getInvitations.onFirstCall().resolves({ items: Array.from({ length: 100 }, (_, i) => ({ email: `u${i}@b.com` })) });
+      getInvitations.onSecondCall().resolves({ items: [{ email: 'a@b.com' }] });
       const client = {
         getUser: () =>
           Promise.resolve({
@@ -160,7 +161,7 @@ describe('api-client functional', () => {
         }),
       } as any;
       const res = await getOrgUsers(client, 'org-1');
-      expect(res.items).to.have.lengthOf(1);
+      expect(res.items).to.have.lengthOf(101);
       expect(getInvitations.calledTwice).to.equal(true);
     });
 
