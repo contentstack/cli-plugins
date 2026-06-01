@@ -46,6 +46,7 @@ export async function setupQueryExportConfig(flags: any): Promise<QueryExportCon
     const { token, apiKey } = configHandler.get(`tokens.${flags.alias}`) || {};
     exportQueryConfig.managementToken = token;
     exportQueryConfig.stackApiKey = apiKey;
+    exportQueryConfig.alias = flags.alias;
     if (!exportQueryConfig.managementToken) {
       throw new Error(`No management token found for alias ${flags.alias}.`);
     }

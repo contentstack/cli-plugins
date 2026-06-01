@@ -115,6 +115,28 @@ export type CSAssetsAPIConfig = {
   context?: Record<string, unknown>;
 };
 
+// ---------------------------------------------------------------------------
+// Bulk mutate (CS Assets / AM API)
+// ---------------------------------------------------------------------------
+
+export type BulkDeleteAssetItem = { uid: string; locale: string };
+
+export type BulkDeleteAssetsPayload = { assets: BulkDeleteAssetItem[] };
+
+export type BulkDeleteAssetsResponse = {
+  notice?: string;
+  job_id?: string;
+};
+
+export type BulkMoveAssetsPayload = {
+  asset_uids: string[];
+  target_folder_uid: string;
+};
+
+export type BulkMoveAssetsResponse = {
+  notice?: string;
+};
+
 /**
  * Adapter interface for Contentstack Assets API calls.
  * Used by export and (future) import.
@@ -152,6 +174,16 @@ export interface ICSAssetsAdapter {
   getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
+  bulkDeleteAssets(
+    spaceUid: string,
+    workspaceUid: string | undefined,
+    payload: BulkDeleteAssetsPayload,
+  ): Promise<BulkDeleteAssetsResponse>;
+  bulkMoveAssets(
+    spaceUid: string,
+    workspaceUid: string | undefined,
+    payload: BulkMoveAssetsPayload,
+  ): Promise<BulkMoveAssetsResponse>;
 }
 
 /** Options for query-based Contentstack Assets export (referenced assets from entries). */

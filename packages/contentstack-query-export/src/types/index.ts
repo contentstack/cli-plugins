@@ -216,6 +216,7 @@ export interface QueryExportConfig extends DefaultConfig {
   csAssetsUrl?: string;
   /** Organization UID for Contentstack Assets API headers. */
   org_uid?: string;
+  alias?: string;
   context?: LogContext; // Log context for centralized logging
 }
 

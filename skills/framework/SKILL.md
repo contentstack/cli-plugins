@@ -1,6 +1,9 @@
 ---
 name: framework
-description: Core utilities, configuration, logging, and framework patterns for CLI development. Use when working with utilities, configuration management, error handling, or core framework components.
+description: >-
+  Core utilities, configuration, logging, and framework patterns for CLI development.
+  Use when working with utilities, config, errors, or core framework components—including
+  the Apps CLI plugin (packages/contentstack-apps-cli).
 ---
 
 # Framework Patterns
@@ -402,3 +405,70 @@ export class MyService {
 const service = new MyService(configHandler, log, httpClient);
 await service.execute();
 ```
+
+## Apps CLI plugin (`@contentstack/apps-cli`)
+
+Package: **`packages/contentstack-apps-cli`**. Developer Hub–specific patterns extend the utilities above. OCLIF commands: [contentstack-cli](../contentstack-cli/SKILL.md#apps-cli-commands-app). Migration: [APPS-CLI-MIGRATION.md](../../APPS-CLI-MIGRATION.md).
+
+### SDK clients in `BaseCommand`
+
+Apps commands use **`BaseCommand`** (`src/base-command.ts`), which initializes three clients in `init()`:
+
+| Client | Initiator | Host | Use |
+| --- | --- | --- | --- |
+| `managementSdk` | `managementSDKInitiator` / `managementSDKClient` | `this.cmaHost` | Standard CMA |
+| `managementAppSdk` | `managementSDKClient` | `developerHubBaseUrl` | Developer Hub CMA |
+| `marketplaceAppSdk` | `marketplaceSDKInitiator` / `marketplaceSDKClient` | `developerHubBaseUrl` | Marketplace / app CRUD |
+
+Resolve Developer Hub host via `getDeveloperHubUrl()` in `src/util/inquirer.ts` when region config does not supply `developerHubBaseUrl`.
+
+### Apps-specific configuration
+
+- **`src/config/index.ts`** — `defaultAppFileName` (`manifest`), `defaultAppName`, `manifestPath` (template), `developerHubBaseUrl`, `appBoilerplateGithubUrl`, `boilerplatesUrl`.
+- **`src/config/manifest.json`** — Reference manifest schema for create/update flows.
+- **`registerConfig()`** on `BaseCommand` — merges external JSON from `--config` into `sharedConfig` (omits `manifestPath`, `boilerplateName`, `developerHubUrls`).
+- **`sharedConfig`** — `projectBasePath` defaults to `process.cwd()`; passed to the local `Logger` (`src/util/log.ts`), which binds `this.log` on commands.
+
+### Manifest and app data
+
+- Typings: **`src/types/`** (e.g. `AppManifest` in `src/types/app.ts`).
+- On-disk file: `{cwd}/manifest.json` via `config.defaultAppFileName`.
+- Manifest commands extend **`AppCLIBaseCommand`** (`src/app-cli-base-command.ts`), which loads `manifestData` after `super.init()`.
+
+### HTTP for Developer Hub
+
+- **`src/util/api-request-handler.ts`** — `apiRequestHandler({ orgUid, method, url, queryParams, payload })`; wraps `HttpClient` with `organization_uid` and `authtoken` from `configHandler`; uses `formatErrors` from `error-helper.ts`. Do not scatter raw HTTP in commands.
+- **`src/util/inquirer.ts`** — `getDeveloperHubUrl()`, org/app/stack prompts; nock this host in unit tests.
+- **`src/util/common-utils.ts`** — App CRUD helpers, boilerplate download, zip handling.
+
+### GraphQL
+
+- **`src/graphql/queries.ts`** — e.g. `projectsQuery` for Launch deploy (`gql` from `@contentstack/cli-launch`). Add new queries here; align with Developer Hub / Launch APIs used by deploy and install flows.
+
+### Auth guard
+
+`validateRegionAndAuth()` runs in `init`: if a region is set, `isAuthenticated()` must pass or the command exits with `CLI_APP_CLI_LOGIN_FAILED`. Unit tests stub via `test/unit/helpers/auth-stub-helper.ts` (`stubAuthentication`); never require real credentials in tests.
+
+### Code layout (business logic)
+
+Keep commands thin; put logic in:
+
+- `src/util/` — shared helpers (`common-utils`, `inquirer`, `fs`, `api-request-handler`)
+- `src/factories/` — object construction (e.g. uninstall flows)
+- `src/strategies/` — variant behavior (e.g. uninstall-all vs uninstall-selected)
+- `src/types/` — `AppManifest` and related typings
+- `src/graphql/queries.ts` — Developer Hub / Launch GraphQL (`@contentstack/cli-launch` `gql`)
+
+### User-visible strings
+
+Apps plugin uses local **`messages`** and **`$t`** from `src/messages/index.ts` (not only `messageHandler` from utilities). Reuse `commonMsg` for shared flag descriptions (`org`, `yes`).
+
+### Rate limits and retries
+
+Follow existing error formatting in `error-helper.ts` and patterns in `api-request-handler` / `common-utils` rather than blocking the CLI without user feedback.
+
+### TypeScript and lint (Apps CLI)
+
+- **`packages/contentstack-apps-cli/tsconfig.json`** — `strict: true`, `noUnusedLocals`, `noUnusedParameters`, `composite: true`, `rootDir` `src/`, `outDir` `lib/`.
+- **`.eslintrc`** — lints `src/` only (`lib/**`, `test/**` ignored).
+- Naming: kebab-case files, PascalCase classes, camelCase functions, `SCREAMING_SNAKE_CASE` for module-level constants.
