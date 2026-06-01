@@ -5,4 +5,6 @@ fileignoreconfig:
   checksum: 580932f192dd3fdd8bb2c55b7a7a78f1694f646ef5c5041f86c75668778f7ecb
 - filename: packages/contentstack-bulk-operations/test/unit/utils/asset-uids-from-file.test.ts
   checksum: 8123f7a675a0275795b59b15d0f2d5f8f1e57ccbecf3f97249a0dc5a037b9203
+- filename: pnpm-lock.yaml
+  checksum: f3d6c28f120dd0f2a6abcdaf033734e979996e462a29b1b5b350228c61f62c87
 version: '1.0'
