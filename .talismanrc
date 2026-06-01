@@ -39,4 +39,6 @@ fileignoreconfig:
     checksum: 9fa87dc7639e821411fba5b4f7871384dc2c4d5c11887a5d3c5a19702e7130be
   - filename: packages/contentstack-asset-management/test/unit/import-setup/import-setup-asset-mappers.test.ts
     checksum: a3841d92aed9e31aea8f243c2fa51023cacd619eeac7c35048621247145decb4
+  - filename: packages/contentstack-query-export/src/core/query-executor.ts
+    checksum: 708f8a9bc837ed15342fe73920588978a97cab9002c401dbc6ad7030e0238f48
 version: '1.0'

@@ -12,7 +12,7 @@ import { getAssetItems, writeStreamToFile } from '../utils/export-helpers';
 import { runInBatches } from '../utils/concurrent-batch';
 
 const DEFAULT_ASSET_BATCH_SIZE = 100;
-const SEARCH_PAGE_LIMIT = 50;
+const SEARCH_PAGE_LIMIT = 100;
 
 /**
  * Query-based Contentstack Assets exporter.
@@ -182,8 +182,12 @@ class QueryExportWorkspaceAdapter extends CSAssetsExportAdapter {
           limit: SEARCH_PAGE_LIMIT,
         });
         pageItems = getAssetItems(response);
-        if (pageItems.length === 0 && Array.isArray((response as { assets?: unknown[] }).assets)) {
-          pageItems = (response as { assets: unknown[] }).assets;
+
+        if (pageItems.length === 0 && skip === 0) {
+          log.warn(
+            `Search returned 0 assets in space ${spaceRef.space_uid} for UID(s): [${uidBatch.join(', ')}]`,
+            this.exportContext.context,
+          );
         }
 
         for (const item of pageItems) {

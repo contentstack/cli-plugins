@@ -136,8 +136,10 @@ export type SearchAssetsParams = {
 /** Response shape from POST /api/search for assets. */
 export type SearchAssetsResponse = {
   count?: number;
+  relation?: string;
   assets?: unknown[];
   items?: unknown[];
+  results?: unknown[];
   folders?: unknown[];
 };
 
