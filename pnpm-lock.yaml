@@ -29,7 +29,7 @@ importers:
         specifier: ~2.0.0-beta.8
         version: 2.0.0-beta.8(@types/node@20.19.41)
       '@contentstack/cli-launch':
-        specifier: ^1.9.9
+        specifier: ^1.10.0
         version: 1.10.0(@types/node@20.19.41)(tslib@2.8.1)(typescript@5.9.3)
       '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
