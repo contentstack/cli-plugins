@@ -1,13 +1,13 @@
 {
   "name": "@contentstack/cli-cm-import-setup",
   "description": "Contentstack CLI plugin to setup the mappers and configurations for the import command",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.2",
-    "@contentstack/cli-utilities": "~1.18.3",
-    "@oclif/core": "^4.10.5",
+    "@contentstack/cli-command": "~1.8.3",
+    "@contentstack/cli-utilities": "~1.18.4",
+    "@oclif/core": "^4.11.4",
     "big-json": "^3.2.0",
     "chalk": "^4.1.2",
     "fs-extra": "^11.3.0",
@@ -28,7 +28,7 @@
     "eslint": "^9.26.0",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.17.46",
+    "oclif": "^4.23.8",
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5"
   },
