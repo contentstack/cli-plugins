@@ -59,7 +59,10 @@ export default class BulkAmAssets extends BaseAmCommand {
     }),
   };
 
-  private printAmSummary(op: 'delete' | 'move', opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string; spaceUid?: string }): void {
+  private printAmSummary(
+    op: 'delete' | 'move',
+    opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string; spaceUid?: string }
+  ): void {
     if (opts.error) {
       log.error($t(messages.AM_OPERATION_FAILED, { operation: op }), this.loggerContext);
       log.error(opts.error, this.loggerContext);
@@ -72,7 +75,10 @@ export default class BulkAmAssets extends BaseAmCommand {
     } else {
       log.success($t(messages.AM_MOVE_SUCCESS), this.loggerContext);
       if (opts.count !== undefined && opts.folderUid) {
-        log.info($t(messages.AM_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }), this.loggerContext);
+        log.info(
+          $t(messages.AM_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }),
+          this.loggerContext
+        );
       }
       const statusUrl = generateAmJobStatusUrl(opts.spaceUid);
       if (statusUrl) log.info(statusUrl, this.loggerContext);

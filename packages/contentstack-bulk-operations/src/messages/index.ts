@@ -238,8 +238,10 @@ const amBulkAssetsMsg = {
   AM_WORKSPACE_FLAG: 'AM workspace query parameter (default: main)',
   AM_ASSET_UIDS_FILE_FLAG:
     'Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string array, no trimming; large lists: see docs for NODE_OPTIONS)',
-  AM_LOCALE_FLAG: 'Locale code for bulk delete only (single locale per run). Not applicable for move — move always relocates all locale variants of an asset.',
-  AM_LOCALE_NOT_ALLOWED_FOR_MOVE: '--locale is not applicable for the move operation. Move always relocates all locale variants of an asset. Remove --locale and try again.',
+  AM_LOCALE_FLAG:
+    'Locale code for bulk delete only (single locale per run). Not applicable for move — move always relocates all locale variants of an asset.',
+  AM_LOCALE_NOT_ALLOWED_FOR_MOVE:
+    '--locale is not applicable for the move operation. Move always relocates all locale variants of an asset. Remove --locale and try again.',
   AM_TARGET_FOLDER_FLAG: 'Destination AM folder UID for bulk move. Use "root" to move assets to the root folder.',
   AM_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
   AM_CONFIRM_SUMMARY: 'Proceed with AM {operation} on {count} item(s)?',
