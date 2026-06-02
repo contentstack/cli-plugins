@@ -787,7 +787,6 @@ export class CloneHandler {
   }
 
   async cloneTypeSelection(): Promise<any> {
-    console.clear();
     return new Promise(async (resolve, reject) => {
       try {
         log.debug('Starting clone type selection', this.config.cloneContext);
