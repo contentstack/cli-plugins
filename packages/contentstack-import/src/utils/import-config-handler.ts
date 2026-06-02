@@ -125,7 +125,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     config.skipEntriesPublish = importCmdFlags['skip-entries-publish'];
   }
 
-  config.skipTaxonomyPublish = importCmdFlags['skip-taxonomy-publish'] ?? true;
+  config.skipTaxonomyPublish = importCmdFlags['skip-taxonomy-publish'] ?? false;
 
   config.replaceExisting = importCmdFlags['replace-existing'];
   config.skipExisting = importCmdFlags['skip-existing'];
