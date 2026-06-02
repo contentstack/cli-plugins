@@ -257,8 +257,8 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
       !f['space-uid'] && '--space-uid',
       !f['org-uid'] && '--org-uid',
       !f['asset-uids-file'] && '--asset-uids-file',
-      (f.operation === 'delete' && !f.locale) && '--locale',
-      (f.operation === 'move' && !f['target-folder-uid']) && '--target-folder-uid',
+      f.operation === 'delete' && !f.locale && '--locale',
+      f.operation === 'move' && !f['target-folder-uid'] && '--target-folder-uid',
     ].filter(Boolean);
     throw new Error(
       `Missing required flag(s): ${missing.join(', ')}. Provide all required flags when running in a non-interactive environment.`
