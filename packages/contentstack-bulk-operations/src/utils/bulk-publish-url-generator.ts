@@ -20,7 +20,6 @@ function getAppUrlFromHost(): string {
  * Generate the bulk publish status URL based on stack configuration
  * @param apiKey - Stack API key
  * @param branch - Branch name (optional)
- * @param host - Host URL (optional)
  * @returns The status URL or null if apiKey is not available
  */
 export function generateBulkPublishStatusUrl(apiKey?: string, branch?: string): string | null {
@@ -33,4 +32,18 @@ export function generateBulkPublishStatusUrl(apiKey?: string, branch?: string): 
   // Only include branch parameter if branch is not empty and not 'main'
   const branchParam = branch && branch !== 'main' ? `?branch=${branch}` : '';
   return `${appUrl}/#!/stack/${apiKey}/publish-queue${branchParam}`;
+}
+
+/**
+ * Generate the AM bulk task queue URL for checking job status
+ * @param spaceUid - AM space UID
+ * @returns The AM job status URL or null if spaceUid is not available
+ */
+export function generateAmJobStatusUrl(spaceUid?: string): string | null {
+  if (!spaceUid) {
+    return null;
+  }
+
+  const appUrl = getAppUrlFromHost();
+  return `${appUrl}/#!/asset-management/spaces/${spaceUid}/space-settings/bulk-task-queue`;
 }

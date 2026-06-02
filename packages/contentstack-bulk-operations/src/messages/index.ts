@@ -245,7 +245,7 @@ const amBulkAssetsMsg = {
   AM_CONFIRM_SUMMARY: 'Proceed with AM {operation} on {count} item(s)?',
   AM_DELETE_SUCCESS: 'AM bulk delete job submitted successfully!',
   AM_DELETE_JOB_ID: 'Job ID: {jobId}',
-  AM_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the Asset Management console for status.',
+  AM_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
   AM_MOVE_SUCCESS: 'AM bulk move completed successfully!',
   AM_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
   AM_OPERATION_FAILED: 'AM {operation} failed.',

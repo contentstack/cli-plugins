@@ -9,6 +9,7 @@ import {
   loadBulkDeleteItemsFromFile,
   LoadAssetUidsError,
 } from '../../../utils/asset-uids-from-file';
+import { generateAmJobStatusUrl } from '../../../utils/bulk-publish-url-generator';
 import { AmBulkDeleteItem } from '../../../interfaces';
 
 const COMMAND_ID = 'cm:stacks:bulk-am-assets';
@@ -58,7 +59,7 @@ export default class BulkAmAssets extends BaseAmCommand {
     }),
   };
 
-  private printAmSummary(op: 'delete' | 'move', opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string }): void {
+  private printAmSummary(op: 'delete' | 'move', opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string; spaceUid?: string }): void {
     if (opts.error) {
       log.error($t(messages.AM_OPERATION_FAILED, { operation: op }), this.loggerContext);
       log.error(opts.error, this.loggerContext);
@@ -66,11 +67,15 @@ export default class BulkAmAssets extends BaseAmCommand {
       log.success($t(messages.AM_DELETE_SUCCESS), this.loggerContext);
       if (opts.jobId) log.info($t(messages.AM_DELETE_JOB_ID, { jobId: opts.jobId }), this.loggerContext);
       log.info($t(messages.AM_DELETE_ASYNC_NOTE), this.loggerContext);
+      const statusUrl = generateAmJobStatusUrl(opts.spaceUid);
+      if (statusUrl) log.info(statusUrl, this.loggerContext);
     } else {
       log.success($t(messages.AM_MOVE_SUCCESS), this.loggerContext);
       if (opts.count !== undefined && opts.folderUid) {
         log.info($t(messages.AM_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }), this.loggerContext);
       }
+      const statusUrl = generateAmJobStatusUrl(opts.spaceUid);
+      if (statusUrl) log.info(statusUrl, this.loggerContext);
     }
     if (opts.notice) log.info(opts.notice, this.loggerContext);
   }
@@ -160,11 +165,11 @@ export default class BulkAmAssets extends BaseAmCommand {
         log.info($t(messages.AM_DELETING_ASSETS, { count: deleteRows.length, spaceUid }), this.loggerContext);
         const result = await amService.bulkDelete(spaceUid, workspace, deleteRows);
         if (!result.success) {
-          this.printAmSummary('delete', { error: result.error ?? 'AM bulk delete failed' });
+          this.printAmSummary('delete', { error: result.error ?? 'AM bulk delete failed', spaceUid });
           process.exitCode = 1;
           return;
         }
-        this.printAmSummary('delete', { jobId: result.jobId, notice: result.notice });
+        this.printAmSummary('delete', { jobId: result.jobId, notice: result.notice, spaceUid });
         return;
       }
 
@@ -226,11 +231,11 @@ export default class BulkAmAssets extends BaseAmCommand {
       );
       const result = await amService.bulkMove(spaceUid, workspace, uids, moveFolderUid);
       if (!result.success) {
-        this.printAmSummary('move', { error: result.error ?? 'AM bulk move failed' });
+        this.printAmSummary('move', { error: result.error ?? 'AM bulk move failed', spaceUid });
         process.exitCode = 1;
         return;
       }
-      this.printAmSummary('move', { count: uids.length, folderUid: moveFolderUid, notice: result.notice });
+      this.printAmSummary('move', { count: uids.length, folderUid: moveFolderUid, notice: result.notice, spaceUid });
     } catch (error) {
       handleAndLogError(error);
     }
