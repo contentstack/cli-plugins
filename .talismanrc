@@ -1,4 +1,4 @@
 fileignoreconfig:
-- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-am-assets.test.ts
-  checksum: a26defc1f356308c3f46607e68714bfa2de174e58237cb6b949bd43f2494a818
+- filename: pnpm-lock.yaml
+  checksum: 2b0f2461ea1bb240a9210b9cf99dc403a756199712b7270f9792a590480451bd
 version: '1.0'
