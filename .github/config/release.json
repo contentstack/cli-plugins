@@ -2,6 +2,8 @@
   "releaseAll": true,
   "plugins": {
     "asset-management": false,
+    "variants": false,
+    "query-export": false,
     "export": false,
     "import": false,
     "clone": false,
@@ -9,6 +11,12 @@
     "migration": false,
     "seed": false,
     "bootstrap": false,
-    "branches": false
+    "branches": false,
+    "apps-cli": false,
+    "tsgen": false,
+    "content-type": false,
+    "regex-validate": false,
+    "migrate-rte": false,
+    "bulk-operations": false
   }
 }
