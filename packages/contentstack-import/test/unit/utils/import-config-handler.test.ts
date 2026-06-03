@@ -389,14 +389,14 @@ describe('Import Config Handler', () => {
       expect(result.skipEntriesPublish).to.be.true;
     });
 
-    it('should set skipTaxonomyPublish to true by default', async () => {
+    it('should set skipTaxonomyPublish to false by default', async () => {
       const importCmdFlags = {
         data: '/test/content',
       };
 
       const result = await setupConfig(importCmdFlags);
 
-      expect(result.skipTaxonomyPublish).to.be.true;
+      expect(result.skipTaxonomyPublish).to.be.false;
     });
 
     it('should allow skipTaxonomyPublish to be overridden to false', async () => {
