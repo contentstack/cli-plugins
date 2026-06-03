@@ -1,7 +1,6 @@
 packages:
   - 'packages/*'
 overrides:
-  tmp: 0.2.4
+  tmp: 0.2.7
   follow-redirects: 1.16.0
-  axios: 1.15.2
   uuid: 14.0.0

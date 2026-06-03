@@ -1,13 +1,13 @@
 import merge from 'merge';
 import * as path from 'path';
-import { existsSync, readFileSync } from 'node:fs';
 import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
-import { readFile } from './file-helper';
+import { readFile, readFileSync } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
 import login from './login-handler';
 import { ImportConfig } from '../types';
+import { existsSync } from 'fs';
 
 const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // Set progress supported module FIRST, before any log calls
@@ -26,9 +26,7 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     if (legacyCsAssetsConfig) {
       externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
       delete externalConfig.modules['asset-management'];
-      log.warn(
-        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
-      );
+      log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
     }
 
     if (isArray(externalConfig['modules'])) {
@@ -142,14 +140,14 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
     try {
-      const stackSettings = JSON.parse(readFileSync(stackSettingsPath, 'utf8'));
+      const stackSettings = readFileSync(stackSettingsPath);
       if (stackSettings?.am_v2) {
         config.csAssetsEnabled = true;
         config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
 
         if (existsSync(stackJsonPath)) {
           try {
-            const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
+            const stackData = readFileSync(stackJsonPath);
             const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
             if (apiKey) {
               config.source_stack = apiKey;

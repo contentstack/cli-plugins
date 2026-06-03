@@ -1,12 +1,13 @@
 // Mock utilities before importing anything that uses them
 jest.mock('@contentstack/cli-utilities', () => {
-  const actual = jest.requireActual('@contentstack/cli-utilities');
+  const { Flags } = require('@oclif/core');
   return {
-    ...actual,
+    managementSDKClient: jest.fn(),
     configHandler: {
       get: jest.fn().mockReturnValue(null),
     },
-    managementSDKClient: jest.fn(),
+    ContentstackClient: jest.fn(),
+    flags: Flags,
   };
 });
 
