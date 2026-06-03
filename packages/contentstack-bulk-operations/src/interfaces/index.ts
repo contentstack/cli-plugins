@@ -20,7 +20,7 @@ export enum ResourceType {
   ENTRY = 'entry',
   ASSET = 'asset',
   TAXONOMY = 'taxonomy',
-  AM_ASSET = 'am-asset',
+  CS_ASSETS = 'cs-assets',
 }
 
 export enum FilterType {
@@ -198,7 +198,7 @@ export interface CommandFlags {
   // Asset-specific flags
   'folder-uid'?: string;
 
-  /** AM bulk delete/move */
+  /** CS Assets bulk delete/move */
   'space-uid'?: string;
   'org-uid'?: string;
   workspace?: string;
@@ -257,14 +257,14 @@ export interface AssetPublishData {
   publish_details?: PublishDetails[];
 }
 
-/** One row for AM bulk-delete payload `{ uid, locale }[]`. */
-export interface AmBulkDeleteItem {
+/** One row for CS Assets bulk-delete payload `{ uid, locale }[]`. */
+export interface CsAssetsBulkDeleteItem {
   uid: string;
   locale: string;
 }
 
-/** Normalized outcome from AM bulk delete/move calls (CLI layer). */
-export interface AmBulkOperationResult {
+/** Normalized outcome from CS Assets bulk delete/move calls (CLI layer). */
+export interface CsAssetsBulkOperationResult {
   success: boolean;
   notice?: string;
   jobId?: string;
@@ -272,7 +272,7 @@ export interface AmBulkOperationResult {
 }
 
 /** Typed flags for the bulk-am-assets command. */
-export interface AmAssetFlags {
+export interface CsAssetsFlags {
   operation: string;
   'space-uid': string;
   'org-uid': string;

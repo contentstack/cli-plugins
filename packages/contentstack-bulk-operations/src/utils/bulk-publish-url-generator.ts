@@ -35,11 +35,11 @@ export function generateBulkPublishStatusUrl(apiKey?: string, branch?: string): 
 }
 
 /**
- * Generate the AM bulk task queue URL for checking job status
- * @param spaceUid - AM space UID
- * @returns The AM job status URL or null if spaceUid is not available
+ * Generate the CS Assets bulk task queue URL for checking job status
+ * @param spaceUid - CS Assets space UID
+ * @returns The CS Assets job status URL or null if spaceUid is not available
  */
-export function generateAmJobStatusUrl(spaceUid?: string): string | null {
+export function generateCsAssetsJobStatusUrl(spaceUid?: string): string | null {
   if (!spaceUid) {
     return null;
   }
