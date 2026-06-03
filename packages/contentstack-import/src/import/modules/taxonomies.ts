@@ -104,7 +104,7 @@ export default class ImportTaxonomies extends BaseClass {
 
       progress.completeProcess(PROCESS_NAMES.TAXONOMIES_IMPORT, true);
 
-      if (publishJobCount > 0) {
+      if (this.importConfig.skipTaxonomyPublish === false && publishJobCount > 0) {
         progress
           .startProcess(PROCESS_NAMES.TAXONOMIES_PUBLISH)
           .updateStatus(
@@ -389,7 +389,7 @@ export default class ImportTaxonomies extends BaseClass {
    */
   initializeTaxonomiesProgress(progress: CLIProgressManager, taxonomyCount: number, publishJobCount: number): void {
     progress.addProcess(PROCESS_NAMES.TAXONOMIES_IMPORT, taxonomyCount);
-    if (publishJobCount > 0) {
+    if (this.importConfig.skipTaxonomyPublish === false && publishJobCount > 0) {
       progress.addProcess(PROCESS_NAMES.TAXONOMIES_PUBLISH, publishJobCount);
     }
   }
@@ -570,8 +570,11 @@ export default class ImportTaxonomies extends BaseClass {
       this.isLocaleBasedStructure = this.detectAndScanLocaleStructure();
 
       const taxonomyCount = Object.keys(this.taxonomies || {}).length;
-      const envMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
-      const publishJobCount = this.countPublishEligibleTaxonomies(envMapper);
+      let publishJobCount = 0;
+      if (this.importConfig.skipTaxonomyPublish === false) {
+        const envMapper = readEnvUidMapperSync(this.envUidMapperPath, this.importConfig.context);
+        publishJobCount = this.countPublishEligibleTaxonomies(envMapper);
+      }
 
       log.debug(
         `Loaded ${taxonomyCount} taxonomy items; ${publishJobCount} eligible for publish (mapped environments).`,
