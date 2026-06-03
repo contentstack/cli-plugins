@@ -236,11 +236,11 @@ async function runInteractivePrompts(prompts: Array<() => Promise<void>>): Promi
 
 /**
  * Fills in missing flags for the bulk-am-assets command by prompting the user.
- * Handles AM-specific required flags including operation-conditional ones
+ * Handles CS Assets-specific required flags including operation-conditional ones
  * (locale for delete, target-folder-uid for move).
  * Throws in non-TTY environments when required flags are missing.
  */
-export async function fillMissingAmFlags(flags: any): Promise<any> {
+export async function fillMissingCsAssetsFlags(flags: any): Promise<any> {
   const f = { ...flags };
 
   const needsLocale = f.operation === 'delete' && !f.locale;
@@ -271,10 +271,10 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f.operation = await cliux.inquire<string>({
           type: 'list',
           name: 'operation',
-          message: messages.AM_SELECT_OPERATION,
+          message: messages.CS_ASSETS_SELECT_OPERATION,
           choices: [
-            { name: 'Delete (AM bulk delete)', value: 'delete' },
-            { name: 'Move (AM bulk move)', value: 'move' },
+            { name: 'Delete (CS Assets bulk delete)', value: 'delete' },
+            { name: 'Move (CS Assets bulk move)', value: 'move' },
           ],
         });
       }
@@ -284,7 +284,7 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f['space-uid'] = await cliux.inquire<string>({
           type: 'input',
           name: 'spaceUid',
-          message: messages.AM_ENTER_SPACE_UID,
+          message: messages.CS_ASSETS_ENTER_SPACE_UID,
           validate: (v: string) => (!v?.trim() ? messages.SPACE_UID_REQUIRED : true),
         });
       }
@@ -294,7 +294,7 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f['org-uid'] = await cliux.inquire<string>({
           type: 'input',
           name: 'orgUid',
-          message: messages.AM_ENTER_ORG_UID,
+          message: messages.CS_ASSETS_ENTER_ORG_UID,
           validate: (v: string) => (!v?.trim() ? messages.ORG_UID_REQUIRED : true),
         });
       }
@@ -304,8 +304,8 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f['asset-uids-file'] = await cliux.inquire<string>({
           type: 'input',
           name: 'assetUidsFile',
-          message: messages.AM_ENTER_ASSET_UIDS_FILE,
-          validate: (v: string) => (!v?.trim() ? messages.AM_ASSET_UIDS_FILE_REQUIRED : true),
+          message: messages.CS_ASSETS_ENTER_ASSET_UIDS_FILE,
+          validate: (v: string) => (!v?.trim() ? messages.CS_ASSETS_ASSET_UIDS_FILE_REQUIRED : true),
         });
       }
     },
@@ -315,8 +315,8 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f.locale = await cliux.inquire<string>({
           type: 'input',
           name: 'locale',
-          message: messages.AM_ENTER_LOCALE,
-          validate: (v: string) => (!v?.trim() ? messages.AM_LOCALE_REQUIRED : true),
+          message: messages.CS_ASSETS_ENTER_LOCALE,
+          validate: (v: string) => (!v?.trim() ? messages.CS_ASSETS_LOCALE_REQUIRED : true),
         });
       }
     },
@@ -325,7 +325,7 @@ export async function fillMissingAmFlags(flags: any): Promise<any> {
         f['target-folder-uid'] = await cliux.inquire<string>({
           type: 'input',
           name: 'targetFolderUid',
-          message: messages.AM_ENTER_TARGET_FOLDER,
+          message: messages.CS_ASSETS_ENTER_TARGET_FOLDER,
           validate: (v: string) => (!v?.trim() ? messages.TARGET_FOLDER_REQUIRED : true),
         });
       }

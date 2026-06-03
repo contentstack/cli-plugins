@@ -213,52 +213,52 @@ const bulkAssetsMsg = {
 };
 
 /**
- * AM bulk delete/move (CS Assets API) messages
+ * CS Assets bulk delete/move messages
  */
-const amBulkAssetsMsg = {
-  BULK_AM_ASSETS_DESCRIPTION:
-    'Bulk delete or move assets via Asset Management API (AM-enabled regions). Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
-  AM_URL_NOT_CONFIGURED:
-    'AM operations require assetManagementUrl in your region settings. Ensure your region is configured correctly.',
-  SPACE_UID_REQUIRED: '--space-uid is required for AM operations',
-  ORG_UID_REQUIRED: '--org-uid is required for AM operations (organization_uid header)',
+const csAssetsBulkMsg = {
+  BULK_CS_ASSETS_DESCRIPTION:
+    'Bulk delete or move assets via CS Assets API. Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
+  CS_ASSETS_URL_NOT_CONFIGURED:
+    'CS Assets operations require csAssetsUrl in your region settings. Ensure your region is configured correctly.',
+  SPACE_UID_REQUIRED: '--space-uid is required for CS Assets operations',
+  ORG_UID_REQUIRED: '--org-uid is required for CS Assets operations (organization_uid header)',
   TARGET_FOLDER_REQUIRED: '--target-folder-uid is required for bulk move',
-  AM_LOCALE_REQUIRED: '--locale is required for bulk delete (AM deletes per asset and locale)',
-  AM_ASSET_UIDS_FILE_REQUIRED: '--asset-uids-file is required (path to JSON `{ "uids": string[] }`)',
-  AM_ASSET_UIDS_FILE_READ_FAILED: 'Failed to read asset UIDs file "{path}": {detail}',
-  AM_ASSET_UIDS_FILE_INVALID: 'Invalid asset UIDs file "{path}": {detail}',
-  AM_DELETING_ASSETS: 'Deleting {count} asset/locale pair(s) from space {spaceUid}...',
-  AM_MOVING_ASSETS: 'Moving {count} asset(s) to folder {targetFolderUid}...',
-  AM_DELETE_SUBMITTED: 'Bulk delete job submitted. Job ID: {jobId}',
-  AM_MOVE_SUBMITTED: 'Bulk move initiated successfully.',
-  AM_OPERATION_NOTICE: '{notice}',
-  AM_OPERATION_FLAG: 'Operation: delete (AM bulk delete) or move (AM bulk move)',
-  AM_SPACE_UID_FLAG: 'Asset Management space UID',
-  AM_ORG_UID_FLAG: 'Organization UID for AM API (organization_uid header)',
-  AM_WORKSPACE_FLAG: 'AM workspace query parameter (default: main)',
-  AM_ASSET_UIDS_FILE_FLAG:
+  CS_ASSETS_LOCALE_REQUIRED: '--locale is required for bulk delete (CS Assets deletes per asset and locale)',
+  CS_ASSETS_ASSET_UIDS_FILE_REQUIRED: '--asset-uids-file is required (path to JSON `{ "uids": string[] }`)',
+  CS_ASSETS_ASSET_UIDS_FILE_READ_FAILED: 'Failed to read asset UIDs file "{path}": {detail}',
+  CS_ASSETS_ASSET_UIDS_FILE_INVALID: 'Invalid asset UIDs file "{path}": {detail}',
+  CS_ASSETS_DELETING_ASSETS: 'Deleting {count} asset/locale pair(s) from space {spaceUid}...',
+  CS_ASSETS_MOVING_ASSETS: 'Moving {count} asset(s) to folder {targetFolderUid}...',
+  CS_ASSETS_DELETE_SUBMITTED: 'Bulk delete job submitted. Job ID: {jobId}',
+  CS_ASSETS_MOVE_SUBMITTED: 'Bulk move initiated successfully.',
+  CS_ASSETS_OPERATION_NOTICE: '{notice}',
+  CS_ASSETS_OPERATION_FLAG: 'Operation: delete (CS Assets bulk delete) or move (CS Assets bulk move)',
+  CS_ASSETS_SPACE_UID_FLAG: 'CS Assets space UID',
+  CS_ASSETS_ORG_UID_FLAG: 'Organization UID for CS Assets API (organization_uid header)',
+  CS_ASSETS_WORKSPACE_FLAG: 'CS Assets workspace query parameter (default: main)',
+  CS_ASSETS_ASSET_UIDS_FILE_FLAG:
     'Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string array, no trimming; large lists: see docs for NODE_OPTIONS)',
-  AM_LOCALE_FLAG:
+  CS_ASSETS_LOCALE_FLAG:
     'Locale code for bulk delete only (single locale per run). Not applicable for move — move always relocates all locale variants of an asset.',
-  AM_LOCALE_NOT_ALLOWED_FOR_MOVE:
+  CS_ASSETS_LOCALE_NOT_ALLOWED_FOR_MOVE:
     '--locale is not applicable for the move operation. Move always relocates all locale variants of an asset. Remove --locale and try again.',
-  AM_TARGET_FOLDER_FLAG: 'Destination AM folder UID for bulk move. Use "root" to move assets to the root folder.',
-  AM_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
-  AM_CONFIRM_SUMMARY: 'Proceed with AM {operation} on {count} item(s)?',
-  AM_DELETE_SUCCESS: 'AM bulk delete job submitted successfully!',
-  AM_DELETE_JOB_ID: 'Job ID: {jobId}',
-  AM_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
-  AM_MOVE_SUCCESS: 'AM bulk move completed successfully!',
-  AM_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
-  AM_OPERATION_FAILED: 'AM {operation} failed.',
+  CS_ASSETS_TARGET_FOLDER_FLAG: 'Destination CS Assets folder UID for bulk move. Use "root" to move assets to the root folder.',
+  CS_ASSETS_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
+  CS_ASSETS_CONFIRM_SUMMARY: 'Proceed with CS Assets {operation} on {count} item(s)?',
+  CS_ASSETS_DELETE_SUCCESS: 'CS Assets bulk delete job submitted successfully!',
+  CS_ASSETS_DELETE_JOB_ID: 'Job ID: {jobId}',
+  CS_ASSETS_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
+  CS_ASSETS_MOVE_SUCCESS: 'CS Assets bulk move completed successfully!',
+  CS_ASSETS_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
+  CS_ASSETS_OPERATION_FAILED: 'CS Assets {operation} failed.',
 
   // Interactive prompts
-  AM_SELECT_OPERATION: 'Select AM operation:',
-  AM_ENTER_SPACE_UID: 'Enter AM space UID:',
-  AM_ENTER_ORG_UID: 'Enter organization UID:',
-  AM_ENTER_ASSET_UIDS_FILE: 'Enter path to asset UIDs JSON file (e.g. ./assets.json):',
-  AM_ENTER_LOCALE: 'Enter locale code for bulk delete (e.g. en-us):',
-  AM_ENTER_TARGET_FOLDER: 'Enter target folder UID for bulk move (use "root" to move to the root folder):',
+  CS_ASSETS_SELECT_OPERATION: 'Select CS Assets operation:',
+  CS_ASSETS_ENTER_SPACE_UID: 'Enter CS Assets space UID:',
+  CS_ASSETS_ENTER_ORG_UID: 'Enter organization UID:',
+  CS_ASSETS_ENTER_ASSET_UIDS_FILE: 'Enter path to asset UIDs JSON file (e.g. ./assets.json):',
+  CS_ASSETS_ENTER_LOCALE: 'Enter locale code for bulk delete (e.g. en-us):',
+  CS_ASSETS_ENTER_TARGET_FOLDER: 'Enter target folder UID for bulk move (use "root" to move to the root folder):',
 };
 
 /**
@@ -420,7 +420,7 @@ const commandInfo = {
   BULK_ASSETS_DESCRIPTION: 'Bulk operations for assets (publish/unpublish/cross-publish)',
   BULK_TAXONOMIES_DESCRIPTION:
     'Publish taxonomies to environments and locales (CMA POST /v3/taxonomies/publish; initiates a publish job)',
-  BULK_AM_ASSETS_DESCRIPTION: amBulkAssetsMsg.BULK_AM_ASSETS_DESCRIPTION,
+  BULK_CS_ASSETS_DESCRIPTION: csAssetsBulkMsg.BULK_CS_ASSETS_DESCRIPTION,
 };
 
 /**
@@ -437,7 +437,7 @@ const messages: typeof errors &
   typeof interactiveMsg &
   typeof flagDescriptions &
   typeof commandInfo &
-  typeof amBulkAssetsMsg = {
+  typeof csAssetsBulkMsg = {
   ...errors,
   ...commonMsg,
   ...entryServiceMsg,
@@ -449,7 +449,7 @@ const messages: typeof errors &
   ...interactiveMsg,
   ...flagDescriptions,
   ...commandInfo,
-  ...amBulkAssetsMsg,
+  ...csAssetsBulkMsg,
 };
 
 /**
