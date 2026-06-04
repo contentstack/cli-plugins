@@ -2,6 +2,7 @@ import { join } from 'path';
 import sinon from 'sinon';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
+import { configHandler } from '@contentstack/cli-utilities';
 
 import importConf from '../mock/import-config.json';
 import ContentType from '../mock/contents/content_types/CT-1.json';
@@ -16,6 +17,9 @@ describe('Variant Entries Import', () => {
     config = cloneDeep(importConf) as unknown as ImportConfig;
     // source reads modules.personalize.project_id; mock uses 'personalization' key
     (config.modules as any).personalize = (config.modules as any).personalization;
+    // authenticationHandler.getAuthDetails() reads 'authtoken' via configHandler.get —
+    // stub it so tests never need a real CLI session
+    sinon.stub(configHandler, 'get').withArgs('authtoken').returns('test-token');
   });
 
   afterEach(() => sinon.restore());
