@@ -223,3 +223,114 @@ export async function fillMissingFlags(flags: any): Promise<any> {
 
   return updatedFlags;
 }
+
+/**
+ * Runs a sequence of prompt functions wrapped in the standard interactive mode header/footer.
+ * Each prompt is a no-op if its condition is already satisfied (value already in flags).
+ */
+async function runInteractivePrompts(prompts: Array<() => Promise<void>>): Promise<void> {
+  cliux.print(messages.INTERACTIVE_MODE_START, { color: 'cyan' });
+  for (const prompt of prompts) await prompt();
+  cliux.print(messages.INTERACTIVE_MODE_COMPLETE, { color: 'green' });
+}
+
+/**
+ * Fills in missing flags for the bulk-am-assets command by prompting the user.
+ * Handles CS Assets-specific required flags including operation-conditional ones
+ * (locale for delete, target-folder-uid for move).
+ * Throws in non-TTY environments when required flags are missing.
+ */
+export async function fillMissingCsAssetsFlags(flags: any): Promise<any> {
+  const f = { ...flags };
+
+  const needsLocale = f.operation === 'delete' && !f.locale;
+  const needsFolderUid = f.operation === 'move' && !f['target-folder-uid'];
+  const needsPrompt =
+    !f.operation || !f['space-uid'] || !f['org-uid'] || !f['asset-uids-file'] || needsLocale || needsFolderUid;
+
+  if (!needsPrompt) return f;
+
+  // Fail fast in non-interactive environments (CI/CD) rather than hanging on stdin
+  if (!process.stdin.isTTY) {
+    const missing = [
+      !f.operation && '--operation',
+      !f['space-uid'] && '--space-uid',
+      !f['org-uid'] && '--org-uid',
+      !f['asset-uids-file'] && '--asset-uids-file',
+      f.operation === 'delete' && !f.locale && '--locale',
+      f.operation === 'move' && !f['target-folder-uid'] && '--target-folder-uid',
+    ].filter(Boolean);
+    throw new Error(
+      `Missing required flag(s): ${missing.join(', ')}. Provide all required flags when running in a non-interactive environment.`
+    );
+  }
+
+  await runInteractivePrompts([
+    async () => {
+      if (!f.operation) {
+        f.operation = await cliux.inquire<string>({
+          type: 'list',
+          name: 'operation',
+          message: messages.CS_ASSETS_SELECT_OPERATION,
+          choices: [
+            { name: 'Delete (CS Assets bulk delete)', value: 'delete' },
+            { name: 'Move (CS Assets bulk move)', value: 'move' },
+          ],
+        });
+      }
+    },
+    async () => {
+      if (!f['space-uid']) {
+        f['space-uid'] = await cliux.inquire<string>({
+          type: 'input',
+          name: 'spaceUid',
+          message: messages.CS_ASSETS_ENTER_SPACE_UID,
+          validate: (v: string) => (!v?.trim() ? messages.SPACE_UID_REQUIRED : true),
+        });
+      }
+    },
+    async () => {
+      if (!f['org-uid']) {
+        f['org-uid'] = await cliux.inquire<string>({
+          type: 'input',
+          name: 'orgUid',
+          message: messages.CS_ASSETS_ENTER_ORG_UID,
+          validate: (v: string) => (!v?.trim() ? messages.ORG_UID_REQUIRED : true),
+        });
+      }
+    },
+    async () => {
+      if (!f['asset-uids-file']) {
+        f['asset-uids-file'] = await cliux.inquire<string>({
+          type: 'input',
+          name: 'assetUidsFile',
+          message: messages.CS_ASSETS_ENTER_ASSET_UIDS_FILE,
+          validate: (v: string) => (!v?.trim() ? messages.CS_ASSETS_ASSET_UIDS_FILE_REQUIRED : true),
+        });
+      }
+    },
+    // Conditional prompts run after operation is resolved (captured by closure)
+    async () => {
+      if (f.operation === 'delete' && !f.locale) {
+        f.locale = await cliux.inquire<string>({
+          type: 'input',
+          name: 'locale',
+          message: messages.CS_ASSETS_ENTER_LOCALE,
+          validate: (v: string) => (!v?.trim() ? messages.CS_ASSETS_LOCALE_REQUIRED : true),
+        });
+      }
+    },
+    async () => {
+      if (f.operation === 'move' && !f['target-folder-uid']) {
+        f['target-folder-uid'] = await cliux.inquire<string>({
+          type: 'input',
+          name: 'targetFolderUid',
+          message: messages.CS_ASSETS_ENTER_TARGET_FOLDER,
+          validate: (v: string) => (!v?.trim() ? messages.TARGET_FOLDER_REQUIRED : true),
+        });
+      }
+    },
+  ]);
+
+  return f;
+}

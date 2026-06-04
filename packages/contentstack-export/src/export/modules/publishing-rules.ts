@@ -23,7 +23,6 @@ export default class ExportPublishingRules extends BaseClass {
   async start(): Promise<void> {
     this.publishingRulesFolderPath = pResolve(
       this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
       this.publishingRulesConfig.dirName,
     );
     log.debug(`Publishing rules folder path: ${this.publishingRulesFolderPath}`, this.exportConfig.context);

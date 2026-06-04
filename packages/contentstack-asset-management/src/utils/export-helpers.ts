@@ -14,7 +14,7 @@ export function getAssetItems(
 ): Array<{ uid?: string; _uid?: string; url?: string; filename?: string; file_name?: string }> {
   if (Array.isArray(assetsData)) return assetsData;
   const data = assetsData as Record<string, unknown>;
-  const items = data?.items ?? data?.assets;
+  const items = data?.items ?? data?.assets ?? data?.results;
   return Array.isArray(items) ? items : [];
 }
 
