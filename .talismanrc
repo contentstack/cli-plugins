@@ -1,4 +1,14 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
-  checksum: 2b0f2461ea1bb240a9210b9cf99dc403a756199712b7270f9792a590480451bd
+  checksum: 6af0841bbfd8d541cfd748941ffcfa5d040fcd3708e49dc8c23eae69685b3b05
+- filename: packages/contentstack-variants/test/unit/import/experiences.test.ts
+  checksum: 6142418bafea6454a72b313d933deb494ce4ea1d8cead7ef918c10e283c2c603
+- filename: packages/contentstack-variants/test/unit/export/variant-entries.test.ts
+  checksum: e150faeefa7b3586b70a6f454c1f68efe05526f582977dba28243b1e47606a42
+- filename: packages/contentstack-variants/test/unit/export/experiences.test.ts
+  checksum: eb9c989dd14373a90e8866ba3350245d3c06e8ba43cfebb24f40c1106b2e6b95
+- filename: packages/contentstack-variants/test/unit/utils/personalization-api-adapter.test.ts
+  checksum: d729c9586d3a19e321d79e490790b9d0aa345f81917376199d962de68317fae1
+- filename: packages/contentstack-variants/test/unit/import/variant-entries.test.ts
+  checksum: bdcd7df1ee9a835ea0fecde7731184097cc397100e58df22b5e6381f6a67e62a
 version: '1.0'
