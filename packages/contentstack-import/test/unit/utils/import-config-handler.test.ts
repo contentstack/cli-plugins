@@ -389,6 +389,27 @@ describe('Import Config Handler', () => {
       expect(result.skipEntriesPublish).to.be.true;
     });
 
+    it('should set skipTaxonomyPublish to false by default', async () => {
+      const importCmdFlags = {
+        data: '/test/content',
+      };
+
+      const result = await setupConfig(importCmdFlags);
+
+      expect(result.skipTaxonomyPublish).to.be.false;
+    });
+
+    it('should allow skipTaxonomyPublish to be overridden to false', async () => {
+      const importCmdFlags = {
+        data: '/test/content',
+        'skip-taxonomy-publish': false,
+      };
+
+      const result = await setupConfig(importCmdFlags);
+
+      expect(result.skipTaxonomyPublish).to.be.false;
+    });
+
     it('should set replaceExisting from replace-existing flag', async () => {
       const importCmdFlags = {
         data: '/test/content',
