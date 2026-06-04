@@ -94,7 +94,10 @@ export default class BulkCsAssets extends BaseCsAssetsCommand {
         this.loggerContext
       );
     } else {
-      log.error($t(messages.CS_ASSETS_ASSET_UIDS_FILE_INVALID, { path: pathShown, detail: e.message }), this.loggerContext);
+      log.error(
+        $t(messages.CS_ASSETS_ASSET_UIDS_FILE_INVALID, { path: pathShown, detail: e.message }),
+        this.loggerContext
+      );
     }
     process.exitCode = 1;
   }
@@ -241,7 +244,12 @@ export default class BulkCsAssets extends BaseCsAssetsCommand {
         process.exitCode = 1;
         return;
       }
-      this.printCsAssetsSummary('move', { count: uids.length, folderUid: moveFolderUid, notice: result.notice, spaceUid });
+      this.printCsAssetsSummary('move', {
+        count: uids.length,
+        folderUid: moveFolderUid,
+        notice: result.notice,
+        spaceUid,
+      });
     } catch (error) {
       handleAndLogError(error);
     }

@@ -2,11 +2,11 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
-import BulkAmAssets from '../../../src/commands/cm/stacks/bulk-am-assets';
+import BulkCsAssets from '../../../src/commands/cm/stacks/bulk-am-assets';
 
-describe('BulkAmAssets command', () => {
+describe('BulkCsAssets command', () => {
   let sandbox: sinon.SinonSandbox;
-  let command: BulkAmAssets;
+  let command: BulkCsAssets;
 
   const baseDeleteFlags = {
     operation: 'delete',
@@ -34,7 +34,7 @@ describe('BulkAmAssets command', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    command = new BulkAmAssets([], {} as any);
+    command = new BulkCsAssets([], {} as any);
     (command as any).parsedFlags = { ...baseDeleteFlags };
     (command as any).loggerContext = { module: 'cm:stacks:bulk-am-assets' };
     setRegion({});
@@ -78,7 +78,7 @@ describe('BulkAmAssets command', () => {
       sandbox.stub(assetUidsModule, 'loadAssetUidsFromFile').returns(['uid1', 'uid2']);
 
       const amServiceModule = require('../../../src/services/am-asset-service');
-      sandbox.stub(amServiceModule.AmAssetService.prototype, 'bulkMove').resolves({
+      sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkMove').resolves({
         success: true,
         notice: undefined,
       });
@@ -99,7 +99,7 @@ describe('BulkAmAssets command', () => {
       sandbox.stub(assetUidsModule, 'loadBulkDeleteItemsFromFile').returns([{ uid: 'u1', locale: 'en-us' }]);
 
       const amServiceModule = require('../../../src/services/am-asset-service');
-      sandbox.stub(amServiceModule.AmAssetService.prototype, 'bulkDelete').resolves({
+      sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkDelete').resolves({
         success: true,
         jobId: 'job-abc-123',
       });
@@ -114,7 +114,7 @@ describe('BulkAmAssets command', () => {
       sandbox.stub(assetUidsModule, 'loadBulkDeleteItemsFromFile').returns([{ uid: 'u1', locale: 'en-us' }]);
 
       const amServiceModule = require('../../../src/services/am-asset-service');
-      sandbox.stub(amServiceModule.AmAssetService.prototype, 'bulkDelete').resolves({
+      sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkDelete').resolves({
         success: false,
         error: 'API rate limit exceeded',
       });
@@ -125,9 +125,9 @@ describe('BulkAmAssets command', () => {
     });
   });
 
-  describe('BaseAmCommand isolation — no publish/unpublish infrastructure', () => {
+  describe('BaseCsAssetsCommand isolation — no publish/unpublish infrastructure', () => {
     it('should not have bulkOperationConfig, queueManager, or managementStack on the instance', () => {
-      // BulkAmAssets extends BaseAmCommand, NOT BaseBulkCommand.
+      // BulkCsAssets extends BaseCsAssetsCommand, NOT BaseBulkCommand.
       // None of these publish/unpublish properties should exist.
       expect((command as any).bulkOperationConfig).to.be.undefined;
       expect((command as any).queueManager).to.be.undefined;

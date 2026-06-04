@@ -417,13 +417,13 @@ describe('Interactive Prompts', () => {
     });
   });
 
-  describe('fillMissingAmFlags', () => {
-    // We need to import fillMissingAmFlags separately
-    let fillMissingAmFlags: typeof import('../../../src/utils/interactive').fillMissingAmFlags;
+  describe('fillMissingCsAssetsFlags', () => {
+    // We need to import fillMissingCsAssetsFlags separately
+    let fillMissingCsAssetsFlags: typeof import('../../../src/utils/interactive').fillMissingCsAssetsFlags;
     let originalIsTTY: boolean | undefined;
 
     before(async () => {
-      ({ fillMissingAmFlags } = await import('../../../src/utils/interactive'));
+      ({ fillMissingCsAssetsFlags } = await import('../../../src/utils/interactive'));
     });
 
     beforeEach(() => {
@@ -445,7 +445,7 @@ describe('Interactive Prompts', () => {
         yes: false,
       };
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result).to.deep.equal(flags);
       expect(inquireStub.called).to.be.false;
@@ -463,7 +463,7 @@ describe('Interactive Prompts', () => {
         yes: false,
       };
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result).to.deep.equal(flags);
       expect(inquireStub.called).to.be.false;
@@ -475,7 +475,7 @@ describe('Interactive Prompts', () => {
       const flags = { workspace: 'main', yes: false };
 
       try {
-        await fillMissingAmFlags(flags);
+        await fillMissingCsAssetsFlags(flags);
         expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.message).to.include('--operation');
@@ -497,7 +497,7 @@ describe('Interactive Prompts', () => {
       };
 
       try {
-        await fillMissingAmFlags(flags);
+        await fillMissingCsAssetsFlags(flags);
         expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.message).to.include('--locale');
@@ -515,7 +515,7 @@ describe('Interactive Prompts', () => {
       };
 
       try {
-        await fillMissingAmFlags(flags);
+        await fillMissingCsAssetsFlags(flags);
         expect.fail('Should have thrown');
       } catch (error: any) {
         expect(error.message).to.include('--target-folder-uid');
@@ -533,7 +533,7 @@ describe('Interactive Prompts', () => {
       inquireStub.onCall(3).resolves('./assets.json');  // asset-uids-file
       inquireStub.onCall(4).resolves('en-us');          // locale (delete-conditional)
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result.operation).to.equal('delete');
       expect(result['space-uid']).to.equal('sp123');
@@ -555,7 +555,7 @@ describe('Interactive Prompts', () => {
 
       inquireStub.onCall(0).resolves('en-us');  // locale
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result.locale).to.equal('en-us');
       expect(inquireStub.calledOnce).to.be.true;
@@ -574,7 +574,7 @@ describe('Interactive Prompts', () => {
 
       inquireStub.onCall(0).resolves('folderABC');  // target-folder-uid
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result['target-folder-uid']).to.equal('folderABC');
       expect(inquireStub.calledOnce).to.be.true;
@@ -592,7 +592,7 @@ describe('Interactive Prompts', () => {
         'target-folder-uid': 'folderABC',
       };
 
-      const result = await fillMissingAmFlags(flags);
+      const result = await fillMissingCsAssetsFlags(flags);
 
       expect(result.locale).to.be.undefined;
       expect(inquireStub.called).to.be.false;
@@ -610,7 +610,7 @@ describe('Interactive Prompts', () => {
 
       inquireStub.onCall(0).resolves('move');  // operation
 
-      await fillMissingAmFlags(flags);
+      await fillMissingCsAssetsFlags(flags);
 
       const operationCall = inquireStub.firstCall.args[0];
       expect(operationCall.type).to.equal('list');
@@ -631,7 +631,7 @@ describe('Interactive Prompts', () => {
 
       inquireStub.onCall(0).resolves('sp123');
 
-      await fillMissingAmFlags(flags);
+      await fillMissingCsAssetsFlags(flags);
 
       const spaceUidCall = inquireStub.firstCall.args[0];
       expect(spaceUidCall.validate('')).to.not.equal(true);

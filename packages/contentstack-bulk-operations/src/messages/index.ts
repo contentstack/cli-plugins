@@ -242,7 +242,8 @@ const csAssetsBulkMsg = {
     'Locale code for bulk delete only (single locale per run). Not applicable for move — move always relocates all locale variants of an asset.',
   CS_ASSETS_LOCALE_NOT_ALLOWED_FOR_MOVE:
     '--locale is not applicable for the move operation. Move always relocates all locale variants of an asset. Remove --locale and try again.',
-  CS_ASSETS_TARGET_FOLDER_FLAG: 'Destination CS Assets folder UID for bulk move. Use "root" to move assets to the root folder.',
+  CS_ASSETS_TARGET_FOLDER_FLAG:
+    'Destination CS Assets folder UID for bulk move. Use "root" to move assets to the root folder.',
   CS_ASSETS_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
   CS_ASSETS_CONFIRM_SUMMARY: 'Proceed with CS Assets {operation} on {count} item(s)?',
   CS_ASSETS_DELETE_SUCCESS: 'CS Assets bulk delete job submitted successfully!',
