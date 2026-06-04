@@ -5,6 +5,7 @@
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
+    "@contentstack/cli-asset-management": "~1.0.0-beta.1",
     "@contentstack/cli-cm-export": "~2.0.0-beta.19",
     "@contentstack/cli-command": "~2.0.0-beta.8",
     "@contentstack/cli-utilities": "~2.0.0-beta.9",

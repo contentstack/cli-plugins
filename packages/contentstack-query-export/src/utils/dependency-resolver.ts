@@ -41,7 +41,6 @@ export class ContentTypeDependenciesHandler {
     } else {
       const contentTypesFilePath = path.join(
         sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
         'content_types',
       );
       allSchemas = readContentTypeSchemas(contentTypesFilePath);
