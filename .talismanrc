@@ -1,6 +1,6 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
-  checksum: 6af0841bbfd8d541cfd748941ffcfa5d040fcd3708e49dc8c23eae69685b3b05
+  checksum: acb2fc21dd3481f162aedaccecbe45d565b3297957345044a12aa50d2850ac4e
 - filename: packages/contentstack-variants/test/unit/import/experiences.test.ts
   checksum: 6142418bafea6454a72b313d933deb494ce4ea1d8cead7ef918c10e283c2c603
 - filename: packages/contentstack-variants/test/unit/export/variant-entries.test.ts
