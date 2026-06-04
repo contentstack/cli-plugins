@@ -79,6 +79,8 @@ export class ExportSpaces {
       chunkFileSizeMb,
       apiConcurrency: this.options.apiConcurrency,
       downloadAssetsConcurrency: this.options.downloadAssetsConcurrency,
+      pageSize: this.options.pageSize,
+      fetchConcurrency: this.options.fetchConcurrency,
     };
 
     const sharedFieldsDir = pResolve(spacesRootPath, 'fields');

@@ -167,11 +167,11 @@ export type SearchAssetsResponse = {
 
 export interface ICSAssetsAdapter {
   init(): Promise<void>;
-  listSpaces(): Promise<SpacesListResponse>;
+  listSpaces(pageSize?: number, fetchConcurrency?: number): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
   getWorkspaceFields(spaceUid: string): Promise<FieldsResponse>;
-  getWorkspaceAssets(spaceUid: string, workspaceUid?: string): Promise<unknown>;
-  getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown>;
+  getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
+  getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
   bulkDeleteAssets(
@@ -233,6 +233,8 @@ export type AssetManagementExportOptions = {
    * Max parallel asset file downloads per workspace.
    */
   downloadAssetsConcurrency?: number;
+  pageSize?: number;
+  fetchConcurrency?: number;
 };
 
 // ---------------------------------------------------------------------------

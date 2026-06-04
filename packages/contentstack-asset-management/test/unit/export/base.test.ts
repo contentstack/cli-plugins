@@ -35,6 +35,12 @@ class TestAdapter extends CSAssetsExportAdapter {
   public get spacesRootPathPublic() {
     return this.spacesRootPath;
   }
+  public get apiPageSizePublic() {
+    return this.apiPageSize;
+  }
+  public get apiFetchConcurrencyPublic() {
+    return this.apiFetchConcurrency;
+  }
 }
 
 describe('CSAssetsExportAdapter (base)', () => {
@@ -189,6 +195,30 @@ describe('CSAssetsExportAdapter (base)', () => {
       adapter.callCompleteProcess('test', true);
 
       expect(fakeParent.completeProcess.callCount).to.equal(0);
+    });
+  });
+
+  describe('apiPageSize', () => {
+    it('should return FALLBACK_AM_API_PAGE_SIZE (100) when pageSize is not set in exportContext', () => {
+      const adapter = new TestAdapter(apiConfig, exportContext);
+      expect(adapter.apiPageSizePublic).to.equal(100);
+    });
+
+    it('should return the configured pageSize when set in exportContext', () => {
+      const adapter = new TestAdapter(apiConfig, { ...exportContext, pageSize: 50 });
+      expect(adapter.apiPageSizePublic).to.equal(50);
+    });
+  });
+
+  describe('apiFetchConcurrency', () => {
+    it('should return FALLBACK_AM_API_FETCH_CONCURRENCY (5) when fetchConcurrency is not set', () => {
+      const adapter = new TestAdapter(apiConfig, exportContext);
+      expect(adapter.apiFetchConcurrencyPublic).to.equal(5);
+    });
+
+    it('should return the configured fetchConcurrency when set in exportContext', () => {
+      const adapter = new TestAdapter(apiConfig, { ...exportContext, fetchConcurrency: 10 });
+      expect(adapter.apiFetchConcurrencyPublic).to.equal(10);
     });
   });
 

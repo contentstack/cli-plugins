@@ -1,12 +1,14 @@
 fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    checksum: 2b0f2461ea1bb240a9210b9cf99dc403a756199712b7270f9792a590480451bd
-  - filename: packages/contentstack-import/test/unit/import/modules/base-class.test.ts
-    checksum: fe372852d5f2f3f57ef62c603406c30ccecdb444c17133ac0b21dda399b962c0
-  - filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-am-assets.test.ts
-    checksum: f8d21db7db0ca2eebe7cc40af0a59f02e74e1689efb6d50a1072dc5ca3e03e9b
-  - filename: packages/contentstack-export/src/export/modules/taxonomies.ts
-    checksum: b6d077118280bc88385405f504f921468a9fd490ac37a4a21f741be729fd1ca3
-  - filename: packages/contentstack-export/test/unit/export/modules/taxonomies.test.ts
-    checksum: cab2ad4d897d23f04f988c1f018a9583ab7f0ee1815994d7bc9fce23dea70073
+- filename: packages/contentstack-asset-management/test/unit/import/asset-types.test.ts
+  checksum: fa4c08a47a52b8bd27353b9ba712e6128674315610d3372b53abe6af361ba0b7
+- filename: packages/contentstack-asset-management/test/unit/import/fields.test.ts
+  checksum: c2830111af2bf72c5a661fe2251a3520a865c42c3980289195a08d713703e4b1
+- filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
+  checksum: f95e4b7ce04d4beb70c7f70c762f03541588c211a8c15ba68d426c98215a0769
+- filename: packages/contentstack-asset-management/test/unit/import/assets.test.ts
+  checksum: 37613b7f2b5812282eedf87e0b9f87efc8eebb5e3cf75afc5f0eaa3605be4b5d
+- filename: packages/contentstack-asset-management/test/unit/utils/cs-assets-api-adapter.test.ts
+  checksum: 3d9d252ffa66a28380a015857fe7358fe7e2ba2efe90adaf715f9ff2a408450f
+- filename: packages/contentstack-asset-management/test/unit/import/base.test.ts
+  checksum: c6ed81639052b5905f481e90d6c17e19b099b30916d4cf6bf7eabfe33fd15530
 version: '1.0'

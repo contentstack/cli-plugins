@@ -5,7 +5,7 @@ import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack
 import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
-import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
 
 export type { ExportContext };
 
@@ -80,6 +80,14 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
   /** Asset download batch size; falls back to {@link apiConcurrency}. */
   protected get downloadAssetsBatchConcurrency(): number {
     return this.exportContext.downloadAssetsConcurrency ?? this.apiConcurrency;
+  }
+
+  protected get apiPageSize(): number {
+    return this.exportContext.pageSize ?? FALLBACK_AM_API_PAGE_SIZE;
+  }
+
+  protected get apiFetchConcurrency(): number {
+    return this.exportContext.fetchConcurrency ?? FALLBACK_AM_API_FETCH_CONCURRENCY;
   }
 
   protected getAssetTypesDir(): string {

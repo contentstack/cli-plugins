@@ -28,8 +28,8 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     log.debug(`Fetching folders and assets for space ${workspace.space_uid}`, this.exportContext.context);
 
     const [folders, assetsData] = await Promise.all([
-      this.getWorkspaceFolders(workspace.space_uid, workspace.uid),
-      this.getWorkspaceAssets(workspace.space_uid, workspace.uid),
+      this.getWorkspaceFolders(workspace.space_uid, workspace.uid, this.apiPageSize, this.apiFetchConcurrency),
+      this.getWorkspaceAssets(workspace.space_uid, workspace.uid, this.apiPageSize, this.apiFetchConcurrency),
     ]);
 
     const assetItems = getAssetItems(assetsData);

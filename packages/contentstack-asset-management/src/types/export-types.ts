@@ -5,6 +5,8 @@ export type ExportContext = {
   chunkFileSizeMb?: number;
   apiConcurrency?: number;
   downloadAssetsConcurrency?: number;
+  pageSize?: number;
+  fetchConcurrency?: number;
 };
 
 /**

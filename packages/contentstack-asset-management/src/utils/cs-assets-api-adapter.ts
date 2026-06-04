@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
+import { chunkArray } from './concurrent-batch';
+import { FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE } from '../constants/index';
+
 import type {
   CSAssetsAPIConfig,
   AssetTypesResponse,
@@ -189,11 +192,17 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     }
   }
 
-  async listSpaces(): Promise<SpacesListResponse> {
+  async listSpaces(pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<SpacesListResponse> {
     log.debug('Fetching all spaces in org', this.config.context);
-    const result = await this.getSpaceLevel<SpacesListResponse>('', '/api/spaces', {});
-    log.debug(`Fetched ${result?.count ?? result?.spaces?.length ?? '?'} space(s)`, this.config.context);
-    return result;
+    const items = await this.fetchAllPages(
+      '',
+      '/api/spaces',
+      'spaces',
+      pageSize,
+      fetchConcurrency,
+    );
+    log.debug(`Fetched ${items.length} space(s)`, this.config.context);
+    return { spaces: items as Space[], count: items.length };
   }
 
   async getSpace(spaceUid: string): Promise<SpaceResponse> {
@@ -230,22 +239,73 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     return result;
   }
 
-  async getWorkspaceAssets(spaceUid: string, workspaceUid?: string): Promise<unknown> {
-    return this.getWorkspaceCollection(
+
+  /**
+   * Fetch all pages of a paginated collection by issuing the first request to determine
+   * the total count, then issuing remaining page requests with controlled concurrency.
+   */
+  private async fetchAllPages(
+    spaceUid: string,
+    path: string,
+    itemsKey: string,
+    pageSize: number,
+    concurrency: number,
+    baseParams: Record<string, unknown> = {},
+  ): Promise<unknown[]> {
+    const first = await this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
+      ...baseParams, limit: String(pageSize), skip: '0',
+    });
+
+    const total: number = Number(first?.count ?? 0);
+    const firstItems: unknown[] = Array.isArray(first?.[itemsKey]) ? (first[itemsKey] as unknown[]) : [];
+    if (firstItems.length >= total) return firstItems;
+
+    const skips = Array.from(
+      { length: Math.ceil(total / pageSize) - 1 },
+      (_, i) => (i + 1) * pageSize,
+    );
+
+    const skipBatches = chunkArray(skips, concurrency);
+    const rest: unknown[] = [];
+
+    for (const batch of skipBatches) {
+      const pages = await Promise.all(
+        batch.map((skip) =>
+          this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
+            ...baseParams, limit: String(pageSize), skip: String(skip),
+          }).then((r) => (Array.isArray(r?.[itemsKey]) ? (r[itemsKey] as unknown[]) : [])),
+        ),
+      );
+      rest.push(...pages.flat());
+    }
+
+    return [...firstItems, ...rest];
+  }
+
+  async getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {
+    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    const items = await this.fetchAllPages(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
       'assets',
-      workspaceUid ? { workspace: workspaceUid } : {},
+      pageSize,
+      fetchConcurrency,
+      baseParams,
     );
+    return { assets: items, count: items.length };
   }
 
-  async getWorkspaceFolders(spaceUid: string, workspaceUid?: string): Promise<unknown> {
-    return this.getWorkspaceCollection(
+  async getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {
+    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    const items = await this.fetchAllPages(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/folders`,
       'folders',
-      workspaceUid ? { workspace: workspaceUid } : {},
+      pageSize,
+      fetchConcurrency,
+      baseParams,
     );
+    return { folders: items, count: items.length };
   }
 
   async getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse> {
