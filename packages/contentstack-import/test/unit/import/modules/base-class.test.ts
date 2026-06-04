@@ -74,6 +74,7 @@ describe('BaseClass', () => {
           create: sinon.stub().resolves({ uid: 'term-123' }),
         }),
         import: sinon.stub().resolves({ uid: 'import-123' }),
+        publish: sinon.stub().resolves({ notice: 'queued' }),
       }),
       globalField: sinon.stub().returns({
         create: sinon.stub().resolves({ uid: 'gf-123' }),
@@ -857,6 +858,59 @@ describe('BaseClass', () => {
 
         expect(result).to.be.undefined;
         expect(mockStackClient.taxonomy().import.called).to.be.false;
+      });
+
+      it('should handle publish-taxonomies with api version 3.2', async () => {
+        const payload = {
+          environments: ['blt-env-dest'],
+          locales: ['en-us'],
+          items: [{ uid: 'tax-uid' }],
+        };
+        mockApiOptions.entity = 'publish-taxonomies' as any;
+        mockApiOptions.apiData = payload;
+
+        await testClass.makeAPICall(mockApiOptions);
+
+        expect(mockStackClient.taxonomy().publish.calledOnce).to.be.true;
+        expect(mockStackClient.taxonomy().publish.firstCall.args[0]).to.deep.equal(payload);
+        expect(mockStackClient.taxonomy().publish.firstCall.args[1]).to.equal('3.2');
+        expect(mockStackClient.taxonomy().publish.firstCall.args[2]).to.deep.equal({});
+        expect(mockApiOptions.resolve.calledOnce).to.be.true;
+      });
+
+      it('should pass branch to publish-taxonomies when branchName is set', async () => {
+        const payload = {
+          environments: ['e1'],
+          locales: ['en-us'],
+          items: [{ uid: 't1' }],
+        };
+        mockImportConfig.branchName = 'main-branch';
+        testClass = new TestBaseClass({
+          importConfig: mockImportConfig,
+          stackAPIClient: mockStackClient,
+        });
+
+        mockApiOptions.entity = 'publish-taxonomies' as any;
+        mockApiOptions.apiData = payload;
+
+        await testClass.makeAPICall(mockApiOptions);
+
+        expect(mockStackClient.taxonomy().publish.firstCall.args[2]).to.deep.equal({ branch: 'main-branch' });
+        delete mockImportConfig.branchName;
+      });
+
+      it('should skip publish-taxonomies when environments empty', async () => {
+        mockApiOptions.entity = 'publish-taxonomies' as any;
+        mockApiOptions.apiData = {
+          environments: [],
+          locales: ['en-us'],
+          items: [{ uid: 't' }],
+        };
+
+        await testClass.makeAPICall(mockApiOptions);
+
+        expect(mockStackClient.taxonomy().publish.called).to.be.false;
+        expect(mockApiOptions.resolve.called).to.be.false;
       });
     });
   });
