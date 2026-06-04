@@ -192,6 +192,7 @@ describe('ImportLocales', () => {
       overwriteSupportedModules: [],
       globalModules: [],
       entriesPublish: false,
+      skipTaxonomyPublish: true,
       cliLogsPath: '/test/logs',
       canCreatePrivateApp: false,
       forceStopMarketplaceAppsPrompt: false,

@@ -5,6 +5,16 @@ import values from 'lodash/values';
 import ImportTaxonomies from '../../../../src/import/modules/taxonomies';
 import { fsUtil, fileHelper } from '../../../../src/utils';
 
+function nestedProgressMock(sb: sinon.SinonSandbox) {
+  return {
+    addProcess: sb.stub().returnsThis(),
+    startProcess: sb.stub().returnsThis(),
+    updateStatus: sb.stub().returnsThis(),
+    completeProcess: sb.stub().returnsThis(),
+    getFailureCount: sb.stub().returns(0),
+  };
+}
+
 describe('ImportTaxonomies', () => {
   let importTaxonomies: ImportTaxonomies;
   let mockStackClient: any;
@@ -67,11 +77,8 @@ describe('ImportTaxonomies', () => {
     sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
       return await fn();
     });
-    sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]);
-    const mockProgress = {
-      updateStatus: sandbox.stub()
-    };
-    sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns(mockProgress);
+    sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]);
+    sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
     sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
     sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
     sandbox.stub(importTaxonomies as any, 'completeProgress').resolves();
@@ -104,6 +111,9 @@ describe('ImportTaxonomies', () => {
       expect((importTaxonomies as any).localesFilePath).to.equal(
         join(testBackupDir, 'locales', 'locales.json'),
       );
+      expect((importTaxonomies as any).envUidMapperPath).to.equal(
+        join(testBackupDir, 'mapper', 'environments', 'uid-mapping.json'),
+      );
     });
 
     it('should set context module to taxonomies', () => {
@@ -135,9 +145,7 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       const prepareMapperDirectoriesStub = sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       const importTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'importTaxonomies').resolves();
       sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
@@ -189,7 +197,7 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      const analyzeTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0]);
+      const analyzeTaxonomiesStub = sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0, 0]);
       sandbox.stub(importTaxonomies as any, 'completeProgress').resolves();
       
       await importTaxonomies.start();
@@ -211,10 +219,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0]); // 0 taxonomies
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([0, 0]); // 0 taxonomies
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       sandbox.stub(importTaxonomies as any, 'importTaxonomies').resolves();
       sandbox.stub(importTaxonomies as any, 'createSuccessAndFailedFile').resolves();
@@ -241,10 +247,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]); // 1 taxonomy
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]); // 1 taxonomy
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').resolves();
       sandbox.stub(importTaxonomies as any, 'importTaxonomies').callsFake(async () => {
         (importTaxonomies as any).createdTaxonomies = { 'taxonomy_1': { uid: 'taxonomy_1' } };
@@ -1123,10 +1127,8 @@ describe('ImportTaxonomies', () => {
       sandbox.stub(importTaxonomies as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
         return await fn();
       });
-      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1]);
-      sandbox.stub(importTaxonomies as any, 'createSimpleProgress').returns({
-        updateStatus: sinon.stub()
-      });
+      sandbox.stub(importTaxonomies as any, 'analyzeTaxonomies').resolves([1, 0]);
+      sandbox.stub(importTaxonomies as any, 'createNestedProgress').returns(nestedProgressMock(sandbox));
       
       // Make prepareMapperDirectories reject with the error
       sandbox.stub(importTaxonomies as any, 'prepareMapperDirectories').rejects(new Error('Directory creation failed'));
