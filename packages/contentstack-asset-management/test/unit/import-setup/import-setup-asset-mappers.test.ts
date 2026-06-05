@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { stub, restore } from 'sinon';
-import { AssetManagementAdapter } from '../../../src/utils/asset-management-api-adapter';
+import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
 import ImportAssets from '../../../src/import/assets';
 import ImportSetupAssetMappers from '../../../src/import-setup/import-setup-asset-mappers';
 
@@ -77,8 +77,8 @@ describe('ImportSetupAssetMappers', () => {
     fs.mkdirSync(path.join(contentDir, 'spaces', 'amspace01'), { recursive: true });
     fs.mkdirSync(backupDir, { recursive: true });
 
-    stub(AssetManagementAdapter.prototype, 'init').resolves();
-    stub(AssetManagementAdapter.prototype, 'listSpaces').resolves({
+    stub(CSAssetsAdapter.prototype, 'init').resolves();
+    stub(CSAssetsAdapter.prototype, 'listSpaces').resolves({
       spaces: [{ uid: 'amspace01' }],
     });
     stub(ImportAssets.prototype, 'buildIdentityMappersFromExport').resolves({
@@ -133,8 +133,8 @@ describe('ImportSetupAssetMappers', () => {
     fs.mkdirSync(path.join(contentDir, 'spaces', 'amspace01'), { recursive: true });
     fs.mkdirSync(backupDir, { recursive: true });
 
-    stub(AssetManagementAdapter.prototype, 'init').resolves();
-    stub(AssetManagementAdapter.prototype, 'listSpaces').resolves({ spaces: [] });
+    stub(CSAssetsAdapter.prototype, 'init').resolves();
+    stub(CSAssetsAdapter.prototype, 'listSpaces').resolves({ spaces: [] });
 
     const buildStub = stub(ImportAssets.prototype, 'buildIdentityMappersFromExport').resolves({
       uidMap: {},
@@ -176,8 +176,8 @@ describe('ImportSetupAssetMappers', () => {
     fs.mkdirSync(path.join(contentDir, 'custom_spaces', 'amspace99'), { recursive: true });
     fs.mkdirSync(backupDir, { recursive: true });
 
-    stub(AssetManagementAdapter.prototype, 'init').resolves();
-    stub(AssetManagementAdapter.prototype, 'listSpaces').resolves({
+    stub(CSAssetsAdapter.prototype, 'init').resolves();
+    stub(CSAssetsAdapter.prototype, 'listSpaces').resolves({
       spaces: [{ uid: 'amspace99' }],
     });
 
@@ -231,8 +231,8 @@ describe('ImportSetupAssetMappers', () => {
     fs.mkdirSync(path.join(contentDir, 'spaces', 'amX'), { recursive: true });
     fs.mkdirSync(backupDir, { recursive: true });
 
-    stub(AssetManagementAdapter.prototype, 'init').resolves();
-    stub(AssetManagementAdapter.prototype, 'listSpaces').resolves({ spaces: [{ uid: 'amX' }] });
+    stub(CSAssetsAdapter.prototype, 'init').resolves();
+    stub(CSAssetsAdapter.prototype, 'listSpaces').resolves({ spaces: [{ uid: 'amX' }] });
 
     stub(ImportAssets.prototype, 'buildIdentityMappersFromExport').callsFake(async function fetchConcCheck(
       this: ImportAssets,

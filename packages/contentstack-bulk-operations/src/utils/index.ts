@@ -36,7 +36,7 @@ import {
   buildBulkModeResult,
   handleOperationError,
 } from './command-helpers';
-import { fillMissingFlags } from './interactive';
+import { fillMissingFlags, fillMissingCsAssetsFlags } from './interactive';
 import {
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,
@@ -102,6 +102,7 @@ export {
   buildBulkModeResult,
   handleOperationError,
   fillMissingFlags,
+  fillMissingCsAssetsFlags,
   fetchTaxonomyList,
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,

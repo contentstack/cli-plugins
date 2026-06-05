@@ -123,7 +123,6 @@ export default class ExportAssets extends BaseClass {
 
     this.assetsRootPath = pResolve(
       this.exportConfig.exportDir,
-      this.exportConfig.branchName || '',
       (this.assetsRootPath = pResolve(getExportBasePath(this.exportConfig), this.assetConfig.dirName)),
     );
     log.debug(`Assets root path resolved to: ${this.assetsRootPath}`, this.exportConfig.context);
