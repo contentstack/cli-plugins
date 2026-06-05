@@ -12,7 +12,7 @@ import {
 } from '@contentstack/cli-utilities';
 import { QueryExporter } from '../../../core/query-executor';
 import { QueryExportConfig } from '../../../types';
-import { setupQueryExportConfig, setupBranches, createLogContext } from '../../../utils';
+import { setupQueryExportConfig, setupBranches, createLogContext, applyRegionToQueryExportConfig } from '../../../utils';
 
 export default class ExportQueryCommand extends Command {
   static description = 'Export content from a stack using query-based filtering';
@@ -80,7 +80,7 @@ export default class ExportQueryCommand extends Command {
       // Setup export configuration
       const exportQueryConfig = await setupQueryExportConfig(flags);
       exportQueryConfig.host = this.cmaHost;
-      exportQueryConfig.region = this.region;
+      applyRegionToQueryExportConfig(exportQueryConfig, this.region);
 
       if (this.developerHubUrl) {
         exportQueryConfig.developerHubBaseUrl = this.developerHubUrl;

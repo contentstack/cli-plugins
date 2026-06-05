@@ -25,7 +25,7 @@ jobs:
       - name: Prune pnpm store
         run: pnpm store prune
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build all plugins
         run: |
@@ -86,3 +86,7 @@ jobs:
       - name: Run tests for Contentstack Bulk Operations
         working-directory: ./packages/contentstack-bulk-operations
         run: npm test
+      
+      - name: Run tests for Contentstack Variants
+        working-directory: ./packages/contentstack-variants
+        run: npm run test

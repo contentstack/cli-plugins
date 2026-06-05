@@ -66,7 +66,14 @@ describe('ExportTaxonomies', () => {
         taxonomies: {
           dirName: 'taxonomies',
           fileName: 'taxonomies.json',
-          invalidKeys: [],
+          invalidKeys: [
+            'updated_at',
+            'created_by',
+            'updated_by',
+            'stackHeaders',
+            'urlPath',
+            'created_at',
+          ],
           limit: 100,
         },
         locales: {
@@ -105,6 +112,118 @@ describe('ExportTaxonomies', () => {
 
   afterEach(() => {
     sinon.restore();
+  });
+
+  describe('include_publish_details (list query)', () => {
+    it('should set include_publish_details true on taxonomy list query params', () => {
+      const qs = (exportTaxonomies as any).qs;
+      expect(qs.include_publish_details).to.equal(true);
+      expect(qs.include_count).to.equal(true);
+    });
+
+    it('should pass include_publish_details true to taxonomy().query from fetchTaxonomies', async () => {
+      const querySpy = sinon.stub().returns({
+        find: sinon.stub().resolves({
+          items: [{ uid: 'taxonomy-1', name: 'Cat' }],
+          count: 1,
+        }),
+      });
+      mockStackClient.taxonomy.returns({ query: querySpy });
+
+      await exportTaxonomies.fetchTaxonomies();
+
+      expect(querySpy.called).to.be.true;
+      expect(querySpy.firstCall.args[0]).to.have.property('include_publish_details', true);
+    });
+
+    it('should pass include_publish_details on every pagination request', async () => {
+      let callCount = 0;
+      const querySpy = sinon.stub().returns({
+        find: sinon.stub().callsFake(() => {
+          callCount++;
+          if (callCount === 1) {
+            return Promise.resolve({
+              items: Array(100).fill(null).map((_, i) => ({ uid: `taxonomy-${i}`, name: 'Test' })),
+              count: 150,
+            });
+          }
+          return Promise.resolve({
+            items: Array(50).fill(null).map((_, i) => ({ uid: `taxonomy-${100 + i}`, name: 'Test' })),
+            count: 150,
+          });
+        }),
+      });
+      mockStackClient.taxonomy.returns({ query: querySpy });
+
+      await exportTaxonomies.fetchTaxonomies();
+
+      expect(callCount).to.be.greaterThan(1);
+      querySpy.getCalls().forEach((call) => {
+        expect(call.args[0]).to.have.property('include_publish_details', true);
+      });
+    });
+
+    it('should pass include_publish_details when fetching with locale code', async () => {
+      const querySpy = sinon.stub().returns({
+        find: sinon.stub().resolves({
+          items: [{ uid: 'taxonomy-1', name: 'Cat', locale: 'en-us' }],
+          count: 1,
+        }),
+      });
+      mockStackClient.taxonomy.returns({ query: querySpy });
+
+      await exportTaxonomies.fetchTaxonomies('fr-fr');
+
+      expect(querySpy.called).to.be.true;
+      expect(querySpy.firstCall.args[0]).to.include({
+        include_publish_details: true,
+        locale: 'fr-fr',
+      });
+    });
+
+    it('should include include_publish_details on initializeExport count query', async () => {
+      const querySpy = sinon.stub().returns({
+        find: sinon.stub().resolves({ items: [{ uid: 'taxonomy-1', name: 'Cat' }], count: 1 }),
+      });
+      mockStackClient.taxonomy.returns({ query: querySpy });
+
+      const stubDetermine = sinon.stub(exportTaxonomies as any, 'determineExportStrategy').resolves();
+      const stubFetchAll = sinon.stub(exportTaxonomies as any, 'fetchAllTaxonomies').resolves();
+      const stubExportAll = sinon.stub(exportTaxonomies as any, 'exportAllTaxonomies').resolves(1);
+      const stubWriteMeta = sinon.stub(exportTaxonomies, 'writeTaxonomiesMetadata').resolves();
+      const stubGetLocales = sinon.stub(exportTaxonomies, 'getLocalesToExport').returns(['en-us']);
+
+      await exportTaxonomies.start();
+
+      expect(querySpy.called).to.be.true;
+      expect(querySpy.firstCall.args[0]).to.have.property('include_publish_details', true);
+      expect(querySpy.firstCall.args[0]).to.have.property('limit', 1);
+
+      stubDetermine.restore();
+      stubFetchAll.restore();
+      stubExportAll.restore();
+      stubWriteMeta.restore();
+      stubGetLocales.restore();
+    });
+
+    it('should merge exportConfig query.modules.taxonomies without removing root include_publish_details', () => {
+      const cfg = {
+        ...mockExportConfig,
+        query: {
+          modules: {
+            taxonomies: { branch: 'main' },
+          },
+        },
+      } as any;
+      const instance = new ExportTaxonomies({
+        exportConfig: cfg,
+        stackAPIClient: mockStackClient,
+        moduleName: 'taxonomies',
+      });
+      const qs = (instance as any).qs;
+      expect(qs.include_publish_details).to.equal(true);
+      expect(qs.query).to.deep.equal({ branch: 'main' });
+    });
   });
 
   describe('Constructor', () => {
@@ -321,6 +440,21 @@ describe('ExportTaxonomies', () => {
       exportTaxonomies.sanitizeTaxonomiesAttribs(taxonomies);
 
       expect(Object.keys(exportTaxonomies.taxonomies).length).to.equal(0);
+    });
+
+    it('should retain publish_details when not listed in invalidKeys', () => {
+      const publishDetails = [{ environment: 'bltEnv1', time: '2026-04-21T12:00:00.000Z', user: 'bltUser1' }];
+      const taxonomies = [
+        {
+          uid: 'taxonomy-pub',
+          name: 'Pub',
+          publish_details: publishDetails,
+        },
+      ];
+
+      exportTaxonomies.sanitizeTaxonomiesAttribs(taxonomies);
+
+      expect(exportTaxonomies.taxonomies['taxonomy-pub'].publish_details).to.deep.equal(publishDetails);
     });
 
     //   const taxonomies = [
@@ -690,6 +824,138 @@ describe('ExportTaxonomies', () => {
 
       mockGetLocales.restore();
       mockFetchTaxonomies.restore();
+    });
+  });
+
+  describe('Detail file: merge list publish_details into export payload', () => {
+    it('should write merged file with list publish_details when export response omits them (legacy)', async () => {
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      const listPublish = [{ environment: 'bltEnv1', locale: 'en-us' }];
+
+      exportTaxonomies.taxonomies = { 'tax-1': { uid: 'tax-1', name: 'T' } };
+      exportTaxonomies.publishDetailsByLocale = {
+        _default: { 'tax-1': listPublish },
+      } as any;
+      exportTaxonomies.taxonomiesFolderPath = '/test/export/taxonomies';
+
+      const makeAPICallStub = sinon.stub(exportTaxonomies, 'makeAPICall').callsFake((opts: any) => {
+        return Promise.resolve(
+          opts.resolve({
+            response: { taxonomy: { uid: 'tax-1', name: 'T' }, terms: {} },
+            uid: 'tax-1',
+          }),
+        );
+      });
+
+      await exportTaxonomies.exportTaxonomies();
+
+      const detailWrite = writeFileStub
+        .getCalls()
+        .find((c) => typeof c.args[0] === 'string' && c.args[0].endsWith('tax-1.json'));
+      expect(detailWrite, 'writeFile for tax-1.json').to.exist;
+      const payload = detailWrite!.args[1];
+      expect(payload.taxonomy.publish_details).to.deep.equal(listPublish);
+
+      makeAPICallStub.restore();
+    });
+
+    it('should prefer export taxonomy.publish_details when already present and non-empty', async () => {
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      const fromExport = [{ environment: 'from-export' }];
+
+      exportTaxonomies.taxonomies = { 'tax-1': { uid: 'tax-1' } };
+      exportTaxonomies.publishDetailsByLocale = {
+        _default: { 'tax-1': [{ from: 'list' }] },
+      } as any;
+      exportTaxonomies.taxonomiesFolderPath = '/test/export/taxonomies';
+
+      const makeAPICallStub = sinon.stub(exportTaxonomies, 'makeAPICall').callsFake((opts: any) => {
+        return Promise.resolve(
+          opts.resolve({
+            response: { taxonomy: { uid: 'tax-1', publish_details: fromExport }, terms: {} },
+            uid: 'tax-1',
+          }),
+        );
+      });
+
+      await exportTaxonomies.exportTaxonomies();
+
+      const detailWrite = writeFileStub
+        .getCalls()
+        .find((c) => typeof c.args[0] === 'string' && c.args[0].endsWith('tax-1.json'));
+      const payload = detailWrite!.args[1];
+      expect(payload.taxonomy.publish_details).to.deep.equal(fromExport);
+
+      makeAPICallStub.restore();
+    });
+
+    it('should fill from list when export has empty array publish_details', async () => {
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      const fromList = [{ from: 'list' }];
+
+      exportTaxonomies.taxonomies = { 'tax-1': { uid: 'tax-1' } };
+      exportTaxonomies.publishDetailsByLocale = { _default: { 'tax-1': fromList } } as any;
+      exportTaxonomies.taxonomiesFolderPath = '/test/export/taxonomies';
+
+      const makeAPICallStub = sinon.stub(exportTaxonomies, 'makeAPICall').callsFake((opts: any) => {
+        return Promise.resolve(
+          opts.resolve({
+            response: { taxonomy: { uid: 'tax-1', publish_details: [] }, terms: {} },
+            uid: 'tax-1',
+          }),
+        );
+      });
+
+      await exportTaxonomies.exportTaxonomies();
+
+      const detailWrite = writeFileStub
+        .getCalls()
+        .find((c) => typeof c.args[0] === 'string' && c.args[0].endsWith('tax-1.json'));
+      expect(detailWrite!.args[1].taxonomy.publish_details).to.deep.equal(fromList);
+
+      makeAPICallStub.restore();
+    });
+
+    it('should use per-locale list publish_details when exporting locale folder', async () => {
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      const frPublish = [{ locale: 'fr-fr' }];
+
+      exportTaxonomies.taxonomies = { 'tax-1': { uid: 'tax-1' } };
+      exportTaxonomies.taxonomiesByLocale['fr-fr'] = new Set(['tax-1']);
+      exportTaxonomies.publishDetailsByLocale = { 'fr-fr': { 'tax-1': frPublish } } as any;
+      exportTaxonomies.taxonomiesFolderPath = '/test/export/taxonomies';
+
+      const makeAPICallStub = sinon.stub(exportTaxonomies, 'makeAPICall').callsFake((opts: any) => {
+        return Promise.resolve(
+          opts.resolve({
+            response: { taxonomy: { uid: 'tax-1' }, terms: {} },
+            uid: 'tax-1',
+          }),
+        );
+      });
+
+      await exportTaxonomies.exportTaxonomies('fr-fr');
+
+      const detailWrite = writeFileStub
+        .getCalls()
+        .find((c) => typeof c.args[0] === 'string' && c.args[0].includes('fr-fr') && c.args[0].endsWith('tax-1.json'));
+      expect(detailWrite, 'fr-fr/tax-1.json').to.exist;
+      expect(detailWrite!.args[1].taxonomy.publish_details).to.deep.equal(frPublish);
+
+      makeAPICallStub.restore();
+    });
+
+    it('should store publish_details per locale bucket in sanitizeTaxonomiesAttribs', () => {
+      const listPd = [{ env: 'a' }];
+      const taxonomies = [
+        { uid: 't-loc', name: 'L', publish_details: listPd },
+      ];
+      exportTaxonomies.publishDetailsByLocale = {};
+      exportTaxonomies.taxonomiesByLocale['es-es'] = new Set<string>();
+
+      exportTaxonomies.sanitizeTaxonomiesAttribs(taxonomies, 'es-es');
+
+      expect((exportTaxonomies as any).publishDetailsByLocale['es-es']['t-loc']).to.deep.equal(listPd);
     });
   });
 });
