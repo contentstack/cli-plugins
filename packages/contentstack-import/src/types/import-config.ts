@@ -15,6 +15,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   skipAssetsPublish?: boolean;
   skipEntriesPublish?: boolean;
   cliLogsPath: string;
+  assetScanningEnabled?: boolean;
   canCreatePrivateApp: boolean;
   contentDir: string;
   data: string;
