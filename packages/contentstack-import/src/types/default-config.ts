@@ -227,5 +227,6 @@ export default interface DefaultConfig {
   globalModules: string[];
   skipAssetsPublish?: boolean;
   skipEntriesPublish?: boolean;
+  skipTaxonomyPublish?: boolean;
   entriesPublish: boolean;
 }

@@ -145,15 +145,14 @@ export abstract class BaseBulkCommand extends Command {
 
     this.parsedFlags = flags;
 
-    const commandName = `cm:stacks:bulk-${this.resourceType === ResourceType.ENTRY ? 'entries' : 'assets'}`;
     createLogContext(
-      this.context?.info?.command || commandName,
+      this.context?.info?.command || this.id,
       flags['stack-api-key'] || '',
       flags.alias ? 'Management Token' : 'Basic Auth'
     );
 
     this.logger = log;
-    this.loggerContext = { module: commandName };
+    this.loggerContext = { module: this.id };
 
     // Check for revert/retry EARLY - all config comes from log file
     const isRevertOrRetry = flags.revert || flags['retry-failed'];
