@@ -34,6 +34,12 @@ class ModuleImporter {
       const stackDetails: Record<string, unknown> = await this.stackAPIClient.fetch();
       this.importConfig.stackName = stackDetails.name as string;
       this.importConfig.org_uid = stackDetails.org_uid as string;
+
+      const assetScanningEnabled = await this.detectAssetScanning(this.importConfig.org_uid);
+      if (assetScanningEnabled) {
+        this.importConfig.assetScanningEnabled = true;
+        this.importConfig.skipAssetsPublish = true;
+      }
     }
     
     await this.resolveImportPath();
@@ -207,6 +213,16 @@ class ModuleImporter {
       return true;
     } catch (error) {
       log.error(`Audit failed with following error. ${error}`, this.importConfig.context);
+    }
+  }
+
+  private async detectAssetScanning(orgUid: string): Promise<boolean> {
+    try {
+      const orgDetails = await this.managementAPIClient.organization(orgUid).fetch({ include_plan: true });
+      const features: Array<{ uid: string; enabled?: boolean }> = orgDetails?.plan?.features || [];
+      return features.some((f) => (f.uid === 'assetsScan' || f.uid === 'amAssetsScan') && f.enabled === true);
+    } catch {
+      return false;
     }
   }
 }
