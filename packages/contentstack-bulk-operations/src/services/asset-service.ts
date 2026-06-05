@@ -211,16 +211,14 @@ export class AssetService {
 
     try {
       while (hasMore) {
-        const query = this.stack
-          .asset()
-          .query({
-            skip,
-            limit,
-            include_count: true,
-            include_publish_details: true,
-            include_asset_scan_status: true,
-            folder: folderUid,
-          });
+        const query = this.stack.asset().query({
+          skip,
+          limit,
+          include_count: true,
+          include_publish_details: true,
+          include_asset_scan_status: true,
+          folder: folderUid,
+        });
         const response = await query.find();
         const assets = response.items || [];
 

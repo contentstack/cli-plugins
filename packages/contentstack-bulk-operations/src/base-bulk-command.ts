@@ -164,7 +164,7 @@ export abstract class BaseBulkCommand extends Command {
     }
 
     // Fill missing required flags via interactive prompts
-  flags = await this.resolveFlagsInteractively(flags);
+    flags = await this.resolveFlagsInteractively(flags);
     this.parsedFlags = flags;
 
     await this.buildConfiguration(flags);
@@ -263,7 +263,6 @@ export abstract class BaseBulkCommand extends Command {
       }
     }
   }
-
 
   /**
    * Resolve flags interactively — subclasses can override to skip prompts for specific modes.
