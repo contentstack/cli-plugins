@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
 
-import type { AmBulkDeleteItem } from '../interfaces';
+import type { CsAssetsBulkDeleteItem } from '../interfaces';
 
 export type LoadAssetUidsErrorKind = 'READ' | 'PARSE' | 'SCHEMA';
 
@@ -83,16 +83,16 @@ export function validateAssetUidsParsedJson(parsed: unknown, filePathForErrors: 
 }
 
 /**
- * Validates `{ "uids": string[] }` and builds AM bulk-delete rows in one pass over `uids`.
+ * Validates `{ "uids": string[] }` and builds CS Assets bulk-delete rows in one pass over `uids`.
  * `locale` must be the final non-empty value from the CLI (caller trims).
  */
 export function validateAndBuildBulkDeleteItems(
   parsed: unknown,
   locale: string,
   filePathForErrors: string
-): AmBulkDeleteItem[] {
+): CsAssetsBulkDeleteItem[] {
   const uids = parseValidatedUidsArray(parsed, filePathForErrors);
-  const items = new Array<AmBulkDeleteItem>(uids.length);
+  const items = new Array<CsAssetsBulkDeleteItem>(uids.length);
   for (let i = 0; i < uids.length; i++) {
     const uid = uids[i];
     if (typeof uid !== 'string') {
@@ -116,9 +116,9 @@ export function loadAssetUidsFromFile(filePath: string): string[] {
 }
 
 /**
- * Reads asset UID file and returns `{ uid, locale }[]` for AM bulk delete (single pass over `uids` after parse).
+ * Reads asset UID file and returns `{ uid, locale }[]` for CS Assets bulk delete (single pass over `uids` after parse).
  */
-export function loadBulkDeleteItemsFromFile(filePath: string, locale: string): AmBulkDeleteItem[] {
+export function loadBulkDeleteItemsFromFile(filePath: string, locale: string): CsAssetsBulkDeleteItem[] {
   const { resolved, parsed } = readResolvedAssetUidsJson(filePath);
   return validateAndBuildBulkDeleteItems(parsed, locale, resolved);
 }

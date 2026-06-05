@@ -2,6 +2,8 @@
   "releaseAll": true,
   "plugins": {
     "asset-management": false,
+    "variants": false,
+    "query-export": false,
     "export": false,
     "import": false,
     "clone": false,

@@ -108,6 +108,9 @@ export default class ImportCommand extends Command {
       description: 'Skips entry publishing during the import process',
       default: false,
     }),
+    'skip-taxonomy-publish': flags.boolean({
+      description: 'Skips taxonomy publishing during the import process.',
+    }),
   };
 
   static usage: string =

@@ -157,7 +157,10 @@ Use this plugin to automate the process of cloning a stack in few steps.
   async run(): Promise<void> {
     try {
       const self = this;
-      configHandler.set('log.progressSupportedModule', 'clone');
+      // Clear any stale progressSupportedModule persisted from a previous run so that
+      // auth/pre-flight errors always reach the console regardless of showConsoleLogs setting.
+      // It will be re-set inside handleClone() once authentication passes.
+      configHandler.set('log.progressSupportedModule', null);
       const { flags: cloneCommandFlags } = await self.parse(StackCloneCommand);
       const {
         yes,
@@ -176,6 +179,7 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } = cloneCommandFlags;
 
       const handleClone = async (): Promise<void> => {
+        configHandler.set('log.progressSupportedModule', 'clone');
         const listOfTokens = configHandler.get('tokens');
         const authenticationMethod = this.determineAuthenticationMethod(
           sourceManagementTokenAlias,
