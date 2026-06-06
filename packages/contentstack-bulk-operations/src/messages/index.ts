@@ -210,6 +210,25 @@ const bulkAssetsMsg = {
   CROSS_PUBLISHING: 'Cross-publishing from {sourceEnv} to {targetEnvs}',
   SYNCED_ASSETS: 'Synced {count} assets from {sourceEnv}',
   ASSETS_READY_FOR_CROSS_PUBLISH: '{count} assets ready for cross-publish',
+
+  // Data-dir / scanning dashboard
+  DATA_DIR_ASSET_SCANNING_HEADER: 'Asset Scan Status',
+  DATA_DIR_TOTAL: 'Total assets found',
+  DATA_DIR_VALID: 'Clean (will publish)',
+  DATA_DIR_NO_PUBLISH_DETAILS: 'No publish details (skipped)',
+  DATA_DIR_UNMAPPED: 'Not imported / UID unmapped (skipped)',
+  DATA_DIR_WILL_PUBLISH: 'Will publish',
+  DATA_DIR_DRY_RUN: 'Dry run — no publish API calls will be made.',
+  DATA_DIR_FLAG_DESC: 'Path to exported content folder containing asset publish details.',
+  DRY_RUN_FLAG_DESC: 'Preview the publish plan without making any API calls.',
+  DATA_DIR_READ_ERROR: 'Failed to read data directory at {path}: {error}',
+  SCAN_STATUS_CLEAN: 'Clean (will publish)',
+  SCAN_STATUS_PENDING: 'Still scanning (skipped)',
+  SCAN_STATUS_QUARANTINED: 'Quarantined (skipped)',
+  SCAN_STATUS_SKIPPED_PENDING: 'Skipped (still scanning): {uid}',
+  SCAN_STATUS_SKIPPED_QUARANTINED: 'Skipped (quarantined): {uid}',
+  SCAN_STATUS_FETCHING: 'Checking asset scan status for {count} assets...',
+  NO_PUBLISHABLE_ASSETS: 'No publishable assets — all assets are either still scanning or quarantined.',
 };
 
 /**

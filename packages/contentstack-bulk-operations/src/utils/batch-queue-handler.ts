@@ -21,7 +21,7 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
     }
 
     logger.info(
-      `Processing batch ${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0}: ` +
+      `Processing batch ${batch.batchNumber}/${batch.totalBatches}: ` +
         `${batch.items.length} items, ` +
         `${batch.locales.length} locales, ` +
         `${batch.environments.length} environments`
@@ -29,7 +29,13 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
 
     (async () => {
       try {
-        const result = await bulkService.executeBulkPublish(batch.items, batch.operation, resourceType);
+        const result = await bulkService.executeBulkPublish(
+          batch.items,
+          batch.operation,
+          resourceType,
+          batch.environments,
+          batch.locales
+        );
 
         batchResults.set(item.id, result);
         queueManager.updateItemStatus(item.id, OperationStatus.SUCCESS);
@@ -76,7 +82,7 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
     if (!batch) return;
 
     handleAndLogError(error, {
-      batchNumber: `${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0}`,
+      batchNumber: `${batch.batchNumber}/${batch.totalBatches}`,
       itemCount: batch.items.length,
     });
 
@@ -109,7 +115,7 @@ async function handleRetryOrFailure({
       : retryStrategy.getDelay(item.retryCount);
 
     logger.warn(
-      `Batch ${batch.batchNumber ?? 0}/${batch.totalBatches ?? 0} failed with ${
+      `Batch ${batch.batchNumber}/${batch.totalBatches} failed with ${
         isRateLimit ? '429 Rate Limit' : getErrorCode(error)
       }, retrying in ${Math.ceil(delay / 1000)}s`
     );
