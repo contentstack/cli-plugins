@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { getLogPath } from '@contentstack/cli-utilities';
 import { $t, messages } from './index';
-import { AssetPublishData, EntryPublishData, BulkOperationResult, BulkJobResult } from '../interfaces';
+import { AssetPublishData, EntryPublishData, BulkOperationResult, BulkJobResult, Asset } from '../interfaces';
 
 export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
@@ -121,4 +121,38 @@ export function logSummary(result: any): void {
   console.log(chalk.cyan($t(messages.LOG_FILES, { path: logFile })));
 
   console.log('');
+}
+
+/**
+ * Categorize assets by their _asset_scan_status field.
+ * Assets with no status field belong to stacks where scanning is disabled — treat as publishable.
+ */
+export function categorizeByScanStatus(assets: Asset[]): {
+  clean: Asset[];
+  pending: Asset[];
+  quarantined: Asset[];
+  noStatus: Asset[];
+} {
+  const clean: Asset[] = [];
+  const pending: Asset[] = [];
+  const quarantined: Asset[] = [];
+  const noStatus: Asset[] = [];
+
+  for (const asset of assets) {
+    switch (asset._asset_scan_status) {
+      case 'clean':
+        clean.push(asset);
+        break;
+      case 'pending':
+        pending.push(asset);
+        break;
+      case 'quarantined':
+        quarantined.push(asset);
+        break;
+      default:
+        noStatus.push(asset);
+    }
+  }
+
+  return { clean, pending, quarantined, noStatus };
 }
