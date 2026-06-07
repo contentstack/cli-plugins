@@ -1,14 +1,14 @@
 fileignoreconfig:
-- filename: packages/contentstack-asset-management/test/unit/import/asset-types.test.ts
-  checksum: fa4c08a47a52b8bd27353b9ba712e6128674315610d3372b53abe6af361ba0b7
-- filename: packages/contentstack-asset-management/test/unit/import/fields.test.ts
-  checksum: c2830111af2bf72c5a661fe2251a3520a865c42c3980289195a08d713703e4b1
-- filename: packages/contentstack-asset-management/test/unit/import/spaces.test.ts
-  checksum: f95e4b7ce04d4beb70c7f70c762f03541588c211a8c15ba68d426c98215a0769
-- filename: packages/contentstack-asset-management/test/unit/import/assets.test.ts
-  checksum: 37613b7f2b5812282eedf87e0b9f87efc8eebb5e3cf75afc5f0eaa3605be4b5d
-- filename: packages/contentstack-asset-management/test/unit/utils/cs-assets-api-adapter.test.ts
-  checksum: 3d9d252ffa66a28380a015857fe7358fe7e2ba2efe90adaf715f9ff2a408450f
-- filename: packages/contentstack-asset-management/test/unit/import/base.test.ts
-  checksum: c6ed81639052b5905f481e90d6c17e19b099b30916d4cf6bf7eabfe33fd15530
+- filename: pnpm-lock.yaml
+  checksum: acb2fc21dd3481f162aedaccecbe45d565b3297957345044a12aa50d2850ac4e
+- filename: packages/contentstack-variants/test/unit/import/experiences.test.ts
+  checksum: 6142418bafea6454a72b313d933deb494ce4ea1d8cead7ef918c10e283c2c603
+- filename: packages/contentstack-variants/test/unit/export/variant-entries.test.ts
+  checksum: e150faeefa7b3586b70a6f454c1f68efe05526f582977dba28243b1e47606a42
+- filename: packages/contentstack-variants/test/unit/export/experiences.test.ts
+  checksum: eb9c989dd14373a90e8866ba3350245d3c06e8ba43cfebb24f40c1106b2e6b95
+- filename: packages/contentstack-variants/test/unit/utils/personalization-api-adapter.test.ts
+  checksum: d729c9586d3a19e321d79e490790b9d0aa345f81917376199d962de68317fae1
+- filename: packages/contentstack-variants/test/unit/import/variant-entries.test.ts
+  checksum: 1337a680c98cfa7d4be2e48db284c8e44866f5eee1e72afb4ba52c2264c3850f
 version: '1.0'
