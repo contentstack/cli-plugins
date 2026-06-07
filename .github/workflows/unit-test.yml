@@ -86,3 +86,7 @@ jobs:
       - name: Run tests for Contentstack Bulk Operations
         working-directory: ./packages/contentstack-bulk-operations
         run: npm test
+      
+      - name: Run tests for Contentstack Variants
+        working-directory: ./packages/contentstack-variants
+        run: npm run test
