@@ -4,7 +4,9 @@ import {
   log,
   handleAndLogError,
   readContentTypeSchemas,
+  managementSDKClient,
 } from '@contentstack/cli-utilities';
+import { CsAssetsQueryExporter } from '@contentstack/cli-asset-management';
 import * as fs from 'fs';
 import * as path from 'path';
 import { QueryExportConfig, Modules } from '../types';
@@ -44,6 +46,9 @@ export class QueryExporter {
     // Step 2: Always export general modules
     await this.exportGeneralModules();
 
+    // Step 3: Resolve linked workspaces from branch settings (Contentstack Assets)
+    await this.fetchLinkedWorkspaces();
+
     // Step 4: Export queried modules
     await this.exportQueriedModule(parsedQuery);
 
@@ -57,6 +62,54 @@ export class QueryExporter {
     // Step 9: export all other modules
 
     log.success('Query-based export completed successfully!', this.exportQueryConfig.context);
+  }
+
+  /**
+   * Fetch linked workspaces from branch settings for Contentstack Assets export routing.
+   */
+  private async fetchLinkedWorkspaces(): Promise<void> {
+    const branchName = this.exportQueryConfig.branchName || 'main';
+    try {
+      const branch = await this.stackAPIClient
+        .branch(branchName)
+        .fetch({ include_settings: true } as Record<string, unknown>);
+      const linked = (
+        branch as { settings?: { am_v2?: { linked_workspaces?: QueryExportConfig['linkedWorkspaces'] } } }
+      )?.settings?.am_v2?.linked_workspaces;
+      this.exportQueryConfig.linkedWorkspaces = Array.isArray(linked) ? linked : [];
+      log.debug(
+        `Linked workspaces for Contentstack Assets: ${this.exportQueryConfig.linkedWorkspaces?.length ?? 0}`,
+        this.exportQueryConfig.context,
+      );
+    } catch (error) {
+      log.warn(
+        `Could not fetch linked workspaces for branch ${branchName}, using stack assets export`,
+        this.exportQueryConfig.context,
+      );
+      this.exportQueryConfig.linkedWorkspaces = [];
+    }
+  }
+
+  private isCsAssetsExport(): boolean {
+    return (this.exportQueryConfig.linkedWorkspaces?.length ?? 0) > 0 && Boolean(this.exportQueryConfig.csAssetsUrl);
+  }
+
+  /**
+   * Resolve organization UID for Contentstack Assets API calls.
+   */
+  private async resolveOrgUid(): Promise<string> {
+    if (this.exportQueryConfig.org_uid) {
+      return this.exportQueryConfig.org_uid;
+    }
+    try {
+      const tempAPIClient = await managementSDKClient({ host: this.exportQueryConfig.host });
+      const stackData = await tempAPIClient.stack({ api_key: this.exportQueryConfig.stackApiKey }).fetch();
+      this.exportQueryConfig.org_uid = (stackData as { org_uid?: string })?.org_uid ?? '';
+      return this.exportQueryConfig.org_uid;
+    } catch (error) {
+      handleAndLogError(error, this.exportQueryConfig.context, 'Failed to resolve organization UID');
+      return '';
+    }
   }
 
   // export general modules
@@ -101,16 +154,8 @@ export class QueryExporter {
     log.info('Starting export of referenced content types and dependent modules...', this.exportQueryConfig.context);
 
     try {
-      const ctPath = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'content_types',
-      );
-      const gfPath = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'global_fields',
-      );
+      const ctPath = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'content_types');
+      const gfPath = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'global_fields');
 
       const referencedHandler = new ReferencedContentTypesHandler(this.exportQueryConfig);
       const dependenciesHandler = new ContentTypeDependenciesHandler(this.stackAPIClient, this.exportQueryConfig);
@@ -212,7 +257,10 @@ export class QueryExporter {
         }
 
         if (!foundNewCTs && !foundNewGFs) {
-          log.info('Schema closure complete, no new content types or global fields found', this.exportQueryConfig.context);
+          log.info(
+            'Schema closure complete, no new content types or global fields found',
+            this.exportQueryConfig.context,
+          );
           break;
         }
       }
@@ -220,7 +268,10 @@ export class QueryExporter {
       // Personalize is a single global module exported once after the closure stabilises.
       await this.moduleExporter.exportModule('personalize');
 
-      log.success('Referenced content types and dependent modules exported successfully', this.exportQueryConfig.context);
+      log.success(
+        'Referenced content types and dependent modules exported successfully',
+        this.exportQueryConfig.context,
+      );
     } catch (error) {
       handleAndLogError(error, this.exportQueryConfig.context, 'Error during schema closure expansion');
       throw error;
@@ -266,128 +317,168 @@ export class QueryExporter {
     log.info('Starting export of referenced assets...', this.exportQueryConfig.context);
 
     try {
-      const assetsDir = path.join(
-        sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
-        'assets',
-      );
-
-      const metadataFilePath = path.join(assetsDir, 'metadata.json');
-      const assetFilePath = path.join(assetsDir, 'assets.json');
-
-      // Define temp file paths
-      const tempMetadataFilePath = path.join(assetsDir, 'metadata_temp.json');
-      const tempAssetFilePath = path.join(assetsDir, 'assets_temp.json');
-
       const assetHandler = new AssetReferenceHandler(this.exportQueryConfig);
 
       // Extract referenced asset UIDs from all entries
       log.debug('Extracting referenced assets from entries', this.exportQueryConfig.context);
       const assetUIDs = assetHandler.extractReferencedAssets();
 
-      if (assetUIDs.length > 0) {
-        log.info(`Found ${assetUIDs.length} referenced assets to export`, this.exportQueryConfig.context);
-
-        fs.mkdirSync(assetsDir, { recursive: true });
-
-        // Define batch size - can be configurable through exportQueryConfig
-        const batchSize = this.exportQueryConfig.assetBatchSize || 100;
-
-        // if asset size is bigger than batch size, then we need to export in batches
-        // Calculate number of batches
-        const totalBatches = Math.ceil(assetUIDs.length / batchSize);
-        log.info(`Processing assets in ${totalBatches} batches of ${batchSize}`, this.exportQueryConfig.context);
-
-        // Process assets in batches
-        for (let i = 0; i < totalBatches; i++) {
-          const start = i * batchSize;
-          const end = Math.min(start + batchSize, assetUIDs.length);
-          const batchAssetUIDs = assetUIDs.slice(start, end);
-
-          log.info(
-            `Exporting batch ${i + 1}/${totalBatches} (${batchAssetUIDs.length} assets)...`,
-            this.exportQueryConfig.context,
-          );
-
-          const query = {
-            modules: {
-              assets: {
-                uid: { $in: batchAssetUIDs },
-              },
-            },
-          };
-
-          await this.moduleExporter.exportModule('assets', { query });
-
-          // Read the current batch's metadata.json and assets.json files
-          const currentMetadata: any = fsUtil.readFile(sanitizePath(metadataFilePath));
-          const currentAssets: any = fsUtil.readFile(sanitizePath(assetFilePath));
-
-          // Check if this is the first batch
-          if (i === 0) {
-            // For first batch, initialize temp files with current content
-            fsUtil.writeFile(sanitizePath(tempMetadataFilePath), currentMetadata);
-            fsUtil.writeFile(sanitizePath(tempAssetFilePath), currentAssets);
-            log.info(`Initialized temporary files with first batch data`, this.exportQueryConfig.context);
-          } else {
-            // For subsequent batches, append to temp files with incremented keys
-
-            // Handle metadata (which contains arrays of asset info)
-            const tempMetadata: any = fsUtil.readFile(sanitizePath(tempMetadataFilePath)) || {};
-
-            // Merge metadata by combining arrays
-            if (currentMetadata) {
-              Object.keys(currentMetadata).forEach((key: string) => {
-                if (!tempMetadata[key]) {
-                  tempMetadata[key] = currentMetadata[key];
-                }
-              });
-            }
-
-            // Write updated metadata back to temp file
-            fsUtil.writeFile(sanitizePath(tempMetadataFilePath), tempMetadata);
-
-            // Handle assets (which is an object with numeric keys)
-            const tempAssets: any = fsUtil.readFile(sanitizePath(tempAssetFilePath)) || {};
-            let nextIndex = Object.keys(tempAssets).length + 1;
-
-            // Add current assets with incremented keys
-            Object.values(currentAssets).forEach((value: any) => {
-              tempAssets[nextIndex.toString()] = value;
-              nextIndex++;
-            });
-
-            fsUtil.writeFile(sanitizePath(tempAssetFilePath), tempAssets);
-
-            log.info(`Updated temporary files with batch ${i + 1} data`, this.exportQueryConfig.context);
-          }
-
-          // Optional: Add delay between batches to avoid rate limiting
-          if (i < totalBatches - 1 && this.exportQueryConfig.batchDelayMs) {
-            await new Promise((resolve) => setTimeout(resolve, this.exportQueryConfig.batchDelayMs));
-          }
-        }
-
-        // After all batches are processed, copy temp files back to original files
-        const finalMetadata = fsUtil.readFile(sanitizePath(tempMetadataFilePath));
-        const finalAssets = fsUtil.readFile(sanitizePath(tempAssetFilePath));
-
-        fsUtil.writeFile(sanitizePath(metadataFilePath), finalMetadata);
-        fsUtil.writeFile(sanitizePath(assetFilePath), finalAssets);
-
-        log.info(`Final data written back to original files`, this.exportQueryConfig.context);
-
-        // Clean up temp files
-        fsUtil.removeFile(sanitizePath(tempMetadataFilePath));
-        fsUtil.removeFile(sanitizePath(tempAssetFilePath));
-
-        log.info(`Temporary files cleaned up`, this.exportQueryConfig.context);
-        log.success('Referenced assets exported successfully', this.exportQueryConfig.context);
-      } else {
+      if (assetUIDs.length === 0) {
         log.info('No referenced assets found in entries', this.exportQueryConfig.context);
+        return;
       }
+
+      log.info(`Found ${assetUIDs.length} referenced assets to export`, this.exportQueryConfig.context);
+
+      if (this.isCsAssetsExport()) {
+        await this.exportReferencedCsAssets(assetUIDs);
+        return;
+      }
+
+      await this.exportReferencedStackAssets(assetUIDs);
     } catch (error) {
       handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting referenced assets');
+      throw error;
+    }
+  }
+
+  /**
+   * Export referenced assets into spaces/ via Contentstack Assets search API.
+   */
+  private async exportReferencedCsAssets(assetUIDs: string[]): Promise<void> {
+    log.info('Using Contentstack Assets export (spaces/)', this.exportQueryConfig.context);
+    const org_uid = await this.resolveOrgUid();
+    if (!org_uid) {
+      throw new Error('Organization UID is required for Contentstack Assets export');
+    }
+
+    const csAssetsExporter = new CsAssetsQueryExporter({
+      linkedWorkspaces: this.exportQueryConfig.linkedWorkspaces ?? [],
+      exportDir: this.exportQueryConfig.exportDir,
+      branchName: this.exportQueryConfig.branchName || 'main',
+      csAssetsUrl: this.exportQueryConfig.csAssetsUrl!,
+      org_uid,
+      apiKey: this.exportQueryConfig.stackApiKey,
+      context: this.exportQueryConfig.context as unknown as Record<string, unknown>,
+      securedAssets: this.exportQueryConfig.securedAssets,
+      assetBatchSize: this.exportQueryConfig.assetBatchSize,
+    });
+
+    await csAssetsExporter.export(assetUIDs);
+    log.success('Referenced assets exported successfully (Contentstack Assets)', this.exportQueryConfig.context);
+  }
+
+  /**
+   * Export referenced assets into stack assets/ via CMA export module.
+   */
+  private async exportReferencedStackAssets(assetUIDs: string[]): Promise<void> {
+    const assetsDir = path.join(sanitizePath(this.exportQueryConfig.exportDir), 'assets');
+
+    const metadataFilePath = path.join(assetsDir, 'metadata.json');
+    const assetFilePath = path.join(assetsDir, 'assets.json');
+
+    // Define temp file paths
+    const tempMetadataFilePath = path.join(assetsDir, 'metadata_temp.json');
+    const tempAssetFilePath = path.join(assetsDir, 'assets_temp.json');
+
+    try {
+      fs.mkdirSync(assetsDir, { recursive: true });
+
+      // Define batch size - can be configurable through exportQueryConfig
+      const batchSize = this.exportQueryConfig.assetBatchSize || 100;
+
+      // if asset size is bigger than batch size, then we need to export in batches
+      // Calculate number of batches
+      const totalBatches = Math.ceil(assetUIDs.length / batchSize);
+      log.info(`Processing assets in ${totalBatches} batches of ${batchSize}`, this.exportQueryConfig.context);
+
+      // Process assets in batches
+      for (let i = 0; i < totalBatches; i++) {
+        const start = i * batchSize;
+        const end = Math.min(start + batchSize, assetUIDs.length);
+        const batchAssetUIDs = assetUIDs.slice(start, end);
+
+        log.info(
+          `Exporting batch ${i + 1}/${totalBatches} (${batchAssetUIDs.length} assets)...`,
+          this.exportQueryConfig.context,
+        );
+
+        const query = {
+          modules: {
+            assets: {
+              uid: { $in: batchAssetUIDs },
+            },
+          },
+        };
+
+        await this.moduleExporter.exportModule('assets', { query });
+
+        // Read the current batch's metadata.json and assets.json files
+        const currentMetadata: any = fsUtil.readFile(sanitizePath(metadataFilePath));
+        const currentAssets: any = fsUtil.readFile(sanitizePath(assetFilePath));
+
+        // Check if this is the first batch
+        if (i === 0) {
+          // For first batch, initialize temp files with current content
+          fsUtil.writeFile(sanitizePath(tempMetadataFilePath), currentMetadata);
+          fsUtil.writeFile(sanitizePath(tempAssetFilePath), currentAssets);
+          log.info(`Initialized temporary files with first batch data`, this.exportQueryConfig.context);
+        } else {
+          // For subsequent batches, append to temp files with incremented keys
+
+          // Handle metadata (which contains arrays of asset info)
+          const tempMetadata: any = fsUtil.readFile(sanitizePath(tempMetadataFilePath)) || {};
+
+          // Merge metadata by combining arrays
+          if (currentMetadata) {
+            Object.keys(currentMetadata).forEach((key: string) => {
+              if (!tempMetadata[key]) {
+                tempMetadata[key] = currentMetadata[key];
+              }
+            });
+          }
+
+          // Write updated metadata back to temp file
+          fsUtil.writeFile(sanitizePath(tempMetadataFilePath), tempMetadata);
+
+          // Handle assets (which is an object with numeric keys)
+          const tempAssets: any = fsUtil.readFile(sanitizePath(tempAssetFilePath)) || {};
+          let nextIndex = Object.keys(tempAssets).length + 1;
+
+          // Add current assets with incremented keys
+          Object.values(currentAssets).forEach((value: any) => {
+            tempAssets[nextIndex.toString()] = value;
+            nextIndex++;
+          });
+
+          fsUtil.writeFile(sanitizePath(tempAssetFilePath), tempAssets);
+
+          log.info(`Updated temporary files with batch ${i + 1} data`, this.exportQueryConfig.context);
+        }
+
+        // Optional: Add delay between batches to avoid rate limiting
+        if (i < totalBatches - 1 && this.exportQueryConfig.batchDelayMs) {
+          await new Promise((resolve) => setTimeout(resolve, this.exportQueryConfig.batchDelayMs));
+        }
+      }
+
+      // After all batches are processed, copy temp files back to original files
+      const finalMetadata = fsUtil.readFile(sanitizePath(tempMetadataFilePath));
+      const finalAssets = fsUtil.readFile(sanitizePath(tempAssetFilePath));
+
+      fsUtil.writeFile(sanitizePath(metadataFilePath), finalMetadata);
+      fsUtil.writeFile(sanitizePath(assetFilePath), finalAssets);
+
+      log.info(`Final data written back to original files`, this.exportQueryConfig.context);
+
+      // Clean up temp files
+      fsUtil.removeFile(sanitizePath(tempMetadataFilePath));
+      fsUtil.removeFile(sanitizePath(tempAssetFilePath));
+
+      log.info(`Temporary files cleaned up`, this.exportQueryConfig.context);
+      log.success('Referenced assets exported successfully', this.exportQueryConfig.context);
+    } catch (error) {
+      handleAndLogError(error, this.exportQueryConfig.context, 'Error exporting stack referenced assets');
       throw error;
     }
   }

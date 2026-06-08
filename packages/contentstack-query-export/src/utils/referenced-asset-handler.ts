@@ -12,7 +12,6 @@ export class AssetReferenceHandler {
     this.exportQueryConfig = exportQueryConfig;
     this.entriesDir = path.join(
       sanitizePath(exportQueryConfig.exportDir),
-      sanitizePath(exportQueryConfig.branchName || ''),
       'entries',
     );
   }
