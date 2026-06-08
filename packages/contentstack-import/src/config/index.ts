@@ -493,6 +493,7 @@ const config: DefaultConfig = {
   //'taxonomies', 'environments', 'marketplace_apps', workflows, custom-roles --> Add this incase need to extend to the other global modules
   globalModules: ['webhooks'],
   entriesPublish: true,
+  skipTaxonomyPublish: true,
 };
 export const PUBLISHING_RULES_APPROVERS_SKIP_MSG =
   'Skipping import of publish rule approver(s) (roles/users); reconfigure approvers on the target stack.';

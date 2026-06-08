@@ -1,16 +1,16 @@
 import { CSAssetsAdapter } from '@contentstack/cli-asset-management';
 
-import type { AmBulkDeleteItem, AmBulkOperationResult } from '../interfaces';
+import type { CsAssetsBulkDeleteItem, CsAssetsBulkOperationResult } from '../interfaces';
 
 /**
- * Thin wrapper around {@link CSAssetsAdapter} for AM bulk delete/move used by bulk-operations CLI.
+ * Thin wrapper around {@link CSAssetsAdapter} for CS Assets bulk delete/move used by bulk-operations CLI.
  */
-export class AmAssetService {
+export class CsAssetsService {
   private readonly adapter: CSAssetsAdapter;
 
-  constructor(amBaseUrl: string, spaceUid: string, orgUid: string) {
+  constructor(csAssetsBaseUrl: string, spaceUid: string, orgUid: string) {
     this.adapter = new CSAssetsAdapter({
-      baseURL: amBaseUrl,
+      baseURL: csAssetsBaseUrl,
       headers: { organization_uid: orgUid, space_key: spaceUid },
     });
   }
@@ -18,8 +18,8 @@ export class AmAssetService {
   async bulkDelete(
     spaceUid: string,
     workspaceUid: string | undefined,
-    items: AmBulkDeleteItem[]
-  ): Promise<AmBulkOperationResult> {
+    items: CsAssetsBulkDeleteItem[]
+  ): Promise<CsAssetsBulkOperationResult> {
     try {
       const response = await this.adapter.bulkDeleteAssets(spaceUid, workspaceUid ?? 'main', {
         assets: items,
@@ -42,7 +42,7 @@ export class AmAssetService {
     workspaceUid: string | undefined,
     assetUids: string[],
     targetFolderUid: string
-  ): Promise<AmBulkOperationResult> {
+  ): Promise<CsAssetsBulkOperationResult> {
     try {
       const response = await this.adapter.bulkMoveAssets(spaceUid, workspaceUid ?? 'main', {
         asset_uids: assetUids,

@@ -15,5 +15,8 @@
       "es2020.promise"
     ],
   },
-  "include": ["src/*", "src/utils/constants.ts"]
+  "include": ["src/*", "src/utils/constants.ts"],
+  "ts-node": {
+    "transpileOnly": true
+  }
 }
