@@ -159,6 +159,11 @@ export default class ImportCommand extends Command {
       backupDir = importConfig.backupDir;
       //Note: Final summary is now handled by summary manager
       CLIProgressManager.printGlobalSummary();
+      if (importConfig.assetScanningEnabled) {
+        cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
+        cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
+        cliux.print(`  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`, { color: 'cyan' });
+      }
       this.logSuccessAndBackupMessages(backupDir, importConfig);
       // Clear progress module setting now that import is complete
       clearProgressModuleSetting();
