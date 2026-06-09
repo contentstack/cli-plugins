@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-bulk-operations",
-  "version": "2.0.0-beta.0",
+  "version": "2.0.0-beta.1",
   "description": "Contentstack CLI plugin for bulk operations",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-bulk-operations",
@@ -20,7 +20,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@contentstack/cli-asset-management": "1.0.0-beta.3",
+    "@contentstack/cli-asset-management": "1.0.0-beta.4",
     "@contentstack/cli-command": "~2.0.0-beta.8",
     "@contentstack/cli-utilities": "~2.0.0-beta.9",
     "@contentstack/delivery-sdk": "^5.2.0",
