@@ -7,6 +7,7 @@ settings:
 overrides:
   tmp: 0.2.7
   uuid: 14.0.0
+  lodash: 4.18.1
 
 importers:
 
@@ -40,7 +41,7 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       shelljs:
         specifier: ^0.10.0
@@ -143,7 +144,7 @@ importers:
         specifier: ^11.3.0
         version: 11.3.5
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       winston:
         specifier: ^3.19.0
@@ -201,7 +202,7 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~1.15.5
+        specifier: ~1.15.6
         version: link:../contentstack-seed
       '@contentstack/cli-command':
         specifier: ~1.8.3
@@ -280,7 +281,7 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
     devDependencies:
       chai:
@@ -332,7 +333,7 @@ importers:
         specifier: ^1.30.3
         version: 1.30.3(debug@4.4.3)
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       uuid:
         specifier: 14.0.0
@@ -444,7 +445,7 @@ importers:
         specifier: 8.2.7
         version: 8.2.7(@types/node@22.19.19)
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       winston:
         specifier: ^3.19.0
@@ -639,7 +640,7 @@ importers:
         specifier: ~1.25.1
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
-        specifier: ~1.33.2
+        specifier: ~1.33.3
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~1.8.3
@@ -657,7 +658,7 @@ importers:
         specifier: 8.2.7
         version: 8.2.7(@types/node@14.18.63)
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       merge:
         specifier: ^2.1.1
@@ -836,7 +837,7 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       merge:
         specifier: ^2.1.1
@@ -1021,7 +1022,7 @@ importers:
         specifier: ^11.3.3
         version: 11.3.5
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       marked:
         specifier: ^4.3.0
@@ -1106,7 +1107,7 @@ importers:
         specifier: ^11.3.0
         version: 11.3.5
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       merge:
         specifier: ^2.1.1
@@ -1191,7 +1192,7 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       omit-deep-lodash:
         specifier: ^1.1.7
@@ -1337,7 +1338,7 @@ importers:
         specifier: ^3.7.2
         version: 3.7.2
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       merge:
         specifier: ^2.1.1
@@ -1428,7 +1429,7 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-        specifier: ~1.33.2
+        specifier: ~1.33.3
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~1.8.3
@@ -1501,7 +1502,7 @@ importers:
         specifier: ^4.11.4
         version: 4.11.4
       lodash:
-        specifier: ^4.18.1
+        specifier: 4.18.1
         version: 4.18.1
       mkdirp:
         specifier: ^1.0.4
@@ -6944,9 +6945,6 @@ packages:
 
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
-
-  lodash@4.17.23:
-    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -19189,8 +19187,6 @@ snapshots:
 
   lodash.uniq@4.5.0: {}
 
-  lodash@4.17.23: {}
-
   lodash@4.18.1: {}
 
   log-symbols@1.0.2:
@@ -19800,7 +19796,7 @@ snapshots:
 
   omit-deep-lodash@1.1.7:
     dependencies:
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   on-finished@2.4.1:
     dependencies:
