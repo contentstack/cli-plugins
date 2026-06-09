@@ -379,6 +379,11 @@ const interactiveMsg = {
   TAXONOMY_UNSUPPORTED_RETRY: 'Retry and revert are not supported for bulk-taxonomies.',
   TAXONOMY_UNSUPPORTED_CROSS_PUBLISH: 'Cross-publish is not supported for bulk-taxonomies.',
 
+  // Data-dir (backup folder) prompt
+  USE_DATA_DIR_PROMPT: 'Do you want to publish assets using publish details from an import backup folder (data-dir)?',
+  ENTER_DATA_DIR: 'Enter the path to the import backup folder (data-dir):',
+  DATA_DIR_REQUIRED: 'Backup folder path is required',
+
   // Errors
   NO_DELIVERY_TOKENS_FOUND:
     'No delivery token aliases found. Add one using: csdx auth:tokens:add -a <alias> --delivery-token <token> --api-key <api-key> --environment <source-env> --type delivery',
