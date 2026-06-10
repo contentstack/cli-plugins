@@ -191,6 +191,14 @@ jobs:
           package: ./packages/contentstack-cli-tsgen/package.json
           tag: latest
 
+      # External Migrate
+      - name: Publishing external-migrate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-external-migrate/package.json
+          tag: alpha
+
       - name: Create Production Release
         id: create_release
         env:
