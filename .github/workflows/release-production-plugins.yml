@@ -197,7 +197,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-external-migrate/package.json
-          tag: alpha
+          tag: latest
 
       - name: Create Production Release
         id: create_release
