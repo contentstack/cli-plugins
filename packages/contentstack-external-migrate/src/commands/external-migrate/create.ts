@@ -28,17 +28,12 @@ import { localDateStamp } from '../../lib/local-date';
 import { inferWorkspace, patchManifest, stackApiKeyPrefix, toWorkspaceRelative } from '../../lib/manifest';
 
 export default class MigrateCreate extends Command {
-  static description = 'Convert a legacy export, create a new stack in an organization, and import into it';
+  static description = 'Convert a source export, create a new stack in an organization, and import into it';
 
-  static examples = [
-    '$ csdx migrate:create --legacy contentful --input ./export.json --org bltOrgUid',
-    '$ csdx migrate:create -l contentful -i ./export.json --org bltOrgUid --stack-name "My Site"',
-    '$ CONTENTFUL_MANAGEMENT_TOKEN=... csdx migrate:create -l contentful --space-id SPACE_ID --org bltOrgUid',
-  ];
+  static examples = ['$ csdx migrate:create --source contentful --input ./export.json --org bltOrgUid'];
 
   static flags: FlagInput = {
     source: flags.string({
-      char: 'l',
       description: 'Legacy CMS source (contentful)',
       required: true,
       options: ['contentful'],
@@ -61,7 +56,7 @@ export default class MigrateCreate extends Command {
       description: 'Include archived entries in export (with --space-id)',
       default: false,
     }),
-    'org-uid': flags.string({
+    org: flags.string({
       description: 'Contentstack organization uid — a new stack is created here (prompts with a list if omitted)',
     }),
     output: flags.string({
@@ -90,7 +85,7 @@ export default class MigrateCreate extends Command {
     }),
     input: flags.string({
       char: 'i',
-      description: 'Path to legacy export JSON (use this OR --space-id)',
+      description: 'Path to source export JSON (use this OR --space-id)',
       hidden: true,
     }),
     'cf-org-id': flags.string({
@@ -117,7 +112,7 @@ export default class MigrateCreate extends Command {
     const { flags } = await this.parse(MigrateCreate);
 
     try {
-      const adapter = getAdapter(flags.legacy);
+      const adapter = getAdapter(flags.source);
 
       // Destination Contentstack org (shared across every migrated space).
       let orgUid = flags.org;
@@ -543,7 +538,7 @@ export default class MigrateCreate extends Command {
     await patchManifest(
       workspace,
       {
-        legacy: flags.legacy,
+        legacy: flags.source,
         convert: {
           completedAt: new Date().toISOString(),
           bundleDir: toWorkspaceRelative(workspace, mainBundleDir),
@@ -557,7 +552,7 @@ export default class MigrateCreate extends Command {
           status: 'completed',
         },
       },
-      { legacy: flags.legacy },
+      { legacy: flags.source },
     );
 
     this.log(`✓ Migration complete`);
