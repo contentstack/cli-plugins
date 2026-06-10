@@ -1,6 +1,4 @@
 fileignoreconfig:
-  - filename: packages/contentstack-import/src/import/modules/webhooks.ts
-    checksum: 8c9527f966fe24debfb36d96a280ac3b2dd6494a58128380c69d7475e595436d
-  - filename: packages/contentstack-import/test/unit/import/modules/webhooks.test.ts
-    checksum: 3924a3e38211b8554f25365fe3100cb83361d03370fdaa77e5c7f9e74abafcee
+  - filename: pnpm-lock.yaml
+    checksum: 07642e8dd04d580185a459e5b088d8a1bb4e91be4e04f4842bf4fe4775205bf6
 version: '1.0'
