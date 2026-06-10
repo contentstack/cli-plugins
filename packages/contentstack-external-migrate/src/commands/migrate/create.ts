@@ -139,10 +139,10 @@ export default class MigrateCreate extends Command {
 
       // Resolve the Contentful management token (shared) for live-API discovery.
       let managementToken =
-        flags['management-token'] ?? process.env.CONTENTFUL_MANAGEMENT_TOKEN ?? readContentfulCliToken();
+        flags['source-token'] ?? process.env.CONTENTFUL_MANAGEMENT_TOKEN ?? readContentfulCliToken();
       if (!managementToken) {
         managementToken = await cliux.prompt(
-          'Contentful management token (not found in --management-token, CONTENTFUL_MANAGEMENT_TOKEN, or contentful login)',
+          'Source token (not found in --source-token, CONTENTFUL_MANAGEMENT_TOKEN, or source login)',
         );
       }
 
@@ -703,7 +703,7 @@ async function fetchContentfulSpaceName(spaceId?: string, token?: string): Promi
 
 /**
  * Reuse the CMA token saved by `contentful login` (~/.contentfulrc.json), so a
- * logged-in user need not pass --management-token. Returns undefined if absent.
+ * logged-in user need not pass --source-token. Returns undefined if absent.
  */
 function readContentfulCliToken(): string | undefined {
   try {
