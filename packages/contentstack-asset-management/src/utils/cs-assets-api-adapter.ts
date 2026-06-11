@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
-import { chunkArray } from './concurrent-batch';
+import { mapInBatches } from './concurrent-batch';
 import { FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE } from '../constants/index';
 
 import type {
@@ -265,21 +265,13 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       (_, i) => (i + 1) * pageSize,
     );
 
-    const skipBatches = chunkArray(skips, concurrency);
-    const rest: unknown[] = [];
+    const pages = await mapInBatches(skips, concurrency, (skip) =>
+      this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
+        ...baseParams, limit: String(pageSize), skip: String(skip),
+      }).then((r) => (Array.isArray(r?.[itemsKey]) ? (r[itemsKey] as unknown[]) : [])),
+    );
 
-    for (const batch of skipBatches) {
-      const pages = await Promise.all(
-        batch.map((skip) =>
-          this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
-            ...baseParams, limit: String(pageSize), skip: String(skip),
-          }).then((r) => (Array.isArray(r?.[itemsKey]) ? (r[itemsKey] as unknown[]) : [])),
-        ),
-      );
-      rest.push(...pages.flat());
-    }
-
-    return [...firstItems, ...rest];
+    return [...firstItems, ...pages.flat()];
   }
 
   async getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {

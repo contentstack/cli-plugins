@@ -1,4 +1,12 @@
 /**
+ * Batched concurrency primitive for the package. All concurrent work — pagination
+ * fan-out, asset downloads, uploads, and folder/asset-type/field creation — runs
+ * through these helpers. Do not hand-roll `Promise.all`/`Promise.allSettled`
+ * batching elsewhere; use `runInBatches` (void, fault-tolerant) for bulk
+ * side-effects and `mapInBatches` (collects results, fail-fast) for fetches.
+ */
+
+/**
  * Split an array into chunks of at most `size` elements.
  */
 export function chunkArray<T>(items: T[], size: number): T[][] {
@@ -31,4 +39,30 @@ export async function runInBatches<T>(
     await Promise.allSettled(batch.map((item, j) => fn(item, offset + j)));
     offset += batch.length;
   }
+}
+
+/**
+ * Run async work in batches of at most `concurrency` tasks, collecting results
+ * in input order. Uses Promise.all per batch (fail-fast: a rejected task aborts
+ * the whole call). Use this for fetches where a dropped result would silently
+ * yield incomplete data (e.g. pagination fan-out).
+ */
+export async function mapInBatches<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const limit = Math.max(1, concurrency);
+  const batches = chunkArray(items, limit);
+  const results: R[] = [];
+  let offset = 0;
+  for (const batch of batches) {
+    const settled = await Promise.all(batch.map((item, j) => fn(item, offset + j)));
+    results.push(...settled);
+    offset += batch.length;
+  }
+  return results;
 }
