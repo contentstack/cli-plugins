@@ -113,6 +113,10 @@ export type CSAssetsAPIConfig = {
   headers?: Record<string, string>;
   /** Optional context for logging (e.g. exportConfig.context) */
   context?: Record<string, unknown>;
+  /** Max retry attempts for transient read failures (network/429/5xx). Default 3. */
+  retries?: number;
+  /** Base backoff (ms) for retries; actual delay grows exponentially with jitter. Default 500. */
+  retryBaseDelayMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -169,10 +173,17 @@ export interface ICSAssetsAdapter {
   init(): Promise<void>;
   listSpaces(pageSize?: number, fetchConcurrency?: number): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
-  getWorkspaceFields(spaceUid: string): Promise<FieldsResponse>;
+  getWorkspaceFields(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<FieldsResponse>;
   getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
+  streamWorkspaceAssets(
+    spaceUid: string,
+    workspaceUid: string | undefined,
+    onPage: (items: unknown[]) => void | Promise<void>,
+    pageSize?: number,
+    fetchConcurrency?: number,
+  ): Promise<number>;
   getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
-  getWorkspaceAssetTypes(spaceUid: string): Promise<AssetTypesResponse>;
+  getWorkspaceAssetTypes(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<AssetTypesResponse>;
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
   bulkDeleteAssets(
     spaceUid: string,

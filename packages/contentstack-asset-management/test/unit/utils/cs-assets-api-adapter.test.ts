@@ -141,14 +141,27 @@ describe('CSAssetsAdapter', () => {
   });
 
   describe('getWorkspaceFields', () => {
-    it('should GET /api/fields and return the response data', async () => {
+    it('should GET /api/fields (paginated) and return the merged fields', async () => {
       const fieldsResponse = { count: 1, relation: 'org', fields: [{ uid: 'f1' }] };
       getStub.resolves({ status: 200, data: fieldsResponse });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceFields('sp-1');
 
-      expect(getStub.firstCall.args[0]).to.equal('/api/fields');
-      expect(result).to.deep.equal(fieldsResponse);
+      expect(getStub.firstCall.args[0]).to.include('/api/fields');
+      expect(getStub.firstCall.args[0]).to.include('skip=0');
+      expect(result).to.deep.equal({ fields: [{ uid: 'f1' }], count: 1 });
+    });
+
+    it('should fetch all fields across multiple pages', async () => {
+      getStub.onCall(0).resolves({ status: 200, data: { fields: [{ uid: 'f1' }, { uid: 'f2' }], count: 3 } });
+      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f3' }], count: 3 } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.getWorkspaceFields('sp-1', 2, 5);
+
+      expect(getStub.callCount).to.equal(2);
+      expect(getStub.secondCall.args[0]).to.include('skip=2');
+      expect(result.count).to.equal(3);
+      expect(result.fields).to.have.lengthOf(3);
     });
   });
 
@@ -182,7 +195,7 @@ describe('CSAssetsAdapter', () => {
   });
 
   describe('getWorkspaceAssetTypes', () => {
-    it('should GET /api/asset_types?include_fields=true and return the response data', async () => {
+    it('should GET /api/asset_types?include_fields=true (paginated) and return the merged asset types', async () => {
       const atResponse = { count: 1, relation: 'org', asset_types: [{ uid: 'at1' }] };
       getStub.resolves({ status: 200, data: atResponse });
       const adapter = new CSAssetsAdapter(baseConfig);
@@ -191,7 +204,21 @@ describe('CSAssetsAdapter', () => {
       const path = getStub.firstCall.args[0] as string;
       expect(path).to.include('/api/asset_types');
       expect(path).to.include('include_fields=true');
-      expect(result).to.deep.equal(atResponse);
+      expect(path).to.include('skip=0');
+      expect(result).to.deep.equal({ asset_types: [{ uid: 'at1' }], count: 1 });
+    });
+
+    it('should fetch all asset types across multiple pages, preserving include_fields', async () => {
+      getStub.onCall(0).resolves({ status: 200, data: { asset_types: [{ uid: 'at1' }, { uid: 'at2' }], count: 3 } });
+      getStub.onCall(1).resolves({ status: 200, data: { asset_types: [{ uid: 'at3' }], count: 3 } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.getWorkspaceAssetTypes('sp-1', 2, 5);
+
+      expect(getStub.callCount).to.equal(2);
+      expect(getStub.secondCall.args[0]).to.include('include_fields=true');
+      expect(getStub.secondCall.args[0]).to.include('skip=2');
+      expect(result.count).to.equal(3);
+      expect(result.asset_types).to.have.lengthOf(3);
     });
   });
 
@@ -206,14 +233,15 @@ describe('CSAssetsAdapter', () => {
       expect(path).to.include('addl_fields=users');
     });
 
-    it('should return empty string and no "?" when params are empty', async () => {
+    it('should append pagination params (limit/skip) for paginated fields collection', async () => {
       getStub.resolves({ status: 200, data: { count: 0, relation: '', fields: [] } });
       const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceFields('sp-1');
 
       const path = getStub.firstCall.args[0] as string;
-      expect(path).to.equal('/api/fields');
-      expect(path).to.not.include('?');
+      expect(path).to.include('/api/fields?');
+      expect(path).to.include('limit=');
+      expect(path).to.include('skip=0');
     });
   });
 
@@ -269,6 +297,92 @@ describe('CSAssetsAdapter', () => {
 
       expect(getStub.callCount).to.equal(5);
       expect(result.spaces).to.have.lengthOf(5);
+    });
+
+    it('should request each page with its OWN skip when pages run concurrently (no shared-mutation race)', async () => {
+      // total 6, pageSize 2, concurrency 5 → page0 inline, then skips [2,4] in a single concurrent batch.
+      // If makeAPICall did not snapshot queryParam, both concurrent calls would read the last skip.
+      const bySkip: Record<string, unknown> = {
+        '0': { spaces: [{ uid: 's0' }, { uid: 's1' }], count: 6 },
+        '2': { spaces: [{ uid: 's2' }, { uid: 's3' }], count: 6 },
+        '4': { spaces: [{ uid: 's4' }, { uid: 's5' }], count: 6 },
+      };
+      getStub.callsFake(async (path: string) => {
+        const skip = new URL(`https://x${path}`).searchParams.get('skip') ?? '0';
+        return { status: 200, data: bySkip[skip] };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.listSpaces(2, 5);
+
+      const uids = (result.spaces as Array<{ uid: string }>).map((s) => s.uid).sort();
+      expect(uids).to.deep.equal(['s0', 's1', 's2', 's3', 's4', 's5']);
+      const requestedSkips = getStub.getCalls().map((c) => new URL(`https://x${c.args[0]}`).searchParams.get('skip'));
+      expect([...requestedSkips].sort()).to.deep.equal(['0', '2', '4']);
+    });
+  });
+
+  describe('makeConcurrentCall', () => {
+    it('should be a no-op for empty apiBatches and never hang', async () => {
+      const adapter = new CSAssetsAdapter(baseConfig);
+      await adapter.makeConcurrentCall({ module: 'noop', apiBatches: [] });
+      expect(getStub.called).to.equal(false);
+    });
+
+    it('should invoke the promisifyHandler once per element with correct index/batchIndex', async () => {
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const seen: Array<{ index: number; batchIndex: number; element: unknown; isLastRequest: boolean }> = [];
+      await adapter.makeConcurrentCall({ module: 'downloads', apiBatches: [['a', 'b'], ['c']] }, async (input) => {
+        seen.push({
+          index: input.index,
+          batchIndex: input.batchIndex,
+          element: input.element,
+          isLastRequest: input.isLastRequest,
+        });
+      });
+      expect(seen).to.deep.equal([
+        { index: 0, batchIndex: 0, element: 'a', isLastRequest: false },
+        { index: 1, batchIndex: 0, element: 'b', isLastRequest: false },
+        { index: 0, batchIndex: 1, element: 'c', isLastRequest: true },
+      ]);
+    });
+  });
+
+  describe('retry on transient failures', () => {
+    // retryBaseDelayMs: 0 → instant retries (no wall-clock backoff in tests).
+    const retryConfig: CSAssetsAPIConfig = { ...baseConfig, retryBaseDelayMs: 0 };
+
+    it('should retry a 429 and then succeed', async () => {
+      getStub.onCall(0).resolves({ status: 429, data: {} });
+      getStub.onCall(1).resolves({ status: 429, data: {} });
+      getStub.onCall(2).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
+      const adapter = new CSAssetsAdapter(retryConfig);
+      const result = await adapter.getWorkspaceFields('sp-1');
+
+      expect(getStub.callCount).to.equal(3);
+      expect(result.fields).to.deep.equal([{ uid: 'f1' }]);
+    });
+
+    it('should retry a 5xx and then succeed', async () => {
+      getStub.onCall(0).resolves({ status: 503, data: {} });
+      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
+      const adapter = new CSAssetsAdapter(retryConfig);
+      const result = await adapter.getWorkspaceFields('sp-1');
+
+      expect(getStub.callCount).to.equal(2);
+      expect(result.fields).to.deep.equal([{ uid: 'f1' }]);
+    });
+
+    it('should NOT retry a 404 (terminal) and surface a normalized error', async () => {
+      getStub.resolves({ status: 404, data: { error: 'not found' } });
+      const adapter = new CSAssetsAdapter(retryConfig);
+      let error: unknown;
+      try {
+        await adapter.getWorkspaceFields('sp-1');
+      } catch (e) {
+        error = e;
+      }
+      expect(getStub.callCount).to.equal(1);
+      expect((error as Error)?.message).to.include('CS Assets API GET failed');
     });
   });
 

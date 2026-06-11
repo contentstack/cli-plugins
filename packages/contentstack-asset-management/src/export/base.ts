@@ -98,19 +98,10 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
     return pResolve(this.exportContext.spacesRootPath, 'fields');
   }
 
-  protected async writeItemsToChunkedJson(
-    dir: string,
-    indexFileName: string,
-    moduleName: string,
-    metaPickKeys: string[],
-    items: unknown[],
-  ): Promise<void> {
-    if (items.length === 0) {
-      await writeFile(pResolve(dir, indexFileName), '{}');
-      return;
-    }
+  /** Build a chunked-JSON writer for incremental (streaming) writes. Caller must `completeFile(true)`. */
+  protected createChunkedJsonWriter(dir: string, indexFileName: string, moduleName: string, metaPickKeys: string[]): FsUtility {
     const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
-    const fs = new FsUtility({
+    return new FsUtility({
       basePath: dir,
       indexFileName,
       chunkFileSize: chunkMb,
@@ -119,6 +110,25 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
       metaPickKeys,
       keepMetadata: true,
     });
+  }
+
+  /** Write an empty index file (matches FsUtility's layout for a zero-record store). */
+  protected async writeEmptyChunkedJson(dir: string, indexFileName: string): Promise<void> {
+    await writeFile(pResolve(dir, indexFileName), '{}');
+  }
+
+  protected async writeItemsToChunkedJson(
+    dir: string,
+    indexFileName: string,
+    moduleName: string,
+    metaPickKeys: string[],
+    items: unknown[],
+  ): Promise<void> {
+    if (items.length === 0) {
+      await this.writeEmptyChunkedJson(dir, indexFileName);
+      return;
+    }
+    const fs = this.createChunkedJsonWriter(dir, indexFileName, moduleName, metaPickKeys);
     fs.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
     fs.completeFile(true);
   }
