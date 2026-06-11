@@ -135,6 +135,14 @@ jobs:
           package: ./packages/contentstack-branches/package.json
           tag: beta
 
+      # Apps CLI
+      - name: Publishing apps-cli (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-apps-cli/package.json
+          tag: latest
+
       # Query Export
       - name: Publishing query-export (Beta)
         uses: JS-DevTools/npm-publish@v3
@@ -183,6 +191,22 @@ jobs:
           package: ./packages/contentstack-migrate-rte/package.json
           access: public
           tag: beta
+      # External Migrate
+      - name: Publishing external-migrate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-external-migrate/package.json
+          tag: latest
+
+      - name: Create Production Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
+          VERSION: ${{ steps.publish-plugins.outputs.version }}
+        run: |
+          # Get the previous production release for comparison
+          PREVIOUS_PROD=$(gh release list --limit 10 | grep -v 'prerelease' | head -1 | cut -f1)
 
       # Bulk Operations
       - name: Publishing bulk-operations (Beta)
