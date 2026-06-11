@@ -1,0 +1,82 @@
+{
+  "contentTypes": [
+    {
+      "sys": {
+        "id": "blogPost",
+        "type": "ContentType",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z",
+        "version": 1
+      },
+      "displayField": "title",
+      "name": "Blog Post",
+      "description": "A simple blog post content type for CLI fixture testing.",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "localized": false,
+          "required": true,
+          "disabled": false,
+          "omitted": false
+        },
+        {
+          "id": "body",
+          "name": "Body",
+          "type": "Text",
+          "localized": false,
+          "required": false,
+          "disabled": false,
+          "omitted": false
+        }
+      ]
+    }
+  ],
+  "editorInterfaces": [
+    {
+      "sys": {
+        "id": "default",
+        "type": "EditorInterface",
+        "contentType": {
+          "sys": { "id": "blogPost", "linkType": "ContentType", "type": "Link" }
+        }
+      },
+      "controls": [
+        { "fieldId": "title", "widgetId": "singleLine", "widgetNamespace": "builtin" },
+        { "fieldId": "body", "widgetId": "multipleLine", "widgetNamespace": "builtin" }
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "sys": {
+        "id": "entry-1",
+        "type": "Entry",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z",
+        "version": 1,
+        "contentType": {
+          "sys": { "id": "blogPost", "linkType": "ContentType", "type": "Link" }
+        }
+      },
+      "fields": {
+        "title": { "en-US": "Hello, CLI" },
+        "body":  { "en-US": "This is a fixture entry for CLI tests." }
+      }
+    }
+  ],
+  "assets": [],
+  "locales": [
+    {
+      "sys": { "id": "en-US", "type": "Locale" },
+      "code": "en-US",
+      "name": "English (United States)",
+      "default": true,
+      "fallbackCode": null
+    }
+  ],
+  "webhooks": [],
+  "roles": [],
+  "tags": []
+}
