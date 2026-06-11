@@ -1,4 +1,4 @@
 fileignoreconfig:
-- filename: packages/contentstack-import/src/import/modules/assets.ts
-  checksum: 85cac8ac469ccb8ac47f4430df5bf6cd0a5f8f4c2d165baabc8121d4ad63919d
+- filename: packages/contentstack-bulk-publish/src/producer/publish-assets.js
+  checksum: 584bed451d8a916fd2629e93583206d3a39d40a7ff05b43a7b9a0e78c688fa2f
 version: '1.0'
