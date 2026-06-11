@@ -120,7 +120,7 @@ function fetchAppInstallations(
   flags: FlagInput,
   orgUid: string,
   options: MarketPlaceOptions
-) {
+): Promise<any> {
   const { marketplaceSdk } = options;
   const app: any = flags["app-uid"];
   return marketplaceSdk
@@ -218,7 +218,7 @@ function uninstallApp(
   orgUid: string,
   options: MarketPlaceOptions,
   installationUid: string
-) {
+): Promise<any> {
   const { marketplaceSdk } = options;
   // const app: any = flags["app-uid"];
   return marketplaceSdk
