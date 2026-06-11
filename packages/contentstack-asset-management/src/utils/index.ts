@@ -7,6 +7,7 @@ export {
   getReadableStreamFromDownloadResponse,
   writeStreamToFile,
 } from './export-helpers';
-export { chunkArray, runInBatches, mapInBatches } from './concurrent-batch';
+export { chunkArray, runInBatches } from './concurrent-batch';
+export { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from './retry';
 export { detectAssetManagementExportFromContentDir } from './detect-asset-management-export';
 export type { AssetManagementExportFlags } from '../types/asset-management-export-flags';

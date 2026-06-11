@@ -1,6 +1,10 @@
 fileignoreconfig:
-- filename: pnpm-lock.yaml
-  checksum: cdead0797199d22bbc55b9e5b6b86983f28eb760fabe5e1f2d5139c4456a9131
-- filename: packages/contentstack-asset-management/test/unit/utils/concurrent-batch.test.ts
-  checksum: d6e5995e0bbdc862a2d21c0ebfead30d9939021da6f7f62c82027de1eed7fd76
+- filename: packages/contentstack-asset-management/src/export/base.ts
+  checksum: a74fe9f5b20f7c0636d571062bce1f12d4078a0354d23fb6879b13c316a2fa06
+- filename: packages/contentstack-asset-management/test/unit/export/assets.test.ts
+  checksum: bafd24cb0e809fd9510a876a8e9fe53ff616f1dbc9df49bb797f6bcff433ccb7
+- filename: packages/contentstack-asset-management/src/export/assets.ts
+  checksum: c4f129138b2b9f3130de8db2a937ce4ae1a2ab30c1b5d9c07652790f0996f757
+- filename: packages/contentstack-asset-management/src/utils/cs-assets-api-adapter.ts
+  checksum: 880c3661cc523c113779748b257386f5f18e6e556f11476150bd5f01f7461186
 version: '1.0'

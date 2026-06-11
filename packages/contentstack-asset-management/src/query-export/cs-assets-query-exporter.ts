@@ -8,8 +8,10 @@ import type { ExportContext } from '../types/export-types';
 import ExportAssetTypes from '../export/asset-types';
 import ExportFields from '../export/fields';
 import { CSAssetsExportAdapter } from '../export/base';
+import chunk from 'lodash/chunk';
 import { getAssetItems, writeStreamToFile } from '../utils/export-helpers';
-import { runInBatches } from '../utils/concurrent-batch';
+import { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from '../utils/retry';
+import type { CustomPromiseHandler } from '../utils/cs-assets-api-adapter';
 
 const DEFAULT_ASSET_BATCH_SIZE = 100;
 const SEARCH_PAGE_LIMIT = 100;
@@ -223,15 +225,34 @@ class QueryExportWorkspaceAdapter extends CSAssetsExportAdapter {
     const securedAssets = this.exportContext.securedAssets ?? false;
     const authtoken = securedAssets ? configHandler.get('authtoken') : null;
 
-    await runInBatches(downloadable, this.downloadAssetsBatchConcurrency, async (asset) => {
+    const apiBatches = chunk(downloadable, this.downloadAssetsBatchConcurrency);
+    const promisifyHandler: CustomPromiseHandler = async ({ index, batchIndex }) => {
+      const asset = apiBatches[batchIndex][index];
       const uid = String(asset.uid ?? asset._uid);
       const url = String(asset.url);
       const filename = String(asset.filename ?? asset.file_name ?? 'asset');
       try {
         const separator = url.includes('?') ? '&' : '?';
         const downloadUrl = securedAssets && authtoken ? `${url}${separator}authtoken=${authtoken}` : url;
-        const response = await fetch(downloadUrl);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        // Binary GET is idempotent — retry transient failures with backoff.
+        const response = await withRetry(
+          async () => {
+            let resp: Response;
+            try {
+              resp = await fetch(downloadUrl);
+            } catch (e) {
+              throw new RetryableHttpError(`download network error: ${(e as Error)?.message ?? String(e)}`);
+            }
+            if (!resp.ok) {
+              if (isRetryableStatus(resp.status)) {
+                throw new RetryableHttpError(`HTTP ${resp.status}`, resp.status, parseRetryAfterMs(resp.headers.get('retry-after')));
+              }
+              throw new Error(`HTTP ${resp.status}`);
+            }
+            return resp;
+          },
+          { context: this.exportContext.context, label: `download ${filename}` },
+        );
         const body = response.body;
         if (!body) throw new Error('No response body');
         const nodeStream = Readable.fromWeb(body as Parameters<typeof Readable.fromWeb>[0]);
@@ -241,6 +262,8 @@ class QueryExportWorkspaceAdapter extends CSAssetsExportAdapter {
       } catch (e) {
         log.debug(`Failed to download asset ${uid} in space ${spaceUid}: ${e}`, this.exportContext.context);
       }
-    });
+    };
+
+    await this.makeConcurrentCall({ apiBatches, module: 'asset downloads' }, promisifyHandler);
   }
 }
