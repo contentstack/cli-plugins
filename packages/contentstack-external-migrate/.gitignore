@@ -1,0 +1,27 @@
+node_modules/
+/lib/
+oclif.manifest.json
+*.log
+.DS_Store
+coverage/
+
+# Local migration outputs (may contain customer content)
+migration-workspace/
+contentstack-import/
+audit-reports/
+audit-fix/
+audit-verify/
+export.json
+contentfulMigrationData/
+_backup_*/
+migration-manifest.json
+
+# Import/audit session logs (local artifacts, may contain customer content)
+logs/
+session.json
+
+# Internal scratch docs — never commit (PR drafts / status notes)
+pr.md
+achieve.md
+out/
+.vscode/
