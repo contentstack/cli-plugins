@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 /* eslint-disable new-cap */
 /* eslint-disable camelcase */
+const path = require('path');
+const { existsSync } = require('fs');
 const chalk = require('chalk');
-const { cliux } = require('@contentstack/cli-utilities');
+const { cliux, FsUtility } = require('@contentstack/cli-utilities');
 const { getQueue } = require('../util/queue');
 const { performBulkPublish, publishAsset, initializeLogger } = require('../consumer/publish');
 const retryFailedLogs = require('../util/retryfailed');
@@ -10,7 +12,7 @@ const { validateFile } = require('../util/fs');
 const { isEmpty } = require('../util');
 const { fetchBulkPublishLimit } = require('../util/common-utility');
 const { generateBulkPublishStatusUrl } = require('../util/generate-bulk-publish-url');
-const { resolveInQueueAssets, ASSET_SCAN_STATUS } = require('../util/asset-scan');
+const { resolveInQueueAssets, fetchScanStatusBatch, ASSET_SCAN_STATUS } = require('../util/asset-scan');
 
 const queue = getQueue();
 let logFileName;
@@ -227,6 +229,216 @@ async function processPendingAssets(pendingItems, stack, bulkPublish, environmen
   }
 }
 
+/**
+ * Publish assets from an import backup directory (post-import flow).
+ *
+ * Unlike getAssets (live folder scan), this drives publishing from the backup:
+ * each imported asset is published ONLY to the environments/locales it was
+ * published to in the source stack (from its publish_details), remapped to the
+ * target stack. Scan-status gating is applied to the target asset UIDs.
+ *
+ * Mirrors the publish_details/env-name resolution of contentstack-import's
+ * assets `publish()` (the bulk publish API resolves environment NAMES against
+ * the target stack, and import preserves env names, so source name == target
+ * name), and adds the clean/quarantined/in-queue scan gating that import skips.
+ *
+ * Source of truth split:
+ *  - publish_details + environments come from the BACKUP (post-import flow): an
+ *    asset's target environments are its source publish_details, gated by the
+ *    environment uid-mapping (only environments actually imported into the target
+ *    are publishable) — avoids doomed publish calls to envs never created there.
+ *  - scan status comes from the LIVE target API (it is a runtime property of the
+ *    freshly-imported assets and cannot exist in the backup).
+ *
+ * Streaming: asset chunks are processed and released one at a time and scan-gated
+ * per chunk, so memory does not scale with total asset count. The only structures
+ * retained across chunks are bounded (partial publish batches + the in-queue
+ * subset). The single in-memory floor is the asset uid-mapping file itself (same
+ * as import's publish()); for very large stacks raise Node's --max-old-space-size.
+ */
+async function getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulkPublishLimit) {
+  const assetsPath = path.join(dataDir, 'assets');
+  const assetsIndexPath = path.join(assetsPath, 'assets.json');
+  const assetUidMapperPath = path.join(dataDir, 'mapper', 'assets', 'uid-mapping.json');
+  const envUidMapperPath = path.join(dataDir, 'mapper', 'environments', 'uid-mapping.json');
+  const environmentsPath = path.join(dataDir, 'environments', 'environments.json');
+
+  // Fail fast with actionable errors when the backup is incomplete.
+  if (!existsSync(assetsPath) || !existsSync(assetsIndexPath)) {
+    throw new Error(`No assets found in backup. Expected '${assetsIndexPath}'. Check the --data-dir path.`);
+  }
+  if (!existsSync(assetUidMapperPath)) {
+    throw new Error(
+      `Asset UID mapping not found at '${assetUidMapperPath}'. Run import against this data dir before publishing.`,
+    );
+  }
+  if (!existsSync(environmentsPath)) {
+    throw new Error(`Environments not found at '${environmentsPath}'. Cannot resolve target environments.`);
+  }
+
+  const fsUtil = new FsUtility({ basePath: assetsPath, indexFileName: 'assets.json' });
+  const assetUidMap = fsUtil.readFile(assetUidMapperPath, true) || {};
+  // environments.json: { [sourceEnvUid]: { name, ... } } — source env definitions.
+  const environments = fsUtil.readFile(environmentsPath, true) || {};
+  // uid-mapping.json: { [sourceEnvUid]: targetEnvUid } — only environments actually
+  // imported into the target. Used as the "is publishable" gate. Optional: older
+  // backups (or runs with no imported environments) may not have it.
+  const envUidMapping = existsSync(envUidMapperPath) ? fsUtil.readFile(envUidMapperPath, true) || {} : null;
+  if (!envUidMapping) {
+    console.log(
+      chalk.yellow(
+        `Environment UID mapping not found at '${envUidMapperPath}'. Falling back to environment names from ` +
+          `environments.json — ensure the target stack has environments with matching names.`,
+      ),
+    );
+  }
+  const isEnvImported = (sourceEnvUid) =>
+    !envUidMapping || Object.prototype.hasOwnProperty.call(envUidMapping, sourceEnvUid);
+
+  // Resolve an asset's deduped, env-gated target (envName, locale) pairs from its
+  // publish_details. Env name comes from the backup; only environments actually
+  // imported into the target (per the env uid-mapping) are publishable.
+  const resolvePairs = (asset) => {
+    const seen = new Set();
+    const pairs = [];
+    for (const pd of asset.publish_details) {
+      const env = environments[pd.environment];
+      if (!env || !env.name) continue; // env not in the data dir — cannot resolve a name
+      if (!isEnvImported(pd.environment)) continue; // env not imported into target — skip
+      const key = `${env.name}||${pd.locale}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push({ envName: env.name, locale: pd.locale });
+    }
+    return pairs;
+  };
+
+  // Bounded cross-chunk state only — nothing scales with total asset count:
+  //  - `buffers`: partial publish batches, capped at envCount x localeCount x bulkPublishLimit.
+  //  - `pending`: the in-queue (scanning) subset awaiting retry.
+  // The full asset universe is never held in memory; chunks are processed and
+  // released one at a time (same streaming shape as contentstack-import's publish()).
+  const buffers = new Map(); // "envName||locale" -> { envName, locale, uids: [] }
+  const pending = []; // { targetUid, pairs } for assets whose scan is still in queue
+  let skippedNoUidMapping = 0; // source asset was not imported (no asset uid mapping)
+  let skippedNoMappableEnv = 0; // asset has publish details, but none of its envs were imported
+  let publishableAssets = 0; // assets enqueued for publish (across all env/locale pairs)
+
+  const enqueueBatch = async (envName, locale, uids) => {
+    if (uids.length === 0) return;
+    if (bulkPublish) {
+      const assets = uids.map((uid) => ({ uid, locale }));
+      await queue.Enqueue({ assets, Type: 'asset', environments: [envName], locale, stack, apiVersion });
+    } else {
+      for (const uid of uids) {
+        await queue.Enqueue({ assetUid: uid, environments: [envName], Type: 'asset', locale, stack });
+      }
+    }
+  };
+
+  // Add a publishable asset to its (env, locale) buffers, flushing any that fill up.
+  // Grouping by the exact pair keeps the bulk API from publishing an asset to a
+  // combo it was not published to in source.
+  const bufferAsset = async (targetUid, pairs) => {
+    publishableAssets++;
+    for (const { envName, locale } of pairs) {
+      const key = `${envName}||${locale}`;
+      let buf = buffers.get(key);
+      if (!buf) {
+        buf = { envName, locale, uids: [] };
+        buffers.set(key, buf);
+      }
+      buf.uids.push(targetUid);
+      if (buf.uids.length >= bulkPublishLimit) {
+        await enqueueBatch(envName, locale, buf.uids);
+        buf.uids = [];
+      }
+    }
+  };
+
+  const indexer = fsUtil.indexFileContent;
+
+  // NOTE: one readChunkFiles.next() call per index entry — the iteration count must
+  // equal the number of chunk files (same contract as contentstack-import's publish()).
+  for (const _index in indexer) {
+    const chunk = await fsUtil.readChunkFiles.next();
+    const assetsArr = Object.values(chunk || {});
+
+    // Resolve this chunk's assets to publish targets (bounded by chunk size).
+    const resolved = [];
+    for (const asset of assetsArr) {
+      if (!asset || !Array.isArray(asset.publish_details) || asset.publish_details.length === 0) {
+        continue;
+      }
+      const targetUid = assetUidMap[asset.uid];
+      if (!targetUid) {
+        skippedNoUidMapping++;
+        continue;
+      }
+      const pairs = resolvePairs(asset);
+      if (pairs.length === 0) {
+        skippedNoMappableEnv++;
+        continue;
+      }
+      resolved.push({ targetUid, pairs });
+    }
+    if (resolved.length === 0) continue;
+
+    // Scan status is a target-stack property of the freshly-imported assets, so it
+    // is fetched live (one batched read per chunk) — it is not in the backup.
+    const statusMap = await fetchScanStatusBatch(
+      stack,
+      resolved.map((r) => r.targetUid),
+    );
+
+    for (const { targetUid, pairs } of resolved) {
+      const status = statusMap.get(targetUid);
+      if (status === ASSET_SCAN_STATUS.QUARANTINE) {
+        scanSummary.quarantined++;
+        console.log(chalk.yellow(`Skipped (quarantined): Asset UID '${targetUid}'`));
+      } else if (status === ASSET_SCAN_STATUS.IN_QUEUE) {
+        scanSummary.inQueue++;
+        pending.push({ targetUid, pairs });
+      } else {
+        if (status === ASSET_SCAN_STATUS.READY) scanSummary.clean++;
+        else scanSummary.noStatus++;
+        await bufferAsset(targetUid, pairs);
+      }
+    }
+  }
+
+  // Resolve in-queue assets once (incremental backoff); publish those that turn clean.
+  if (pending.length > 0) {
+    const resolvedUids = await resolveInQueueAssets(
+      stack,
+      pending.map((p) => p.targetUid),
+    );
+    const resolvedSet = new Set(resolvedUids);
+    for (const { targetUid, pairs } of pending) {
+      if (resolvedSet.has(targetUid)) await bufferAsset(targetUid, pairs);
+    }
+  }
+
+  // Flush remaining partial (env, locale) batches.
+  for (const { envName, locale, uids } of buffers.values()) {
+    await enqueueBatch(envName, locale, uids);
+  }
+
+  if (skippedNoUidMapping > 0) {
+    console.log(chalk.yellow(`Skipped ${skippedNoUidMapping} asset(s): no UID mapping (not imported into target).`));
+  }
+  if (skippedNoMappableEnv > 0) {
+    console.log(
+      chalk.yellow(
+        `Skipped ${skippedNoMappableEnv} asset(s): none of their published environments were imported into the target.`,
+      ),
+    );
+  }
+  if (publishableAssets === 0) {
+    console.log(chalk.yellow('No publishable assets found in backup (no mapped assets with publishable environments).'));
+  }
+}
+
 function setConfig(conf, bp) {
   if (bp) {
     queue.consumer = performBulkPublish;
@@ -242,7 +454,7 @@ function setConfig(conf, bp) {
   scanSummary = { clean: 0, quarantined: 0, inQueue: 0, noStatus: 0 };
 }
 
-async function start({ retryFailed, bulkPublish, environments, folderUid, locales, apiVersion }, stack, config) {
+async function start({ retryFailed, bulkPublish, environments, folderUid, locales, apiVersion, dataDir }, stack, config) {
   process.on('beforeExit', async () => {
     const isErrorLogEmpty = await isEmpty(`${filePath}.error`);
     const isSuccessLogEmpty = await isEmpty(`${filePath}.success`);
@@ -280,6 +492,13 @@ async function start({ retryFailed, bulkPublish, environments, folderUid, locale
     } else {
       await retryFailedLogs(retryFailed, { assetQueue: queue }, 'publish');
     }
+  } else if (dataDir) {
+    // Post-import flow: publish each imported asset only to its original
+    // environments/locales (from backup publish_details), scan-gated.
+    setConfig(config, bulkPublish);
+    const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);
+    await getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulkPublishLimit);
+    printScanSummary(scanSummary);
   } else if (folderUid) {
     setConfig(config, bulkPublish);
     const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);
@@ -299,6 +518,7 @@ async function start({ retryFailed, bulkPublish, environments, folderUid, locale
 
 module.exports = {
   getAssets,
+  getAssetsFromBackup,
   setConfig,
   start,
   processPendingAssets,

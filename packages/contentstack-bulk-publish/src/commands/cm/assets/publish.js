@@ -15,10 +15,12 @@ class AssetsPublishCommand extends Command {
     assetsFlags.folderUid = assetsFlags['folder-uid'] || assetsFlags.folderUid;
     assetsFlags.bulkPublish = assetsFlags['bulk-publish'] || assetsFlags.bulkPublish;
     assetsFlags.apiVersion = assetsFlags['api-version'] || '3'; // setting default value for apiVersion
+    assetsFlags.dataDir = assetsFlags['data-dir'] || assetsFlags.dataDir;
     delete assetsFlags['api-version'];
     delete assetsFlags['retry-failed'];
     delete assetsFlags['folder-uid'];
     delete assetsFlags['bulk-publish'];
+    delete assetsFlags['data-dir'];
 
     let updatedFlags;
     try {
@@ -111,9 +113,15 @@ class AssetsPublishCommand extends Command {
     }
   }
 
-  validate({ environments, retryFailed, locales, 'source-env': sourceEnv, 'delivery-token': deliveryToken }) {
+  validate({ environments, retryFailed, locales, dataDir, 'source-env': sourceEnv, 'delivery-token': deliveryToken }) {
     let missing = [];
     if (retryFailed) {
+      return true;
+    }
+
+    // In data-dir mode, environments and locales are derived per-asset from the
+    // backup publish_details, so they are not required on the command line.
+    if (dataDir) {
       return true;
     }
 
@@ -180,6 +188,11 @@ AssetsPublishCommand.flags = {
     description:
       '(optional) The UID of the Assets’ folder from which the assets need to be published. The default value is cs_root.',
     exclusive: ['source-env'],
+  }),
+  'data-dir': flags.string({
+    description:
+      '(optional) Path to the import backup directory. When set, each imported asset is published only to the environments and locales it was published to in the source stack (read from the backup’s publish details and asset UID mapping), with asset-scan gating applied. Intended for the post-import publish flow.',
+    exclusive: ['source-env', 'folder-uid'],
   }),
   'bulk-publish': flags.string({
     description: 'Set this flag to use Contentstack’s Bulk Publish APIs. It is true, by default.',
@@ -259,11 +272,14 @@ AssetsPublishCommand.examples = [
   '',
   'Using --stack-api-key flag',
   'csdx cm:assets:publish --environments [ENVIRONMENT 1] [ENVIRONMENT 2] --locales [LOCALE] --stack-api-key [STACK API KEY]',
+  '',
+  'Using --data-dir flag (publish imported assets to their original environments after asset scanning)',
+  'csdx cm:assets:publish --data-dir [PATH TO IMPORT BACKUP DIR] --stack-api-key [STACK API KEY]',
 ];
 
 AssetsPublishCommand.aliases = ['cm:bulk-publish:assets'];
 
 AssetsPublishCommand.usage =
-  'cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]';
+  'cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--data-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]';
 
 module.exports = AssetsPublishCommand;
