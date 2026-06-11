@@ -1,4 +1,6 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
   checksum: cdead0797199d22bbc55b9e5b6b86983f28eb760fabe5e1f2d5139c4456a9131
+- filename: packages/contentstack-asset-management/test/unit/utils/concurrent-batch.test.ts
+  checksum: d6e5995e0bbdc862a2d21c0ebfead30d9939021da6f7f62c82027de1eed7fd76
 version: '1.0'
