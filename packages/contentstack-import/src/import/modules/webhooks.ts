@@ -1,5 +1,4 @@
 import isEmpty from 'lodash/isEmpty';
-import values from 'lodash/values';
 import { join } from 'node:path';
 import { log, handleAndLogError } from '@contentstack/cli-utilities';
 
@@ -93,7 +92,16 @@ export default class ImportWebhooks extends BaseClass {
       return;
     }
 
-    const apiContent = values(this.webhooks);
+    // Attach each webhook's UID (the JSON key) onto its body. Webhooks are keyed by
+    // UID in webhooks.json, but the body may not carry a `uid` field. Deriving it from
+    // the key keeps the dedup mapper keyed by a unique, defined UID — otherwise every
+    // webhook collapses onto the same `undefined` key and gets falsely skipped as a
+    // duplicate once the first one is created. The `uid` is stripped before the create
+    // API call (see `omit(apiData, ['uid'])` in base-class), so this is import-only.
+    const apiContent = Object.entries(this.webhooks).map(([uid, webhook]) => ({
+      ...(webhook as Record<string, unknown>),
+      uid,
+    }));
     log.debug(`Starting to import ${apiContent.length} webhooks`, this.importConfig.context);
 
     const onSuccess = ({ response, apiData: { uid, name } = { uid: null, name: '' } }: any) => {
