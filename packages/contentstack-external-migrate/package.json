@@ -1,0 +1,79 @@
+{
+  "name": "@contentstack/cli-external-migrate",
+  "version": "1.0.0-alpha.3",
+  "description": "Migrate from external source to Contentstack",
+  "author": "Contentstack",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "/lib",
+    "/oclif.manifest.json"
+  ],
+  "scripts": {
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "compile": "tsc -b tsconfig.json && node scripts/copy-assets.js",
+    "lint": "eslint . --ext .ts --config .eslintrc.js",
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint . --ext .ts --config .eslintrc.js --fix",
+    "prepack": "pnpm compile && oclif manifest && oclif readme",
+    "test": "vitest run",
+    "test:integration": "jest --testPathPattern=tests/integration",
+    "version": "oclif readme && git add README.md"
+  },
+  "dependencies": {
+    "@contentstack/cli-command": "~1.8.3",
+    "@contentstack/cli-utilities": "~1.18.4",
+    "@contentstack/json-rte-serializer": "~2.1.0",
+    "@contentstack/marketplace-sdk": "~1.5.2",
+    "@oclif/core": "^4.8.0",
+    "axios": "^1.15.2",
+    "chalk": "^4.1.2",
+    "jsdom": "^23.0.0",
+    "lodash": "^4.17.21",
+    "mkdirp": "^1.0.4",
+    "p-limit": "^3.1.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@oclif/test": "^3.0.0",
+    "@types/jsdom": "^21.1.7",
+    "@types/lodash": "^4.17.0",
+    "@types/mkdirp": "^1.0.2",
+    "@types/node": "^20.12.12",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "oclif": "^4.8.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
+  },
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "csdx",
+    "devPlugins": [
+      "@oclif/plugin-help"
+    ],
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-external-migrate/<%- commandPath %>"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-external-migrate"
+  },
+  "csdxConfig": {
+    "shortCommandName": {
+      "external-migrate:create": "EMCRT"
+    }
+  },
+  "keywords": [
+    "contentstack",
+    "cli",
+    "plugin"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
