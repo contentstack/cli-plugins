@@ -1,4 +1,13 @@
 /**
+ * Fault-tolerant batched concurrency for the import side (uploads, folder/asset-type/
+ * field creation). `runInBatches` runs work in batches of `concurrency`, settling each
+ * batch (`Promise.allSettled`) before the next so one failure doesn't abort the batch.
+ *
+ * NOTE: the export side (pagination + downloads) uses the legacy-style `makeConcurrentCall`
+ * on `CSAssetsAdapter` instead; do not route export work through here.
+ */
+
+/**
  * Split an array into chunks of at most `size` elements.
  */
 export function chunkArray<T>(items: T[], size: number): T[][] {

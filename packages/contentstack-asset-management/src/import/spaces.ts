@@ -10,7 +10,7 @@ import type {
   ImportSpacesOptions,
   SpaceMapping,
 } from '../types/cs-assets-api';
-import { CS_ASSETS_MAIN_PROCESS_NAME, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_API_FETCH_CONCURRENCY, PROCESS_NAMES, getSpaceProcessName } from '../constants/index';
 import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
 import ImportAssetTypes from './asset-types';
 import ImportFields from './fields';
@@ -112,7 +112,7 @@ export class ImportSpaces {
     try {
       const adapterForList = new CSAssetsAdapter(apiConfig);
       await adapterForList.init();
-      const { spaces } = await adapterForList.listSpaces();
+      const { spaces } = await adapterForList.listSpaces(FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_API_FETCH_CONCURRENCY);
       for (const s of spaces) {
         if (s.uid) existingSpaceUids.add(s.uid);
       }
