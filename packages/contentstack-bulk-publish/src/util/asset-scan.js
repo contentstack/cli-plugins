@@ -8,7 +8,7 @@ const ASSET_SCAN_STATUS = {
 };
 
 const SCAN_RETRY = {
-  MAX_RETRIES: 5,
+  MAX_RETRIES: 0,
   INITIAL_WAIT_MS: 5000,
   BACKOFF_FACTOR: 2,
 };
