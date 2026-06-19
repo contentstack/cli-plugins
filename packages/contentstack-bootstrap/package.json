@@ -23,7 +23,7 @@
     "@oclif/core": "^4.11.4",
     "inquirer": "8.2.7",
     "mkdirp": "^2.1.6",
-    "tar": "^7.5.11"
+    "tar": "^7.5.16"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.18",
