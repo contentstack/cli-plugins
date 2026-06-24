@@ -58,7 +58,7 @@
     "test:unit": "mocha --forbid-only \"test/**/*.test.ts\" --exit"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/bin",
