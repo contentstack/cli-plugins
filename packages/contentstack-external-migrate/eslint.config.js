@@ -1,31 +1,21 @@
-import tseslint from 'typescript-eslint';
-import globals from 'globals';
-import oclif from 'eslint-config-oclif';
-import oclifTypescript from 'eslint-config-oclif-typescript';
+'use strict';
 
-export default [
-  ...tseslint.configs.recommended,
+const path = require('path');
+const { FlatCompat } = require('@eslint/eslintrc');
 
-  oclif,
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
 
-  oclifTypescript,
-
-  {
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: {
-        ecmaVersion: 2020,
-        sourceType: 'module',
-      },
-      globals: {
-        ...globals.node,
-      },
+module.exports = [
+  ...compat.config({
+    parser: '@typescript-eslint/parser',
+    parserOptions: {
+      ecmaVersion: 2020,
+      sourceType: 'module',
     },
-
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-    },
-
+    plugins: ['@typescript-eslint'],
+    extends: ['oclif', 'oclif-typescript'],
     rules: {
       'unicorn/prefer-module': 'off',
       '@typescript-eslint/no-require-imports': 'off',
@@ -41,5 +31,5 @@ export default [
       'object-curly-spacing': ['error', 'never'],
       'node/no-missing-import': 'off',
     },
-  },
+  }),
 ];
