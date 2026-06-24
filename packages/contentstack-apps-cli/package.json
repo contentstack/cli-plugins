@@ -91,7 +91,7 @@
     "test:unit:report:json": "mocha --reporter json --reporter-options output=report.json --forbid-only \"test/unit/**/*.test.ts\" && nyc --reporter=clover --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=22.0.0"
   },
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "keywords": [
