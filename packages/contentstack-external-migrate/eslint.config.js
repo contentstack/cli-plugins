@@ -1,21 +1,18 @@
-'use strict';
+import tseslint from 'typescript-eslint';
 
-const path = require('path');
-const { FlatCompat } = require('@eslint/eslintrc');
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-module.exports = [
-  ...compat.config({
-    parser: '@typescript-eslint/parser',
-    parserOptions: {
-      ecmaVersion: 2020,
-      sourceType: 'module',
+export default [
+  ...tseslint.configs.recommended,
+  {
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+      },
     },
-    plugins: ['@typescript-eslint'],
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
     rules: {
       'unicorn/prefer-module': 'off',
       'unicorn/no-abusive-eslint-disable': 'off',
@@ -25,5 +22,5 @@ module.exports = [
       '@typescript-eslint/no-require-imports': 'off',
       'no-useless-escape': 'off',
     },
-  }),
+  },
 ];
