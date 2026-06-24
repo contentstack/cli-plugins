@@ -22,7 +22,7 @@
   "devDependencies": {
     "@oclif/test": "^4.1.18",
     "chai": "^4.5.0",
-    "eslint": "^8.57.1",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.164",
     "mocha": "^10.8.2",
     "nock": "^13.5.6",
