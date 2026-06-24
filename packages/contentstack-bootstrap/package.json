@@ -23,7 +23,7 @@
     "@oclif/core": "^4.11.4",
     "inquirer": "12.11.1",
     "mkdirp": "^2.1.6",
-    "tar": "^7.5.15"
+    "tar": "^7.5.16"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.18",
@@ -32,7 +32,7 @@
     "@types/node": "^18.11.9",
     "@types/tar": "^6.1.13",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.8",
