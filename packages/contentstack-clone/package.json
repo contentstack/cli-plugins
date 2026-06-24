@@ -27,7 +27,7 @@
     "@types/sinon": "^21.0.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.62",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
@@ -37,7 +37,7 @@
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/bin",
