@@ -94,7 +94,7 @@
     "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.0.0"
   },
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "keywords": [

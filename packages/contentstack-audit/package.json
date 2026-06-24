@@ -71,7 +71,7 @@
     "test:unit": "mocha --timeout 10000 --forbid-only --file test/unit/logger-config.js \"test/unit/**/*.test.ts\""
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=22.0.0"
   },
   "bugs": "https://github.com/contentstack/cli/issues",
   "keywords": [
