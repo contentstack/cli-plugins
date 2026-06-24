@@ -59,7 +59,7 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint . --ext .ts --config .eslintrc",
+    "lint": "eslint .",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "npm run lint",
     "compile": "tsc -b tsconfig.json",

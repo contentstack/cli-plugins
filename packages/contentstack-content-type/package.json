@@ -72,8 +72,8 @@
     "test": "jest",
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
-    "posttest": "eslint . --ext .ts --config .eslintrc",
-    "lint": "eslint . --ext .ts --config .eslintrc",
+    "posttest": "eslint . --fix",
+    "lint": "eslint .",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "version": "oclif readme && git add README.md"
   },
