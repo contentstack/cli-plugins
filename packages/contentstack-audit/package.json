@@ -34,7 +34,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.50",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.62",
     "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "^10.8.2",
@@ -59,7 +59,7 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint . --ext .ts --config .eslintrc",
+    "lint": "eslint . --ext .ts",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "npm run lint",
     "compile": "tsc -b tsconfig.json",
