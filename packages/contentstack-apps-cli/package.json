@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/apps-cli",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "App ClI",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-apps-cli",
@@ -22,8 +22,8 @@
   ],
   "dependencies": {
     "@apollo/client": "^3.14.1",
-    "@contentstack/cli-command": "~1.8.3",
-    "@contentstack/cli-launch": "^1.10.0",
+    "@contentstack/cli-command": "~1.8.4",
+    "@contentstack/cli-launch": "^1.11.1",
     "@contentstack/cli-utilities": "~1.18.4",
     "adm-zip": "^0.5.17",
     "chalk": "^4.1.2",
@@ -88,7 +88,7 @@
     "test:unit:report:json": "mocha --reporter json --reporter-options output=report.json --forbid-only \"test/unit/**/*.test.ts\" && nyc --reporter=clover --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=22.0.0"
   },
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "keywords": [
