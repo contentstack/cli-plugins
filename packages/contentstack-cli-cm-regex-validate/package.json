@@ -16,7 +16,7 @@
     "@types/safe-regex": "^1.1.6",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "chai": "^4.5.0",
-    "eslint": "^8.57.1",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^4.0.0",
     "eslint-config-oclif-typescript": "^1.0.3",
     "eslint-plugin-unicorn": "^48.0.1",
@@ -58,7 +58,7 @@
   "scripts": {
     "mocha": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --ext .ts --config .eslintrc",
+    "posttest": "eslint . --ext .ts",
     "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
     "test": "jest --detectOpenHandles --silent",
     "version": "oclif-dev readme && git add README.md"
