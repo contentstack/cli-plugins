@@ -30,7 +30,7 @@
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.8",
@@ -55,7 +55,7 @@
     "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\""
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/bin",
