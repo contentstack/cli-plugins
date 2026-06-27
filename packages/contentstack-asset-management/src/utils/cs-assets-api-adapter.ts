@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import chunk from 'lodash/chunk';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
@@ -636,14 +636,19 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     }
   }
 
-  private async postMultipart<T>(path: string, form: FormData, extraHeaders: Record<string, string> = {}): Promise<T> {
+  private async postMultipart<T>(
+    path: string,
+    form: FormData,
+    extraHeaders: Record<string, string> = {},
+    method: 'POST' | 'PUT' = 'POST',
+  ): Promise<T> {
     const baseUrl = this.config.baseURL?.replace(/\/$/, '') ?? '';
     const headers = await this.getPostHeaders(extraHeaders);
-    log.debug(`POST (multipart) ${path}`, this.config.context);
+    log.debug(`${method} (multipart) ${path}`, this.config.context);
 
     try {
       const response = await fetch(`${baseUrl}${path}`, {
-        method: 'POST',
+        method,
         headers,
         body: form,
       });
@@ -651,18 +656,18 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
         const text = await response.text().catch(() => '');
         const bodySnippet = this.formatResponseBodyForError(text);
         throw new Error(
-          `CS Assets API multipart POST failed: status ${response.status} path ${path}${
+          `CS Assets API multipart ${method} failed: status ${response.status} path ${path}${
             bodySnippet ? `\nResponse: ${bodySnippet}` : ''
           }`,
         );
       }
       return response.json() as Promise<T>;
     } catch (error) {
-      if (error instanceof Error && error.message.includes('CS Assets API multipart POST failed')) {
+      if (error instanceof Error && error.message.includes('CS Assets API multipart')) {
         throw error;
       }
       throw new Error(
-        `CS Assets API multipart POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
+        `CS Assets API multipart ${method} failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -699,7 +704,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     metadata: CreateAssetMetadata,
   ): Promise<{ asset: { uid: string; url: string } }> {
     const filename = basename(filePath);
-    const fileBuffer = readFileSync(filePath);
+    const fileBuffer = await readFile(filePath);
     const blob = new Blob([fileBuffer]);
     const form = new FormData();
     form.append('file', blob, filename);
@@ -710,6 +715,34 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
       form,
       { space_key: spaceUid },
+    );
+  }
+
+  /**
+   * PUT /api/spaces/{spaceUid}/assets/{assetUid}?locale={locale} — uploads a localized binary onto an
+   * existing asset so multi-locale assets keep a distinct file per locale (master locale created via
+   * {@link uploadAsset}; each additional locale is localized onto the same asset uid). Locale travels
+   * as a query param (per CS Assets v4 "update Asset"); the file rides in the multipart body.
+   */
+  async localizeAsset(
+    spaceUid: string,
+    assetUid: string,
+    locale: string,
+    filePath: string,
+    metadata: CreateAssetMetadata,
+  ): Promise<{ asset: { uid: string; url: string } }> {
+    const filename = basename(filePath);
+    const fileBuffer = await readFile(filePath);
+    const blob = new Blob([fileBuffer]);
+    const form = new FormData();
+    form.append('file', blob, filename);
+    if (metadata.title) form.append('title', metadata.title);
+    if (metadata.description) form.append('description', metadata.description);
+    return this.postMultipart<{ asset: { uid: string; url: string } }>(
+      `/api/spaces/${encodeURIComponent(spaceUid)}/assets/${encodeURIComponent(assetUid)}?locale=${encodeURIComponent(locale)}`,
+      form,
+      { space_key: spaceUid },
+      'PUT',
     );
   }
 

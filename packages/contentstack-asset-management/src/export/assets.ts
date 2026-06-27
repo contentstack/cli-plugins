@@ -7,15 +7,27 @@ import { configHandler, log, FsUtility } from '@contentstack/cli-utilities';
 import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import { CSAssetsExportAdapter } from './base';
-import { writeStreamToFile } from '../utils/export-helpers';
+import { writeStreamToFile, getArrayFromResponse } from '../utils/export-helpers';
 import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
 import { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from '../utils/retry';
 import type { CustomPromiseHandler } from '../utils/cs-assets-api-adapter';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
-const ASSET_META_KEYS = ['uid', 'url', 'filename', 'file_name', 'parent_uid'];
+// `locale` is part of the storage key so multi-locale variants of the same uid are kept
+// as distinct records (each locale has its own binary) instead of collapsing to one.
+const ASSET_META_KEYS = ['uid', 'url', 'filename', 'file_name', 'parent_uid', 'locale'];
 
-type AssetRecord = { uid?: string; _uid?: string; url?: string; filename?: string; file_name?: string };
+type AssetRecord = {
+  uid?: string;
+  _uid?: string;
+  url?: string;
+  filename?: string;
+  file_name?: string;
+  locale?: string;
+};
+
+/** Per-space export counts surfaced to the summary (assets = downloaded binaries; folders = entities). */
+export type SpaceExportCounts = { assets: number; folders: number };
 
 export default class ExportAssets extends CSAssetsExportAdapter {
   constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
@@ -26,7 +38,7 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     return Boolean(asset?.url && (asset?.uid ?? asset?._uid));
   }
 
-  async start(workspace: LinkedWorkspace, spaceDir: string): Promise<void> {
+  async start(workspace: LinkedWorkspace, spaceDir: string): Promise<SpaceExportCounts> {
     await this.init();
 
     log.debug(`Starting assets export for space ${workspace.space_uid}`, this.exportContext.context);
@@ -44,7 +56,9 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     const onPage = (items: unknown[]) => {
       if (items.length === 0) return;
       if (!fsWriter) fsWriter = this.createChunkedJsonWriter(assetsDir, 'assets.json', 'assets', ASSET_META_KEYS);
-      fsWriter.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
+      // Composite key (uid + locale) keeps each localized variant — a plain uid key would let the
+      // last locale overwrite the rest, silently dropping their binaries.
+      fsWriter.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true, keyName: ['uid', 'locale'] });
       totalStreamed += items.length;
       for (const asset of items as AssetRecord[]) if (this.isDownloadable(asset)) downloadableCount += 1;
     };
@@ -75,14 +89,17 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     this.tick(true, `metadata: ${workspace.space_uid} (${totalStreamed})`, null);
 
     log.debug(`Starting binary downloads for space ${workspace.space_uid}`, this.exportContext.context);
-    await this.downloadWorkspaceAssets(assetsDir, workspace.space_uid, downloadableCount);
+    const assetsDownloaded = await this.downloadWorkspaceAssets(assetsDir, workspace.space_uid, downloadableCount);
+
+    const folderCount = getArrayFromResponse(folders, 'folders').length;
+    return { assets: assetsDownloaded, folders: folderCount };
   }
 
   /**
    * Download asset binaries by reading the just-written chunked `assets.json` back from disk
    * (one chunk at a time), so we never re-materialize the whole asset list in memory.
    */
-  private async downloadWorkspaceAssets(assetsDir: string, spaceUid: string, expectedDownloads: number): Promise<void> {
+  private async downloadWorkspaceAssets(assetsDir: string, spaceUid: string, expectedDownloads: number): Promise<number> {
     const filesDir = pResolve(assetsDir, 'files');
     await mkdir(filesDir, { recursive: true });
 
@@ -105,6 +122,27 @@ export default class ExportAssets extends CSAssetsExportAdapter {
         chunkReadLogLabel: 'assets',
         onOpenError: (err) => log.debug(`Could not open assets.json for download: ${err}`, this.exportContext.context),
         onEmptyIndexer: () => log.info(`No asset files to download for space ${spaceUid}`, this.exportContext.context),
+        // A chunk that fails to read back would otherwise drop its downloads silently. `records` are
+        // recovered from metadata.json, so we count + surface each lost asset by identity here — no
+        // separate full-metadata reconcile (which would re-materialize the whole set every run).
+        onChunkError: (records, err) => {
+          log.error(
+            `Failed to read an asset chunk back from disk during download for space ${spaceUid}: ${
+              (err as Error)?.message ?? String(err)
+            }`,
+            this.exportContext.context,
+          );
+          for (const rec of records) {
+            if (!this.isDownloadable(rec)) continue;
+            downloadFail += 1;
+            const label = rec.file_name ?? rec.filename ?? rec.uid ?? 'asset';
+            this.tick(false, `asset: ${label}`, 'Asset chunk unreadable');
+            log.error(
+              `Asset ${rec.uid ?? '<unknown>'} (locale ${rec.locale ?? 'n/a'}) not downloaded — chunk unreadable for space ${spaceUid}`,
+              this.exportContext.context,
+            );
+          }
+        },
       },
       async (records) => {
         const valid = records.filter((asset) => this.isDownloadable(asset));
@@ -141,7 +179,8 @@ export default class ExportAssets extends CSAssetsExportAdapter {
             const body = response.body;
             if (!body) throw new Error('No response body');
             const nodeStream = Readable.fromWeb(body as Parameters<typeof Readable.fromWeb>[0]);
-            const assetFolderPath = pResolve(filesDir, uid);
+            // Locale-scoped path keeps each localized variant's binary distinct under the same uid.
+            const assetFolderPath = asset.locale ? pResolve(filesDir, uid, asset.locale) : pResolve(filesDir, uid);
             await mkdir(assetFolderPath, { recursive: true });
             const filePath = pResolve(assetFolderPath, filename);
             await writeStreamToFile(nodeStream, filePath);
@@ -153,25 +192,16 @@ export default class ExportAssets extends CSAssetsExportAdapter {
             downloadFail += 1;
             const err = (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_DOWNLOADS].FAILED;
             this.tick(false, `asset: ${filename}`, err);
-            log.debug(`Failed to download asset ${uid}: ${e}`, this.exportContext.context);
+            log.error(
+              `Failed to download asset ${uid} (${filename}): ${(e as Error)?.message ?? String(e)}`,
+              this.exportContext.context,
+            );
           }
         };
 
         await this.makeConcurrentCall({ apiBatches, module: 'asset downloads' }, promisifyHandler);
       },
     );
-
-    // Completeness check: a chunk that fails to read back is skipped (logged at debug) by
-    // forEachChunkedJsonStore, which would silently drop those downloads. Reconcile attempts
-    // (ok + failed) against what streaming counted as downloadable.
-    const attempted = downloadOk + downloadFail;
-    if (attempted < expectedDownloads) {
-      log.warn(
-        `Asset downloads for space ${spaceUid} incomplete: expected ${expectedDownloads}, attempted ${attempted}` +
-          ` — ${expectedDownloads - attempted} asset(s) were never read back for download.`,
-        this.exportContext.context,
-      );
-    }
 
     log.info(
       downloadFail === 0
@@ -180,8 +210,11 @@ export default class ExportAssets extends CSAssetsExportAdapter {
       this.exportContext.context,
     );
     log.debug(
-      `Asset downloads finished for space ${spaceUid}: ok=${downloadOk}, failed=${downloadFail}`,
+      `Asset downloads finished for space ${spaceUid}: ok=${downloadOk}, failed=${downloadFail}, expected=${expectedDownloads}`,
       this.exportContext.context,
     );
+
+    return downloadOk;
   }
+
 }

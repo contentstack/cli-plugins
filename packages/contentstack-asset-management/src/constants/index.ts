@@ -13,7 +13,6 @@ export const FALLBACK_FIELDS_IMPORT_INVALID_KEYS = [
   'created_by',
   'updated_at',
   'updated_by',
-  'is_system',
   'asset_types_count',
 ] as const;
 export const FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS = [
@@ -21,7 +20,6 @@ export const FALLBACK_ASSET_TYPES_IMPORT_INVALID_KEYS = [
   'created_by',
   'updated_at',
   'updated_by',
-  'is_system',
   'category',
   'preview_image_url',
   'category_detail',
