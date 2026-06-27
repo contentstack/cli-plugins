@@ -19,4 +19,8 @@ fileignoreconfig:
   checksum: 7b043a59fc9c523d5f772c1b81d6d4b6c65fb7f8edb8df73e48ba821e7298f0b
 - filename: packages/contentstack-content-type/eslint.config.js
   checksum: 26da78717a38d8e7464a069626213dd3010efa6e50f91efbc996f26b18346948
+- filename: packages/contentstack-asset-management/src/utils/cs-assets-api-adapter.ts
+  checksum: 22708ea1e27a48a5741426a8e17e5d8b243864d877066861bc275d82393002eb
+- filename: packages/contentstack-asset-management/src/export/assets.ts
+  checksum: b169481a31393a9036fbe4d41429bfee3d0f321629f01a72089469ddf5e8826d
 version: '1.0'
