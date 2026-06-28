@@ -263,9 +263,12 @@ async function getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulk
   const envUidMapperPath = path.join(dataDir, 'mapper', 'environments', 'uid-mapping.json');
   const environmentsPath = path.join(dataDir, 'environments', 'environments.json');
 
-  // Fail fast with actionable errors when the backup is incomplete.
+  // A backup with no assets is a legitimate outcome of a successful import that
+  // had 0 assets (assets.json is never produced) — exit cleanly, not as a crash.
+  // A genuinely wrong --data-dir surfaces via the uid-mapping/environments guards below.
   if (!existsSync(assetsPath) || !existsSync(assetsIndexPath)) {
-    throw new Error(`No assets found in backup. Expected '${assetsIndexPath}'. Check the --data-dir path.`);
+    console.log(chalk.yellow('No assets found in backup — nothing to publish.'));
+    return;
   }
   if (!existsSync(assetUidMapperPath)) {
     throw new Error(
@@ -456,6 +459,9 @@ function setConfig(conf, bp) {
 
 async function start({ retryFailed, bulkPublish, environments, folderUid, locales, apiVersion, dataDir }, stack, config) {
   process.on('beforeExit', async () => {
+    // Print the scan summary here (not inline after enqueueing):
+    printScanSummary(scanSummary);
+
     const isErrorLogEmpty = await isEmpty(`${filePath}.error`);
     const isSuccessLogEmpty = await isEmpty(`${filePath}.success`);
     if (!isErrorLogEmpty) {
@@ -498,15 +504,12 @@ async function start({ retryFailed, bulkPublish, environments, folderUid, locale
     setConfig(config, bulkPublish);
     const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);
     await getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulkPublishLimit);
-    printScanSummary(scanSummary);
   } else if (folderUid) {
     setConfig(config, bulkPublish);
     const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);
     for (const locale of locales) {
       await getAssets(stack, folderUid, bulkPublish, environments, locale, apiVersion, bulkPublishLimit);
     }
-
-    printScanSummary(scanSummary);
 
     // Resolve in-queue assets with incremental retry; pass pendingAssetsForRetry explicitly
     if (pendingAssetsForRetry.length > 0) {

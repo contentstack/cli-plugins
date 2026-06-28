@@ -80,7 +80,11 @@ export default class ImportAssets extends BaseClass {
 
       log.success('Assets imported successfully!', this.importConfig.context);
 
-      if (this.importConfig.assetScanningEnabled) {
+      // Only surface the "publish later" guidance when assets were actually
+      // imported. With 0 assets, assetsUidMap is empty and the backup has no
+      // assets to publish — printing the guidance would send the user to run
+      // cm:assets:publish against an empty backup.
+      if (this.importConfig.assetScanningEnabled && !isEmpty(this.assetsUidMap)) {
         log.info('Asset Scanning is enabled for this stack.', this.importConfig.context);
         log.info('Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
         log.info('Once scanning is done, publish your assets using:', this.importConfig.context);
