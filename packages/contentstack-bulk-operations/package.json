@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "@contentstack/cli-command": "~1.8.4",
-    "@contentstack/cli-utilities": "~1.18.4",
+    "@contentstack/cli-utilities": "~1.18.5",
     "@contentstack/delivery-sdk": "^5.2.1",
     "@contentstack/management": "^1.30.3",
     "lodash": "^4.18.1",
