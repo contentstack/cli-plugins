@@ -146,6 +146,8 @@ describe('ExportAssets', () => {
           chunkFileSizeMb: 1,
           apiConcurrency: 5,
           downloadAssetsConcurrency: 5,
+          pageSize: 100,
+          fetchConcurrency: 5,
         },
         content_types: {
           dirName: 'content_types',

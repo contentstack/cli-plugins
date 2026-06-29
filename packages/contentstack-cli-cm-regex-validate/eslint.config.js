@@ -1,14 +1,11 @@
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import oclif from 'eslint-config-oclif';
-import oclifTypescript from 'eslint-config-oclif-typescript';
 
 export default [
   ...tseslint.configs.recommended,
 
   oclif,
-
-  oclifTypescript,
 
   {
     ignores: [

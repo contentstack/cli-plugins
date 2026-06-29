@@ -1,8 +1,13 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
+<<<<<<< fix/DX-3921
   checksum: b099fc2004034db2766c6ad0b49f284c0a16bbb6f251b95ae0bf29f53207876d
 - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
   checksum: ccce01ed8481a1e0b8551f36165f6eecb83b4f1c12ff5b114a291ea442540c57
 - filename: packages/contentstack-migration/README.md
   checksum: 921fb6a81f51b21609188bee4b6bb76e194109383b05d38c5d8b338124b16733
 version: '1.0'
+=======
+  checksum: 0feb3713a8f2e4a8a1f5f528218c2c578265dc5b31ff283a283fefc949bbafd2
+version: ""
+>>>>>>> v2-dev
