@@ -2,7 +2,7 @@
 
 It is Contentstack’s CLI plugin to export content from the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/developers/cli/migration/).
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-export](#contentstackcli-cm-export)
@@ -10,34 +10,10 @@ It is Contentstack’s CLI plugin to export content from the stack. To learn how
 * [Commands](#commands)
 <!-- tocstop -->
 
-For switching to EU region update the hosts at config/default.js
+To switch regions, use:
 
-```js
-{
-  host:'https://eu-api.contentstack.com/v3',
-  cdn: 'https://eu-cdn.contentstack.com/v3',
- ...
-}
-```
-
-For switching to AZURE-NA region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-na-api.contentstack.com/v3',
-  cdn: 'https://azure-na-cdn.contentstack.com/v3',
- ...
-}
-```
-
-For switching to AZURE-EU region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-eu-api.contentstack.com/v3',
-  cdn: 'https://azure-eu-cdn.contentstack.com/v3',
- ...
-}
+```sh-session
+$ csdx config:set:region [EU | AZURE-NA | AZURE-EU]
 ```
 
 # Usage
@@ -48,7 +24,7 @@ $ npm install -g @contentstack/cli-cm-export
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-export/1.25.1 darwin-arm64 node-v24.14.0
+@contentstack/cli-cm-export/1.25.2 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

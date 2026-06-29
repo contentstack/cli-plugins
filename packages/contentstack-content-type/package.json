@@ -1,7 +1,7 @@
 {
   "name": "contentstack-cli-content-type",
   "description": "Retrieve information about Content Types in a Stack.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "author": "Contentstack Developer",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
@@ -27,7 +27,7 @@
     "@oclif/plugin-help": "^6.2.49",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.19.19",
-    "eslint": "^8.57.1",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.162",
     "eslint-config-oclif-typescript": "^3.1.14",
     "globby": "^11.1.0",
@@ -38,7 +38,7 @@
     "typescript": "^4.9.5"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/bin",
@@ -73,8 +73,8 @@
     "test": "jest",
     "test:unit": "jest",
     "test:coverage": "jest --coverage",
-    "posttest": "eslint . --ext .ts --config .eslintrc",
-    "lint": "eslint . --ext .ts --config .eslintrc",
+    "posttest": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "version": "oclif readme && git add README.md"
   },
