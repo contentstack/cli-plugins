@@ -18,7 +18,7 @@ export default class ExportFields extends CSAssetsExportAdapter {
 
     log.debug('Starting shared fields export process...', this.exportContext.context);
 
-    const fieldsData = await this.getWorkspaceFields(spaceUid);
+    const fieldsData = await this.getWorkspaceFields(spaceUid, this.apiPageSize, this.apiFetchConcurrency);
     const items = getArrayFromResponse(fieldsData, 'fields');
     const dir = this.getFieldsDir();
     if (items.length === 0) {

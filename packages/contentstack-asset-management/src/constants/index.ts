@@ -4,6 +4,8 @@ export const FALLBACK_AM_CHUNK_FILE_SIZE_MB = 1;
 export const FALLBACK_AM_API_CONCURRENCY = 5;
 /** @deprecated Use FALLBACK_AM_API_CONCURRENCY */
 export const DEFAULT_AM_API_CONCURRENCY = FALLBACK_AM_API_CONCURRENCY;
+export const FALLBACK_AM_API_PAGE_SIZE = 100;
+export const FALLBACK_AM_API_FETCH_CONCURRENCY = 5;
 
 /** Fallback strip lists when import options omit `fieldsImportInvalidKeys` / `assetTypesImportInvalidKeys`. */
 export const FALLBACK_FIELDS_IMPORT_INVALID_KEYS = [

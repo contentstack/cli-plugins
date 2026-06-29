@@ -5,7 +5,7 @@ import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack
 import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
-import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
 
 export type { ExportContext };
 
@@ -82,12 +82,39 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
     return this.exportContext.downloadAssetsConcurrency ?? this.apiConcurrency;
   }
 
+  protected get apiPageSize(): number {
+    return this.exportContext.pageSize ?? FALLBACK_AM_API_PAGE_SIZE;
+  }
+
+  protected get apiFetchConcurrency(): number {
+    return this.exportContext.fetchConcurrency ?? FALLBACK_AM_API_FETCH_CONCURRENCY;
+  }
+
   protected getAssetTypesDir(): string {
     return pResolve(this.exportContext.spacesRootPath, 'asset_types');
   }
 
   protected getFieldsDir(): string {
     return pResolve(this.exportContext.spacesRootPath, 'fields');
+  }
+
+  /** Build a chunked-JSON writer for incremental (streaming) writes. Caller must `completeFile(true)`. */
+  protected createChunkedJsonWriter(dir: string, indexFileName: string, moduleName: string, metaPickKeys: string[]): FsUtility {
+    const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
+    return new FsUtility({
+      basePath: dir,
+      indexFileName,
+      chunkFileSize: chunkMb,
+      moduleName,
+      fileExt: 'json',
+      metaPickKeys,
+      keepMetadata: true,
+    });
+  }
+
+  /** Write an empty index file (matches FsUtility's layout for a zero-record store). */
+  protected async writeEmptyChunkedJson(dir: string, indexFileName: string): Promise<void> {
+    await writeFile(pResolve(dir, indexFileName), '{}');
   }
 
   protected async writeItemsToChunkedJson(
@@ -98,19 +125,10 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
     items: unknown[],
   ): Promise<void> {
     if (items.length === 0) {
-      await writeFile(pResolve(dir, indexFileName), '{}');
+      await this.writeEmptyChunkedJson(dir, indexFileName);
       return;
     }
-    const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
-    const fs = new FsUtility({
-      basePath: dir,
-      indexFileName,
-      chunkFileSize: chunkMb,
-      moduleName,
-      fileExt: 'json',
-      metaPickKeys,
-      keepMetadata: true,
-    });
+    const fs = this.createChunkedJsonWriter(dir, indexFileName, moduleName, metaPickKeys);
     fs.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
     fs.completeFile(true);
   }

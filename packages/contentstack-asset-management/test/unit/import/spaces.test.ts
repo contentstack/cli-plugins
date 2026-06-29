@@ -30,7 +30,10 @@ describe('ImportSpaces', () => {
   };
 
   beforeEach(() => {
-    sinon.stub(configHandler, 'get').returns({ showConsoleLogs: false });
+    sinon.stub(configHandler, 'get').callsFake((key: string) => {
+      if (key === 'log') return { showConsoleLogs: false };
+      return undefined;
+    });
     sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress as any);
     // init and listSpaces live on AssetManagementAdapter (the common base).
     // Stubbing the base once covers both the adapter used for listSpaces and ImportWorkspace.
@@ -171,6 +174,180 @@ describe('ImportSpaces', () => {
 
       expect(result.spaceMappings).to.deep.equal([]);
       expect(result.spaceUidMap).to.deep.equal({});
+    });
+  });
+
+  describe('bootstrap failure', () => {
+    it('should mark all space rows as failed and re-throw when ImportFields throws', async () => {
+      stubSpaceDirs(['am-space-1']);
+      sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space', workspaceUid: 'main',
+        isDefault: false, uidMap: {}, urlMap: {},
+      });
+      (ImportFields.prototype.start as sinon.SinonStub).rejects(new Error('fields-bootstrap-error'));
+
+      const importer = new ImportSpaces(baseOptions);
+      try {
+        await importer.start();
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.equal('fields-bootstrap-error');
+      }
+
+      const completeCalls = fakeProgress.completeProcess.getCalls().map((c) => c.args);
+      expect(completeCalls).to.deep.include([PROCESS_NAMES.AM_IMPORT_FIELDS, false]);
+    });
+
+    it('should mark all space rows as failed and re-throw when ImportAssetTypes throws', async () => {
+      stubSpaceDirs(['am-space-1']);
+      (ImportAssetTypes.prototype.start as sinon.SinonStub).rejects(new Error('at-bootstrap-error'));
+
+      const importer = new ImportSpaces(baseOptions);
+      try {
+        await importer.start();
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.equal('at-bootstrap-error');
+      }
+
+      const completeCalls = fakeProgress.completeProcess.getCalls().map((c) => c.args);
+      expect(completeCalls).to.deep.include([PROCESS_NAMES.AM_IMPORT_ASSET_TYPES, false]);
+    });
+  });
+
+  describe('per-space failure resilience', () => {
+    it('should continue importing remaining spaces when one space fails', async () => {
+      stubSpaceDirs(['am-space-1', 'am-space-2']);
+      const startStub = sinon.stub(ImportWorkspace.prototype, 'start');
+      startStub.onFirstCall().rejects(new Error('space-1-error'));
+      startStub.onSecondCall().resolves({
+        oldSpaceUid: 'am-space-2', newSpaceUid: 'new-space-2', workspaceUid: 'main',
+        isDefault: false, uidMap: {}, urlMap: {},
+      });
+
+      const importer = new ImportSpaces(baseOptions);
+      const result = await importer.start();
+
+      expect(startStub.callCount).to.equal(2);
+      expect(result.spaceMappings).to.have.lengthOf(1);
+      expect(result.spaceMappings[0].oldSpaceUid).to.equal('am-space-2');
+    });
+  });
+
+  describe('backupDir mapper file writing', () => {
+    it('should write uid, url, and space-uid mapping files when backupDir is set', async () => {
+      const os = require('node:os');
+      const path = require('node:path');
+      const fsReal = require('node:fs');
+      const tmpDir = path.join(os.tmpdir(), `import-spaces-backup-${Date.now()}`);
+      fsReal.mkdirSync(tmpDir, { recursive: true });
+
+      stubSpaceDirs(['am-space-1']);
+      sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space-1', workspaceUid: 'main',
+        isDefault: false,
+        uidMap: { 'old-uid': 'new-uid' },
+        urlMap: { 'old-url': 'new-url' },
+      });
+
+      const options: ImportSpacesOptions = { ...baseOptions, backupDir: tmpDir };
+      const importer = new ImportSpaces(options);
+      await importer.start();
+
+      const mapperDir = path.join(tmpDir, 'mapper', 'assets');
+      expect(fsReal.existsSync(path.join(mapperDir, 'uid-mapping.json'))).to.be.true;
+      expect(fsReal.existsSync(path.join(mapperDir, 'url-mapping.json'))).to.be.true;
+      expect(fsReal.existsSync(path.join(mapperDir, 'space-uid-mapping.json'))).to.be.true;
+
+      const uidMap = JSON.parse(fsReal.readFileSync(path.join(mapperDir, 'uid-mapping.json'), 'utf8'));
+      expect(uidMap).to.deep.equal({ 'old-uid': 'new-uid' });
+    });
+  });
+
+  describe('listSpaces error handling and uid filtering', () => {
+    it('should pass existing org space uids to ImportWorkspace when listSpaces returns spaces', async () => {
+      (CSAssetsAdapter.prototype.listSpaces as sinon.SinonStub).resolves({ spaces: [{ uid: 'org-space-uid' }] });
+      stubSpaceDirs(['am-space-1']);
+      const startStub = sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space', workspaceUid: 'main',
+        isDefault: false, uidMap: {}, urlMap: {},
+      });
+
+      const importer = new ImportSpaces(baseOptions);
+      await importer.start();
+
+      expect(startStub.callCount).to.equal(1);
+      const existingSpaceUids: Set<string> = startStub.firstCall.args[2];
+      expect(existingSpaceUids.has('org-space-uid')).to.be.true;
+    });
+
+    it('should continue (disable reuse-by-uid) when listSpaces throws', async () => {
+      (CSAssetsAdapter.prototype.listSpaces as sinon.SinonStub).rejects(new Error('network error'));
+      stubSpaceDirs(['am-space-1']);
+      sinon.stub(ImportWorkspace.prototype, 'start').resolves({
+        oldSpaceUid: 'am-space-1', newSpaceUid: 'new-uid', workspaceUid: 'main',
+        isDefault: false, uidMap: {}, urlMap: {},
+      });
+
+      const importer = new ImportSpaces(baseOptions);
+      const result = await importer.start();
+
+      expect(result.spaceMappings).to.have.lengthOf(1);
+    });
+
+    it('should return false for a directory entry when statSync throws', async () => {
+      const fsMock = require('node:fs');
+      const pResolve = require('node:path').resolve;
+      const join = require('node:path').join;
+      const spacesRoot = pResolve('/tmp/import', 'spaces');
+      const origStatSync = fsMock.statSync.bind(fsMock);
+      sinon.stub(fsMock, 'readdirSync').returns(['am-bad-entry'] as any);
+      sinon.stub(fsMock, 'statSync').callsFake((p: string) => {
+        if (p === join(spacesRoot, 'am-bad-entry')) throw new Error('permission denied');
+        return origStatSync(p);
+      });
+
+      const importer = new ImportSpaces(baseOptions);
+      const result = await importer.start();
+
+      expect(result.spaceMappings).to.deep.equal([]);
+    });
+
+    it('should log warning and return empty dirs when readdirSync throws', async () => {
+      const fsMock = require('node:fs');
+      const pResolve = require('node:path').resolve;
+      const spacesRoot = pResolve('/tmp/import', 'spaces');
+      const origReaddir = fsMock.readdirSync.bind(fsMock);
+      sinon.stub(fsMock, 'readdirSync').callsFake((p: string) => {
+        if (p === spacesRoot) throw new Error('ENOENT: no such file or directory');
+        return origReaddir(p);
+      });
+      sinon.stub(fsMock, 'statSync').returns({ isDirectory: () => true } as any);
+
+      const importer = new ImportSpaces(baseOptions);
+      const result = await importer.start();
+
+      expect(result.spaceMappings).to.deep.equal([]);
+    });
+  });
+
+  describe('setParentProgressManager', () => {
+    it('should use parent progress manager instead of creating a new CLIProgressManager', async () => {
+      const fakeParent = {
+        addProcess: sinon.stub().returnsThis(),
+        startProcess: sinon.stub().returnsThis(),
+        updateStatus: sinon.stub().returnsThis(),
+        tick: sinon.stub(),
+        completeProcess: sinon.stub(),
+      };
+      stubSpaceDirs([]);
+
+      const importer = new ImportSpaces(baseOptions);
+      importer.setParentProgressManager(fakeParent as any);
+      await importer.start();
+
+      expect((CLIProgressManager.createNested as sinon.SinonStub).callCount).to.equal(0);
+      expect(fakeParent.addProcess.callCount).to.be.greaterThan(0);
     });
   });
 });

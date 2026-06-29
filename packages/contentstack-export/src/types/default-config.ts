@@ -110,6 +110,10 @@ export default interface DefaultConfig {
       apiConcurrency: number;
       /** Parallel downloads per AM workspace export. */
       downloadAssetsConcurrency: number;
+      /** Items per page for paginated GET requests (assets, folders, spaces). */
+      pageSize: number;
+      /** Parallel page fetches for paginated GET requests. */
+      fetchConcurrency: number;
       dependencies?: Modules[];
     };
     content_types: {
