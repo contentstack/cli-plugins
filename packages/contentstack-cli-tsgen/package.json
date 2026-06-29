@@ -6,8 +6,8 @@
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@contentstack/cli-command": "~1.8.4",
-    "@contentstack/cli-utilities": "~1.18.4",
-    "@contentstack/types-generator": "^3.10.1"
+    "@contentstack/cli-utilities": "~1.18.5",
+    "@contentstack/types-generator": "^3.10.2"
   },
   "devDependencies": {
     "@oclif/plugin-help": "^6.2.49",

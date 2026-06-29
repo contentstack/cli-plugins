@@ -18,7 +18,7 @@
     "chai": "^4.5.0",
     "eslint": "^10.5.0",
     "eslint-config-oclif": "^4.0.0",
-    "eslint-config-oclif-typescript": "^1.0.3",
+    "eslint-config-oclif-typescript": "^3.1.14",
     "eslint-plugin-unicorn": "^48.0.1",
     "globby": "^11.1.0",
     "husky": "^9.1.7",
@@ -65,8 +65,8 @@
     "version": "oclif-dev readme && git add README.md"
   },
   "dependencies": {
-    "@contentstack/cli-command": "^1.8.3",
-    "@contentstack/cli-utilities": "^1.18.4",
+    "@contentstack/cli-command": "^1.8.4",
+    "@contentstack/cli-utilities": "^1.18.5",
     "@contentstack/management": "^1.30.3",
     "cli-table3": "^0.6.5",
     "cli-ux": "^6.0.9",
