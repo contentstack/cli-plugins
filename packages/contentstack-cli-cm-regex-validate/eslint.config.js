@@ -1,18 +1,13 @@
+import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
-import oclif from 'eslint-config-oclif';
 
 export default [
-  ...tseslint.configs.recommended,
-  oclif,
-
   {
-    ignores: [
-      'lib/**/*',
-    ],
+    ignores: ['lib/**/*', 'test/**/*', 'bin/*'],
   },
-
   {
+    files: ['src/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -23,25 +18,19 @@ export default [
         ...globals.node,
       },
     },
-
     plugins: {
       '@typescript-eslint': tseslint.plugin,
     },
-
     rules: {
-      'unicorn/prefer-module': 'off',
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended[1].rules,
       '@typescript-eslint/no-require-imports': 'off',
-      'unicorn/no-array-for-each': 'off',
-      camelcase: 'off',
+      'camelcase': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
-      quotes: ['error', 'single', { avoidEscape: true }],
-      semi: ['error', 'never'],
-      'unicorn/import-style': 'off',
-      'unicorn/prefer-node-protocol': 'off',
-      'unicorn/consistent-function-scoping': 'off',
+      'quotes': ['error', 'single', { avoidEscape: true }],
+      'semi': ['error', 'never'],
       '@typescript-eslint/ban-ts-comment': 'off',
       'object-curly-spacing': ['error', 'never'],
-      'node/no-missing-import': 'off',
     },
   },
 ];
