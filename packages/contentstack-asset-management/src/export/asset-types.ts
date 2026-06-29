@@ -18,7 +18,7 @@ export default class ExportAssetTypes extends CSAssetsExportAdapter {
 
     log.debug('Starting shared asset types export process...', this.exportContext.context);
 
-    const assetTypesData = await this.getWorkspaceAssetTypes(spaceUid);
+    const assetTypesData = await this.getWorkspaceAssetTypes(spaceUid, this.apiPageSize, this.apiFetchConcurrency);
     const items = getArrayFromResponse(assetTypesData, 'asset_types');
     const dir = this.getAssetTypesDir();
     if (items.length === 0) {

@@ -2660,4 +2660,70 @@ describe('ImportWebhooks - Simple Tests', () => {
       expect((importWebhooks as any).failedWebhooks.length).to.equal(1);
     });
   });
+
+  describe('UID derivation from JSON key (regression)', () => {
+    it('attaches the JSON key as uid even when the webhook body has no uid', async () => {
+      // Mirrors the user's bundle: webhooks keyed by uid, but no `uid` in the body.
+      (importWebhooks as any).webhooks = {
+        '09Ah2QxtkCSKeIRCDYnfkF': { name: 'KB Revalidation' },
+        '6fikvC9O4jTp8LNMSV006u': { name: 'DT documentation revalidater' },
+      };
+
+      let captured: any[] = [];
+      sinon.stub(importWebhooks as any, 'makeConcurrentCall').callsFake(async (config: any) => {
+        captured = config.apiContent;
+      });
+
+      await (importWebhooks as any).importWebhooks();
+
+      expect(captured).to.have.length(2);
+      expect(captured[0].uid).to.equal('09Ah2QxtkCSKeIRCDYnfkF');
+      expect(captured[1].uid).to.equal('6fikvC9O4jTp8LNMSV006u');
+      // Distinct uids — not all collapsed onto a single `undefined` key.
+      expect(new Set(captured.map((w: any) => w.uid)).size).to.equal(2);
+    });
+
+    it('does not falsely skip later webhooks after the first is created', async () => {
+      // Bodies have no `uid`. Before the fix, the first success wrote
+      // webhookUidMapper["undefined"], so every later webhook was serialized as a
+      // "duplicate" and skipped. The fix keys the mapper by the unique JSON key.
+      (importWebhooks as any).webhooks = {
+        uidA: { name: 'Webhook A' },
+        uidB: { name: 'Webhook B' },
+        uidC: { name: 'Webhook C' },
+      };
+
+      // onSuccess persists the mapper via fsUtil.writeFile — stub the real write.
+      const utils = require('../../../../src/utils');
+      sinon.stub(utils.fsUtil, 'writeFile');
+
+      const created: string[] = [];
+      const skipped: string[] = [];
+
+      sinon.stub(importWebhooks as any, 'makeConcurrentCall').callsFake(async (config: any) => {
+        const { serializeData, resolve } = config.apiParams;
+        // Process sequentially so the first success writes the mapper BEFORE the
+        // next item is serialized — the exact ordering that triggered the bug.
+        for (const apiData of config.apiContent) {
+          const opts = serializeData({ apiData, entity: 'create-webhooks' });
+          if (opts.entity === undefined) {
+            skipped.push(apiData.name);
+            continue;
+          }
+          resolve({ response: { uid: `new-${apiData.uid}` }, apiData: opts.apiData });
+          created.push(apiData.name);
+        }
+      });
+
+      await (importWebhooks as any).importWebhooks();
+
+      expect(skipped).to.deep.equal([]); // none falsely skipped
+      expect(created).to.deep.equal(['Webhook A', 'Webhook B', 'Webhook C']);
+      expect((importWebhooks as any).webhookUidMapper).to.deep.equal({
+        uidA: 'new-uidA',
+        uidB: 'new-uidB',
+        uidC: 'new-uidC',
+      });
+    });
+  });
 });
