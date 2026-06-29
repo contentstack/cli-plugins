@@ -66,20 +66,6 @@ export default class ImportWorkspace extends CSAssetsImportAdapter {
       assetsImporter.setProcessName(spaceProcessName);
     }
 
-    // Map source default space → existing target default space (cross-org migration).
-    // The caller supplies the uid of the pre-existing target default space; we upload
-    // source assets into it instead of creating a new space.
-    if (isDefault && targetDefaultSpaceUid) {
-      const newSpaceUid = targetDefaultSpaceUid;
-      const resolvedWorkspaceUid = targetDefaultWorkspaceUid ?? workspaceUid;
-      log.info(
-        `Source default space "${oldSpaceUid}" mapped to existing target default space "${newSpaceUid}".`,
-        this.importContext.context,
-      );
-      const { uidMap, urlMap } = await assetsImporter.start(newSpaceUid, spaceDir);
-      return { oldSpaceUid, newSpaceUid, workspaceUid: resolvedWorkspaceUid, isDefault: true, uidMap, urlMap };
-    }
-
     // Reuse: target org already has a space with the same uid as the export directory.
     if (existingSpaceUids.has(oldSpaceUid)) {
       log.info(
@@ -99,6 +85,20 @@ export default class ImportWorkspace extends CSAssetsImportAdapter {
         uidMap,
         urlMap,
       };
+    }
+    
+    // Map source default space → existing target default space (cross-org migration).
+    // The caller supplies the uid of the pre-existing target default space; we upload
+    // source assets into it instead of creating a new space.
+    if (isDefault && targetDefaultSpaceUid) {
+      const newSpaceUid = targetDefaultSpaceUid;
+      const resolvedWorkspaceUid = targetDefaultWorkspaceUid ?? workspaceUid;
+      log.info(
+        `Source default space "${oldSpaceUid}" mapped to existing target default space "${newSpaceUid}".`,
+        this.importContext.context,
+      );
+      const { uidMap, urlMap } = await assetsImporter.start(newSpaceUid, spaceDir);
+      return { oldSpaceUid, newSpaceUid, workspaceUid: resolvedWorkspaceUid, isDefault: true, uidMap, urlMap };
     }
 
     // Create new space with exact exported title

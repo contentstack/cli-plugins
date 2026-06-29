@@ -108,6 +108,8 @@ export default class ExportAssets extends BaseClass {
           chunkFileSizeMb: csAssetsModuleConfig?.chunkFileSizeMb,
           apiConcurrency: csAssetsModuleConfig?.apiConcurrency,
           downloadAssetsConcurrency: csAssetsModuleConfig?.downloadAssetsConcurrency,
+          pageSize: csAssetsModuleConfig?.pageSize,
+          fetchConcurrency: csAssetsModuleConfig?.fetchConcurrency,
         });
         exporter.setParentProgressManager(progress);
         await exporter.start();
