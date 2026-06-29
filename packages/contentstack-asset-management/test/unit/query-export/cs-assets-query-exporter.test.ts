@@ -10,7 +10,7 @@ import ExportAssetTypes from '../../../src/export/asset-types';
 import ExportFields from '../../../src/export/fields';
 import { CSAssetsExportAdapter } from '../../../src/export/base';
 import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
-import * as concurrentBatch from '../../../src/utils/concurrent-batch';
+import * as retryModule from '../../../src/utils/retry';
 
 import type { CsAssetsQueryExportOptions } from '../../../src/types/cs-assets-api';
 
@@ -46,11 +46,32 @@ describe('CsAssetsQueryExporter', () => {
       ],
     });
     sinon.stub(CSAssetsExportAdapter.prototype as any, 'writeItemsToChunkedJson').resolves();
-    sinon.stub(concurrentBatch, 'runInBatches').callsFake(async (items, _concurrency, handler) => {
-      for (let i = 0; i < items.length; i++) {
-        await handler(items[i], i);
+    // Downloads now run through makeConcurrentCall; fake it by invoking the
+    // promisifyHandler synchronously over each element of every apiBatch.
+    sinon.stub(CSAssetsAdapter.prototype, 'makeConcurrentCall').callsFake(async (env: any, handler: any) => {
+      const batches = env?.apiBatches ?? [];
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        for (let index = 0; index < batches[batchIndex].length; index++) {
+          if (handler) await handler({ index, batchIndex, isLastRequest: false });
+        }
       }
     });
+    // Run the download retry wrapper inline (single attempt, no backoff) and serve a fake binary
+    // so download attempts don't hit the network or wait on real retry delays.
+    sinon.stub(retryModule, 'withRetry').callsFake(async (fn: () => Promise<unknown>) => fn());
+    sinon.stub(globalThis, 'fetch').callsFake(
+      async () =>
+        ({
+          ok: true,
+          status: 200,
+          body: new ReadableStream({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode('x'));
+              controller.close();
+            },
+          }),
+        }) as any,
+    );
   });
 
   afterEach(() => {
