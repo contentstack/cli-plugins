@@ -27,14 +27,14 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(graphql@16.14.2)
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.9
+        version: 2.0.0-beta.9(@types/node@20.19.43)
       '@contentstack/cli-launch':
         specifier: ^1.10.0
         version: 1.11.1(@types/node@20.19.43)(tslib@2.8.1)(typescript@5.9.3)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.9
-        version: 2.0.0-beta.9(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       adm-zip:
         specifier: ^0.5.17
         version: 0.5.18
@@ -127,8 +127,8 @@ importers:
   packages/contentstack-asset-management:
     dependencies:
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.9
-        version: 2.0.0-beta.9(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       lodash:
         specifier: 4.18.1
         version: 4.18.1
@@ -182,11 +182,11 @@ importers:
   packages/contentstack-audit:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@20.19.43)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@20.19.43)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -258,17 +258,17 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~2.0.0-beta.20
+        specifier: ~2.0.0-beta.21
         version: link:../contentstack-seed
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@18.19.130)
-      '@contentstack/cli-config':
-        specifier: ~2.0.0-beta.11
-        version: 2.0.0-beta.11(@types/node@18.19.130)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-config':
+        specifier: ~2.0.0-beta.12
+        version: 2.0.0-beta.12(@types/node@18.19.130)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@18.19.130)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -325,11 +325,11 @@ importers:
   packages/contentstack-branches:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@22.20.0)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -380,14 +380,14 @@ importers:
   packages/contentstack-bulk-operations:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: 1.0.0-beta.4
+        specifier: 1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@20.19.43)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@20.19.43)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@contentstack/delivery-sdk':
         specifier: ^5.2.0
         version: 5.2.2
@@ -486,11 +486,11 @@ importers:
   packages/contentstack-cli-cm-regex-validate:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@18.19.130)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@18.19.130)
       '@contentstack/management':
         specifier: ^1.30.2
         version: 1.30.4(debug@4.4.3)
@@ -577,13 +577,13 @@ importers:
   packages/contentstack-cli-tsgen:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@22.20.0)
       '@contentstack/types-generator':
-        specifier: ^3.10.0
+        specifier: ^3.10.2
         version: 3.10.2(graphql@16.14.2)
     devDependencies:
       '@oclif/plugin-help':
@@ -624,7 +624,7 @@ importers:
         version: 4.23.24(@types/node@22.20.0)
       ts-jest:
         specifier: ^29.4.9
-        version: 29.4.11(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@29.7.0(@types/node@22.20.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3)))(typescript@5.9.3)
+        version: 29.4.11(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@29.7.0(@types/node@22.20.0))(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -635,17 +635,17 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.20
+        specifier: ~2.0.0-beta.21
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.20
+        specifier: ~2.0.0-beta.21
         version: link:../contentstack-import
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@18.19.130)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@18.19.130)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -720,11 +720,11 @@ importers:
   packages/contentstack-content-type:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@22.20.0)
       '@types/diff2html':
         specifier: ^3.0.3
         version: 3.0.3
@@ -808,16 +808,16 @@ importers:
   packages/contentstack-export:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.4
+        specifier: ~1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@22.20.0)
       '@contentstack/cli-variants':
-        specifier: ~2.0.0-beta.16
+        specifier: ~2.0.0-beta.17
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -854,11 +854,11 @@ importers:
         version: 3.19.0
     devDependencies:
       '@contentstack/cli-auth':
-        specifier: ~2.0.0-beta.13
-        version: 2.0.0-beta.13(@types/node@22.20.0)
+        specifier: ~2.0.0-beta.14
+        version: 2.0.0-beta.14(@types/node@22.20.0)
       '@contentstack/cli-config':
-        specifier: ~2.0.0-beta.11
-        version: 2.0.0-beta.11(@types/node@22.20.0)
+        specifier: ~2.0.0-beta.12
+        version: 2.0.0-beta.12(@types/node@22.20.0)
       '@contentstack/cli-dev-dependencies':
         specifier: ~2.0.0-beta.0
         version: 2.0.0-beta.0
@@ -923,11 +923,11 @@ importers:
   packages/contentstack-export-to-csv:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@20.19.43)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@20.19.43)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@inquirer/prompts':
         specifier: ^7.0.0
         version: 7.10.1(@types/node@20.19.43)
@@ -987,11 +987,11 @@ importers:
   packages/contentstack-external-migrate:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~1.8.3
-        version: 1.8.4(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.9
+        version: 2.0.0-beta.9(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~1.18.4
-        version: 1.18.5(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
         version: 2.1.0
@@ -1063,19 +1063,19 @@ importers:
   packages/contentstack-import:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.4
+        specifier: ~1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-audit':
-        specifier: ~2.0.0-beta.13
+        specifier: ~2.0.0-beta.14
         version: link:../contentstack-audit
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@14.18.63)(debug@4.4.3)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@14.18.63)(debug@4.4.3)
       '@contentstack/cli-variants':
-        specifier: ~2.0.0-beta.16
+        specifier: ~2.0.0-beta.17
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1163,14 +1163,14 @@ importers:
   packages/contentstack-import-setup:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.4
+        specifier: ~1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@14.18.63)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
-        version: 2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)
+        version: 2.0.0-beta.9(@types/node@14.18.63)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -1260,11 +1260,11 @@ importers:
   packages/contentstack-migrate-rte:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@22.20.0)
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
         version: 2.1.0
@@ -1330,11 +1330,11 @@ importers:
   packages/contentstack-migration:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@14.18.63)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
-        version: 2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)
+        version: 2.0.0-beta.9(@types/node@14.18.63)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -1412,17 +1412,17 @@ importers:
   packages/contentstack-query-export:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.4
+        specifier: ~1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.20
+        specifier: ~2.0.0-beta.21
         version: link:../contentstack-export
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@20.19.43)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@20.19.43)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -1527,14 +1527,14 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.20
+        specifier: ~2.0.0-beta.21
         version: link:../contentstack-import
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.8
-        version: 2.0.0-beta.8(@types/node@18.19.130)
-      '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.9
         version: 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-utilities':
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@18.19.130)
       inquirer:
         specifier: 12.11.1
         version: 12.11.1(@types/node@18.19.130)
@@ -1597,8 +1597,8 @@ importers:
   packages/contentstack-variants:
     dependencies:
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.9
-        version: 2.0.0-beta.9(@types/node@20.19.43)
+        specifier: ~2.0.0-beta.10
+        version: 2.0.0-beta.10(@types/node@20.19.43)
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.11.11
@@ -2360,21 +2360,21 @@ packages:
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
     engines: {node: '>=0.1.90'}
 
-  '@contentstack/cli-auth@2.0.0-beta.13':
-    resolution: {integrity: sha512-VSZ5y4tsLN8HkMpxXZEo+bfo4w4vUb6a3jxyn6TvJgEdWgq05ByEQq84G8WnFdNXF+q1md7FmUWvihuot18JjA==}
-    engines: {node: '>=14.0.0'}
+  '@contentstack/cli-auth@2.0.0-beta.14':
+    resolution: {integrity: sha512-PG9KhUI66Pv9Vu/PK1xw70fiXqP4/EkkXzvcOqifbGQk6NrIZIP8sRdz19jluorhq+qUH9GqAhkUoGKiV5xHnQ==}
+    engines: {node: '>=22.0.0'}
 
   '@contentstack/cli-command@1.8.4':
     resolution: {integrity: sha512-xo6d+KrwqGZakUKz6Uw9I3CsW6HC+NqwsMd5kc9IN5j/UhzLZujLAj6fotQY+cyJYG/Dz9D+tSIaL8ZAMRTkLg==}
     engines: {node: '>=22.0.0'}
 
-  '@contentstack/cli-command@2.0.0-beta.8':
-    resolution: {integrity: sha512-LZMiD3geKqc9zyzdpEktrzrvG1v/YyTVc5n5GF5iE17llnM9Ts5WfGKjhQX49ZavWbJYI0Qk06BF2ncomHQhvg==}
-    engines: {node: '>=14.0.0'}
+  '@contentstack/cli-command@2.0.0-beta.9':
+    resolution: {integrity: sha512-7hcHEpj6NL9KS5fuhWqC0U3vMHXOeTVJoZiIatJwpqY29Ov4SP620Pe5dcXZKBjuETiPNusBv2L9sVQ4UrLxoQ==}
+    engines: {node: '>=22.0.0'}
 
-  '@contentstack/cli-config@2.0.0-beta.11':
-    resolution: {integrity: sha512-DnsWIkIBqWQSHESswDQVrbqnjTmlJFd9TRrGT/CJPLHsXLEtocUaBBV0T0ri9MttvyvQ8c4B1LyjZAFOb1iRjw==}
-    engines: {node: '>=14.0.0'}
+  '@contentstack/cli-config@2.0.0-beta.12':
+    resolution: {integrity: sha512-ip1opE9HSZrFOM9L6re5DHIoCYYH0kdA0X1bAQ1BPJiWGuMXGlcE4b3uje9FD67TcRpTw+Yf0f7fVrcBH93z3g==}
+    engines: {node: '>=22.0.0'}
 
   '@contentstack/cli-dev-dependencies@1.3.1':
     resolution: {integrity: sha512-RQuCGQxBdZ+aNhOMwt/VMpz/9AL2PwIFz7H9rUS6BzPOe6G4RjmzFLXi/gnyECbyLoIgyGGXTjlz8NQ0oapp7Q==}
@@ -2390,8 +2390,8 @@ packages:
   '@contentstack/cli-utilities@1.18.5':
     resolution: {integrity: sha512-0qRZznIiU8jqYl7BTs84w9Ke2fVGRDCY22PSUg0DABR1nzrnTVwTTne/gjhuQUoQjMU7GG4rvAScY0SU/0mHAg==}
 
-  '@contentstack/cli-utilities@2.0.0-beta.9':
-    resolution: {integrity: sha512-OWL1ZDl4e1/hCt2+CS+zvFSQuEs0WOfe1HpGNTZzUETj8/gULPhb2wdvTS3vOOcpA55d0rbTt4JjYBa83BpzcA==}
+  '@contentstack/cli-utilities@2.0.0-beta.10':
+    resolution: {integrity: sha512-u2fhvYR+P5AateT4+AaUHsdEDxeP/eJZUQvfA0xHZhrwOqN/WVkkXDu96j/g7U0hqdMKRHtXzrYpmdfjEeMtMA==}
 
   '@contentstack/core@1.4.1':
     resolution: {integrity: sha512-QfLa8WUwquWSwvF8EltLyzQTkeNE2I9b9PBkPe21w0d5PnHOagxFzDNCYN4VO/zuJ52sNtKLFIFUcvLsOPk9ww==}
@@ -5632,8 +5632,8 @@ packages:
   fast-levenshtein@3.0.0:
     resolution: {integrity: sha512-hKKNajm46uNmTlhHSyZkmToAc56uZJwYq7yrciZjqOxnlfQwERDQJmHPUp7m1m9wx8vgOe8IaCKZ5Kv2k1DdCQ==}
 
-  fast-uri@3.1.2:
-    resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
+  fast-uri@3.1.3:
+    resolution: {integrity: sha512-i70LwGWUduXqzicKXWshooq+sWL1K3WUU5rKZNG/0i3a1OSoX3HqhH5WbWwTmqWfor4urUakGPiRQcleRZTwOg==}
 
   fastest-levenshtein@1.0.16:
     resolution: {integrity: sha512-eRnCtTTtGZFpQCwhJiUOuxPQWRXVKYDn0b2PeHfXL6/Zi53SLAzAHfVhVWK2AryC/WH05kGfxhFIPvTF0SXQzg==}
@@ -10333,10 +10333,10 @@ snapshots:
 
   '@colors/colors@1.6.0': {}
 
-  '@contentstack/cli-auth@2.0.0-beta.13(@types/node@22.20.0)':
+  '@contentstack/cli-auth@2.0.0-beta.14(@types/node@22.20.0)':
     dependencies:
-      '@contentstack/cli-command': 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-command': 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@22.20.0)
       '@oclif/core': 4.11.11
       otplib: 12.0.1
     transitivePeerDependencies:
@@ -10354,9 +10354,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@2.0.0-beta.8(@types/node@14.18.63)':
+  '@contentstack/cli-command@2.0.0-beta.9(@types/node@14.18.63)':
     dependencies:
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@14.18.63)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@14.18.63)
       '@oclif/core': 4.11.11
       contentstack: 3.27.0
     transitivePeerDependencies:
@@ -10364,9 +10364,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@2.0.0-beta.8(@types/node@14.18.63)(debug@4.4.3)':
+  '@contentstack/cli-command@2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)':
     dependencies:
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core': 4.11.11
       contentstack: 3.27.0
     transitivePeerDependencies:
@@ -10374,9 +10374,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@2.0.0-beta.8(@types/node@18.19.130)':
+  '@contentstack/cli-command@2.0.0-beta.9(@types/node@18.19.130)':
     dependencies:
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@18.19.130)
       '@oclif/core': 4.11.11
       contentstack: 3.27.0
     transitivePeerDependencies:
@@ -10384,9 +10384,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@2.0.0-beta.8(@types/node@20.19.43)':
+  '@contentstack/cli-command@2.0.0-beta.9(@types/node@20.19.43)':
     dependencies:
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@20.19.43)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@20.19.43)
       '@oclif/core': 4.11.11
       contentstack: 3.27.0
     transitivePeerDependencies:
@@ -10394,9 +10394,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-command@2.0.0-beta.8(@types/node@22.20.0)':
+  '@contentstack/cli-command@2.0.0-beta.9(@types/node@22.20.0)':
     dependencies:
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@22.20.0)
       '@oclif/core': 4.11.11
       contentstack: 3.27.0
     transitivePeerDependencies:
@@ -10404,10 +10404,10 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-config@2.0.0-beta.11(@types/node@18.19.130)':
+  '@contentstack/cli-config@2.0.0-beta.12(@types/node@18.19.130)':
     dependencies:
-      '@contentstack/cli-command': 2.0.0-beta.8(@types/node@18.19.130)
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-command': 2.0.0-beta.9(@types/node@18.19.130)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@18.19.130)
       '@contentstack/utils': 1.9.1
       '@oclif/core': 4.11.11
     transitivePeerDependencies:
@@ -10415,10 +10415,10 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-config@2.0.0-beta.11(@types/node@22.20.0)':
+  '@contentstack/cli-config@2.0.0-beta.12(@types/node@22.20.0)':
     dependencies:
-      '@contentstack/cli-command': 2.0.0-beta.8(@types/node@22.20.0)
-      '@contentstack/cli-utilities': 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-command': 2.0.0-beta.9(@types/node@22.20.0)
+      '@contentstack/cli-utilities': 2.0.0-beta.10(@types/node@22.20.0)
       '@contentstack/utils': 1.9.1
       '@oclif/core': 4.11.11
     transitivePeerDependencies:
@@ -10519,7 +10519,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-utilities@2.0.0-beta.9(@types/node@14.18.63)':
+  '@contentstack/cli-utilities@2.0.0-beta.10(@types/node@14.18.63)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -10556,7 +10556,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-utilities@2.0.0-beta.9(@types/node@14.18.63)(debug@4.4.3)':
+  '@contentstack/cli-utilities@2.0.0-beta.10(@types/node@14.18.63)(debug@4.4.3)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -10593,7 +10593,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-utilities@2.0.0-beta.9(@types/node@18.19.130)':
+  '@contentstack/cli-utilities@2.0.0-beta.10(@types/node@18.19.130)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -10630,7 +10630,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-utilities@2.0.0-beta.9(@types/node@20.19.43)':
+  '@contentstack/cli-utilities@2.0.0-beta.10(@types/node@20.19.43)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -10667,7 +10667,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/cli-utilities@2.0.0-beta.9(@types/node@22.20.0)':
+  '@contentstack/cli-utilities@2.0.0-beta.10(@types/node@22.20.0)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -13582,7 +13582,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.2
+      fast-uri: 3.1.3
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -15678,7 +15678,7 @@ snapshots:
     dependencies:
       fastest-levenshtein: 1.0.16
 
-  fast-uri@3.1.2: {}
+  fast-uri@3.1.3: {}
 
   fastest-levenshtein@1.0.16: {}
 
@@ -17362,6 +17362,18 @@ snapshots:
       '@jest/types': 29.6.3
       import-local: 3.2.0
       jest-cli: 29.7.0(@types/node@18.19.130)(ts-node@8.10.2(typescript@5.9.3))
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - supports-color
+      - ts-node
+
+  jest@29.7.0(@types/node@22.20.0):
+    dependencies:
+      '@jest/core': 29.7.0(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
+      '@jest/types': 29.6.3
+      import-local: 3.2.0
+      jest-cli: 29.7.0(@types/node@22.20.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -19676,6 +19688,26 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       handlebars: 4.7.9
       jest: 29.7.0(@types/node@22.20.0)(ts-node@10.9.2(@types/node@22.20.0)(typescript@5.9.3))
+      json5: 2.2.3
+      lodash.memoize: 4.1.2
+      make-error: 1.3.6
+      semver: 7.8.5
+      type-fest: 4.41.0
+      typescript: 5.9.3
+      yargs-parser: 21.1.1
+    optionalDependencies:
+      '@babel/core': 7.29.7
+      '@jest/transform': 30.4.1
+      '@jest/types': 30.4.1
+      babel-jest: 30.4.1(@babel/core@7.29.7)
+      jest-util: 30.4.1
+
+  ts-jest@29.4.11(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@29.7.0(@types/node@22.20.0))(typescript@5.9.3):
+    dependencies:
+      bs-logger: 0.2.6
+      fast-json-stable-stringify: 2.1.0
+      handlebars: 4.7.9
+      jest: 29.7.0(@types/node@22.20.0)
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6
