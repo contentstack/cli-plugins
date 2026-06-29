@@ -2,7 +2,7 @@
 
 It is Contentstack’s CLI plugin to perform bulk publish/unpublish operations on entries and assets in Contentstack. Refer to the [Bulk Publish and Unpublish documentation](https://www.contentstack.com/docs/developers/cli/bulk-publish-and-unpublish) to learn more about its commands.
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-bulk-publish](#contentstackcli-cm-bulk-publish)
@@ -18,7 +18,7 @@ $ npm install -g @contentstack/cli-cm-bulk-publish
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-bulk-publish/1.12.0 darwin-arm64 node-v24.14.0
+@contentstack/cli-cm-bulk-publish/1.12.1 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
