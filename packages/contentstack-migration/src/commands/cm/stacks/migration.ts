@@ -43,8 +43,8 @@ export default class MigrationCommand extends Command {
   static examples: string[] = [
     '$ csdx cm:migration --file-path <migration/script/file/path> -k <api-key>',
     '$ csdx cm:migration --file-path <migration/script/file/path> -k <api-key> --branch <target branch name>',
-    '$ csdx cm:migration --config <key1>:<value1> <key2>:<value2> ... --file-path <migration/script/file/path>',
-    '$ csdx cm:migration --config-file <path/to/json/config/file> --file-path <migration/script/file/path>',
+    '$ csdx cm:migration --inline-config <key1>:<value1> <key2>:<value2> ... --file-path <migration/script/file/path>',
+    '$ csdx cm:migration --config <path/to/json/config/file> --file-path <migration/script/file/path>',
     '$ csdx cm:migration --multiple --file-path <migration/scripts/dir/path> ',
     '$ csdx cm:migration --alias <management-token-alias> --file-path <migration/script/file/path>',
   ];
@@ -67,10 +67,11 @@ export default class MigrationCommand extends Command {
     branch: flags.string({
       description: 'Use this flag to add the branch name where you want to perform the migration. (target branch name)',
     }),
-    'config-file': flags.string({
+    config: flags.string({
+      char: 'c',
       description: '[optional] Path of the JSON configuration file.',
     }),
-    config: flags.string({
+    'inline-config': flags.string({
       description:
         '[optional] Inline configuration, <key1>:<value1>. Passing an external configuration makes the script re-usable.',
       multiple: true,
@@ -113,7 +114,7 @@ export default class MigrationCommand extends Command {
   static aliases: string[] = ['cm:migration'];
 
   static usage: string =
-    'cm:stacks:migration [-k <value>] [-a <value>] [--file-path <value>] [--branch <value>] [--config-file <value>] [--config <value>] [--multiple]';
+    'cm:stacks:migration [-k <value>] [-a <value>] [--file-path <value>] [--branch <value>] [-c <value>] [--inline-config <value>] [--multiple]';
 
   async run(): Promise<void> {
     // TODO: filePath validation required.
@@ -124,7 +125,7 @@ export default class MigrationCommand extends Command {
     const authtoken = isAuthenticated();
     const apiKey = (migrationCommandFlags as any)['api-key'] || (migrationCommandFlags as any)['stack-api-key'];
     const alias = (migrationCommandFlags as any)['alias'] || (migrationCommandFlags as any)['management-token-alias'];
-    const config = (migrationCommandFlags as any)['config'];
+    const config = (migrationCommandFlags as any)['inline-config'];
 
     if (!authtoken && !alias) {
       this.log(
@@ -141,8 +142,8 @@ export default class MigrationCommand extends Command {
     // Reset map instance
     const mapInstance = getMapInstance();
     resetMapInstance(mapInstance);
-    if (migrationCommandFlags['config-file']) {
-      set('config-path', mapInstance, migrationCommandFlags['config-file']);
+    if (migrationCommandFlags['config']) {
+      set('config-path', mapInstance, migrationCommandFlags['config']);
     }
 
     if (Array.isArray(config) && config.length > 0) {
