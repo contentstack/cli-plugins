@@ -23,4 +23,6 @@ fileignoreconfig:
   checksum: 22708ea1e27a48a5741426a8e17e5d8b243864d877066861bc275d82393002eb
 - filename: packages/contentstack-asset-management/src/export/assets.ts
   checksum: b169481a31393a9036fbe4d41429bfee3d0f321629f01a72089469ddf5e8826d
+- filename: packages/contentstack-asset-management/src/export/assets.ts
+  checksum: 0a4e04bc91f65cb695a4ca0415dc042b64e6563f0b4a3b718cd9a0ac0d1d7fab
 version: '1.0'

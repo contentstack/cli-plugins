@@ -13,18 +13,9 @@ import { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } f
 import type { CustomPromiseHandler } from '../utils/cs-assets-api-adapter';
 import { PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 
-// `locale` is part of the storage key so multi-locale variants of the same uid are kept
-// as distinct records (each locale has its own binary) instead of collapsing to one.
-const ASSET_META_KEYS = ['uid', 'url', 'filename', 'file_name', 'parent_uid', 'locale'];
+const ASSET_META_KEYS = ['uid', 'url', 'filename', 'file_name', 'parent_uid'];
 
-type AssetRecord = {
-  uid?: string;
-  _uid?: string;
-  url?: string;
-  filename?: string;
-  file_name?: string;
-  locale?: string;
-};
+type AssetRecord = { uid?: string; _uid?: string; url?: string; filename?: string; file_name?: string };
 
 /** Per-space export counts surfaced to the summary (assets = downloaded binaries; folders = entities). */
 export type SpaceExportCounts = { assets: number; folders: number };
@@ -56,9 +47,7 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     const onPage = (items: unknown[]) => {
       if (items.length === 0) return;
       if (!fsWriter) fsWriter = this.createChunkedJsonWriter(assetsDir, 'assets.json', 'assets', ASSET_META_KEYS);
-      // Composite key (uid + locale) keeps each localized variant — a plain uid key would let the
-      // last locale overwrite the rest, silently dropping their binaries.
-      fsWriter.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true, keyName: ['uid', 'locale'] });
+      fsWriter.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
       totalStreamed += items.length;
       for (const asset of items as AssetRecord[]) if (this.isDownloadable(asset)) downloadableCount += 1;
     };
@@ -138,7 +127,7 @@ export default class ExportAssets extends CSAssetsExportAdapter {
             const label = rec.file_name ?? rec.filename ?? rec.uid ?? 'asset';
             this.tick(false, `asset: ${label}`, 'Asset chunk unreadable');
             log.error(
-              `Asset ${rec.uid ?? '<unknown>'} (locale ${rec.locale ?? 'n/a'}) not downloaded — chunk unreadable for space ${spaceUid}`,
+              `Asset ${rec.uid ?? '<unknown>'} not downloaded — chunk unreadable for space ${spaceUid}`,
               this.exportContext.context,
             );
           }
@@ -179,8 +168,7 @@ export default class ExportAssets extends CSAssetsExportAdapter {
             const body = response.body;
             if (!body) throw new Error('No response body');
             const nodeStream = Readable.fromWeb(body as Parameters<typeof Readable.fromWeb>[0]);
-            // Locale-scoped path keeps each localized variant's binary distinct under the same uid.
-            const assetFolderPath = asset.locale ? pResolve(filesDir, uid, asset.locale) : pResolve(filesDir, uid);
+            const assetFolderPath = pResolve(filesDir, uid);
             await mkdir(assetFolderPath, { recursive: true });
             const filePath = pResolve(assetFolderPath, filename);
             await writeStreamToFile(nodeStream, filePath);

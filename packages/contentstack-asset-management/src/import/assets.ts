@@ -24,7 +24,6 @@ type AssetRecord = {
   parent_uid?: string;
   title?: string;
   description?: string;
-  locale?: string;
 };
 
 type UploadJob = {
@@ -195,10 +194,6 @@ export default class ImportAssets extends CSAssetsImportAdapter {
     let uploadFail = 0;
     let missingFiles = 0;
 
-    // Master uid (old → new). The first locale seen for a uid creates the asset; later locales of the
-    // same uid are localized onto that new uid so multi-locale assets keep one asset with per-locale files.
-    const uidToNewUid = new Map<string, string>();
-
     await forEachChunkRecordsFromFs<AssetRecord>(
       assetFs,
       {
@@ -219,10 +214,7 @@ export default class ImportAssets extends CSAssetsImportAdapter {
         for (const asset of assetChunk) {
           const oldUid = asset.uid;
           const filename = asset.filename ?? asset.file_name ?? 'asset';
-          // Locale-scoped path mirrors the export layout (files/<uid>/<locale>/<filename>).
-          const filePath = asset.locale
-            ? pResolve(assetsDir, 'files', oldUid, asset.locale, filename)
-            : pResolve(assetsDir, 'files', oldUid, filename);
+          const filePath = pResolve(assetsDir, 'files', oldUid, filename);
 
           if (!existsSync(filePath)) {
             missingFiles += 1;
@@ -243,62 +235,22 @@ export default class ImportAssets extends CSAssetsImportAdapter {
           this.importContext.context,
         );
 
-        // Group by old uid so a uid's locales upload as master-then-localize (sequential within a
-        // group); different uids still upload concurrently.
-        const jobsByUid = new Map<string, UploadJob[]>();
-        for (const job of uploadJobs) {
-          const group = jobsByUid.get(job.oldUid);
-          if (group) group.push(job);
-          else jobsByUid.set(job.oldUid, [job]);
-        }
-
-        await runInBatches([...jobsByUid.values()], this.uploadAssetsBatchConcurrency, async (group) => {
-          // If the master row's create fails, its remaining locales can't be localized — skip them.
-          let masterFailed = false;
-          for (const { asset, filePath, mappedParentUid, oldUid } of group) {
+        await runInBatches(
+          uploadJobs,
+          this.uploadAssetsBatchConcurrency,
+          async ({ asset, filePath, mappedParentUid, oldUid }) => {
             const filename = asset.filename ?? asset.file_name ?? 'asset';
-            const masterNewUid = uidToNewUid.get(oldUid);
-            // Master (first row for this uid) failed earlier → can't localize onto it; skip its locales.
-            if (!masterNewUid && masterFailed) {
-              uploadFail += 1;
-              this.tick(false, `asset: ${filename}`, 'Skipped: master asset upload failed');
-              log.error(
-                `Skipped locale ${asset.locale ?? 'n/a'} of asset ${oldUid} — master upload failed`,
-                this.importContext.context,
-              );
-              continue;
-            }
             try {
-              if (!masterNewUid) {
-                // First locale for this uid → create the asset.
-                const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
-                  title: asset.title ?? filename,
-                  description: asset.description,
-                  parent_uid: mappedParentUid,
-                });
-                uidToNewUid.set(oldUid, created.uid);
-                uidMap[oldUid] = created.uid;
-                if (asset.url && created.url) urlMap[asset.url] = created.url;
-                this.tick(true, `asset: ${filename}`, null);
-                uploadOk += 1;
-                log.debug(`Uploaded asset ${oldUid} → ${created.uid} (${filePath})`, this.importContext.context);
-              } else {
-                // Additional locale → localize onto the asset created from the master row.
-                const { asset: localized } = await this.localizeAsset(
-                  newSpaceUid,
-                  masterNewUid,
-                  asset.locale as string,
-                  filePath,
-                  { title: asset.title ?? filename, description: asset.description, parent_uid: mappedParentUid },
-                );
-                if (asset.url && localized.url) urlMap[asset.url] = localized.url;
-                this.tick(true, `asset: ${filename} (${asset.locale})`, null);
-                uploadOk += 1;
-                log.debug(
-                  `Localized asset ${oldUid} → ${masterNewUid} for locale ${asset.locale} (${filePath})`,
-                  this.importContext.context,
-                );
-              }
+              const { asset: created } = await this.uploadAsset(newSpaceUid, filePath, {
+                title: asset.title ?? filename,
+                description: asset.description,
+                parent_uid: mappedParentUid,
+              });
+              uidMap[oldUid] = created.uid;
+              if (asset.url && created.url) urlMap[asset.url] = created.url;
+              this.tick(true, `asset: ${filename}`, null);
+              uploadOk += 1;
+              log.debug(`Uploaded asset ${oldUid} → ${created.uid} (${filePath})`, this.importContext.context);
             } catch (e) {
               uploadFail += 1;
               this.tick(
@@ -307,19 +259,12 @@ export default class ImportAssets extends CSAssetsImportAdapter {
                 (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].FAILED,
               );
               log.error(
-                `${
-                  masterNewUid
-                    ? `Failed to localize asset ${oldUid} for locale ${asset.locale}`
-                    : `Failed to upload asset ${oldUid}`
-                }: ${(e as Error)?.message ?? String(e)}`,
+                `Failed to upload asset ${oldUid}: ${(e as Error)?.message ?? String(e)}`,
                 this.importContext.context,
               );
-              // Master create failed → skip this uid's remaining locale rows instead of re-attempting
-              // them as new masters (which would duplicate the asset with the wrong default locale).
-              if (!masterNewUid) masterFailed = true;
             }
-          }
-        });
+          },
+        );
       },
     );
 
