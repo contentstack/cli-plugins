@@ -15,6 +15,7 @@ const { generateBulkPublishStatusUrl } = require('../util/generate-bulk-publish-
 const { resolveInQueueAssets, fetchScanStatusBatch, ASSET_SCAN_STATUS } = require('../util/asset-scan');
 
 const queue = getQueue();
+let config;
 let logFileName;
 let bulkPublishSet = [];
 let pendingAssetsForRetry = [];
