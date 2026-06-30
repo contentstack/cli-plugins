@@ -61,7 +61,7 @@ function displayEntriesDetails(sanitizedData, action, mapping = []) {
 function displayAssetsDetails(sanitizedData, action, mapping) {
   if (action === 'bulk_publish') {
     sanitizedData.forEach((asset) => {
-      asset?.publish_details.forEach((pd) => {
+      asset?.publish_details?.forEach((pd) => {
         if (Object.keys(mapping).includes(pd.environment)) {
         console.log(
           chalk.green(
