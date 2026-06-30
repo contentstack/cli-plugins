@@ -5,7 +5,7 @@ The Contentstack CLI’s “Migration” plugin allows developers to automate th
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@contentstack/cli-migration.svg)](https://npmjs.org/package/@contentstack/cli-migration)
 [![Downloads/week](https://img.shields.io/npm/dw/@contentstack/cli-migration.svg)](https://npmjs.org/package/@contentstack/cli-migration)
-[![License](https://img.shields.io/npm/l/@contentstack/cli-migration.svg)](https://github.com/***REMOVED***/cli-migration/blob/master/package.json)
+[![License](https://img.shields.io/npm/l/@contentstack/cli-migration.svg)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-migration](#contentstackcli-migration)
@@ -21,7 +21,7 @@ $ npm install -g @contentstack/cli-migration
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-migration/1.12.3 darwin-arm64 node-v24.14.0
+@contentstack/cli-migration/1.12.4 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -123,9 +123,3 @@ EXAMPLES
 
 _See code: [src/commands/cm/stacks/migration.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-migration/src/commands/cm/stacks/migration.ts)_
 <!-- commandsstop -->
-
-### Points to remember
-
-- Currently, you can pass a custom schema to the createField method to migrate group fields.
-- You can migrate global fields by creating an SDK instance and adding it to content types using the createField method.
-- Currently, you can migrate entries by creating an SDK instance to create/update/delete entries for your content type.
