@@ -23,12 +23,12 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
   static description = "Generate TypeScript typings from a Stack";
 
   static examples = [
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts"',
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" -p "I"',
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" --no-doc',
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" --include-referenced-entry',
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" --api-type graphql',
-    '$ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" --api-type graphql --namespace "GraphQL" ',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts"',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --prefix "I"',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --no-doc',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --include-referenced-entry',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql',
+    '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql --namespace "GraphQL" ',
   ];
 
   // Check if a region is a default Contentstack region
@@ -55,7 +55,6 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
     }),
 
     output: flags.string({
-      char: "o",
       description: "full path to output",
       hidden: false,
       multiple: false,
@@ -63,7 +62,6 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
     }),
 
     prefix: flags.string({
-      char: "p",
       description: 'interface prefix, e.g. "I"',
       hidden: false,
       multiple: false,
@@ -72,7 +70,6 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
     }),
 
     doc: flags.boolean({
-      char: "d",
       description: "include documentation comments",
       default: true,
       allowNo: true,
