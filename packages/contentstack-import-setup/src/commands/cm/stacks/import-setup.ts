@@ -13,6 +13,8 @@ import {
   handleAndLogError,
   configHandler,
   createLogContext,
+  cliux,
+  loadChalk
 } from '@contentstack/cli-utilities';
 
 import { ImportConfig, Context } from '../../../types';
@@ -64,6 +66,7 @@ export default class ImportSetupCommand extends Command {
   static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]';
 
   async run(): Promise<void> {
+    await loadChalk();
     try {
       const { flags } = await this.parse(ImportSetupCommand);
       let importSetupConfig = await setupImportConfig(flags);
@@ -106,6 +109,7 @@ export default class ImportSetupCommand extends Command {
     } catch (error) {
       CLIProgressManager.printGlobalSummary();
       handleAndLogError(error);
+      cliux.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
