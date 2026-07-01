@@ -55,10 +55,6 @@ jobs:
         working-directory: ./packages/contentstack-bootstrap
         run: npm run test
 
-      - name: Run tests for Contentstack Import Setup
-        working-directory: ./packages/contentstack-import-setup
-        run: npm run test:unit
-
       - name: Run tests for Contentstack Branches
         working-directory: ./packages/contentstack-branches
         run: npm run test:unit
