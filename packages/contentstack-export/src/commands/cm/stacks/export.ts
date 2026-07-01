@@ -22,6 +22,8 @@ import { Context, ExportConfig } from '../../../types';
 import { setupExportConfig } from '../../../utils';
 
 export default class ExportCommand extends Command {
+  static planProtectedFeatures = ['assetsScan'];
+
   static description: string = messageHandler.parse('Export content from a stack');
 
   static examples: string[] = [
@@ -92,7 +94,8 @@ export default class ExportCommand extends Command {
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);
-      const exportConfig = await setupExportConfig(flags);
+      const exportConfig = await setupExportConfig(flags, this.context);
+
       // Prepare the context object
       const context = this.createExportContext(exportConfig.apiKey, exportConfig.authenticationMethod);
       exportConfig.context = { ...context };
