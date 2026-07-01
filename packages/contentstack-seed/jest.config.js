@@ -16,4 +16,5 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testPathIgnorePatterns: ['/node_modules/', '/old_tests/'],
+  transformIgnorePatterns: ['/node_modules/(?!(uuid)/)'],
 };
