@@ -1,7 +1,7 @@
 import merge from 'merge';
 import * as path from 'path';
 import { omit, filter, includes, isArray } from 'lodash';
-import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import { configHandler, isAuthenticated, cliux, sanitizePath, log, isFeatureEnabled, FeatureCtx } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, readFileSync } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
@@ -9,7 +9,7 @@ import login from './login-handler';
 import { ImportConfig } from '../types';
 import { existsSync } from 'fs';
 
-const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
+const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'import');
@@ -165,6 +165,25 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Import configuration setup completed.', { ...config });
+
+  // Deferred plan check — credentials now available after setupImportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) context.planStatus[featureUid] = status;
+        log.debug(`[import] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[import] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
+    }
+  }
 
   return config;
 };
