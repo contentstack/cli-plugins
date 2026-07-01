@@ -5,6 +5,10 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.test.json',
     }],
+    '(node_modules/.pnpm/uuid@[^/]+/node_modules/uuid|node_modules/uuid)/.+\\.js$': [
+      'babel-jest',
+      { presets: [['@babel/preset-env', { modules: 'commonjs' }]] },
+    ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testEnvironment: 'node',
@@ -16,5 +20,5 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testPathIgnorePatterns: ['/node_modules/', '/old_tests/'],
-  transformIgnorePatterns: ['/node_modules/(?!(uuid)/)'],
+  transformIgnorePatterns: ['/node_modules/(?!(.pnpm/uuid@[^/]+/node_modules/)?uuid/)'],
 };
