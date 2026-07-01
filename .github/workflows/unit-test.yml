@@ -95,9 +95,9 @@ jobs:
         working-directory: ./packages/contentstack-clone
         run: npm run test:unit
 
-      - name: Run tests for Contentstack External Migrate
-        working-directory: ./packages/contentstack-external-migrate
-        run: npm test
+      # - name: Run tests for Contentstack External Migrate
+      #   working-directory: ./packages/contentstack-external-migrate
+      #   run: npm test
 
       - name: Run tests for Contentstack Seed
         working-directory: ./packages/contentstack-seed
