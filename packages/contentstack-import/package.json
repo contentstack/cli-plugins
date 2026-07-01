@@ -88,7 +88,9 @@
   "csdxConfig": {
     "shortCommandName": {
       "cm:stacks:import": "IMPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
+
   },
   "repository": "https://github.com/contentstack/cli"
 }

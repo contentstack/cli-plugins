@@ -168,12 +168,19 @@ const setupConfig = async (exportCmdFlags: any, context: any): Promise<ExportCon
     for (const featureUid of deferredFeatures) {
       try {
         const status = await isFeatureEnabled(featureUid, planCtx);
-        if (context) context.planStatus[featureUid] = status;
+        if (context) {
+          context.planStatus[featureUid] = status;
+        }
+
         log.debug(`[export] Deferred plan status fetched for "${featureUid}".`);
       } catch (error) {
         log.warn(`[export] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
       }
     }
+  }
+
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
   }
 
   return config;

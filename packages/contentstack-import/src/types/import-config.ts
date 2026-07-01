@@ -61,6 +61,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   context: Context;
   csAssetsUrl?: string;
   csAssetsEnabled?: boolean;
+  planStatus: any;
 }
 
 type branch = {
