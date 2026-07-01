@@ -1,7 +1,15 @@
 import merge from 'merge';
 import * as path from 'path';
 import { omit, filter, includes, isArray } from 'lodash';
-import { configHandler, isAuthenticated, cliux, sanitizePath, log, isFeatureEnabled, FeatureCtx } from '@contentstack/cli-utilities';
+import {
+  configHandler,
+  isAuthenticated,
+  cliux,
+  sanitizePath,
+  log,
+  isFeatureEnabled,
+  FeatureCtx,
+} from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, readFileSync } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
@@ -182,6 +190,14 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
       } catch (error) {
         log.warn(`[import] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
       }
+    }
+  }
+
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
+    if (config.planStatus['assetsScan']?.is_part_of_plan) {
+      config.assetScanningEnabled = true;
+      config.skipAssetsPublish = true;
     }
   }
 

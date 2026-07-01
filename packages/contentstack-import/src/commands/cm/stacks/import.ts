@@ -20,8 +20,6 @@ import { ModuleImporter } from '../../../import';
 import { setupImportConfig } from '../../../utils';
 
 export default class ImportCommand extends Command {
-  static planProtectedFeatures = ['assetsScan'];
-
   static description = messageHandler.parse('Import content from a stack');
 
   static examples: string[] = [
@@ -164,7 +162,9 @@ export default class ImportCommand extends Command {
       if (importConfig.assetScanningEnabled) {
         cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
         cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
-        cliux.print(`  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`, { color: 'cyan' });
+        cliux.print(`  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`, {
+          color: 'cyan',
+        });
       }
       this.logSuccessAndBackupMessages(backupDir, importConfig);
       // Clear progress module setting now that import is complete
