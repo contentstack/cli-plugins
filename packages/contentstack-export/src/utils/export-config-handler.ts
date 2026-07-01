@@ -1,6 +1,15 @@
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import {
+  configHandler,
+  isAuthenticated,
+  cliux,
+  sanitizePath,
+  log,
+  assertFeatureEnabled,
+  FeatureCtx,
+  isFeatureEnabled,
+} from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, isDirectoryNonEmpty } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
@@ -8,7 +17,7 @@ import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
+const setupConfig = async (exportCmdFlags: any, context: any): Promise<ExportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'export');
@@ -29,11 +38,8 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
     if (legacyCsAssetsConfig) {
       externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
       delete externalConfig.modules['asset-management'];
-      log.warn(
-        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
-      );
+      log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
     }
-
 
     config = merge.recursive(config, externalConfig);
   }
@@ -52,10 +58,9 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   config.exportDir = path.resolve(config.exportDir);
 
   if (isDirectoryNonEmpty(config.exportDir)) {
-    cliux.print(
-      '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
-      { color: 'yellow' },
-    );
+    cliux.print('\nThe export directory is not empty. Existing files in this folder may be overwritten.', {
+      color: 'yellow',
+    });
   }
 
   const managementTokenAlias = exportCmdFlags['management-token-alias'] || exportCmdFlags['alias'];
@@ -151,6 +156,25 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Export configuration setup completed.', { ...config });
+
+  // Deferred plan check — credentials now available after setupExportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) context.planStatus[featureUid] = status;
+        log.debug(`[export] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[export] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
+    }
+  }
 
   return config;
 };
