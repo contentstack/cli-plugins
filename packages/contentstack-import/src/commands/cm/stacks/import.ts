@@ -20,6 +20,8 @@ import { ModuleImporter } from '../../../import';
 import { setupImportConfig } from '../../../utils';
 
 export default class ImportCommand extends Command {
+  static planProtectedFeatures = ['assetsScan'];
+
   static description = messageHandler.parse('Import content from a stack');
 
   static examples: string[] = [
@@ -124,7 +126,7 @@ export default class ImportCommand extends Command {
     let importConfig: ImportConfig;
     try {
       const { flags } = await this.parse(ImportCommand);
-      importConfig = await setupImportConfig(flags);
+      importConfig = await setupImportConfig(flags, this.context);
       // Prepare the context object
       createLogContext(
         this.context?.info?.command || 'cm:stacks:import',

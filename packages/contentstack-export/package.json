@@ -6,7 +6,7 @@
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.8",
-    "@contentstack/cli-utilities": "~2.0.0-beta.9",
+    "@contentstack/cli-utilities": "~2.0.0-beta.10",
     "@contentstack/cli-variants": "~2.0.0-beta.16",
     "@contentstack/cli-asset-management": "~1.0.0-beta.4",
     "@oclif/core": "^4.11.4",
@@ -64,7 +64,7 @@
     "test:unit:report": "nyc --reporter=text --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/lib",
