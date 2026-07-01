@@ -46,7 +46,7 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
   }
 
   static flags: FlagInput = {
-    "token-alias": flags.string({
+    alias: flags.string({
       char: "a",
       description: "delivery token alias",
       hidden: false,
@@ -115,7 +115,7 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
     try {
       const { flags } = await this.parse(TypeScriptCodeGeneratorCommand);
 
-      const token = this.getToken(flags["token-alias"]);
+      const token = this.getToken(flags["alias"]);
       const prefix = flags.prefix;
       const includeDocumentation = flags.doc;
       const filePath = flags.output;
