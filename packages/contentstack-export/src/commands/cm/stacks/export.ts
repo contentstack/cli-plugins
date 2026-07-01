@@ -93,8 +93,6 @@ export default class ExportCommand extends Command {
     await loadChalk();
     let exportDir: string = pathValidator('logs');
     try {
-      console.log('context', this.context);
-
       const { flags } = await this.parse(ExportCommand);
       const exportConfig = await setupExportConfig(flags, this.context);
 
