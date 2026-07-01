@@ -32,7 +32,6 @@ export default class MigrateConvert extends Command {
       description: 'Destination master locale code',
     }),
     affix: flags.string({
-      char: 'a',
       description: 'Content-type UID prefix',
       default: '',
     }),
