@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { stub, restore, SinonStub } from 'sinon';
+import { stub, restore, SinonStub, createSandbox } from 'sinon';
 import * as utilities from '@contentstack/cli-utilities';
 import * as cliAm from '@contentstack/cli-asset-management';
 import setupConfig from '../../src/utils/import-config-handler';
@@ -153,11 +153,13 @@ describe('Import Config Handler', () => {
   });
 
   it('should merge Asset Management export flags from detectAssetManagementExportFromContentDir into config', async () => {
-    const detectStub = stub(cliAm, 'detectAssetManagementExportFromContentDir').returns({
+    const sandbox = createSandbox();
+    const detectFake = sandbox.fake.returns({
       assetManagementEnabled: true,
       source_stack: 'branch-source-key',
       assetManagementUrl: 'https://am.example.com',
     });
+    sandbox.replaceGetter(cliAm, 'detectAssetManagementExportFromContentDir', () => detectFake);
 
     try {
       const config = await setupConfig({
@@ -166,12 +168,12 @@ describe('Import Config Handler', () => {
         module: ['assets'],
       });
 
-      expect(detectStub.calledOnce).to.be.true;
-      expect(config.assetManagementEnabled).to.equal(true);
-      expect(config.assetManagementUrl).to.equal('https://am.example.com');
+      expect(detectFake.calledOnce).to.be.true;
+      expect(config.csAssetsEnabled).to.equal(true);
+      expect(config.csAssetsUrl).to.equal('https://am.example.com');
       expect(config.source_stack).to.equal('branch-source-key');
     } finally {
-      detectStub.restore();
+      sandbox.restore();
     }
   });
 });
