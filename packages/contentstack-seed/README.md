@@ -1,12 +1,26 @@
+# @contentstack/cli-cm-seed
+
 ## Description
-The “seed” command in Contentstack CLI allows users to import content to your stack, from Github repositories. It's an effective command that can help you to migrate content to your stack with minimal steps.
+The "seed" command in Contentstack CLI allows users to import content to your stack, from Github repositories. It's an effective command that can help you to migrate content to your stack with minimal steps.
 
 To import content to your stack, you can choose from the following two sources:
 
-**Contentstack’s organization**: In this organization, we have provided sample content, which you can import directly to your stack using the seed command.
+**Contentstack's organization**: In this organization, we have provided sample content, which you can import directly to your stack using the seed command.
 
-**Github’s repository**: You can import content available on Github’s repository belonging to an organization or an individual.
+**Github's repository**: You can import content available on Github's repository belonging to an organization or an individual.
 
+<!-- usage -->
+```sh-session
+$ npm install -g @contentstack/cli-cm-seed
+$ csdx COMMAND
+running command...
+$ csdx (--version)
+@contentstack/cli-cm-seed/1.15.7 darwin-arm64 node-v22.21.1
+$ csdx --help [COMMAND]
+USAGE
+  $ csdx COMMAND
+...
+```
 <!-- usagestop -->
 ## Commands
 <!-- commands -->
@@ -103,7 +117,7 @@ This stack might be used in conjunction with a sample web site or mobile app you
 
 Now, run `csdx cm:export` against it. The following documentation explains the [Export Plugin](https://www.contentstack.com/docs/developers/cli/export-content-using-cli/).
 
-In most cases, running `csdx cm:export -A` or `csdx cm:export -a "management token"` should work for you.
+In most cases, running `csdx cm:export -a "management token alias"` or `csdx cm:export -a "management token"` should work for you.
 
 The `csdx cm:seed` plugin uses the same libraries as `csdx cm:import`.
 
@@ -114,7 +128,7 @@ Once the Stack is exported:
 * Create a GitHub repository.
     * By convention, your repository name should be prefixed with `stack-`. For example: `stack-your-starter-app`.
       Doing so will allow the stack names to be found by the interactive prompt when running `csdx cm:seed -r "account"`.
-      This step is optional. You can fully qualify the repository name if required: `csdx cm:seed -r "account/repo`.
+      This step is optional. You can fully qualify the repository name if required: `csdx cm:seed -r "account/repo"`.
 * Create a folder named `stack` within the newly created GitHub repository
 * Take the content from **Step 1** and commit it to the `stack` folder
 * Create a [Release](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/managing-releases-in-a-repository)
