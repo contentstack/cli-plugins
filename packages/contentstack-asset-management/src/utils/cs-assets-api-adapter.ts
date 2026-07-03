@@ -419,7 +419,12 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     pageSize = FALLBACK_AM_API_PAGE_SIZE,
     fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY,
   ): Promise<number> {
-    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    // include_publish_details=true so each asset carries its `publish_details` array (env/api_key/
+    // locale) — persisted in the chunk files and consumed by the import publish step.
+    const baseParams: Record<string, unknown> = {
+      include_publish_details: 'true',
+      ...(workspaceUid ? { workspace: workspaceUid } : {}),
+    };
     return this.paginate(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
@@ -488,7 +493,10 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
   }
 
   async getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {
-    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    const baseParams: Record<string, unknown> = {
+      include_publish_details: 'true',
+      ...(workspaceUid ? { workspace: workspaceUid } : {}),
+    };
     const items = await this.fetchAllPages(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
