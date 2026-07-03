@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/apps-cli",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "App ClI",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-apps-cli",
