@@ -53,7 +53,7 @@ export default class ImportCommand extends Command {
     module: flags.string({
       required: false,
       description:
-        '[optional] Specify the module to import into the target stack. If not specified, the import command will import all the modules into the stack. The available modules are stack, assets, locales, environments, extensions, webhooks, global-fields, entries, content-types, custom-roles, workflows, labels, marketplace-apps, taxonomies, personalize, and composable-studio.',
+        '[optional] Specify the module to import into the target stack. If not specified, the import command will import all the modules into the stack. The available modules are stack, assets, locales, environments, extensions, webhooks, global-fields, entries, content-types, custom-roles, workflows, publishing-rules, labels, marketplace-apps, taxonomies, personalize, variant-entries, and composable-studio.',
       options: [
         'stack',
         'assets',
@@ -66,10 +66,12 @@ export default class ImportCommand extends Command {
         'content-types',
         'custom-roles',
         'workflows',
+        'publishing-rules',
         'labels',
         'marketplace-apps',
         'taxonomies',
         'personalize',
+        'variant-entries',
         'composable-studio',
       ],
     }),
