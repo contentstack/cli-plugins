@@ -1,7 +1,7 @@
 {
   "name": "@contentstack/cli-cm-regex-validate",
   "description": "Validate Fields with Regex Property of Content Type and Global Field in a Stack",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
@@ -85,3 +85,4 @@
     }
   }
 }
+
