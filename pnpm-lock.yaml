@@ -7,8 +7,10 @@ settings:
 overrides:
   tmp: 0.2.7
   follow-redirects: 1.16.0
-  uuid: 14.0.0
+  uuid: 14.0.1
   lodash: 4.18.1
+  brace-expansion: 5.0.7
+  js-yaml: 4.3.0
 
 importers:
 
@@ -258,7 +260,7 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~2.0.0-beta.21
+        specifier: ~2.0.0-beta.22
         version: link:../contentstack-seed
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.9
@@ -398,8 +400,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       uuid:
-        specifier: 14.0.0
-        version: 14.0.0
+        specifier: 14.0.1
+        version: 14.0.1
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.1
@@ -635,10 +637,10 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.21
+        specifier: ~2.0.0-beta.22
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.21
+        specifier: ~2.0.0-beta.22
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.9
@@ -996,7 +998,7 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@contentstack/marketplace-sdk':
-        specifier: ~1.5.3
+        specifier: ~1.5.2
         version: 1.5.4(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.8.0
@@ -1020,8 +1022,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       uuid:
-        specifier: 14.0.0
-        version: 14.0.0
+        specifier: 14.0.1
+        version: 14.0.1
     devDependencies:
       '@oclif/test':
         specifier: ^3.0.0
@@ -1415,7 +1417,7 @@ importers:
         specifier: ~1.0.0-beta.5
         version: link:../contentstack-asset-management
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.21
+        specifier: ~2.0.0-beta.22
         version: link:../contentstack-export
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.9
@@ -1527,7 +1529,7 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.21
+        specifier: ~2.0.0-beta.22
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.9
@@ -4172,9 +4174,6 @@ packages:
   arg@4.1.3:
     resolution: {integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==}
 
-  argparse@1.0.10:
-    resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
-
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
@@ -4356,9 +4355,6 @@ packages:
     peerDependencies:
       '@babel/core': ^7.11.0 || ^8.0.0-beta.1
 
-  balanced-match@1.0.2:
-    resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
-
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
@@ -4396,12 +4392,6 @@ packages:
 
   bowser@2.14.1:
     resolution: {integrity: sha512-tzPjzCxygAKWFOJP011oxFHs57HzIhOEracIgAePE4pqB3LikALKnSzUyU4MGs9/iCEUuHlAJTjTc5M+u7YEGg==}
-
-  brace-expansion@1.1.15:
-    resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
-
-  brace-expansion@2.1.1:
-    resolution: {integrity: sha512-WR1cURNjuvBLMZBMbqM0UoE+WAfdUcEV1ccD8PVBVOI+Z3ND4+SZbN8RsfT2bMuG1qwz5RFvPukSZm5fF2D5eA==}
 
   brace-expansion@5.0.7:
     resolution: {integrity: sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA==}
@@ -4732,9 +4722,6 @@ packages:
 
   compare-func@2.0.0:
     resolution: {integrity: sha512-zHig5N+tPWARooBnb0Zx1MFcdfpyJrfTJ3Y5L+IFvUm8rM74hHz66z0gw0x4tijh5CorKkKUCnW82R2vmpeCRA==}
-
-  concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   concat-stream@2.0.0:
     resolution: {integrity: sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==}
@@ -6683,10 +6670,6 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@3.15.0:
-    resolution: {integrity: sha512-ttBQIIQPDeLjpPOohtUdXuXUVoA2uIB6fEH9HyJ7234s5mBJ5wTx20njxplLZQgLaOfpmPQA7X2t5AX6tIPbog==}
-    hasBin: true
-
   js-yaml@4.3.0:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
@@ -8334,9 +8317,6 @@ packages:
   speedometer@1.0.0:
     resolution: {integrity: sha512-lgxErLl/7A5+vgIIXsh9MbeukOaCb2axgQ+bKCdIE+ibNT4XNYGNCR1qFEGq6F+YDASXK3Fh/c5FgtZchFolxw==}
 
-  sprintf-js@1.0.3:
-    resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
-
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
 
@@ -8911,8 +8891,8 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  uuid@14.0.0:
-    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -10402,7 +10382,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10439,7 +10419,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10476,7 +10456,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10513,7 +10493,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10550,7 +10530,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10587,7 +10567,7 @@ snapshots:
       traverse: 0.6.11
       tty-table: 4.2.3
       unique-string: 2.0.0
-      uuid: 14.0.0
+      uuid: 14.0.1
       winston: 3.19.0
       xdg-basedir: 4.0.0
     transitivePeerDependencies:
@@ -10629,7 +10609,7 @@ snapshots:
       lodash.isundefined: 3.0.1
       lodash.kebabcase: 4.1.1
       slate: 0.103.0
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   '@contentstack/management@1.30.4(debug@4.4.3)':
     dependencies:
@@ -11468,7 +11448,7 @@ snapshots:
       camelcase: 5.3.1
       find-up: 4.1.0
       get-package-type: 0.1.0
-      js-yaml: 3.15.0
+      js-yaml: 4.3.0
       resolve-from: 5.0.0
 
   '@istanbuljs/schema@0.1.6': {}
@@ -11929,7 +11909,7 @@ snapshots:
       hyperlinker: 1.0.0
       indent-string: 4.0.0
       is-wsl: 2.2.0
-      js-yaml: 3.15.0
+      js-yaml: 4.3.0
       minimatch: 9.0.9
       natural-orderby: 2.0.3
       object-treeify: 1.1.33
@@ -13525,10 +13505,6 @@ snapshots:
 
   arg@4.1.3: {}
 
-  argparse@1.0.10:
-    dependencies:
-      sprintf-js: 1.0.3
-
   argparse@2.0.1: {}
 
   array-back@1.0.4:
@@ -13781,8 +13757,6 @@ snapshots:
       babel-plugin-jest-hoist: 30.4.0
       babel-preset-current-node-syntax: 1.2.0(@babel/core@7.29.7)
 
-  balanced-match@1.0.2: {}
-
   balanced-match@4.0.4: {}
 
   base64-js@1.5.1: {}
@@ -13832,15 +13806,6 @@ snapshots:
       - supports-color
 
   bowser@2.14.1: {}
-
-  brace-expansion@1.1.15:
-    dependencies:
-      balanced-match: 1.0.2
-      concat-map: 0.0.1
-
-  brace-expansion@2.1.1:
-    dependencies:
-      balanced-match: 1.0.2
 
   brace-expansion@5.0.7:
     dependencies:
@@ -14211,8 +14176,6 @@ snapshots:
     dependencies:
       array-ify: 1.0.0
       dot-prop: 5.3.0
-
-  concat-map@0.0.1: {}
 
   concat-stream@2.0.0:
     dependencies:
@@ -16434,7 +16397,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       p-map: 3.0.0
       rimraf: 3.0.2
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   istanbul-lib-processinfo@3.0.1:
     dependencies:
@@ -17271,11 +17234,6 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@3.15.0:
-    dependencies:
-      argparse: 1.0.10
-      esprima: 4.0.1
-
   js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
@@ -17751,19 +17709,19 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.15
+      brace-expansion: 5.0.7
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.1.1
+      brace-expansion: 5.0.7
 
   minimatch@9.0.3:
     dependencies:
-      brace-expansion: 2.1.1
+      brace-expansion: 5.0.7
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.1.1
+      brace-expansion: 5.0.7
 
   minimist@1.2.8: {}
 
@@ -19187,8 +19145,6 @@ snapshots:
 
   speedometer@1.0.0: {}
 
-  sprintf-js@1.0.3: {}
-
   stable-hash@0.0.5: {}
 
   stack-trace@0.0.10: {}
@@ -19999,7 +19955,7 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
-  uuid@14.0.0: {}
+  uuid@14.0.1: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
