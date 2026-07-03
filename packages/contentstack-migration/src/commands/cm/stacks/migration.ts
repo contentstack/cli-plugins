@@ -82,7 +82,6 @@ export default class MigrationCommand extends Command {
 
     // To be deprecated
     'api-key': flags.string({
-      char: 'k',
       description: 'With this flag add the API key of your stack.',
       // dependsOn: ['authtoken'],
       exclusive: ['alias'],
