@@ -53,7 +53,25 @@ export default class ImportCommand extends Command {
     module: flags.string({
       required: false,
       description:
-        '[optional] Specify the module to import into the target stack. If not specified, the import command will import all the modules into the stack. The available modules are assets, content-types, entries, environments, extensions, marketplace-apps, global-fields, labels, locales, webhooks, workflows, custom-roles, personalize projects, taxonomies, and composable-studio.',
+        '[optional] Specify the module to import into the target stack. If not specified, the import command will import all the modules into the stack. The available modules are stack, assets, locales, environments, extensions, webhooks, global-fields, entries, content-types, custom-roles, workflows, labels, marketplace-apps, taxonomies, personalize, and composable-studio.',
+      options: [
+        'stack',
+        'assets',
+        'locales',
+        'environments',
+        'extensions',
+        'webhooks',
+        'global-fields',
+        'entries',
+        'content-types',
+        'custom-roles',
+        'workflows',
+        'labels',
+        'marketplace-apps',
+        'taxonomies',
+        'personalize',
+        'composable-studio',
+      ],
     }),
     'backup-dir': flags.string({
       description: '[optional] Backup directory name when using specific module.',
