@@ -52,6 +52,7 @@ describe('ExportCommand', () => {
         'content-types',
         'custom-roles',
         'workflows',
+        'publishing-rules',
         'labels',
         'marketplace-apps',
         'taxonomies',
@@ -76,7 +77,7 @@ describe('ExportCommand', () => {
     it('should have the correct number of valid modules', () => {
       const moduleOptions = (ExportCommand.flags['module'] as any).options as string[];
 
-      expect(moduleOptions).to.have.lengthOf(16);
+      expect(moduleOptions).to.have.lengthOf(17);
     });
   });
 });
