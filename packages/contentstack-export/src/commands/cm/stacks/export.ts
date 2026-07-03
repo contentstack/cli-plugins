@@ -56,7 +56,7 @@ export default class ExportCommand extends Command {
     }),
     module: flags.string({
       description:
-        '[optional] Specific module name. If not specified, the export command will export all the modules to the stack. The available modules are assets, content-types, entries, environments, extensions, marketplace-apps, global-fields, labels, locales, webhooks, workflows, custom-roles, taxonomies, and studio.',
+        '[optional] Specific module name. If not specified, the export command will export all the modules from the stack. The available modules are stack, assets, locales, environments, extensions, webhooks, global-fields, entries, content-types, custom-roles, workflows, labels, marketplace-apps, taxonomies, personalize, and composable-studio.',
       options: [
         'stack',
         'assets',
@@ -69,7 +69,6 @@ export default class ExportCommand extends Command {
         'content-types',
         'custom-roles',
         'workflows',
-        'publishing-rules',
         'labels',
         'marketplace-apps',
         'taxonomies',
