@@ -1,1 +1,4 @@
-{}
+{
+  "IMPORT_SETUP_SUCCESS": "Backup folder and mapper files have been successfully created for the stack using the API key %s.",
+  "IMPORT_SETUP_BACKUP_PATH": "The backup folder has been created at '%s'."
+}
