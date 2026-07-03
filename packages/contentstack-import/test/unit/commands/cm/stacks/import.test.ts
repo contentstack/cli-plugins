@@ -216,10 +216,12 @@ describe('ImportCommand', () => {
         'content-types',
         'custom-roles',
         'workflows',
+        'publishing-rules',
         'labels',
         'marketplace-apps',
         'taxonomies',
         'personalize',
+        'variant-entries',
         'composable-studio',
       ];
       const moduleOptions = (ImportCommand.flags['module'] as any).options as string[];
