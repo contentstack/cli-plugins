@@ -27,7 +27,7 @@ export default class ImportSetupCommand extends Command {
   );
 
   static examples: string[] = [
-    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --modules <module_name, module_name> --branch <branch_name>`,
+    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --module <module_name, module_name> --branch <branch_name>`,
   ];
 
   static flags: FlagInput = {
@@ -63,7 +63,7 @@ export default class ImportSetupCommand extends Command {
 
   static aliases: string[] = [];
 
-  static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]';
+  static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]';
 
   async run(): Promise<void> {
     await loadChalk();
