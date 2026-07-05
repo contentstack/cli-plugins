@@ -28,7 +28,7 @@ USAGE
 # Commands
 * [`csdx cm:export-to-csv`](#csdx-cmexport-to-csv)
 
-### `csdx cm:export-to-csv`
+## `csdx cm:export-to-csv`
 
 Export entries or organization users to csv using this command
 
