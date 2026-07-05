@@ -158,7 +158,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
 ```
 
-_See code: [src/commands/cm/stacks/bulk-assets.ts](./v1.0.0-beta/src/commands/cm/stacks/bulk-assets.ts)_
+_See code: [src/commands/cm/stacks/bulk-assets.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts)_
 
 ## `csdx cm:stacks:bulk-entries`
 
@@ -244,7 +244,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-entries --revert ./bulk-operation
 ```
 
-_See code: [src/commands/cm/stacks/bulk-entries.ts](./v1.0.0-beta/src/commands/cm/stacks/bulk-entries.ts)_
+_See code: [src/commands/cm/stacks/bulk-entries.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-entries.ts)_
 
 ## `csdx cm:stacks:bulk-taxonomies`
 
@@ -313,7 +313,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-taxonomies --operation publish --branch feature --environments development --locales en-us --taxonomies brands_tax -k blt123
 ```
 
-_See code: [src/commands/cm/stacks/bulk-taxonomies.ts](./v1.0.1/src/commands/cm/stacks/bulk-taxonomies.ts)_
+_See code: [src/commands/cm/stacks/bulk-taxonomies.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-taxonomies.ts)_
 <!-- commandsstop -->
 
 ## Requirements
