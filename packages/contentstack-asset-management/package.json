@@ -39,7 +39,7 @@
     "devPlugins": [
       "@oclif/plugin-help"
     ],
-    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-cs-assets/<%- commandPath %>"
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-asset-management/<%- commandPath %>"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",
@@ -57,5 +57,10 @@
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-asset-management"
   }
 }
