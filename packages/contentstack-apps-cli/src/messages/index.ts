@@ -38,7 +38,7 @@ const commonMsg = {
   APP_UID: "Provide the app UID of an existing app.",
   APP_TYPE_DESCRIPTION: "Type of app",
   CONTACT_SUPPORT: "Contact the support team for help.",
-  STACK_API_KEY: "API key of the stack where the app operation is to be performed.",
+  STACK_API_KEY_placeholder: "API key of the stack where the app operation is to be performed.",
   USER_TERMINATION: "Process terminated by the user.",
   CLI_APP_CLI_LOGIN_FAILED: "You're not logged in. Run $ csdx auth:login to continue."
 };
