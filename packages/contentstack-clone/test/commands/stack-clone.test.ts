@@ -63,6 +63,7 @@ describe('Stack Clone Test', () => {
 
   describe('createNewStack', () => {
     it('should call createNewStack', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const createNewStackStub = sandbox.stub(handler, 'createNewStack').resolves({ api_key: 'test-key' });
       await handler.createNewStack({ orgUid: 'dummyOrg' });
       expect(createNewStackStub.calledOnce).to.be.true;
