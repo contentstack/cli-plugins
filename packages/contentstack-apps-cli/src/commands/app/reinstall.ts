@@ -25,7 +25,7 @@ export default class Reinstall extends AppCLIBaseCommand {
       description: commonMsg.APP_UID,
     }),
     "stack-api-key": flags.string({
-      description: commonMsg.STACK_API_KEY,
+      description: commonMsg.STACK_API_KEY_placeholder,
     }),
     ...AppCLIBaseCommand.baseFlags,
   };
