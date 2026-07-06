@@ -1,3 +1,7 @@
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
+import { PassThrough } from 'stream';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { FsUtility, getDirectories } from '@contentstack/cli-utilities';
@@ -563,6 +567,63 @@ describe('ExportAssets', () => {
       await exportAssets.downloadAssets();
 
       expect(makeConcurrentCallStub.called).to.be.true;
+    });
+  });
+
+  describe('downloadAssets() concurrency gating (OOM regression)', () => {
+    let tmpDir: string;
+    let makeConcurrentCallStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'asset-download-test-'));
+      (exportAssets as any).assetsRootPath = tmpDir;
+      sinon.stub(require('@contentstack/cli-utilities'), 'getDirectories').resolves([]);
+      sinon.stub(FsUtility.prototype, 'getPlainMeta').returns({
+        'file-1': [{ uid: 'asset-1', url: 'https://cdn.example.com/asset-1', filename: 'test.jpg' }],
+      });
+      // Bypass makeConcurrentCall's batching/throttling (it enforces a >=1s floor
+      // per batch via logMsgAndWaitIfRequired, unrelated to this bug) and instead
+      // drive the promisifyHandler directly, the same way makeConcurrentCall would
+      // for a single-item batch. This isolates the actual fix under test: does the
+      // per-asset promise wait for the write to finish, or resolve as soon as
+      // piping starts.
+      makeConcurrentCallStub = sinon.stub(exportAssets as any, 'makeConcurrentCall');
+      makeConcurrentCallStub.callsFake((_env: any, promisifyHandler: any) =>
+        promisifyHandler({ index: 0, batchIndex: 0, isLastRequest: true }),
+      );
+    });
+
+    afterEach(() => {
+      sinon.restore();
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('does not resolve a download until the file has actually finished writing to disk', async () => {
+      const passthrough = new PassThrough();
+      mockStackClient.asset = sinon.stub().returns({
+        download: sinon.stub().resolves({ data: passthrough }),
+      });
+
+      const downloadPromise = exportAssets.downloadAssets();
+      let settled = false;
+      downloadPromise.then(() => {
+        settled = true;
+      });
+
+      // Let the microtask/event-loop queue drain as far as it can without the
+      // write stream ever finishing.
+      await new Promise((r) => setImmediate(r));
+      await new Promise((r) => setImmediate(r));
+
+      // Before the fix, the download "completed" as soon as piping started
+      // (headers received), so this would already be true here - which is
+      // exactly what let unbounded concurrent downloads pile up and OOM.
+      expect(settled).to.equal(false);
+
+      passthrough.end();
+      await downloadPromise;
+
+      expect(settled).to.equal(true);
     });
   });
 

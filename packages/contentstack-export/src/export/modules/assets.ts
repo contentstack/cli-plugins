@@ -10,6 +10,8 @@ import isEmpty from 'lodash/isEmpty';
 import includes from 'lodash/includes';
 import progress from 'progress-stream';
 import { createWriteStream } from 'node:fs';
+import { finished as streamFinished } from 'node:stream';
+import { promisify } from 'node:util';
 import { resolve as pResolve } from 'node:path';
 import {
   FsUtility,
@@ -23,6 +25,8 @@ import {
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
+
+const finished = promisify(streamFinished);
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -332,7 +336,7 @@ export default class ExportAssets extends BaseClass {
     const apiBatches: Array<any> = chunk(listOfAssets, this.assetConfig.downloadLimit);
     const downloadedAssetsDirs = await getDirectories(pResolve(this.assetsRootPath, 'files'));
 
-    const onSuccess = ({ response: { data }, additionalInfo }: any) => {
+    const onSuccess = async ({ response: { data }, additionalInfo }: any) => {
       const { asset } = additionalInfo;
       const assetFolderPath = pResolve(this.assetsRootPath, 'files', asset.uid);
       const assetFilePath = pResolve(assetFolderPath, asset.filename);
@@ -344,21 +348,7 @@ export default class ExportAssets extends BaseClass {
       }
 
       const assetWriterStream = createWriteStream(assetFilePath);
-      assetWriterStream.on('error', (error) => {
-        handleAndLogError(
-          error,
-          { ...this.exportConfig.context, uid: asset.uid, filename: asset.fileName },
-          messageHandler.parse('ASSET_DOWNLOAD_FAILED', asset.filename, asset.uid),
-        );
-      });
-      /**
-       * NOTE if pipe not working as expected add the following code below to fix the issue
-       * https://oramind.com/using-streams-efficiently-in-nodejs/
-       * import * as stream from "stream";
-       * import { promisify } from "util";
-       * const finished = promisify(stream.finished);
-       * await finished(assetWriterStream);
-       */
+
       if (this.assetConfig.enableDownloadStatus) {
         const str = progress({
           time: 5000,
@@ -372,7 +362,22 @@ export default class ExportAssets extends BaseClass {
         data.pipe(assetWriterStream);
       }
 
-      log.success(messageHandler.parse('ASSET_DOWNLOAD_SUCCESS', asset.filename, asset.uid), this.exportConfig.context);
+      try {
+        // Wait for the file to actually finish writing before this download is
+        // considered "done" - otherwise downloadLimit never gates real in-flight
+        // transfers, since the response/write streams pile up unboundedly.
+        await finished(assetWriterStream);
+        log.success(
+          messageHandler.parse('ASSET_DOWNLOAD_SUCCESS', asset.filename, asset.uid),
+          this.exportConfig.context,
+        );
+      } catch (error) {
+        handleAndLogError(
+          error,
+          { ...this.exportConfig.context, uid: asset.uid, filename: asset.filename },
+          messageHandler.parse('ASSET_DOWNLOAD_FAILED', asset.filename, asset.uid),
+        );
+      }
     };
 
     const onReject = ({ error, additionalInfo }: any) => {
