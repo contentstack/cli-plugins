@@ -84,7 +84,7 @@ export default class Reinstall extends AppCLIBaseCommand {
         appType = "stack";
 
         this.log(
-          $t(reinstallAppMsg.MISSING_STACK_API_KEY, {
+          $t(reinstallAppMsg.MISSING_STACK_API_KEY_placeholder, {
             app: app?.name || app?.uid,
           }),
           "warn"

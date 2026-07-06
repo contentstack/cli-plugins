@@ -97,7 +97,7 @@ const installAppMsg = {
   CHOOSE_A_STACK: "Please select a stack",
   APP_INSTALLED_SUCCESSFULLY: "{app} installed successfully in {target}.",
   INSTALL_ORG_APP_TO_STACK: "{app} is an organization app. It cannot be installed to a stack. Do you want to proceed?",
-  MISSING_STACK_API_KEY: "As {app} is a stack app, it can only be installed in a stack. Please select a stack.",
+  MISSING_STACK_API_KEY_placeholder: "As {app} is a stack app, it can only be installed in a stack. Please select a stack.",
   INSTALLING_APP_NOTICE: "Installing {app} on {type} {target}.",
   APP_ALREADY_INSTALLED: "Please use $ csdx app:reinstall to reinstall the app.",
 }
@@ -115,7 +115,7 @@ const reinstallAppMsg = {
   CHOOSE_A_STACK: "Please select a stack",
   APP_REINSTALLED_SUCCESSFULLY: "{app} reinstalled successfully in {target}.",
   REINSTALL_ORG_APP_TO_STACK: "{app} is an organization app. It cannot be reinstalled to a stack. Do you want to proceed?",
-  MISSING_STACK_API_KEY: "As {app} is a stack app, it can only be reinstalled in a stack. Please select a stack.",
+  MISSING_STACK_API_KEY_placeholder: "As {app} is a stack app, it can only be reinstalled in a stack. Please select a stack.",
   REINSTALLING_APP_NOTICE: "Reinstalling {app} on {type} {target}.",
   APP_UID: "Provide the app UID of an existing app to be reinstalled.",
   APP_ALREADY_LATEST_VERSION: "The application is already up to date; no new version is available.",
