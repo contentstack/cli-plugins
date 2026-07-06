@@ -84,11 +84,35 @@ export default class ImportTaxonomies extends BaseClass {
       log.debug('Using legacy folder structure for taxonomies', this.importConfig.context);
     }
 
-    //Step 5 create taxonomy & related terms success & failure file
+    // Step 5: Flag taxonomies that were never processed (no matching export data
+    // found in any locale/legacy path), so they don't silently disappear.
+    for (const taxonomyUID of Object.keys(this.taxonomies || {})) {
+      if (!(taxonomyUID in this.createdTaxonomies) && !(taxonomyUID in this.failedTaxonomies)) {
+        log.error(
+          `Taxonomy '${taxonomyUID}' could not be imported: no matching export data found`,
+          this.importConfig.context,
+        );
+        this.failedTaxonomies[taxonomyUID] = this.taxonomies[taxonomyUID];
+      }
+    }
+
+    //Step 6 create taxonomy & related terms success & failure file
     log.debug('Creating success and failure files...', this.importConfig.context);
     this.createSuccessAndFailedFile();
 
-    log.success('Taxonomies imported successfully!', this.importConfig.context);
+    const createdCount = Object.keys(this.createdTaxonomies).length;
+    const failedCount = Object.keys(this.failedTaxonomies).length;
+
+    if (failedCount > 0) {
+      log.error(
+        `Taxonomies import completed with errors: ${createdCount} succeeded, ${failedCount} failed`,
+        this.importConfig.context,
+      );
+    } else if (createdCount > 0) {
+      log.success('Taxonomies imported successfully!', this.importConfig.context);
+    } else {
+      log.info('No taxonomies to import.', this.importConfig.context);
+    }
   }
 
   /**
@@ -367,13 +391,22 @@ export default class ImportTaxonomies extends BaseClass {
     const masterLocaleFolder = join(this.taxonomiesFolderPath, masterLocaleCode);
 
     // Check if master locale folder exists (indicates new locale-based structure)
-    if (!fileHelper.fileExistsSync(masterLocaleFolder)) {
-      log.debug('No locale-based folder structure detected', this.importConfig.context);
-      return false;
+    if (fileHelper.fileExistsSync(masterLocaleFolder)) {
+      log.debug('Locale-based folder structure detected', this.importConfig.context);
+      return true;
     }
 
-    log.debug('Locale-based folder structure detected', this.importConfig.context);
+    // The master locale may not have any localized taxonomies (so its folder was
+    // never exported), but other locales can still use the locale-based structure.
+    const locales = this.loadAvailableLocales();
+    for (const localeCode of Object.keys(locales)) {
+      if (fileHelper.fileExistsSync(join(this.taxonomiesFolderPath, localeCode))) {
+        log.debug('Locale-based folder structure detected', this.importConfig.context);
+        return true;
+      }
+    }
 
-    return true;
+    log.debug('No locale-based folder structure detected', this.importConfig.context);
+    return false;
   }
 }
