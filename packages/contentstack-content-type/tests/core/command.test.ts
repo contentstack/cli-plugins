@@ -4,6 +4,7 @@ jest.mock('@contentstack/cli-command', () => ({
     error = jest.fn()
     warn = jest.fn()
     getToken(_alias: string) {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       return { apiKey: 'default-api', type: 'management' }
     }
   },

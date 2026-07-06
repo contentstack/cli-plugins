@@ -648,6 +648,7 @@ describe('Config Builder Utilities', () => {
       configHandlerGetStub.withArgs('tokens.mgmt-alias').returns({
         type: 'management',
         token: 'cs-mgmt-token',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 
@@ -674,6 +675,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production', // Different from source-env
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 

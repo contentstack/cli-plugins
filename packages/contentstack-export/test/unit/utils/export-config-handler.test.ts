@@ -173,6 +173,7 @@ describe('Export Config Handler', () => {
     it('should support alias flag as alternative to management-token-alias', async () => {
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         token: 'test-token',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'test-key'
       });
       

@@ -69,6 +69,7 @@ describe('Module Index - startModuleImport', () => {
 
   it('should handle different module names', async () => {
     const mockStackAPIClient = {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'test-key',
       name: 'test-stack'
     } as any;
@@ -97,6 +98,7 @@ describe('Module Index - startModuleImport', () => {
 
   it('should handle stack module', async () => {
     const mockStackAPIClient = {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'test-key',
       name: 'test-stack'
     } as any;
@@ -140,6 +142,7 @@ describe('Module Index - startModuleImport', () => {
     sinon.replace(fs, 'existsSync', existsSyncStub);
 
     const mockStackAPIClient = {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'test-key',
       name: 'test-stack',
       asset: sandbox.stub().returns({

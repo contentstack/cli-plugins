@@ -61,6 +61,7 @@ describe('error-handler', () => {
     it('should append api_key error details', () => {
       const error = {
         errorMessage: 'Invalid request',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         errors: { api_key: 'is required' },
       };
       const result = formatError(error);
@@ -93,6 +94,7 @@ describe('error-handler', () => {
         errorMessage: 'Multiple errors',
         errors: {
           authorization: 'is invalid',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'is missing',
         },
       };

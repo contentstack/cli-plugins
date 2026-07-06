@@ -442,6 +442,7 @@ describe("Content Type with Single RTE Field of Single Type", function () {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: "testApiKey",
     type: "management",
   });
@@ -1108,6 +1109,7 @@ describe("Content Type with single rte of multiple type", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: "testApiKey",
     type: "management",
   });
@@ -1217,6 +1219,7 @@ describe("Content Type with Single RTE inside group of type multiple", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: "testApiKey",
     type: "management",
   });
@@ -1256,6 +1259,7 @@ describe("Content Type with multiple file field", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: "testApiKey",
     type: "management",
   });
