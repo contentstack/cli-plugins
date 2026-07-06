@@ -55,10 +55,6 @@ jobs:
         working-directory: ./packages/contentstack-bootstrap
         run: npm run test
 
-      # - name: Run tests for Contentstack Import Setup
-      #   working-directory: ./packages/contentstack-import-setup
-      #   run: npm run test:unit
-
       - name: Run tests for Contentstack Branches
         working-directory: ./packages/contentstack-branches
         run: npm run test:unit
@@ -86,7 +82,20 @@ jobs:
       - name: Run tests for Contentstack Bulk Operations
         working-directory: ./packages/contentstack-bulk-operations
         run: npm test
-      
+
       - name: Run tests for Contentstack Variants
         working-directory: ./packages/contentstack-variants
         run: npm run test
+
+      - name: Run tests for Contentstack Asset Management
+        working-directory: ./packages/contentstack-asset-management
+        run: npm run test:unit
+
+      - name: Run tests for Contentstack Clone
+        working-directory: ./packages/contentstack-clone
+        run: npm run test:unit
+
+      # - name: Run tests for Contentstack External Migrate
+      #   working-directory: ./packages/contentstack-external-migrate
+      #   run: npm test
+

@@ -192,12 +192,13 @@ jobs:
           access: public
           tag: beta
       # External Migrate
-      - name: Publishing external-migrate (Production)
+      - name: Publishing external-migrate (Beta)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-external-migrate/package.json
-          tag: latest
+          access: public
+          tag: beta
 
       - name: Create Production Release
         id: create_release

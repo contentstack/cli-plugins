@@ -24,7 +24,7 @@ describe("Integration Test for tsgen command", () => {
   // Test case 1: Generate TypeScript types with default flags
   it("should generate TypeScript types with the default flags", () => {
     const cmd = "csdx";
-    const args = ["tsgen", "-a", tokenAlias!, "-o", outputFilePath];
+    const args = ["tsgen", "-a", tokenAlias!, "--output", outputFilePath];
 
     const result = spawnSync(cmd, args, { encoding: "utf-8" });
 
@@ -44,9 +44,9 @@ describe("Integration Test for tsgen command", () => {
       "tsgen",
       "-a",
       tokenAlias!,
-      "-o",
+      "--output",
       outputFilePath,
-      "-p",
+      "--prefix",
       prefix,
     ];
 
@@ -72,7 +72,7 @@ describe("Integration Test for tsgen command", () => {
   // Test case 3: Generate TypeScript types without documentation comments
   it("should generate TypeScript types without documentation", () => {
     const cmd = "csdx";
-    const args = ["tsgen", "-a", tokenAlias!, "-o", outputFilePath, "--no-doc"];
+    const args = ["tsgen", "-a", tokenAlias!, "--output", outputFilePath, "--no-doc"];
 
     const result = spawnSync(cmd, args, { encoding: "utf-8" });
 
@@ -90,7 +90,7 @@ describe("Integration Test for tsgen command", () => {
       "tsgen",
       "-a",
       tokenAlias!,
-      "-o",
+      "--output",
       outputFilePath,
       "--include-system-fields",
     ];
@@ -108,7 +108,7 @@ describe("Integration Test for tsgen command", () => {
   // Test case 5: Handling of invalid token alias
   it("should fail with an invalid token alias", () => {
     const cmd = "csdx";
-    const args = ["tsgen", "-a", "invalid_alias", "-o", outputFilePath];
+    const args = ["tsgen", "-a", "invalid_alias", "--output", outputFilePath];
 
     const result = spawnSync(cmd, args, { encoding: "utf-8" });
 
@@ -124,7 +124,7 @@ describe("Integration Test for tsgen command", () => {
       "tsgen",
       "-a",
       tokenAlias!,
-      "-o",
+      "--output",
       outputFilePath,
       "--api-type",
       "graphql",
@@ -147,7 +147,7 @@ describe("Integration Test for tsgen command", () => {
       "tsgen",
       "-a",
       tokenAlias!,
-      "-o",
+      "--output",
       outputFilePath,
       "--api-type",
       "graphql",
@@ -171,7 +171,7 @@ describe("Integration Test for tsgen command", () => {
       "tsgen",
       "-a",
       "invalid_alias",
-      "-o",
+      "--output",
       outputFilePath,
       "--api-type",
       "graphql",
