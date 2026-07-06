@@ -1,4 +1,6 @@
-![npm](https://img.shields.io/npm/v/@contentstack/cli-external-migrate)
+# @contentstack/cli-external-migrate
+
+[![npm](https://img.shields.io/npm/v/@contentstack/cli-external-migrate)](https://npmjs.org/package/@contentstack/cli-external-migrate)
 
 ## Description
 
@@ -12,8 +14,6 @@ Source lives in [contentstack/cli-plugins](https://github.com/contentstack/cli-p
 ```shell
 $ csdx plugins:install @contentstack/cli-external-migrate
 ```
-
-## How to use this plugin
 
 <!-- commands -->
 * [`csdx migrate:create`](#csdx-migratecreate)
