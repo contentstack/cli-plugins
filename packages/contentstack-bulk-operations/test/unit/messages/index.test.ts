@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import messages, { $t } from '../../../src/messages';
+import messages, { $t } from '../../../src/messages/index';
 
 describe('Messages', () => {
   describe('$t function - message interpolation', () => {
