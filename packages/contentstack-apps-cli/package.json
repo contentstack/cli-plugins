@@ -61,6 +61,7 @@
     "bin": "csdx",
     "dirname": "apps-cli",
     "commands": "./lib/commands",
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-apps-cli/<%- commandPath %>",
     "hooks": {
       "init": "./lib/hooks/init/load-chalk.js"
     },

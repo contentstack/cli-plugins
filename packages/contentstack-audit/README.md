@@ -19,7 +19,7 @@ $ npm install -g @contentstack/cli-audit
 $ csdx COMMAND
 running command...
 $ csdx (--version|-v)
-@contentstack/cli-audit/2.0.0-beta.13 darwin-arm64 node-v22.13.1
+@contentstack/cli-audit/2.0.0-beta.14 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -80,7 +80,7 @@ EXAMPLES
   $ csdx cm:stacks:audit --report-path=<path> --modules=content-types --filter="name="<filter-value>"
 ```
 
-_See code: [src/commands/cm/stacks/audit/index.ts](https://github.com/contentstack/audit/blob/main/packages/contentstack-audit/src/commands/cm/stacks/audit/index.ts)_
+_See code: [src/commands/cm/stacks/audit/index.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-audit/src/commands/cm/stacks/audit/index.ts)_
 
 ## `csdx cm:stacks:audit:fix`
 
@@ -136,5 +136,5 @@ EXAMPLES
   $ csdx cm:stacks:audit:fix --report-path=<path> --modules=content-types --filter="name="<filter-value>" --copy-dir --copy-path=<path>
 ```
 
-_See code: [src/commands/cm/stacks/audit/fix.ts](https://github.com/contentstack/audit/blob/main/packages/contentstack-audit/src/commands/cm/stacks/audit/fix.ts)_
+_See code: [src/commands/cm/stacks/audit/fix.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-audit/src/commands/cm/stacks/audit/fix.ts)_
 <!-- commandsstop -->
