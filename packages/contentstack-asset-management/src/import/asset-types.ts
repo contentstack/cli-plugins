@@ -138,7 +138,7 @@ export default class ImportAssetTypes extends CSAssetsImportAdapter {
         log.debug(`Imported asset type: ${uid}`, this.importContext.context);
       } catch (e) {
         this.failureCount += 1;
-        log.debug(`Failed to import asset type ${uid}: ${e}`, this.importContext.context);
+        log.error(`Failed to import asset type ${uid}: ${(e as Error)?.message ?? String(e)}`, this.importContext.context);
       }
     });
   }

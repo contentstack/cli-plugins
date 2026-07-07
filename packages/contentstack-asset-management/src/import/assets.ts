@@ -196,7 +196,17 @@ export default class ImportAssets extends CSAssetsImportAdapter {
 
     await forEachChunkRecordsFromFs<AssetRecord>(
       assetFs,
-      { context: this.importContext.context, chunkReadLogLabel: 'assets' },
+      {
+        context: this.importContext.context,
+        chunkReadLogLabel: 'assets',
+        onChunkError: (_records, err) =>
+          log.error(
+            `Failed to read an asset chunk back from disk during import for space ${newSpaceUid}: ${
+              (err as Error)?.message ?? String(err)
+            }`,
+            this.importContext.context,
+          ),
+      },
       async (assetChunk) => {
         exportRowCount += assetChunk.length;
         const uploadJobs: UploadJob[] = [];
@@ -208,8 +218,8 @@ export default class ImportAssets extends CSAssetsImportAdapter {
 
           if (!existsSync(filePath)) {
             missingFiles += 1;
-            log.warn(`Asset file not found: ${filePath}, skipping`, this.importContext.context);
             this.tick(false, `asset: ${oldUid}`, 'File not found on disk');
+            log.error(`Asset file not found: ${filePath}`, this.importContext.context);
             continue;
           }
 
@@ -236,13 +246,8 @@ export default class ImportAssets extends CSAssetsImportAdapter {
                 description: asset.description,
                 parent_uid: mappedParentUid,
               });
-
               uidMap[oldUid] = created.uid;
-
-              if (asset.url && created.url) {
-                urlMap[asset.url] = created.url;
-              }
-
+              if (asset.url && created.url) urlMap[asset.url] = created.url;
               this.tick(true, `asset: ${filename}`, null);
               uploadOk += 1;
               log.debug(`Uploaded asset ${oldUid} → ${created.uid} (${filePath})`, this.importContext.context);
@@ -253,7 +258,10 @@ export default class ImportAssets extends CSAssetsImportAdapter {
                 `asset: ${filename}`,
                 (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_ASSETS].FAILED,
               );
-              log.debug(`Failed to upload asset ${oldUid}: ${e}`, this.importContext.context);
+              log.error(
+                `Failed to upload asset ${oldUid}: ${(e as Error)?.message ?? String(e)}`,
+                this.importContext.context,
+              );
             }
           },
         );
@@ -367,7 +375,10 @@ export default class ImportAssets extends CSAssetsImportAdapter {
             `folder: ${folder.title}`,
             (e as Error)?.message ?? PROCESS_STATUS[PROCESS_NAMES.AM_IMPORT_FOLDERS].FAILED,
           );
-          log.debug(`Failed to create folder ${folder.uid}: ${e}`, this.importContext.context);
+          log.error(
+            `Failed to create folder ${folder.uid}: ${(e as Error)?.message ?? String(e)}`,
+            this.importContext.context,
+          );
         }
       });
 
