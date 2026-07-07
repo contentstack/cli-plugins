@@ -3,7 +3,7 @@
   "description": "Contentstack CLI plugin to do branches operations",
   "version": "2.0.0-beta.9",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.9",
     "@oclif/core": "^4.11.4",
@@ -63,7 +63,7 @@
   "oclif": {
     "commands": "./lib/commands",
     "bin": "csdx",
-    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-export/<%- commandPath %>"
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-branches/<%- commandPath %>"
   },
   "csdxConfig": {
     "shortCommandName": {
@@ -75,5 +75,9 @@
       "cm:branches": "BRLS"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-branches"
+  }
 }
