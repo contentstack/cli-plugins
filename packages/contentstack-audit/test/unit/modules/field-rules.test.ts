@@ -140,7 +140,7 @@ describe('Field Rules', () => {
       });
   });
 
-  describe('global field field rules', () => {
+  describe('global field rules', () => {
     const gfWithRuleSchema = () => [
       {
         uid: 'gf_with_rule',
