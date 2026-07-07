@@ -110,7 +110,7 @@ describe('Messages', () => {
 
     it('should export flag descriptions', () => {
       expect(messages.ALIAS).to.be.a('string');
-      expect(messages.STACK_API_KEY).to.be.a('string');
+      expect(messages.STACK_API_KEY_placeholder).to.be.a('string');
       expect(messages.OPERATION).to.be.a('string');
     });
 
