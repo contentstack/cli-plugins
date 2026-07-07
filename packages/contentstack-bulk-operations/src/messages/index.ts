@@ -372,7 +372,7 @@ const flagDescriptions = {
   // Common flags
   ALIAS:
     'Uses the name of a saved Management Token to authenticate the command. The command can only access the branches allowed for that token. This option can be used as an alternative to` --stack-api-key.`',
-  STACK_API_KEY_placeholder: 
+  STACK_API_KEY_placeholder:
     'API key of the source stack. You must use either the --stack-api-key flag or the --alias flag.',
   OPERATION: 'Specifies whether to `publish` or `unpublish` content.',
   ENVIRONMENTS:
