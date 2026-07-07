@@ -42,7 +42,7 @@ export default class MigrateCreate extends Command {
       description: 'Contentful space ID — export from Contentful first (use this OR --input)',
     }),
     'source-token': flags.string({
-      description: 'Sorce CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)',
+      description: 'Source CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)',
     }),
     'download-assets': flags.boolean({
       description: 'Download asset binaries during export (with --space-id)',
