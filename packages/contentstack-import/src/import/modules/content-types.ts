@@ -214,11 +214,11 @@ export default class ContentTypesImport extends BaseClass {
     }
 
     // Global field rules were skipped during the content type update (see updateFieldRules) because
-    // the embedded global field schema was not yet complete on the stack. By this point every global
-    // field is complete — deferred ones via updatePendingGFs above, non-deferred ones already applied
-    // in the global-fields module, and pre-existing ones already on the stack for module-only imports.
-    // So re-apply the global field rules now. This runs UNCONDITIONALLY (outside the pending check):
-    // non-deferred and module-only imports have no pending global fields but still need their rules.
+    // the embedded global field schema was not yet complete on the stack. At this point global
+    // fields are expected to be complete (deferred ones via updatePendingGFs above; others already
+    // applied in the global-fields module / pre-existing on the stack for module-only imports).
+    // Re-apply the global field rules now; if global fields are still incomplete this step may fail
+    // and will be reported below.
     const failedGFFieldRuleCTs = await this.updateGFFieldRules().catch((error) => {
       handleAndLogError(error, { ...this.importConfig.context });
       return [] as string[];
