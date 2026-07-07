@@ -3,7 +3,7 @@
   "description": "create a Stack from existing content types, entries, assets, etc.",
   "version": "2.0.0-beta.22",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@contentstack/cli-cm-import": "~2.0.0-beta.22",
     "@contentstack/cli-command": "~2.0.0-beta.9",
@@ -59,7 +59,11 @@
       "cm:stacks:seed": "SEED"
     }
   },
-  "repository": "contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-seed"
+  },
   "scripts": {
     "test": "jest",
     "pack": "npm pack --dry-run",
