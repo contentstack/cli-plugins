@@ -3,8 +3,6 @@ fileignoreconfig:
   checksum: 89126fab0d404140bb81c6b2d58cc54de26e5bfe9c0f1f81ee353bc5c05a0fbd
 - filename: packages/contentstack-import/src/utils/import-config-handler.ts
   checksum: 999092528b445b6e9de6883150f02b56bf5050dc64129335d84246c157bfe303
-- filename: packages/contentstack-import-setup/src/utils/import-config-handler.ts
-  checksum: c13ca4996b3767fae9d2716fe9ae7d90d98b26012e064f42ea9fdd054f684761
-- filename: packages/contentstack-export/src/utils/export-config-handler.ts
-  checksum: 68351337b78f0962475498946fe34245a681182db756528c9ff6fab7153392e3
+- filename: packages/contentstack-asset-management/src/utils/export-helpers.ts
+  checksum: 726d1632110ebc203ce70dc1cbe7d4b3011f56349ed371b6645d0375e7818cad
 version: ""
