@@ -12,7 +12,7 @@ export const messages = {
   FLAG_ORG: 'Provide organization UID to clone org users',
   FLAG_STACK_NAME: 'Name of the stack that needs to be created as CSV filename',
   // deepcode ignore HardcodedNonCryptoSecret: <Its not a secret>
-  FLAG_STACK_API_KEY: 'Provide the stack API key of the source stack',
+  FLAG_STACK_API_KEY_placeholder: 'Provide the stack API key of the source stack',
   FLAG_ORG_NAME: 'Name of the organization that needs to be created as CSV filename',
   FLAG_LOCALE: 'Locale of entries that will be exported',
   FLAG_CONTENT_TYPE: 'Content type of entries that will be exported',
