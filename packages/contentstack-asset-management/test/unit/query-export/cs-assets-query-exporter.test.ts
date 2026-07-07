@@ -10,6 +10,7 @@ import ExportAssetTypes from '../../../src/export/asset-types';
 import ExportFields from '../../../src/export/fields';
 import { CSAssetsExportAdapter } from '../../../src/export/base';
 import { CSAssetsAdapter } from '../../../src/utils/cs-assets-api-adapter';
+import * as exportHelpers from '../../../src/utils/export-helpers';
 import * as retryModule from '../../../src/utils/retry';
 
 import type { CsAssetsQueryExportOptions } from '../../../src/types/cs-assets-api';
@@ -17,6 +18,7 @@ import type { CsAssetsQueryExportOptions } from '../../../src/types/cs-assets-ap
 describe('CsAssetsQueryExporter', () => {
   let exportDir: string;
   let searchAssetsStub: sinon.SinonStub;
+  let fetchStub: sinon.SinonStub;
   const baseOptions: CsAssetsQueryExportOptions = {
     linkedWorkspaces: [{ uid: 'main', space_uid: 'space-1', is_default: true }],
     exportDir: '',
@@ -47,19 +49,22 @@ describe('CsAssetsQueryExporter', () => {
     });
     sinon.stub(CSAssetsExportAdapter.prototype as any, 'writeItemsToChunkedJson').resolves();
     // Downloads now run through makeConcurrentCall; fake it by invoking the
-    // promisifyHandler synchronously over each element of every apiBatch.
+    // promisifyHandler over each element of every apiBatch. Mirror the real
+    // implementation's Promise.allSettled semantics: handler rejections are swallowed.
     sinon.stub(CSAssetsAdapter.prototype, 'makeConcurrentCall').callsFake(async (env: any, handler: any) => {
       const batches = env?.apiBatches ?? [];
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batchPromises: Array<Promise<unknown>> = [];
         for (let index = 0; index < batches[batchIndex].length; index++) {
-          if (handler) await handler({ index, batchIndex, isLastRequest: false });
+          if (handler) batchPromises.push(handler({ index, batchIndex, isLastRequest: false }));
         }
+        await Promise.allSettled(batchPromises);
       }
     });
     // Run the download retry wrapper inline (single attempt, no backoff) and serve a fake binary
     // so download attempts don't hit the network or wait on real retry delays.
     sinon.stub(retryModule, 'withRetry').callsFake(async (fn: () => Promise<unknown>) => fn());
-    sinon.stub(globalThis, 'fetch').callsFake(
+    fetchStub = sinon.stub(globalThis, 'fetch').callsFake(
       async () =>
         ({
           ok: true,
@@ -115,6 +120,97 @@ describe('CsAssetsQueryExporter', () => {
     const foldersPath = pResolve(exportDir, 'spaces', 'space-1', 'assets', 'folders.json');
     const folders = JSON.parse(await fs.readFile(foldersPath, 'utf-8'));
     expect(folders).to.be.an('array').that.is.empty;
+  });
+
+  describe('secured asset downloads', () => {
+    const securedOptions: CsAssetsQueryExportOptions = { ...baseOptions, securedAssets: true };
+    const make401 = () => ({ ok: false, status: 401, headers: { get: (): string | null => null } });
+
+    it('should send the Authorization header (and no authtoken param) for OAuth', async () => {
+      securedOptions.exportDir = exportDir;
+      const authStub = sinon
+        .stub(exportHelpers, 'getSecuredAssetAuth')
+        .resolves({ headers: { authorization: 'Bearer oauth-token' } });
+
+      const exporter = new CsAssetsQueryExporter(securedOptions);
+      await exporter.export(['asset-1', 'asset-2']);
+
+      expect(authStub.called).to.be.true;
+      expect(fetchStub.called).to.be.true;
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal('https://cdn.example.com/a1.png');
+      expect(init).to.deep.equal({ headers: { authorization: 'Bearer oauth-token' } });
+    });
+
+    it('should append ?authtoken= (and no headers) for basic auth', async () => {
+      securedOptions.exportDir = exportDir;
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ authtoken: 'basic-token' });
+
+      const exporter = new CsAssetsQueryExporter(securedOptions);
+      await exporter.export(['asset-1']);
+
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal('https://cdn.example.com/a1.png?authtoken=basic-token');
+      expect(init).to.be.undefined;
+    });
+
+    it('should not resolve auth or attach credentials for unsecured exports', async () => {
+      const authStub = sinon.stub(exportHelpers, 'getSecuredAssetAuth');
+
+      const exporter = new CsAssetsQueryExporter(baseOptions);
+      await exporter.export(['asset-1']);
+
+      expect(authStub.called).to.be.false;
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal('https://cdn.example.com/a1.png');
+      expect(init).to.be.undefined;
+    });
+
+    it('should force-refresh once on 401 and succeed with the fresh token', async () => {
+      securedOptions.exportDir = exportDir;
+      const authStub = sinon
+        .stub(exportHelpers, 'getSecuredAssetAuth')
+        .callsFake(async (force?: boolean) =>
+          force ? { headers: { authorization: 'Bearer fresh' } } : { headers: { authorization: 'Bearer stale' } },
+        );
+      fetchStub.callsFake(async (_url: any, init: any) =>
+        init?.headers?.authorization === 'Bearer fresh'
+          ? ({
+              ok: true,
+              status: 200,
+              body: new ReadableStream({
+                start(controller) {
+                  controller.enqueue(new TextEncoder().encode('x'));
+                  controller.close();
+                },
+              }),
+            } as any)
+          : (make401() as any),
+      );
+
+      const exporter = new CsAssetsQueryExporter(securedOptions);
+      await exporter.export(['asset-1']);
+
+      expect(authStub.calledWith(true)).to.be.true;
+    });
+
+    it('should stop downloading after a 401 persists post-refresh instead of failing every asset', async () => {
+      securedOptions.exportDir = exportDir;
+      const authStub = sinon
+        .stub(exportHelpers, 'getSecuredAssetAuth')
+        .resolves({ headers: { authorization: 'Bearer bad' } });
+      fetchStub.callsFake(async () => make401() as any);
+
+      // export() marks the space as failed and resolves (per-space isolation) — the key
+      // behavior is that later batches are never fetched once auth failed hard.
+      // Concurrency 1 → one asset per batch, so the abort is observable on the second asset.
+      const exporter = new CsAssetsQueryExporter({ ...securedOptions, downloadAssetsConcurrency: 1 });
+      await exporter.export(['asset-1', 'asset-2']);
+
+      // asset-1: initial fetch + post-refresh fetch = 2; asset-2: skipped entirely.
+      expect(fetchStub.callCount).to.equal(2);
+      expect(authStub.calledWith(true)).to.be.true;
+    });
   });
 });
 
