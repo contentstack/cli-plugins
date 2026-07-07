@@ -62,7 +62,7 @@ async function promptForStackCredentials(): Promise<{ alias?: string; apiKey?: s
     const apiKey = await cliux.inquire<string>({
       type: 'input',
       name: 'apiKey',
-      message: messages.ENTER_API_KEY,
+      message: messages.ENTER_API_KEY_placeholder,
       validate: (value) => {
         if (!value || value.trim().length === 0) {
           return messages.API_KEY_REQUIRED;
@@ -97,7 +97,7 @@ async function promptForStackCredentials(): Promise<{ alias?: string; apiKey?: s
   const apiKey = await cliux.inquire<string>({
     type: 'input',
     name: 'apiKey',
-    message: messages.ENTER_API_KEY,
+    message: messages.ENTER_API_KEY_placeholder,
     validate: (value) => {
       if (!value || value.trim().length === 0) {
         return messages.API_KEY_REQUIRED;
