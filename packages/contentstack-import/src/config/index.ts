@@ -120,7 +120,6 @@ const config: DefaultConfig = {
         'created_by',
         'updated_at',
         'updated_by',
-        'is_system',
         'asset_types_count',
       ],
       assetTypesImportInvalidKeys: [
@@ -128,7 +127,6 @@ const config: DefaultConfig = {
         'created_by',
         'updated_at',
         'updated_by',
-        'is_system',
         'category',
         'preview_image_url',
         'category_detail',
