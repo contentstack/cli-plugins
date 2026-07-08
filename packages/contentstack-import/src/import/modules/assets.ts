@@ -211,7 +211,7 @@ export default class ImportAssets extends BaseClass {
           this.importConfig.context,
         );
         log.info('   Once scanning is done, publish your assets using:', this.importConfig.context);
-        log.info('   csdx cm:stacks:bulk-assets --data-dir ./content --stack-api-key <key>', this.importConfig.context);
+        log.info('   csdx cm:stacks:bulk-assets --data-dir ./content --stack-api-key <key> --operation publish', this.importConfig.context);
       }
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset import failed');

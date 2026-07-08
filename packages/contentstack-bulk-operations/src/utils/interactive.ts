@@ -151,7 +151,7 @@ async function promptForSourceAlias(): Promise<string> {
 /**
  * Fills in missing required flags by prompting the user
  */
-export async function fillMissingFlags(flags: any, options?: { promptDataDir?: boolean }): Promise<any> {
+export async function fillMissingFlags(flags: any): Promise<any> {
   const updatedFlags = { ...flags };
 
   // Skip interactive mode for retry/revert operations
@@ -162,17 +162,21 @@ export async function fillMissingFlags(flags: any, options?: { promptDataDir?: b
   // Track if we prompted for anything
   let didPrompt = false;
 
+  // The presence of --data-dir is what selects the import-backup publish flow:
+  // environments and locales are then derived per-asset from the backup, so we
+  // neither prompt for the data-dir path nor for environments/locales here.
+  const hasDataDir = !!updatedFlags['data-dir'];
+
   // Check if any required fields are missing
   const needsCredentials = !updatedFlags.alias && !updatedFlags['stack-api-key'];
   const needsOperation = !updatedFlags.operation;
-  const needsEnvironments = !updatedFlags.environments || updatedFlags.environments.length === 0;
   // Check if non-localized filter is used
   const isNonLocalized = updatedFlags.filter === FilterType.NON_LOCALIZED;
-  const needsLocales = !isNonLocalized && (!updatedFlags.locales || updatedFlags.locales.length === 0);
-  const needsDataDir = options?.promptDataDir && !updatedFlags['data-dir'];
+  const needsEnvironments = !hasDataDir && (!updatedFlags.environments || updatedFlags.environments.length === 0);
+  const needsLocales = !hasDataDir && !isNonLocalized && (!updatedFlags.locales || updatedFlags.locales.length === 0);
 
   // Only show interactive mode header if we need to prompt
-  if (needsCredentials || needsOperation || needsEnvironments || needsLocales || needsDataDir) {
+  if (needsCredentials || needsOperation || needsEnvironments || needsLocales) {
     cliux.print(messages.INTERACTIVE_MODE_START, { color: 'cyan' });
     didPrompt = true;
   }
@@ -190,26 +194,6 @@ export async function fillMissingFlags(flags: any, options?: { promptDataDir?: b
   // 2. Operation type (REQUIRED)
   if (needsOperation) {
     updatedFlags.operation = await promptForOperation();
-  }
-
-  // 2.5. Data-dir (import backup folder) — alternative to environments/locales for asset publish
-  if (needsDataDir) {
-    const useDataDir = await cliux.inquire<boolean>({
-      type: 'confirm',
-      name: 'useDataDir',
-      message: messages.USE_DATA_DIR_PROMPT,
-      default: false,
-    });
-    if (useDataDir) {
-      updatedFlags['data-dir'] = await cliux.inquire<string>({
-        type: 'input',
-        name: 'dataDir',
-        message: messages.ENTER_DATA_DIR,
-        validate: (v: string) => (!v?.trim() ? messages.DATA_DIR_REQUIRED : true),
-      });
-      cliux.print(messages.INTERACTIVE_MODE_COMPLETE, { color: 'green' });
-      return updatedFlags;
-    }
   }
 
   // 3. Check for cross-publish mode
