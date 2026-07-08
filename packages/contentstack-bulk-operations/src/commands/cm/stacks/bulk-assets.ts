@@ -5,15 +5,7 @@ import { flags, handleAndLogError, log } from '@contentstack/cli-utilities';
 
 import { AssetPublishData, BulkOperationResult, OperationType, ResourceType } from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
-import {
-  $t,
-  messages,
-  fetchAssets,
-  scanDataDirStats,
-  BATCH_CONSTANTS,
-  categorizeByScanStatus,
-  fillMissingFlags,
-} from '../../../utils';
+import { $t, messages, fetchAssets, scanDataDirStats, BATCH_CONSTANTS, categorizeByScanStatus } from '../../../utils';
 import type { DataDirScanStats } from '../../../utils';
 import { AssetService } from '../../../services';
 
@@ -66,13 +58,6 @@ export default class BulkAssets extends BaseBulkCommand {
   };
 
   protected resourceType: ResourceType = ResourceType.ASSET;
-
-  protected async resolveFlagsInteractively(flags: any): Promise<any> {
-    if (flags['data-dir']) {
-      return flags;
-    }
-    return fillMissingFlags(flags, { promptDataDir: true });
-  }
 
   async run(): Promise<void> {
     try {
