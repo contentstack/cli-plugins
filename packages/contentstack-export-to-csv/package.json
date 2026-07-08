@@ -1,12 +1,12 @@
 {
   "name": "@contentstack/cli-cm-export-to-csv",
   "description": "Export entries, taxonomies, terms, or organization users to CSV",
-  "version": "2.0.0-beta.8",
+  "version": "2.0.0-beta.9",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0-beta.8",
-    "@contentstack/cli-utilities": "~2.0.0-beta.9",
+    "@contentstack/cli-command": "~2.0.0-beta.9",
+    "@contentstack/cli-utilities": "~2.0.0-beta.10",
     "@oclif/core": "^4.11.4",
     "@inquirer/prompts": "^7.0.0",
     "fast-csv": "^4.3.6"
@@ -18,7 +18,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.50",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.62",
     "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "^10.8.2",
@@ -58,7 +58,11 @@
       "cm:export-to-csv": "EXPRTCSV"
     }
   },
-  "repository": "https://github.com/contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-export-to-csv"
+  },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",

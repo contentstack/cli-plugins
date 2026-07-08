@@ -140,7 +140,7 @@ export default class ImportFields extends CSAssetsImportAdapter {
         log.debug(`Imported field: ${uid}`, this.importContext.context);
       } catch (e) {
         this.failureCount += 1;
-        log.debug(`Failed to import field ${uid}: ${e}`, this.importContext.context);
+        log.error(`Failed to import field ${uid}: ${(e as Error)?.message ?? String(e)}`, this.importContext.context);
       }
     });
   }

@@ -13,20 +13,21 @@ export default class ExportFields extends CSAssetsExportAdapter {
     super(apiConfig, exportContext);
   }
 
-  async start(spaceUid: string): Promise<void> {
+  async start(spaceUid: string): Promise<number> {
     await this.init();
 
     log.debug('Starting shared fields export process...', this.exportContext.context);
+    log.info('Exporting shared fields...', this.exportContext.context);
 
-    const fieldsData = await this.getWorkspaceFields(spaceUid);
+    const fieldsData = await this.getWorkspaceFields(spaceUid, this.apiPageSize, this.apiFetchConcurrency);
     const items = getArrayFromResponse(fieldsData, 'fields');
     const dir = this.getFieldsDir();
-    if (items.length === 0) {
-      log.info('No field items to export, writing empty fields', this.exportContext.context);
-    } else {
-      log.debug(`Writing ${items.length} shared fields`, this.exportContext.context);
-    }
     await this.writeItemsToChunkedJson(dir, 'fields.json', 'fields', ['uid', 'title', 'display_type'], items);
+    log.info(
+      items.length === 0 ? 'No fields to export' : `Exported ${items.length} shared field(s)`,
+      this.exportContext.context,
+    );
     this.tick(true, `fields (${items.length})`, null);
+    return items.length;
   }
 }
