@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 
 import { formatError, log } from '@contentstack/cli-utilities';
 
-import { IMPORT_ASSETS_MAPPER_FILES, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
+import { FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE, IMPORT_ASSETS_MAPPER_FILES, PROCESS_NAMES, PROCESS_STATUS } from '../constants/index';
 import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
 import type { AssetMapperImportSetupResult, RunAssetMapperImportSetupParams } from '../types/import-setup-asset-mapper';
 import ImportAssets from '../import/assets';
@@ -25,7 +25,7 @@ export default class ImportSetupAssetMappers extends AssetManagementImportSetupA
   private async fetchExistingSpaceUidsInOrg(apiConfig: CSAssetsAPIConfig): Promise<Set<string>> {
     const adapter = new CSAssetsAdapter(apiConfig);
     await adapter.init();
-    const { spaces } = await adapter.listSpaces();
+    const { spaces } = await adapter.listSpaces(FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_API_FETCH_CONCURRENCY);
     const uids = new Set<string>();
     for (const s of spaces) {
       if (s.uid) {

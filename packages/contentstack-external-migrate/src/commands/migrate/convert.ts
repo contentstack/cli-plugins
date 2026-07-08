@@ -8,7 +8,7 @@ export default class MigrateConvert extends Command {
 
   static examples = [
     '$ csdx migrate:convert --legacy contentful --input ./export.json --output ./contentstack-import',
-    '$ csdx migrate:convert -l contentful -i ../references/contentful-export-*.json -o ./contentstack-import -m en-US',
+    '$ csdx migrate:convert -l contentful -i ../references/contentful-export-*.json --output ./contentstack-import --master-locale en-US',
   ];
   static hidden = true;
   static flags: FlagInput = {
@@ -23,16 +23,13 @@ export default class MigrateConvert extends Command {
       description: 'Path to legacy export JSON (e.g. Contentful export)',
     }),
     output: flags.string({
-      char: 'o',
       description: 'Parent output directory; bundle written to <output>/bundle',
       default: './contentstack-import',
     }),
     'master-locale': flags.string({
-      char: 'm',
       description: 'Destination master locale code',
     }),
     affix: flags.string({
-      char: 'a',
       description: 'Content-type UID prefix',
       default: '',
     }),

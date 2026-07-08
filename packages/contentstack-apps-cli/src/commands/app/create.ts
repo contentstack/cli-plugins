@@ -62,7 +62,6 @@ export default class Create extends BaseCommand<typeof Create> {
 
   static flags: FlagInput = {
     name: flags.string({
-      char: "n",
       description: appCreate.NAME_DESCRIPTION,
     }),
     "app-type": flags.string({

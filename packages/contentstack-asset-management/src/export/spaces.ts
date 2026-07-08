@@ -10,6 +10,17 @@ import ExportFields from './fields';
 import ExportWorkspace from './workspaces';
 
 /**
+ * Real entity counts for the export summary (Bug 3 — "everything under ASSETS"):
+ * assets = downloaded binaries, folders = folder entities, plus shared asset_types and fields.
+ */
+export type AssetExportCounts = {
+  assets: number;
+  folders: number;
+  assetTypes: number;
+  fields: number;
+};
+
+/**
  * Orchestrates the full Contentstack Assets export: shared asset types and fields,
  * then per-workspace metadata and assets (including internal download).
  * Progress and download are fully owned by this package.
@@ -27,7 +38,7 @@ export class ExportSpaces {
     this.parentProgressManager = parent;
   }
 
-  async start(): Promise<void> {
+  async start(): Promise<AssetExportCounts> {
     const {
       linkedWorkspaces,
       exportDir,
@@ -42,7 +53,7 @@ export class ExportSpaces {
 
     if (!linkedWorkspaces.length) {
       log.debug('No linked workspaces to export', context);
-      return;
+      return { assets: 0, folders: 0, assetTypes: 0, fields: 0 };
     }
 
     log.debug('Starting Contentstack Assets export process...', context);
@@ -79,6 +90,8 @@ export class ExportSpaces {
       chunkFileSizeMb,
       apiConcurrency: this.options.apiConcurrency,
       downloadAssetsConcurrency: this.options.downloadAssetsConcurrency,
+      pageSize: this.options.pageSize,
+      fetchConcurrency: this.options.fetchConcurrency,
     };
 
     const sharedFieldsDir = pResolve(spacesRootPath, 'fields');
@@ -89,6 +102,11 @@ export class ExportSpaces {
     const firstSpaceUid = linkedWorkspaces[0].space_uid;
     let bootstrapFailed = false;
     let anySpaceFailed = false;
+    // Real entity counts accumulated for the summary (Bug 3).
+    let assetsTotal = 0;
+    let foldersTotal = 0;
+    let assetTypesCount = 0;
+    let fieldsCount = 0;
     try {
       progress.startProcess(PROCESS_NAMES.AM_FIELDS);
       progress.startProcess(PROCESS_NAMES.AM_ASSET_TYPES);
@@ -98,7 +116,10 @@ export class ExportSpaces {
       const exportFields = new ExportFields(apiConfig, exportContext);
       exportFields.setParentProgressManager(progress);
       try {
-        await Promise.all([exportAssetTypes.start(firstSpaceUid), exportFields.start(firstSpaceUid)]);
+        [assetTypesCount, fieldsCount] = await Promise.all([
+          exportAssetTypes.start(firstSpaceUid),
+          exportFields.start(firstSpaceUid),
+        ]);
         progress.completeProcess(PROCESS_NAMES.AM_FIELDS, true);
         progress.completeProcess(PROCESS_NAMES.AM_ASSET_TYPES, true);
       } catch (bootstrapErr) {
@@ -116,7 +137,9 @@ export class ExportSpaces {
         try {
           const exportWorkspace = new ExportWorkspace(apiConfig, exportContext);
           exportWorkspace.setParentProgressManager(progress);
-          await exportWorkspace.start(ws, spaceDir, branchName || 'main', spaceProcess);
+          const spaceCounts = await exportWorkspace.start(ws, spaceDir, branchName || 'main', spaceProcess);
+          assetsTotal += spaceCounts.assets;
+          foldersTotal += spaceCounts.folders;
           progress.completeProcess(spaceProcess, true);
           log.debug(`Exported workspace structure for space ${ws.space_uid}`, context);
         } catch (err) {
@@ -140,6 +163,8 @@ export class ExportSpaces {
         context,
       );
       log.debug('Contentstack Assets export completed', context);
+
+      return { assets: assetsTotal, folders: foldersTotal, assetTypes: assetTypesCount, fields: fieldsCount };
     } catch (err) {
       if (!bootstrapFailed) {
         // Mark any spaces that hadn't been processed as failed so the multibar
@@ -168,6 +193,6 @@ export class ExportSpaces {
 /**
  * Entry point for callers that prefer a function. Delegates to ExportSpaces.
  */
-export async function exportSpaceStructure(options: AssetManagementExportOptions): Promise<void> {
-  await new ExportSpaces(options).start();
+export async function exportSpaceStructure(options: AssetManagementExportOptions): Promise<AssetExportCounts> {
+  return new ExportSpaces(options).start();
 }
