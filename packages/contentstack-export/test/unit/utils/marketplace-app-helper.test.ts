@@ -15,6 +15,7 @@ describe('Marketplace App Helper Utils', () => {
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-stack-uid',
       exportDir: '/test/export',
       data: '/test/data',
