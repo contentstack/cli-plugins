@@ -78,8 +78,10 @@ describe('Login Handler', () => {
     it('should successfully login with email and password and set headers', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         source_stack: 'test-api-key',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         access_token: 'test-access-token',
         authtoken: 'test-auth-token',
         apiKey: 'test-api-key',
@@ -104,6 +106,7 @@ describe('Login Handler', () => {
       expect(config.headers!.authtoken).to.equal('test-auth-token');
       expect(config.headers!['X-User-Agent']).to.equal('contentstack-export/v');
       expect(mockClient.login.calledOnce).to.be.true;
+      // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
       expect(mockClient.login.calledWith({ email: 'test@example.com', password: 'testpassword' })).to.be.true;
       expect(logSuccessStub.calledWith('Contentstack account authenticated successfully!')).to.be.true;
     });
@@ -111,6 +114,7 @@ describe('Login Handler', () => {
     it('should throw error when authtoken is missing after login', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -136,6 +140,7 @@ describe('Login Handler', () => {
     it('should throw error when user object is missing authtoken property', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -157,6 +162,7 @@ describe('Login Handler', () => {
     it('should throw error when user object is missing', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -176,6 +182,7 @@ describe('Login Handler', () => {
     it('should handle login API errors', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -409,9 +416,11 @@ describe('Login Handler', () => {
     it('should prioritize email/password over existing auth when email and password are present', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         source_stack: 'test-api-key',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         access_token: 'test-access-token',
         authtoken: 'test-auth-token',
         contentDir: '/test/content',
