@@ -27,7 +27,7 @@ export default class Install extends AppCLIBaseCommand {
     }),
     "stack-api-key": flags.string({
       char: "k",
-      description: commonMsg.STACK_API_KEY,
+      description: commonMsg.STACK_API_KEY_placeholder,
     }),
     ...AppCLIBaseCommand.baseFlags,
   };
@@ -89,7 +89,7 @@ export default class Install extends AppCLIBaseCommand {
       // in case a stack app is selected and no stack-api-key is provided
       if (appType === "stack" && !this.flags["stack-api-key"]) {
         this.log(
-          $t(installAppMsg.MISSING_STACK_API_KEY, {
+          $t(installAppMsg.MISSING_STACK_API_KEY_placeholder, {
             app: app?.name || app?.uid,
           }),
           "warn"
