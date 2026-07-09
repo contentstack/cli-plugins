@@ -39,7 +39,7 @@ describe('ExportSpaces', () => {
     sinon.stub(ExportAssetTypes.prototype, 'setParentProgressManager');
     sinon.stub(ExportFields.prototype, 'start').resolves();
     sinon.stub(ExportFields.prototype, 'setParentProgressManager');
-    sinon.stub(ExportWorkspace.prototype, 'start').resolves();
+    sinon.stub(ExportWorkspace.prototype, 'start').resolves({ assets: 0, folders: 0 });
     sinon.stub(ExportWorkspace.prototype, 'setParentProgressManager');
 
     fakeProgress.addProcess.resetHistory();
@@ -133,7 +133,7 @@ describe('ExportSpaces', () => {
     it('should mark only the failing space row as failed and continue with remaining spaces', async () => {
       const wsStub = ExportWorkspace.prototype.start as sinon.SinonStub;
       wsStub.onFirstCall().rejects(new Error('workspace-error'));
-      wsStub.onSecondCall().resolves();
+      wsStub.onSecondCall().resolves({ assets: 0, folders: 0 });
 
       const exporter = new ExportSpaces(baseOptions);
       // Per the plan, per-space failures must NOT abort the orchestrator —

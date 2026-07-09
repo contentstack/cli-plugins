@@ -3,7 +3,7 @@
   "description": "Contentstack CLI plugin to setup the mappers and configurations for the import command",
   "version": "2.0.0-beta.16",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.9",
     "@contentstack/cli-utilities": "~2.0.0-beta.10",
@@ -82,5 +82,9 @@
       "cm:stacks:import": "IMPRTSTP"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-import-setup"
+  }
 }

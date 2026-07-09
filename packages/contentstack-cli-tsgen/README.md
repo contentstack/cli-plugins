@@ -30,19 +30,33 @@ generate TypeScript typings from a Stack
 USAGE
   $ csdx tsgen
 
-OPTIONS
-  -a, --token-alias=token-alias  (required) delivery token alias
-  -d, --[no-]doc                 include documentation comments
-  -o, --output=output            (required) full path to output
-  -p, --prefix=prefix            interface prefix, e.g. "I"
+FLAGS
+  -a, --alias=<value>         (required) delivery token alias
+  -o, --output=<value>        (required) full path to output
+      --[no-]doc              include documentation comments
+      --prefix=<value>        interface prefix, e.g. "I"
+      --branch=<value>        branch
+      --include-system-fields include system fields in generated types
+      --include-editable-tags include editable tags in generated types
+      --include-referenced-entry
+                              Includes the ReferencedEntry interface in generated types. Use this option to add a
+                              generic interface for handling referenced entries when the exact content type is unknown
+                              or when you need a flexible reference type
+      --api-type=<option>     [default: rest] [Optional] Please enter an API type to generate the type definitions.
+                              <options: rest|graphql>
+      --namespace=<value>     [Optional]Please enter a namespace for the GraphQL API type to organize the generated
+                              types.
 
 EXAMPLES
-  $ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts"
-  $ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" -p "I"
-  $ csdx tsgen -a "delivery token alias" -o "contentstack/generated.d.ts" --no-doc
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts"
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --prefix "I"
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --no-doc
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --include-referenced-entry
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql
+  $ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql --namespace "GraphQL" 
 ```
 
-_See code: [src/commands/tsgen.ts](https://github.com/contentstack/cli-plugins/blob/v2-beta/packages/contentstack-cli-tsgen/src/commands/tsgen.ts)_
+_See code: [src/commands/tsgen.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-tsgen/src/commands/tsgen.ts)_
 <!-- commandsstop -->
 
 ## Supported Fields
