@@ -82,6 +82,7 @@ describe('error-handler', () => {
     it('should append access_token error details', () => {
       const error = {
         errorMessage: 'Unauthorized',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         errors: { access_token: 'is expired' },
       };
       const result = formatError(error);

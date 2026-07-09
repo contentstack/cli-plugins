@@ -15,6 +15,7 @@ describe('Module Index - startModuleImport', () => {
 
   it('should import a module successfully', async () => {
     const mockStackAPIClient = {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'test-key',
       name: 'test-stack'
     } as any;
@@ -44,6 +45,7 @@ describe('Module Index - startModuleImport', () => {
 
   it('should handle module import errors', async () => {
     const mockStackAPIClient = {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'test-key',
       name: 'test-stack'
     } as any;

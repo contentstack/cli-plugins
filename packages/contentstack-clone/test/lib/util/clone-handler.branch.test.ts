@@ -122,10 +122,12 @@ describe('CloneHandler - Branch', () => {
 
       try {
         await handler.resolveBranchAliases(false);
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
       }
     });

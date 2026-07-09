@@ -72,7 +72,7 @@ describe('Login Handler', () => {
       const mockConfig = {
         ...baseConfig,
         email: 'test@example.com',
-        password: 'password123',
+        password: 'YOUR_PWD',
         source_stack: 'test-stack-key',
       } as ImportConfig;
 
@@ -90,7 +90,7 @@ describe('Login Handler', () => {
       expect(
         clientLoginStub.calledWith({
           email: 'test@example.com',
-          password: 'password123',
+          password: 'YOUR_PWD',
         }),
       ).to.be.true;
 
@@ -101,7 +101,7 @@ describe('Login Handler', () => {
       const mockConfig = {
         ...baseConfig,
         email: 'test@example.com',
-        password: 'wrong-password',
+        password: 'YOUR_PWD_WRONG',
       } as ImportConfig;
 
       // Mock failed login

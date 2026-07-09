@@ -567,6 +567,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-from-alias',
         token: 'cs-token-123',
       });
@@ -589,6 +590,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -598,6 +600,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 
@@ -619,6 +622,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -640,6 +644,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -666,6 +671,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
