@@ -196,6 +196,7 @@ describe('Export Config Handler', () => {
       // Provide username and password via external config file
       readFileStub.resolves({
         username: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'test-password'
       });
       
