@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 import chunk from 'lodash/chunk';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
@@ -699,7 +699,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     metadata: CreateAssetMetadata,
   ): Promise<{ asset: { uid: string; url: string } }> {
     const filename = basename(filePath);
-    const fileBuffer = readFileSync(filePath);
+    const fileBuffer = await readFile(filePath);
     const blob = new Blob([fileBuffer]);
     const form = new FormData();
     form.append('file', blob, filename);
@@ -712,6 +712,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       { space_key: spaceUid },
     );
   }
+
 
   /**
    * POST /api/fields — creates a shared field.
