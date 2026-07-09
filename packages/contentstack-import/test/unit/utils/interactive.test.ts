@@ -83,6 +83,7 @@ describe('Interactive Utils', () => {
 
   describe('askAPIKey', () => {
     it('should return API key from user input', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'test-api-key-123';
       cliuxInquireStub.resolves(apiKey);
 
