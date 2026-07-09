@@ -87,6 +87,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'asset1', locale: 'en-us', version: 1, type: 'asset' }],
           status: 'failed',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -122,6 +123,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' }],
           status: 'success',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -162,6 +164,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' }],
           status: 'failed',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -202,6 +205,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' }],
           status: 'success',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -297,6 +301,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'asset1', locale: 'en-us', version: 1, type: 'asset' }],
           status: 'failed',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -339,6 +344,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' as const }],
           status: 'success' as const,
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },
@@ -362,6 +368,7 @@ describe('Revert Retry Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' as const }],
           status: 'success' as const,
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },

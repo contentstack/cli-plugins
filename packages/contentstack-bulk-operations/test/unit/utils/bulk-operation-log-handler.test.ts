@@ -255,6 +255,7 @@ describe('Bulk Operation Log Handler', () => {
           items: [{ uid: 'entry1' }],
           status: 'failed',
           error: 'Network error',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           apiKey: 'test-key',
           branch: 'main',
         },

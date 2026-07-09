@@ -784,6 +784,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration error', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -814,6 +815,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration error', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1003,6 +1005,7 @@ describe('ImportMarketplaceApps', () => {
     it('should handle installApps with existing app and configuration', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
       // Set up nodeCrypto for decryption
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
       // Set installedApps directly on the instance
       (importMarketplaceApps as any).installedApps = mockData.mockInstalledApps;
@@ -1037,6 +1040,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with successful configuration update', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1067,6 +1071,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration update error', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1101,6 +1106,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with successful server configuration update', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1131,6 +1137,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration update error', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1166,6 +1173,7 @@ describe('ImportMarketplaceApps', () => {
     it('should handle installApps with existing app and UID mapping already set', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
       // Set up nodeCrypto for decryption
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
       // Set installedApps directly on the instance
       (importMarketplaceApps as any).installedApps = mockData.mockInstalledApps;
@@ -1183,6 +1191,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle installApps with updateParam and configuration', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
       // Set installedApps directly on the instance
       (importMarketplaceApps as any).installedApps = mockData.mockInstalledApps;
@@ -1208,6 +1217,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle installApps with updateParam but no configuration', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
       // Set installedApps directly on the instance
       (importMarketplaceApps as any).installedApps = mockData.mockInstalledApps;
@@ -1283,6 +1293,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration success path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1314,6 +1325,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration success path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1345,6 +1357,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration error path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1380,6 +1393,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration error path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1415,6 +1429,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle installApps with existing app and configuration - specific branch coverage', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       // Create an app that exists in installedApps with configuration
@@ -1464,6 +1479,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration success - specific success path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1494,6 +1510,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration success - specific success path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1524,6 +1541,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with configuration error - specific error path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1558,6 +1576,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle updateAppsConfig with server configuration error - specific error path', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1592,6 +1611,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle installApps with existing app that has configuration - exact branch coverage', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       // First, we need to populate installedApps by calling start() or setting it directly
@@ -1627,6 +1647,7 @@ describe('ImportMarketplaceApps', () => {
 
     it('should handle installApps with installation failure - specific error branch coverage', async () => {
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
 
       const app = {
@@ -1972,6 +1993,7 @@ describe('ImportMarketplaceApps', () => {
     });
 
     it('should use provided encryption key', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const encryptionKey = 'test-encryption-key';
 
       await importMarketplaceApps.getAndValidateEncryptionKey(encryptionKey);
@@ -2004,6 +2026,7 @@ describe('ImportMarketplaceApps', () => {
   describe('updateAppsConfig()', () => {
     beforeEach(() => {
       importMarketplaceApps = new ImportMarketplaceApps(mockModuleClassParams);
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
     });
 
@@ -2267,6 +2290,7 @@ describe('ImportMarketplaceApps', () => {
     beforeEach(() => {
       importMarketplaceApps = new ImportMarketplaceApps(mockModuleClassParams);
       importMarketplaceApps.appSdk = mockAppSdk;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       importMarketplaceApps.nodeCrypto = new NodeCrypto({ encryptionKey: 'test-key' });
     });
 
