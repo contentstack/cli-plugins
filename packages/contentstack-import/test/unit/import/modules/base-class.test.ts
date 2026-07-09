@@ -131,6 +131,7 @@ describe('BaseClass', () => {
       forceStopMarketplaceAppsPrompt: false,
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       auth_token: 'auth-token',
       selectedModules: ['assets'],
       skipAudit: false,
