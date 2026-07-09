@@ -72,6 +72,7 @@ describe('Login Handler', () => {
       const mockConfig = {
         ...baseConfig,
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'YOUR_PWD',
         source_stack: 'test-stack-key',
       } as ImportConfig;
@@ -90,6 +91,7 @@ describe('Login Handler', () => {
       expect(
         clientLoginStub.calledWith({
           email: 'test@example.com',
+          // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
           password: 'YOUR_PWD',
         }),
       ).to.be.true;
@@ -101,6 +103,7 @@ describe('Login Handler', () => {
       const mockConfig = {
         ...baseConfig,
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'YOUR_PWD_WRONG',
       } as ImportConfig;
 
