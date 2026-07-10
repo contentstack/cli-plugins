@@ -2886,8 +2886,10 @@ describe('EntriesImport', () => {
 
       await entriesImport.start();
 
-      // Verify publishEntries was NOT called due to empty environments
-      expect(publishEntriesStub.called).to.be.false;
+      // publishEntries is called but is a no-op — envs is empty so serializePublishEntries nulls all entries
+      expect(publishEntriesStub.called).to.be.true;
+      // createEntryDataForVariantEntry must always run regardless of environments
+      expect(createEntryDataForVariantEntryStub.called).to.be.true;
     });
 
     it('should handle errors in replaceEntries', async () => {
