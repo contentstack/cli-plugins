@@ -282,7 +282,6 @@ export default class EntriesImport extends BaseClass {
             `No environments file found at ${this.envPath}. Entries will not be published.`,
             this.importConfig.context,
           );
-          return;
         } else {
           log.debug(`Loaded ${Object.keys(this.envs).length} environments.`, this.importConfig.context);
         }
