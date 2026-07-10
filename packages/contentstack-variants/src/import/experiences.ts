@@ -262,7 +262,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
 
     if (!existsSync(versionsPath)) {
       log.debug(`No versions file found for experience: ${oldExperienceUid}`, this.config.context);
-      return;
+      return false;
     }
 
     const versions = fsUtil.readFile(versionsPath, true) as ExperienceStruct[];
