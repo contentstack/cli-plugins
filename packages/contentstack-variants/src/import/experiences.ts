@@ -1,7 +1,5 @@
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
-import values from 'lodash/values';
-import cloneDeep from 'lodash/cloneDeep';
 import { sanitizePath, log, handleAndLogError } from '@contentstack/cli-utilities';
 import { PersonalizationAdapter, fsUtil, lookUpAudiences, lookUpEvents } from '../utils';
 import {
