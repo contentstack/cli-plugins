@@ -284,17 +284,18 @@ export default class EntriesImport extends BaseClass {
           );
         } else {
           log.debug(`Loaded ${Object.keys(this.envs).length} environments.`, this.importConfig.context);
-          for (let entryRequestOption of entryRequestOptions) {
-            await this.publishEntries(entryRequestOption).catch((error) => {
-              handleAndLogError(
-                error,
-                { ...this.importConfig.context, cTUid: entryRequestOption.cTUid, locale: entryRequestOption.locale },
-                `Error in publishing entries of ${entryRequestOption.cTUid} in locale ${entryRequestOption.locale}`,
-              );
-            });
-          }
-          log.success('All the entries have been published successfully', this.importConfig.context);
         }
+
+        for (let entryRequestOption of entryRequestOptions) {
+          await this.publishEntries(entryRequestOption).catch((error) => {
+            handleAndLogError(
+              error,
+              { ...this.importConfig.context, cTUid: entryRequestOption.cTUid, locale: entryRequestOption.locale },
+              `Error in publishing entries of ${entryRequestOption.cTUid} in locale ${entryRequestOption.locale}`,
+            );
+          });
+        }
+        log.success('All the entries have been published successfully', this.importConfig.context);
       } else {
         log.info('Skipping entry publishing as per configuration...', this.importConfig.context);
       }
