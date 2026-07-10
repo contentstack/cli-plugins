@@ -203,7 +203,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
     // Process each version and map them by status
     versions.forEach((version) => {
       let versionReqObj = lookUpAudiences(version, this.audiencesUid) as CreateExperienceVersionInput;
-      versionReqObj = lookUpEvents(version, this.eventsUid) as CreateExperienceVersionInput;
+      versionReqObj = lookUpEvents(versionReqObj, this.eventsUid) as CreateExperienceVersionInput;
 
       if (versionReqObj && versionReqObj.status && (versionReqObj.variants?.length ?? 0) > 0) {
         versionMap[versionReqObj.status] = versionReqObj;

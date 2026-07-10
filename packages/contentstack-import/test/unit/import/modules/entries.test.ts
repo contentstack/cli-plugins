@@ -2886,8 +2886,8 @@ describe('EntriesImport', () => {
 
       await entriesImport.start();
 
-      // publishEntries is called but is a no-op — envs is empty so serializePublishEntries nulls all entries
-      expect(publishEntriesStub.called).to.be.true;
+      // publish loop is skipped entirely when envs is empty — no pointless API work
+      expect(publishEntriesStub.called).to.be.false;
       // createEntryDataForVariantEntry must always run regardless of environments
       expect(createEntryDataForVariantEntryStub.called).to.be.true;
     });
