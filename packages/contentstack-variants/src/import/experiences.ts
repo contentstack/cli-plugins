@@ -283,7 +283,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
         versionMap[versionReqObj.status] = versionReqObj;
         log.debug(`Mapped version with status: ${versionReqObj.status}`, this.config.context);
       } else if (versionReqObj?.status && !(versionReqObj.variants?.length ?? 0)) {
-        log.warn(`Skipping version ${versionReqObj.status}: no valid variants (all had unmapped Lytics audiences)`, this.config.context);
+        log.warn(`Skipping version ${versionReqObj.status}: no valid variants after audience/event mapping`, this.config.context);
       }
     });
 
