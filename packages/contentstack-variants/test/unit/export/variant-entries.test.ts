@@ -1,12 +1,13 @@
-import { expect } from '@oclif/test';
+import { expect } from 'chai';
+import sinon from 'sinon';
 import { FsUtility } from '@contentstack/cli-utilities';
-import { fancy } from '@contentstack/cli-dev-dependencies';
 
 import exportConf from '../mock/export-config.json';
 import { Export, ExportConfig, VariantHttpClient, VariantsOption } from '../../../src';
 
 describe('Variant Entries Export', () => {
   let config: ExportConfig;
+  let sandbox: sinon.SinonSandbox;
 
   const exportEntryData = {
     locale: 'en-us',
@@ -14,67 +15,63 @@ describe('Variant Entries Export', () => {
     entries: [{ uid: 'E-UID-1', title: 'Entry 1' }],
   };
 
-  const test = fancy
-    .stdout({ print: process.env.PRINT === 'true' || false })
-    .stub(FsUtility.prototype, 'completeFile', () => {})
-    .stub(FsUtility.prototype, 'writeIntoFile', () => {})
-    .stub(FsUtility.prototype, 'createFolderIfNotExist', () => {});
-
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
     config = exportConf as unknown as ExportConfig;
+    sandbox.stub(FsUtility.prototype, 'completeFile').returns(undefined as any);
+    sandbox.stub(FsUtility.prototype, 'writeIntoFile').returns(undefined as any);
+    sandbox.stub(FsUtility.prototype, 'createFolderIfNotExist').returns(undefined as any);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('exportVariantEntry method', () => {
-    test
-      .stub(VariantHttpClient.prototype, 'variantEntries', async () => {})
-      .spy(VariantHttpClient.prototype, 'variantEntries')
-      .spy(FsUtility.prototype, 'completeFile')
-      .spy(FsUtility.prototype, 'createFolderIfNotExist')
-      .it('should call export variant entry method (API call)', async ({ spy }) => {
-        let entryVariantInstace = new Export.VariantEntries(config);
-        await entryVariantInstace.exportVariantEntry(exportEntryData);
+    it('should call export variant entry method (API call)', async () => {
+      sandbox.stub(VariantHttpClient.prototype, 'variantEntries').resolves();
 
-        expect(spy.variantEntries.callCount).to.be.equals(1);
-        expect(spy.completeFile.callCount).to.be.equals(1);
-        expect(spy.createFolderIfNotExist.callCount).to.be.equals(1);
-        expect(spy.completeFile.alwaysCalledWith(true)).to.be.true;
+      const entryVariantInstance = new Export.VariantEntries(config);
+      await entryVariantInstance.exportVariantEntry(exportEntryData);
+
+      const variantEntriesStub = VariantHttpClient.prototype.variantEntries as sinon.SinonStub;
+      const completeFileStub = FsUtility.prototype.completeFile as sinon.SinonStub;
+      const createFolderStub = FsUtility.prototype.createFolderIfNotExist as sinon.SinonStub;
+
+      expect(variantEntriesStub.callCount).to.equal(1);
+      expect(completeFileStub.callCount).to.equal(1);
+      expect(createFolderStub.callCount).to.equal(1);
+      expect(completeFileStub.alwaysCalledWith(true)).to.be.true;
+    });
+
+    it('should write data in files (As chunk)', async () => {
+      sandbox.stub(VariantHttpClient.prototype, 'variantEntries').callsFake(async (...args: any) => {
+        const { callback } = args[0] as VariantsOption;
+        if (callback) callback([{ uid: 'E-UID-1', title: 'Entry 1' }]);
       });
 
-    test
-      .stub(VariantHttpClient.prototype, 'variantEntries', async (...args: any) => {
-        const { callback } = args[0] as VariantsOption;
-        if (callback) {
-          callback([{ uid: 'E-UID-1', title: 'Entry 1' }]);
-        }
-      })
-      .spy(FsUtility.prototype, 'writeIntoFile')
-      .it('should write data in files (As chunk)', async ({ spy }) => {
-        let entryVariantInstace = new Export.VariantEntries(config);
-        await entryVariantInstace.exportVariantEntry(exportEntryData);
+      const entryVariantInstance = new Export.VariantEntries(config);
+      await entryVariantInstance.exportVariantEntry(exportEntryData);
 
-        expect(spy.writeIntoFile.callCount).to.be.equals(1);
-        expect(spy.writeIntoFile.alwaysCalledWith([{ uid: 'E-UID-1', title: 'Entry 1' }])).to.be.true;
+      const writeIntoFileStub = FsUtility.prototype.writeIntoFile as sinon.SinonStub;
+      expect(writeIntoFileStub.callCount).to.equal(1);
+      expect(writeIntoFileStub.alwaysCalledWith([{ uid: 'E-UID-1', title: 'Entry 1' }])).to.be.true;
+    });
+
+    it('should skip write when API returns empty data, should set default chunk 1MB if not in config', async () => {
+      sandbox.stub(VariantHttpClient.prototype, 'variantEntries').callsFake(async (...args: any) => {
+        const { callback } = args[0] as VariantsOption;
+        if (callback) callback([]);
       });
 
-    test
-      .stub(VariantHttpClient.prototype, 'variantEntries', async (...args: any) => {
-        const { callback } = args[0] as VariantsOption;
-        if (callback) {
-          callback([]); // NOTE API callback with empty response
-        }
-      })
-      .spy(FsUtility.prototype, 'writeIntoFile')
-      .spy(VariantHttpClient.prototype, 'variantEntries')
-      .it(
-        'should skip write data in files (Empty data check validation), should set default file chunk 1MB if chunk size is not passed in config',
-        async ({ spy }) => {
-          config.modules.variantEntry.chunkFileSize = null as any;
-          let entryVariantInstace = new Export.VariantEntries(config, () => {});
-          await entryVariantInstace.exportVariantEntry(exportEntryData);
+      config.modules.variantEntry.chunkFileSize = null as any;
+      const entryVariantInstance = new Export.VariantEntries(config);
+      await entryVariantInstance.exportVariantEntry(exportEntryData);
 
-          expect(spy.writeIntoFile.callCount).to.be.equals(0);
-          expect(spy.variantEntries.callCount).to.be.equals(1);
-        },
-      );
+      const writeIntoFileStub = FsUtility.prototype.writeIntoFile as sinon.SinonStub;
+      const variantEntriesStub = VariantHttpClient.prototype.variantEntries as sinon.SinonStub;
+      expect(writeIntoFileStub.callCount).to.equal(0);
+      expect(variantEntriesStub.callCount).to.equal(1);
+    });
   });
 });
