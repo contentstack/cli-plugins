@@ -192,7 +192,7 @@ AssetsPublishCommand.flags = {
   'data-dir': flags.string({
     description:
       '(optional) Path to the import backup directory. When set, each imported asset is published only to the environments and locales it was published to in the source stack (read from the backup’s publish details and asset UID mapping), with asset-scan gating applied. Intended for the post-import publish flow.',
-    exclusive: ['source-env', 'folder-uid'],
+    exclusive: ['source-env', 'folder-uid', 'environments', 'locales'],
   }),
   'bulk-publish': flags.string({
     description: 'Set this flag to use Contentstack’s Bulk Publish APIs. It is true, by default.',
