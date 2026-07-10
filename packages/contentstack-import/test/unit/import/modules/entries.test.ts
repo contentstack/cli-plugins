@@ -2886,8 +2886,10 @@ describe('EntriesImport', () => {
 
       await entriesImport.start();
 
-      // Verify publishEntries was NOT called due to empty environments
+      // publish loop is skipped entirely when envs is empty — no pointless API work
       expect(publishEntriesStub.called).to.be.false;
+      // createEntryDataForVariantEntry must always run regardless of environments
+      expect(createEntryDataForVariantEntryStub.called).to.be.true;
     });
 
     it('should handle errors in replaceEntries', async () => {
