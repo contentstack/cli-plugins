@@ -28,7 +28,7 @@ describe('Interactive Utils', () => {
 
   describe('askPassword', () => {
     it('should prompt for password and mask the input', async () => {
-      const mockPassword = 'testPassword123';
+      const mockPassword = 'YOUR_PWD';
       inquireStub.resolves(mockPassword);
 
       const result = await askPassword();
@@ -247,6 +247,7 @@ describe('Interactive Utils', () => {
 
   describe('askAPIKey', () => {
     it('should prompt for stack API key', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const mockAPIKey = 'blt1234567890abcdef';
       inquireStub.resolves(mockAPIKey);
 

@@ -16,6 +16,7 @@ describe('Common Helper Utilities', () => {
 
   describe('askAPIKey', () => {
     it('should prompt user for API key and return the response', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const mockApiKey = 'test-api-key-12345';
 
       cliuxInquireStub = stub(cliux, 'inquire').resolves(mockApiKey);
