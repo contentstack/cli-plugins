@@ -1,7 +1,5 @@
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
-import values from 'lodash/values';
-import cloneDeep from 'lodash/cloneDeep';
 import { sanitizePath, log, handleAndLogError } from '@contentstack/cli-utilities';
 import { PersonalizationAdapter, fsUtil, lookUpAudiences, lookUpEvents } from '../utils';
 import {
@@ -119,10 +117,12 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
         const experiences = fsUtil.readFile(this.experiencesPath, true) as ExperienceStruct[];
         log.info(`Found ${experiences.length} experiences to import`, this.config.context);
 
+        const experienceUidsWithVariants = new Set<string>();
+
         for (const experience of experiences) {
           const { uid, ...restExperienceData } = experience;
           log.debug(`Processing experience: ${uid}`, this.config.context);
-          
+
           //check whether reference audience exists or not that referenced in variations having __type equal to AudienceBasedVariation & targeting
           let experienceReqObj: CreateExperienceInput = lookUpAudiences(restExperienceData, this.audiencesUid);
           //check whether events exists or not that referenced in metrics
@@ -135,7 +135,9 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
 
           try {
             // import versions of experience
-            await this.importExperienceVersions(expRes, uid);
+            if (await this.importExperienceVersions(expRes, uid)) {
+              experienceUidsWithVariants.add(expRes.uid);
+            }
           } catch (error) {
             handleAndLogError(error, this.config.context, `Failed to import experience versions for ${expRes.uid}`);
           }
@@ -145,7 +147,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
         log.success('Experiences created successfully', this.config.context);
 
         log.info('Validating variant and variant group creation',this.config.context);
-        this.pendingVariantAndVariantGrpForExperience = values(cloneDeep(this.experiencesUidMapper));
+        this.pendingVariantAndVariantGrpForExperience = Array.from(experienceUidsWithVariants);
         const jobRes = await this.validateVariantGroupAndVariantsCreated();
         fsUtil.writeFile(this.cmsVariantPath, this.cmsVariants);
         fsUtil.writeFile(this.cmsVariantGroupPath, this.cmsVariantGroups);
@@ -175,7 +177,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
   /**
    * function import experience versions from a JSON file and creates them in the project.
    */
-  async importExperienceVersions(experience: ExperienceStruct, oldExperienceUid: string) {
+  async importExperienceVersions(experience: ExperienceStruct, oldExperienceUid: string): Promise<boolean> {
     log.debug(`Importing versions for experience: ${oldExperienceUid}`, this.config.context);
     
     const versionsPath = resolve(
@@ -186,33 +188,39 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
 
     if (!existsSync(versionsPath)) {
       log.debug(`No versions file found for experience: ${oldExperienceUid}`, this.config.context);
-      return;
+      return false;
     }
 
     const versions = fsUtil.readFile(versionsPath, true) as ExperienceStruct[];
     log.debug(`Found ${versions.length} versions for experience: ${oldExperienceUid}`, this.config.context);
     
-    const versionMap: Record<string, CreateExperienceVersionInput | undefined> = {
-      ACTIVE: undefined,
-      DRAFT: undefined,
-      PAUSE: undefined,
-    };
+    const HANDLED_STATUSES = new Set(['ACTIVE', 'DRAFT', 'PAUSE']);
+    const versionMap: { ACTIVE?: CreateExperienceVersionInput; DRAFT?: CreateExperienceVersionInput; PAUSE?: CreateExperienceVersionInput } = {};
 
     // Process each version and map them by status
     versions.forEach((version) => {
       let versionReqObj = lookUpAudiences(version, this.audiencesUid) as CreateExperienceVersionInput;
-      versionReqObj = lookUpEvents(version, this.eventsUid) as CreateExperienceVersionInput;
+      versionReqObj = lookUpEvents(versionReqObj, this.eventsUid) as CreateExperienceVersionInput;
 
       if (versionReqObj && versionReqObj.status && (versionReqObj.variants?.length ?? 0) > 0) {
-        versionMap[versionReqObj.status] = versionReqObj;
+        if (!HANDLED_STATUSES.has(versionReqObj.status)) {
+          log.warn(`Skipping version with unrecognized status "${versionReqObj.status}" — expected one of ACTIVE, DRAFT, PAUSE`, this.config.context);
+          return;
+        }
+        versionMap[versionReqObj.status as 'ACTIVE' | 'DRAFT' | 'PAUSE'] = versionReqObj;
         log.debug(`Mapped version with status: ${versionReqObj.status}`, this.config.context);
       } else if (versionReqObj?.status && !(versionReqObj.variants?.length ?? 0)) {
-        log.warn(`Skipping version ${versionReqObj.status}: no valid variants (all had unmapped Lytics audiences)`, this.config.context);
+        log.warn(`Skipping version ${versionReqObj.status}: no valid variants after audience/event mapping`, this.config.context);
       }
     });
 
+    if (!Object.values(versionMap).some((v) => v !== undefined)) {
+      return false;
+    }
+
     // Prioritize updating or creating versions based on the order: ACTIVE -> DRAFT -> PAUSE
-    return await this.handleVersionUpdateOrCreate(experience, versionMap);
+    await this.handleVersionUpdateOrCreate(experience, versionMap);
+    return true;
   }
 
   // Helper method to handle version update or creation logic
@@ -333,6 +341,10 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
               log.debug(`Attaching ${updatedContentTypes.length} content types to experience: ${newExpUid}`, this.config.context);
               const { variant_groups: [variantGroup] = [] } =
                 (await this.getVariantGroup({ experienceUid: newExpUid })) || {};
+              if (!variantGroup) {
+                log.warn(`No variant group found for experience: ${newExpUid} — skipping CT attachment`, this.config.context);
+                return;
+              }
               variantGroup.content_types = updatedContentTypes;
               // Update content types detail in the new experience asynchronously
               return await this.updateVariantGroup(variantGroup);
