@@ -145,6 +145,8 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
 
       log.info(`Processing ${experiencesCount} experiences for import`, this.config.context);
 
+      const experienceUidsWithVariants = new Set<string>();
+
       for (const experience of this.experiences) {
         const { uid, ...restExperienceData } = experience;
         log.debug(`Processing experience: ${uid}`, this.config.context);
@@ -162,7 +164,9 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
 
           try {
             // import versions of experience
-            await this.importExperienceVersions(expRes, uid);
+            if (await this.importExperienceVersions(expRes, uid)) {
+              experienceUidsWithVariants.add(expRes.uid);
+            }
           } catch (error) {
             handleAndLogError(error, this.config.context, `Failed to import experience versions for ${expRes.uid}`);
           }
@@ -184,7 +188,7 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
       log.success('Experiences created successfully', this.config.context);
 
       log.info('Validating variant and variant group creation', this.config.context);
-      this.pendingVariantAndVariantGrpForExperience = values(cloneDeep(this.experiencesUidMapper));
+      this.pendingVariantAndVariantGrpForExperience = Array.from(experienceUidsWithVariants);
       const jobRes = await this.validateVariantGroupAndVariantsCreated();
       fsUtil.writeFile(this.cmsVariantPath, this.cmsVariants);
       fsUtil.writeFile(this.cmsVariantGroupPath, this.cmsVariantGroups);
@@ -283,8 +287,13 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
       }
     });
 
+    if (!Object.values(versionMap).some((v) => v !== undefined)) {
+      return false;
+    }
+
     // Prioritize updating or creating versions based on the order: ACTIVE -> DRAFT -> PAUSE
-    return await this.handleVersionUpdateOrCreate(experience, versionMap);
+    await this.handleVersionUpdateOrCreate(experience, versionMap);
+    return true;
   }
 
   // Helper method to handle version update or creation logic
@@ -414,6 +423,10 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
               );
               const { variant_groups: [variantGroup] = [] } =
                 (await this.getVariantGroup({ experienceUid: newExpUid })) || {};
+              if (!variantGroup) {
+                log.warn(`No variant group found for experience: ${newExpUid} — skipping CT attachment`, this.config.context);
+                return;
+              }
               variantGroup.content_types = updatedContentTypes;
               // Update content types detail in the new experience asynchronously
               return await this.updateVariantGroup(variantGroup);
