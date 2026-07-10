@@ -194,11 +194,8 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
     const versions = fsUtil.readFile(versionsPath, true) as ExperienceStruct[];
     log.debug(`Found ${versions.length} versions for experience: ${oldExperienceUid}`, this.config.context);
     
-    const versionMap: Record<string, CreateExperienceVersionInput | undefined> = {
-      ACTIVE: undefined,
-      DRAFT: undefined,
-      PAUSE: undefined,
-    };
+    const HANDLED_STATUSES = new Set(['ACTIVE', 'DRAFT', 'PAUSE']);
+    const versionMap: { ACTIVE?: CreateExperienceVersionInput; DRAFT?: CreateExperienceVersionInput; PAUSE?: CreateExperienceVersionInput } = {};
 
     // Process each version and map them by status
     versions.forEach((version) => {
@@ -206,10 +203,14 @@ export default class Experiences extends PersonalizationAdapter<ImportConfig> {
       versionReqObj = lookUpEvents(versionReqObj, this.eventsUid) as CreateExperienceVersionInput;
 
       if (versionReqObj && versionReqObj.status && (versionReqObj.variants?.length ?? 0) > 0) {
-        versionMap[versionReqObj.status] = versionReqObj;
+        if (!HANDLED_STATUSES.has(versionReqObj.status)) {
+          log.warn(`Skipping version with unrecognized status "${versionReqObj.status}" — expected one of ACTIVE, DRAFT, PAUSE`, this.config.context);
+          return;
+        }
+        versionMap[versionReqObj.status as 'ACTIVE' | 'DRAFT' | 'PAUSE'] = versionReqObj;
         log.debug(`Mapped version with status: ${versionReqObj.status}`, this.config.context);
       } else if (versionReqObj?.status && !(versionReqObj.variants?.length ?? 0)) {
-        log.warn(`Skipping version ${versionReqObj.status}: no valid variants after audience mapping — variants may have had no audiences or all audiences were unmapped`, this.config.context);
+        log.warn(`Skipping version ${versionReqObj.status}: no valid variants after audience/event mapping`, this.config.context);
       }
     });
 
