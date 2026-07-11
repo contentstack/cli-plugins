@@ -7,4 +7,14 @@ fileignoreconfig:
   checksum: c13ca4996b3767fae9d2716fe9ae7d90d98b26012e064f42ea9fdd054f684761
 - filename: packages/contentstack-export/src/utils/export-config-handler.ts
   checksum: 68351337b78f0962475498946fe34245a681182db756528c9ff6fab7153392e3
+- filename: packages/contentstack-bulk-operations/src/messages/index.ts
+  checksum: 07c2bf3f3130ad5e8b6a2971d76139e9b643c70a9ff5f7450adfb5c9bf3d7164
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: 8bca423db4c3815c651ad922d986a53b6271cce3ea27f5987b66ee594151165e
+- filename: packages/contentstack-bulk-operations/test/unit/utils/operation-flag-matrix.test.ts
+  checksum: 35451ca4c03359b06531a8461091f4a3a45c4dea1f8853081fb53e4ce28c1cc3
+- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets-init.test.ts
+  checksum: 590b1cfe42d46d0917ac90f363b1ccd05200b180bd9c58c770ffd1f12eb18327
+- filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
+  checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
 version: ""
