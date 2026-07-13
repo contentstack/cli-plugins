@@ -400,7 +400,7 @@ export class VariantAdapter<T> {
   constructor(config: ContentstackConfig & AnyProperty & AdapterType<T, ContentstackConfig>);
   constructor(config: APIConfig & AdapterType<T, APIConfig & AnyProperty>, options?: HttpClientOptions);
   constructor(
-    config: APIConfig & AdapterType<T, (APIConfig & AnyProperty) | ContentstackConfig>,
+    config: ((APIConfig & AnyProperty) | (ContentstackConfig & AnyProperty)) & AdapterType<T, any>,
     options?: HttpClientOptions,
   ) {
     log.debug('Initializing VariantAdapter...', this.exportConfig?.context);

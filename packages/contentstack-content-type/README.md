@@ -7,7 +7,7 @@ It allows you to quickly retrieve information about Content Types in a Stack.
 ## Why use this plugin
 1. The `csdx content-type:audit` command lists recent changes to a content type and by whom.
 This is useful when needing to find Content Type versions to compare with `csdx content-type:compare`.
-[Audit logs](https://www.contentstack.com/docs/developers/set-up-stack/monitor-stack-activities-in-audit-log/) are stored for 90 days within Contentstack. 
+[Audit logs](https://www.contentstack.com/docs/headless-cms/set-up-stack/monitor-stack-activities-in-audit-log/) are stored for 90 days within Contentstack. 
 
 1. The `csdx content-type:compare-remote` command allows you to compare the same Content Type between two Stacks.
 This is useful when you have cloned or duplicated a Stack, and want to check what has changed in a child Stack.
@@ -37,7 +37,7 @@ $ csdx plugins:install contentstack-cli-content-type
 ```
 
 ## How to use this plugin
-This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/developers/cli/authenticate-with-the-cli/).
+This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/headless-cms/cli-authentication).
 
 Several commands, such as `csdx content-type:compare` support token aliases as input.
 These token aliases should be created using `csdx auth:tokens:add`.
@@ -67,14 +67,12 @@ Display recent changes to a Content Type
 
 ```
 USAGE
-  $ csdx content-type:audit -c <value> [-s <value> | -a <value> | -a <value>] [-k <value> |  | ]
+  $ csdx content-type:audit --content-type <value> [-k <value> |  | -a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
 
 DESCRIPTION
   Display recent changes to a Content Type
@@ -93,16 +91,14 @@ Compare two Content Type versions
 
 ```
 USAGE
-  $ csdx content-type:compare -c <value> [-s <value> | -a <value>] [-k <value> | ] [-a <value>] [-l <value> -r <value>]
+  $ csdx content-type:compare --content-type <value> [-k <value> | ] [-a <value>] [--left <value> --right <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -l, --left=<value>           Content Type version, i.e. prev version
-  -r, --right=<value>          Content Type version, i.e. later version
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
+      --left=<value>           Content Type version, i.e. prev version
+      --right=<value>          Content Type version, i.e. later version
 
 DESCRIPTION
   Compare two Content Type versions
@@ -123,12 +119,12 @@ compare two Content Types on different Stacks
 
 ```
 USAGE
-  $ csdx content-type:compare-remote (-o <value> -r <value>) -c <value>
+  $ csdx content-type:compare-remote (--origin-stack <value> --remote-stack <value>) --content-type <value>
 
 FLAGS
-  -c, --content-type=<value>  (required) Content Type UID
-  -o, --origin-stack=<value>  (required) Origin Stack API Key
-  -r, --remote-stack=<value>  (required) Remote Stack API Key
+  --content-type=<value>  (required) Content Type UID
+  --origin-stack=<value>  (required) Origin Stack API Key
+  --remote-stack=<value>  (required) Remote Stack API Key
 
 DESCRIPTION
   compare two Content Types on different Stacks
@@ -145,15 +141,13 @@ Display Content Type details
 
 ```
 USAGE
-  $ csdx content-type:details -c <value> [-s <value> | -a <value>] [-k <value> | ] [-a <value>] [-p]
+  $ csdx content-type:details --content-type <value> [-k <value> | ] [-a <value>] [--path]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -p, --[no-]path              show path column
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
+      --[no-]path              show path column
 
 DESCRIPTION
   Display Content Type details
@@ -174,18 +168,16 @@ Create a visual diagram of a Stack's Content Types
 
 ```
 USAGE
-  $ csdx content-type:diagram -o <value> -d portrait|landscape -t svg|dot [-s <value> | -a <value> | -a <value>] [-k
-    <value> |  | ]
+  $ csdx content-type:diagram --output <value> --direction portrait|landscape --type svg|dot [-k <value> |  | -a
+  <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -d, --direction=<option>     (required) [default: portrait] graph orientation
-                               <options: portrait|landscape>
   -k, --stack-api-key=<value>  Stack API Key
-  -o, --output=<value>         (required) full path to output
-  -s, --stack=<value>          Stack UID
-  -t, --type=<option>          (required) [default: svg] graph output file type
+      --direction=<option>     (required) [default: portrait] graph orientation
+                               <options: portrait|landscape>
+      --output=<value>         (required) full path to output
+      --type=<option>          (required) [default: svg] graph output file type
                                <options: svg|dot>
 
 DESCRIPTION
@@ -209,15 +201,13 @@ List all Content Types in a Stack
 
 ```
 USAGE
-  $ csdx content-type:list [-s <value> | -a <value> | -a <value>] [-k <value> |  | ] [-o title|modified]
+  $ csdx content-type:list [-k <value> |  | -a <value>] [--order title|modified]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
   -k, --stack-api-key=<value>  Stack API Key
-  -o, --order=<option>         [default: title] order by column
+      --order=<option>         [default: title] order by column
                                <options: title|modified>
-  -s, --stack=<value>          Stack UID
 
 DESCRIPTION
   List all Content Types in a Stack

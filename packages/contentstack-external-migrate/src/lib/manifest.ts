@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { sanitizePath, pathValidator } from './helpers';
 
 export const MANIFEST_FILENAME = 'migration-manifest.json';
 export const MANIFEST_VERSION = 1;
@@ -46,7 +47,7 @@ export interface MigrationManifest {
 }
 
 export function manifestFilePath(workspace: string): string {
-  return path.join(path.resolve(workspace), MANIFEST_FILENAME);
+  return pathValidator(path.join(path.resolve(sanitizePath(workspace)), MANIFEST_FILENAME));
 }
 
 export function stackApiKeyPrefix(stackApiKey: string): string {
@@ -165,10 +166,10 @@ export async function writeManifest(
   workspace: string,
   manifest: MigrationManifest,
 ): Promise<void> {
-  const filePath = manifestFilePath(workspace);
+  const filePath = pathValidator(sanitizePath(manifestFilePath(workspace)));
   await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
 
-  const tmpPath = `${filePath}.${process.pid}.tmp`;
+  const tmpPath = pathValidator(sanitizePath(`${filePath}.${process.pid}.tmp`));
   await fs.promises.writeFile(tmpPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
   await fs.promises.rename(tmpPath, filePath);
 }
