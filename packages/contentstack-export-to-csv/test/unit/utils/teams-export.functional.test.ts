@@ -120,6 +120,7 @@ describe('teams-export functional', () => {
         {
           uid: 'r1',
           name: 'Role',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           stack: { api_key: 'wrong-key', name: 'S', uid: 'su' },
         },
       ],
@@ -183,6 +184,7 @@ describe('teams-export functional', () => {
       items: [{ uid: 'r1', name: 'Editor', stack: { api_key: 'k1', name: 'Stack1', uid: 's1' } }],
     } as any);
     roleStub.onSecondCall().resolves({
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       items: [{ uid: 'r2', name: 'Author', stack: { api_key: 'wrong-k2', name: 'Stack2', uid: 's2' } }],
     } as any);
     const interactiveMod = loadInteractiveFresh();
