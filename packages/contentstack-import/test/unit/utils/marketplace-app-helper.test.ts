@@ -230,6 +230,7 @@ describe('Marketplace App Helper', () => {
       const result = await getOrgUid(mockConfig);
 
       expect(result).to.equal('test-org-123');
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockClient.stack.calledWith({ api_key: mockConfig.target_stack })).to.be.true;
     });
 

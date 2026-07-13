@@ -109,6 +109,7 @@ describe('Common Helper Utils', () => {
         errorMessage: 'Main error',
         errors: {
           authorization: 'Invalid token',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'Invalid key'
         }
       };

@@ -6,6 +6,7 @@ import contentfulValidator from './validator';
 import { initContentfulMigrateConfig } from '../../services/contentful/config';
 import { pickMasterLocale } from '../../services/contentful/prompts/master-locale';
 import { writeMapper, type MapperBundle } from '../../services/contentful/mapper/write';
+import { sanitizePath, pathValidator } from '../../lib/helpers';
 import {
   done,
   logStageFail,
@@ -308,8 +309,9 @@ function enforceLocaleFallbacks(bundleRoot: string, masterCode: string): void {
   const languageFile = path.join(localesDir, 'language.json');
 
   const patch = (file: string, isMaster: boolean) => {
-    if (!fs.existsSync(file)) return;
-    const data = parseJsonLoose(fs.readFileSync(file, 'utf8'));
+    const safeFile = pathValidator(sanitizePath(file));
+    if (!fs.existsSync(safeFile)) return;
+    const data = parseJsonLoose(fs.readFileSync(safeFile, 'utf8'));
     for (const k of Object.keys(data || {})) {
       if (!data[k]) continue;
       if (isMaster || data[k].code === masterCode) {
@@ -318,7 +320,7 @@ function enforceLocaleFallbacks(bundleRoot: string, masterCode: string): void {
         data[k].fallback_locale = masterCode;
       }
     }
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(safeFile, JSON.stringify(data, null, 2), 'utf8');
   };
 
   patch(masterFile, true);
