@@ -291,7 +291,7 @@ const interactiveMsg = {
   ENTER_ENVIRONMENTS: 'Enter target environments (comma-separated):',
   ENTER_LOCALES: 'Enter locales (comma-separated):',
   SELECT_ALIAS: 'Select alias:',
-  ENTER_API_KEY: 'Enter stack API key:',
+  ENTER_API_KEY_placeholder: 'Enter stack API key:',
   ENTER_SOURCE_ENV: 'Enter source environment name:',
   SELECT_SOURCE_ALIAS: 'Select delivery token alias for source environment:',
 
@@ -322,7 +322,8 @@ const flagDescriptions = {
   // Common flags
   ALIAS:
     'Uses the name of a saved Management Token to authenticate the command. The command can only access the branches allowed for that token. This option can be used as an alternative to` --stack-api-key.`',
-  STACK_API_KEY: 'API key of the source stack. You must use either the --stack-api-key flag or the --alias flag.',
+  STACK_API_KEY_placeholder:
+    'API key of the source stack. You must use either the --stack-api-key flag or the --alias flag.',
   OPERATION: 'Specifies whether to `publish` or `unpublish` content.',
   ENVIRONMENTS:
     'Specifies one or more environments where the entries or assets should be published. Separate multiple environments with spaces.',
