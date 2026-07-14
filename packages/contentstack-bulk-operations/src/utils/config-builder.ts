@@ -234,11 +234,6 @@ export function validateFlags(flagsOrConfig: CommandFlags | BulkOperationConfig)
  * Supports both CLI flags and config file format
  */
 export function buildConfig(flags: CommandFlags): BulkOperationConfig {
-  // Enable the progress-bar UI + suppress the timestamped console logs for the whole command
-  // (mirrors export-config-handler). Set here — during config build, before the first log call —
-  // because the logger builds its transports once, lazily, so setting it later has no effect.
-  configHandler.set('log.progressSupportedModule', 'bulk-operations');
-
   const config: BulkOperationConfig = {
     alias: flags.alias,
     stackApiKey: flags['stack-api-key'],
