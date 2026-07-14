@@ -2,7 +2,7 @@ fileignoreconfig:
 - filename: packages/contentstack-export/test/unit/utils/export-config-handler.test.ts
   checksum: f612661a8b6784b20ea62794b35192b340a34d8424a54a1a2cffec1878ab7528
 - filename: packages/contentstack-import/test/unit/utils/marketplace-app-helper.test.ts
-  checksum: 7d594278c69799ee25a62f12e1ad947861e609d8231bc99791a4f77b01a63674
+  checksum: de694e861560c4c242100eaf17a6d8e230247b99f94e4b428e55ef065084c10c
 - filename: packages/contentstack-import-setup/test/unit/login-handler.test.ts
   checksum: 2df43be75a96e1a3a00dd256628e191909aa9d7f192b672b56cb3772e074958c
 - filename: pnpm-lock.yaml
