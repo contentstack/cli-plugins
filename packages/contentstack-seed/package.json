@@ -14,7 +14,7 @@
     "tmp": "^0.2.7"
   },
   "devDependencies": {
-    "@types/inquirer": "^9.0.9",
+    "@types/inquirer": "^9.0.10",
     "@types/jest": "^26.0.24",
     "@types/mkdirp": "^1.0.2",
     "@types/node": "^18.11.9",
