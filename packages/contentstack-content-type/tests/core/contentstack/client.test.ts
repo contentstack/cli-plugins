@@ -36,6 +36,7 @@ describe('ContentstackClient', () => {
       expect(mockGet).toHaveBeenCalledWith(
         '/audit-logs',
         expect.objectContaining({
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           headers: { api_key: 'stack-key' },
           params: {
             query: {
@@ -106,6 +107,7 @@ describe('ContentstackClient', () => {
       await client.getContentTypeReferences('stack-key', 'ct-uid', spinner)
 
       expect(mockGet).toHaveBeenCalledWith('/content_types/ct-uid/references', {
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         headers: { api_key: 'stack-key' },
         params: { include_global_fields: true }
       })
