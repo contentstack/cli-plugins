@@ -26,7 +26,6 @@ export default class Install extends AppCLIBaseCommand {
       description: commonMsg.APP_UID,
     }),
     "stack-api-key": flags.string({
-      char: "k",
       description: commonMsg.STACK_API_KEY_placeholder,
     }),
     ...AppCLIBaseCommand.baseFlags,

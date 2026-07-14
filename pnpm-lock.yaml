@@ -1554,7 +1554,7 @@ importers:
         specifier: ^6.2.49
         version: 6.2.53
       '@types/inquirer':
-        specifier: ^9.0.9
+        specifier: ^9.0.10
         version: 9.0.10
       '@types/jest':
         specifier: ^26.0.24

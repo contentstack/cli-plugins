@@ -207,7 +207,7 @@ describe('Export Config Handler', () => {
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         token: 'test-token',
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'test-key'
       });
 
       const flags = {
@@ -230,7 +230,7 @@ describe('Export Config Handler', () => {
       readFileStub.resolves({
         username: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'test-password',
+        password: 'test-password'
       });
 
       const flags = {
