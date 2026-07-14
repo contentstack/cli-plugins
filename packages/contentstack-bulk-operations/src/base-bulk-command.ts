@@ -408,12 +408,12 @@ export abstract class BaseBulkCommand extends Command {
    * the label with the branch only when one is set. Shared with bulk-taxonomies via inheritance.
    */
   protected beginOperationSummary(itemCount: number): void {
-    const operationLabel = (this.bulkOperationConfig.operation || 'operation').toString().toUpperCase();
-    const branchName = this.bulkOperationConfig.branch || '';
+    const operationLabel = (this.bulkOperationConfig?.operation || 'operation').toString().toUpperCase();
+    const branchName = this.bulkOperationConfig?.branch || '';
     CLIProgressManager.initializeGlobalSummary(
       branchName ? `BULK ${operationLabel}-${branchName}` : `BULK ${operationLabel}`,
       branchName,
-      $t(messages.EXECUTING_OPERATION, { count: itemCount }),
+      $t(messages.EXECUTING_OPERATION, { count: itemCount })
     );
   }
 
