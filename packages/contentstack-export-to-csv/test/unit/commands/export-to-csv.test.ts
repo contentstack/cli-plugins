@@ -630,6 +630,7 @@ describe('cm:export-to-csv', () => {
 
       const aliasClient = { stack: sandbox.stub().returns({}) } as any;
       const aliasSpy = sandbox.stub(cmd, 'getAliasDetails').resolves({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         stackDetails: { name: 'Aliased', apiKey: 'ak-alias' } as any,
         apiClient: aliasClient,
       });
@@ -896,6 +897,7 @@ describe('cm:export-to-csv', () => {
       const restoreCli = patchCliUtilities({ isAuthenticated: () => true });
       try {
         const { ExportCmd, interactiveMod } = reloadExportCommandWithUtilsStubs(sandbox, {
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           chooseStack: { name: 'MyStack', apiKey: 'stack-key-99' },
         });
         const cmd = new ExportCmd([], minimalConfig);
@@ -903,6 +905,7 @@ describe('cm:export-to-csv', () => {
 
         const out = await cmd.getStackDetails({} as any, 'stack-key-99', 'org-uid-z');
 
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'stack-key-99' });
         expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'stack-key-99')).to.equal(
           true,
