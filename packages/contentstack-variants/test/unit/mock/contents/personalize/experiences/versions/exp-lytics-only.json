@@ -1,0 +1,15 @@
+[
+  {
+    "uid": "ver-lytics-001",
+    "experienceUid": "exp-lytics-only",
+    "status": "ACTIVE",
+    "variants": [
+      {
+        "__type": "SegmentedVariant",
+        "audiences": [],
+        "lyticsAudiences": ["lytics-audience-001"]
+      }
+    ],
+    "variantSplit": "EQUALLY_SPLIT"
+  }
+]
