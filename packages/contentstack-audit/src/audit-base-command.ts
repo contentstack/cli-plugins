@@ -146,10 +146,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       if (this.currentCommand === 'cm:stacks:audit') {
         log.warn(this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath }), this.auditContext);
       } else {
-        log.warn(
-          this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath }),
-          this.auditContext,
-        );
+        cliux.print(this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath }), {
+          color: 'yellow',
+        });
       }
     } else {
       log.info(this.messages.NO_MISSING_REF_FOUND, this.auditContext);
@@ -172,6 +171,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       !isEmpty(missingCtRefsInWorkflow) ||
       !isEmpty(missingCtRefsInExtensions) ||
       !isEmpty(missingSelectFeild) ||
+      !isEmpty(missingMandatoryFields) ||
+      !isEmpty(missingTitleFields) ||
+      !isEmpty(missingMultipleFields) ||
       !isEmpty(missingRefInCustomRoles) ||
       !isEmpty(missingEnvLocalesInAssets) ||
       !isEmpty(missingEnvLocalesInEntries) ||
