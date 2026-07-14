@@ -1,5 +1,5 @@
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, log, createLogContext, handleAndLogError, loadChalk } from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../../../messages';
 import { BaseBulkCommand } from '../../../base-bulk-command';
@@ -57,6 +57,10 @@ export default class BulkTaxonomies extends BaseBulkCommand {
   async init(): Promise<void> {
     // Call oclif Command init without running BaseBulkCommand.init (taxonomy uses its own prompts).
     await (Command.prototype as unknown as { init(this: Command): Promise<void> }).init.call(this);
+
+    // Load chalk (ESM) up-front. The progress-module flag is set in buildConfig() (invoked by
+    // buildConfiguration below), before the first log call.
+    await loadChalk();
 
     let { flags: parsed } = await this.parse(BulkTaxonomies);
 
@@ -161,6 +165,9 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     this.logger.debug($t(messages.EXECUTING_OPERATION, { count: items.length }), this.loggerContext);
     const startTime = Date.now();
 
+    // Initialize the run-level summary + header once (inherited from BaseBulkCommand).
+    this.beginOperationSummary(items.length);
+
     const operation = this.bulkOperationConfig.operation;
     if (operation !== OperationType.PUBLISH && operation !== OperationType.UNPUBLISH) {
       throw new Error($t(messages.UNSUPPORTED_OPERATION, { operation: operation ?? 'unknown' }));
@@ -190,12 +197,17 @@ export default class BulkTaxonomies extends BaseBulkCommand {
       this.logger.info(String(response.notice));
     }
 
-    return {
+    const result: BulkOperationResult = {
       success: 0,
       failed: 0,
       total: items.length,
       duration,
       jobIds: jobId ? [jobId] : [],
     };
+
+    // Record the taxonomy module row in the summary (inherited from BaseBulkCommand).
+    this.recordModuleSummary(result, items.length);
+
+    return result;
   }
 }
