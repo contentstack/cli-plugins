@@ -186,7 +186,7 @@ class ModuleImporter {
         const { hasFix, config } = result;
 
         if (hasFix) {
-          log.warn($t(messages.FINAL_REPORT_PATH, { path: config.reportPath }), this.importConfig.context);
+          cliux.print($t(messages.FINAL_REPORT_PATH, { path: config.reportPath }), { color: 'yellow' });
 
           if (
             this.importConfig.forceStopMarketplaceAppsPrompt ||
