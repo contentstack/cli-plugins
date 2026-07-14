@@ -44,6 +44,7 @@ import {
   generateBulkPublishStatusUrl,
   validateBranch,
   validateEnvironments,
+  aggregateBatchResults,
 } from './utils';
 import {
   OperationType,
@@ -235,6 +236,9 @@ export abstract class BaseBulkCommand extends Command {
     await this.initializeComponents();
 
     await this.handleRevertOrRetry(mergedFlags);
+    // This early exit bypasses finally(); print the run summary and clear the progress-module
+    // flag here so it doesn't leak into the persisted config / later commands.
+    this.finalizeProgressSummary();
     process.exit(0);
   }
 
@@ -295,6 +299,9 @@ export abstract class BaseBulkCommand extends Command {
 
     const validation = validateFlags(this.bulkOperationConfig);
     if (!validation.valid) {
+      // buildConfig() set the progress-module flag; this early exit bypasses finally(), so
+      // clear it here to avoid leaking the setting into the persisted config / later commands.
+      this.finalizeProgressSummary();
       process.exit(1);
     }
 
@@ -403,9 +410,11 @@ export abstract class BaseBulkCommand extends Command {
   }
 
   /**
-   * Initialize the run-level summary + header once (mirrors import). Falls back to an empty
-   * branch name — displayOperationHeader applies its own `|| 'main'` for display — and suffixes
-   * the label with the branch only when one is set. Shared with bulk-taxonomies via inheritance.
+   * Initialize the run-level summary + header once. The label includes the branch, which
+   * defaults to 'main' from the --branch flag, so it normally reads e.g. "BULK PUBLISH-main" —
+   * the same "<OP>-<branch>" title shape export/import produce (SummaryManager uses the passed
+   * operationName verbatim). The branch is dropped from the label only in the edge case where
+   * it is unset. Shared with bulk-taxonomies via inheritance.
    */
   protected beginOperationSummary(itemCount: number): void {
     const operationLabel = (this.bulkOperationConfig?.operation || 'operation').toString().toUpperCase();
@@ -419,15 +428,33 @@ export abstract class BaseBulkCommand extends Command {
 
   /**
    * Record a per-module row in the summary so the final summary shows Module Details for this
-   * command (entry/asset/taxonomy). SINGLE mode returns real success/failed counts; async
-   * submissions (BULK mode, taxonomy) report those as 0 (publish happens server-side), so the
-   * items successfully submitted are counted as success — the status URL tracks the real outcome.
+   * command (entry/asset/taxonomy).
+   *
+   * SINGLE mode processes items individually and returns real success/failed counts, so those
+   * are used directly. BULK mode submits async jobs — buildBulkModeResult reports success/failed
+   * as 0 because the publish runs server-side — so we count submission-level failures from
+   * batchResults (recorded as status:'failed') and treat the remaining submitted items as
+   * success. The printed status URL remains the source of truth for the real publish outcome.
    */
   protected recordModuleSummary(result: BulkOperationResult, submittedCount: number): void {
     const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
+    const publishMode = this.bulkOperationConfig?.publishMode || PublishMode.BULK;
     const total = result?.total || submittedCount || 0;
-    const failed = result?.failed || 0;
-    const success = result?.success ? result.success : Math.max(total - failed, 0);
+
+    let success: number;
+    let failed: number;
+    if (publishMode === PublishMode.SINGLE) {
+      failed = result?.failed || 0;
+      success = typeof result?.success === 'number' ? result.success : Math.max(total - failed, 0);
+    } else {
+      // BULK: derive failures from batch submissions (result.failed is always 0 here).
+      failed = aggregateBatchResults(this.batchResults).totalFailed;
+      success = Math.max(total - failed, 0);
+    }
+
+    // Clamp so counts never over/under-report relative to total.
+    failed = Math.min(Math.max(failed, 0), total);
+    success = Math.min(Math.max(success, 0), total - failed);
 
     const progress = CLIProgressManager.createSimple(this.resourceType, total, showConsoleLogs);
     for (let i = 0; i < success; i++) progress.tick(true);
