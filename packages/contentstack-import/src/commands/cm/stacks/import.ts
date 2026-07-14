@@ -200,7 +200,7 @@ export default class ImportCommand extends Command {
       // covers the scanning case, since detecting scanning sets skipAssetsPublish.
       if (!result?.noSuccessMsg && assetsImported && importConfig.skipAssetsPublish) {
         log.info(
-          `Note: assets were imported but not published asset scanning is enabled and must complete first. To publish them, run:\n  csdx cm:assets:publish --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`,
+          `Note: assets were imported but not published asset scanning is enabled and must complete first. To publish them, run:\n  csdx cm:assets:publish --backup-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`,
           importConfig.context,
         );
       }
