@@ -5,4 +5,6 @@ fileignoreconfig:
   checksum: 7d594278c69799ee25a62f12e1ad947861e609d8231bc99791a4f77b01a63674
 - filename: packages/contentstack-import-setup/test/unit/login-handler.test.ts
   checksum: 2df43be75a96e1a3a00dd256628e191909aa9d7f192b672b56cb3772e074958c
+- filename: pnpm-lock.yaml
+  checksum: eae269c31146f807a80978acb68b83b761742b6d8e82116b6af48dcc0156f085
 version: ""
