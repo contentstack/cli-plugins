@@ -287,6 +287,13 @@ export abstract class BaseBulkCommand extends Command {
    * Build operation configuration
    */
   protected async buildConfiguration(flags: any): Promise<void> {
+    // Enable the progress-bar UI + suppress the timestamped console logs for the whole command.
+    // Set here (command lifecycle, runs before the first log call) rather than in the pure
+    // buildConfig() util so it isn't triggered by direct/unit-test callers of buildConfig.
+    // Cleared on every exit path: finally() on normal runs, and finalizeProgressSummary() before
+    // the validation exit(1) below and the revert/retry exit(0).
+    configHandler.set('log.progressSupportedModule', 'bulk-operations');
+
     this.bulkOperationConfig = buildConfig(flags);
 
     // buildConfig splits comma-separated oclif `multiple` values; mirror onto flags so
@@ -299,8 +306,8 @@ export abstract class BaseBulkCommand extends Command {
 
     const validation = validateFlags(this.bulkOperationConfig);
     if (!validation.valid) {
-      // buildConfig() set the progress-module flag; this early exit bypasses finally(), so
-      // clear it here to avoid leaking the setting into the persisted config / later commands.
+      // The progress-module flag was set above; this early exit bypasses finally(), so clear it
+      // here to avoid leaking the setting into the persisted config / later commands.
       this.finalizeProgressSummary();
       process.exit(1);
     }
