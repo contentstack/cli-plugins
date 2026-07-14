@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-external-migrate",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Migrate from external source to Contentstack",
   "author": "Contentstack",
   "license": "MIT",
