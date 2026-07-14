@@ -1,6 +1,17 @@
-import chalk from 'chalk';
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, getLogPath, handleAndLogError, FlagInput } from '@contentstack/cli-utilities';
+import {
+  flags,
+  log,
+  createLogContext,
+  getLogPath,
+  handleAndLogError,
+  FlagInput,
+  loadChalk,
+  getChalk,
+  configHandler,
+  CLIProgressManager,
+  clearProgressModuleSetting,
+} from '@contentstack/cli-utilities';
 
 import config from './config';
 import messages, { $t } from './messages';
@@ -141,6 +152,11 @@ export abstract class BaseBulkCommand extends Command {
   protected async init(): Promise<void> {
     await super.init();
 
+    // Progress UI: load chalk (ESM) up-front and clear any stale progress-module flag so
+    // pre-flight/auth/setup errors always reach the console regardless of showConsoleLogs.
+    await loadChalk();
+    configHandler.set('log.progressSupportedModule', null);
+
     let { flags } = await this.parse(this.constructor as typeof BaseBulkCommand);
 
     this.parsedFlags = flags;
@@ -175,6 +191,9 @@ export abstract class BaseBulkCommand extends Command {
 
     await this.setupStack();
     await this.initializeComponents();
+
+    // Setup succeeded — enable progress-bar UI (console logs suppressed by default) for the operation.
+    configHandler.set('log.progressSupportedModule', 'bulk-operations');
 
     this.logger.debug($t(messages.INITIALIZING, { resourceType: this.resourceType }), this.loggerContext);
   }
@@ -218,6 +237,9 @@ export abstract class BaseBulkCommand extends Command {
     // Setup stack using apiKey from log file
     await this.setupStack();
     await this.initializeComponents();
+
+    // Setup succeeded — enable progress-bar UI for the revert/retry operation.
+    configHandler.set('log.progressSupportedModule', 'bulk-operations');
 
     await this.handleRevertOrRetry(mergedFlags);
     process.exit(0);
@@ -365,20 +387,58 @@ export abstract class BaseBulkCommand extends Command {
     this.logger.debug($t(messages.EXECUTING_OPERATION, { count: items.length }), this.loggerContext);
     const startTime = Date.now();
 
+    const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
+    const operationLabel = (this.bulkOperationConfig.operation || 'operation').toString().toUpperCase();
+
+    // Initialize the run-level summary + header once (progress-manager UX, same as import).
+    // Fall back to an empty branch name; displayOperationHeader applies its own `|| 'main'`
+    // for display, and the label is suffixed with the branch only when one is set.
+    const branchName = this.bulkOperationConfig.branch || '';
+    CLIProgressManager.initializeGlobalSummary(
+      branchName ? `BULK ${operationLabel}-${branchName}` : `BULK ${operationLabel}`,
+      branchName,
+      $t(messages.EXECUTING_OPERATION, { count: items.length }),
+    );
+
+    let result: BulkOperationResult;
     try {
       logOperationInfo(items, this.logger);
 
       const publishMode = this.bulkOperationConfig.publishMode || PublishMode.BULK;
       this.logger.debug(`Using ${publishMode.toUpperCase()} mode for operation`, this.loggerContext);
 
-      if (publishMode === PublishMode.SINGLE) {
-        return await this.executeSingleMode(items, startTime);
-      }
-
-      return await this.executeBulkMode(items, startTime);
+      // The Bulk API submits async batch/jobs, so per-item completion isn't observable
+      // mid-flight. Show a spinner while the queue drains, then record accurate pass/fail
+      // counts from the final result into the progress-manager summary.
+      result = await CLIProgressManager.withLoadingSpinner(
+        $t(messages.EXECUTING_OPERATION, { count: items.length }),
+        async () =>
+          publishMode === PublishMode.SINGLE
+            ? this.executeSingleMode(items, startTime)
+            : this.executeBulkMode(items, startTime),
+      );
     } catch (error: any) {
-      return handleOperationError(error, items, startTime);
+      result = handleOperationError(error, items, startTime);
     }
+
+    this.recordProgressSummary(result, showConsoleLogs);
+    return result;
+  }
+
+  /**
+   * Record accurate success/failure counts from the final result into the
+   * CLIProgressManager summary. Bulk operations submit async jobs, so counts come from
+   * the aggregated result rather than live per-item ticks.
+   */
+  private recordProgressSummary(result: BulkOperationResult, showConsoleLogs: boolean): void {
+    const total = result?.total || 0;
+    const failed = result?.failed || 0;
+    const success = typeof result?.success === 'number' ? result.success : Math.max(total - failed, 0);
+
+    const progress = CLIProgressManager.createSimple(this.resourceType, total, showConsoleLogs);
+    for (let i = 0; i < success; i++) progress.tick(true);
+    for (let i = 0; i < failed; i++) progress.tick(false);
+    progress.complete(failed === 0);
   }
 
   /**
@@ -444,6 +504,7 @@ export abstract class BaseBulkCommand extends Command {
    * Called at the end of run() method in subclasses
    */
   protected printOperationSummary(result: BulkOperationResult): void {
+    const chalk = getChalk();
     const publishMode = this.bulkOperationConfig.publishMode || PublishMode.BULK;
 
     console.log('');
@@ -555,6 +616,10 @@ export abstract class BaseBulkCommand extends Command {
   abstract run(): Promise<void>;
 
   protected async finally(_error: Error | undefined): Promise<void> {
+    // Print the run-level progress summary, then clear the progress-module flag so it
+    // never leaks into a later command in the same process (mirrors export/import/clone).
+    CLIProgressManager.printGlobalSummary();
+    clearProgressModuleSetting();
     await this.cleanup();
   }
 }
