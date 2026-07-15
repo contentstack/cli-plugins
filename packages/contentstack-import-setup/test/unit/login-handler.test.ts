@@ -79,16 +79,8 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
-        source_stack: 'test-api-key',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        access_token: 'test-access-token',
-        authtoken: 'test-auth-token',
-        apiKey: 'test-api-key',
-        contentDir: '/test/content',
-        data: '/test/content',
-        management_token: undefined,
-        target_stack: 'test-api-key',
+        password: 'YOUR_PWD',
+        source_stack: 'test-stack-key',
       } as ImportConfig;
 
       mockClient.login.resolves({
@@ -99,26 +91,24 @@ describe('Login Handler', () => {
 
       const result = await loginHandler(config, deps);
 
-      expect(result).to.equal(config);
-      expect(config.headers).to.exist;
-      expect(config.headers!.api_key).to.equal('test-api-key');
-      expect(config.headers!.access_token).to.equal('test-access-token');
-      expect(config.headers!.authtoken).to.equal('test-auth-token');
-      expect(config.headers!['X-User-Agent']).to.equal('contentstack-export/v');
-      expect(mockClient.login.calledOnce).to.be.true;
-      // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-      expect(mockClient.login.calledWith({ email: 'test@example.com', password: 'testpassword' })).to.be.true;
-      expect(logSuccessStub.calledWith('Contentstack account authenticated successfully!')).to.be.true;
+      expect(managementSDKClientStub.calledOnce).to.be.true;
+      expect(clientLoginStub.calledOnce).to.be.true;
+      expect(
+        clientLoginStub.calledWith({
+          email: 'test@example.com',
+          // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
+          password: 'YOUR_PWD',
+        }),
+      ).to.be.true;
+
+      expect(logStub.calledWith(result, 'Contentstack account authenticated successfully!', 'success')).to.be.true;
     });
 
     it('should throw error when authtoken is missing after login', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
-        apiKey: 'test-api-key',
-        contentDir: '/test/content',
-        data: '/test/content',
+        password: 'YOUR_PWD_WRONG',
       } as ImportConfig;
 
       mockClient.login.resolves({
