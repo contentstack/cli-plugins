@@ -61,7 +61,7 @@ export abstract class BaseBulkCommand extends Command {
     }),
     'stack-api-key': flags.string({
       char: 'k',
-      description: messages.STACK_API_KEY,
+      description: messages.STACK_API_KEY_placeholder,
     }),
     operation: flags.string({
       description: messages.OPERATION,

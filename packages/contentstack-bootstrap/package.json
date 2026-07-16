@@ -1,9 +1,9 @@
 {
   "name": "@contentstack/cli-cm-bootstrap",
   "description": "Bootstrap contentstack apps",
-  "version": "2.0.0-beta.20",
+  "version": "2.0.0-beta.23",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
@@ -16,14 +16,14 @@
     "test:report": "nyc --reporter=lcov mocha \"test/**/*.test.js\""
   },
   "dependencies": {
-    "@contentstack/cli-cm-seed": "~2.0.0-beta.20",
-    "@contentstack/cli-command": "~2.0.0-beta.8",
-    "@contentstack/cli-utilities": "~2.0.0-beta.9",
-    "@contentstack/cli-config": "~2.0.0-beta.11",
+    "@contentstack/cli-cm-seed": "~2.0.0-beta.23",
+    "@contentstack/cli-command": "~2.0.0-beta.9",
+    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-config": "~2.0.0-beta.12",
     "@oclif/core": "^4.11.4",
     "inquirer": "12.11.1",
     "mkdirp": "^2.1.6",
-    "tar": "^7.5.15"
+    "tar": "^7.5.20"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.18",
@@ -32,7 +32,7 @@
     "@types/node": "^18.11.9",
     "@types/tar": "^6.1.13",
     "chai": "^4.5.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.8",
@@ -41,7 +41,7 @@
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/lib",
@@ -69,5 +69,9 @@
       "cm:bootstrap": "BTSTRP"
     }
   },
-  "repository": "contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-bootstrap"
+  }
 }

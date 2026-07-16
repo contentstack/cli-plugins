@@ -49,9 +49,48 @@ csdx cm:stacks:bulk-entries --help
 ## Commands
 
 <!-- commands -->
+* [`csdx cm:stacks:bulk-am-assets`](#csdx-cmstacksbulk-am-assets)
 * [`csdx cm:stacks:bulk-assets`](#csdx-cmstacksbulk-assets)
 * [`csdx cm:stacks:bulk-entries`](#csdx-cmstacksbulk-entries)
 * [`csdx cm:stacks:bulk-taxonomies`](#csdx-cmstacksbulk-taxonomies)
+
+## `csdx cm:stacks:bulk-am-assets`
+
+Bulk delete or move assets via CS Assets API. Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.
+
+```
+USAGE
+  $ csdx cm:stacks:bulk-am-assets --operation delete|move --space-uid <value> --org-uid <value> --asset-uids-file
+    <value> [--workspace <value>] [--locale <value>] [--target-folder-uid <value>] [-y]
+
+FLAGS
+  -y, --yes                        Skips interactive confirmation prompts and runs the command immediately using the
+                                   provided options. Useful for automation and scripts.
+      --asset-uids-file=<value>    Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string
+                                   array, no trimming; large lists: see docs for NODE_OPTIONS)
+      --locale=<value>             Locale code for bulk delete only (single locale per run). Not applicable for move —
+                                   move always relocates all locale variants of an asset.
+      --operation=<option>         Operation: delete (CS Assets bulk delete) or move (CS Assets bulk move)
+                                   <options: delete|move>
+      --org-uid=<value>            Organization UID for CS Assets API (organization_uid header)
+      --space-uid=<value>          CS Assets space UID
+      --target-folder-uid=<value>  Destination CS Assets folder UID for bulk move. Use "root" to move assets to the
+                                   root folder.
+      --workspace=<value>          [default: main] CS Assets workspace query parameter (default: main)
+
+DESCRIPTION
+  Bulk delete or move assets via CS Assets API. Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass
+  organization via `--org-uid`.
+
+EXAMPLES
+  $ csdx cm:stacks:bulk-am-assets --operation delete --space-uid am123 --org-uid bltcOrg --locale en-us --asset-uids-file ./assets.json
+
+  $ csdx cm:stacks:bulk-am-assets --operation move --space-uid am123 --org-uid bltcOrg --target-folder-uid amFolder --asset-uids-file ./assets.json
+
+  $ csdx cm:stacks:bulk-am-assets --operation delete --space-uid am123 --org-uid bltcOrg --workspace main --locale en-us --asset-uids-file ./uids.json -y
+```
+
+_See code: [src/commands/cm/stacks/bulk-am-assets.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-am-assets.ts)_
 
 ## `csdx cm:stacks:bulk-assets`
 
@@ -119,7 +158,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
 ```
 
-_See code: [src/commands/cm/stacks/bulk-assets.ts](./v1.0.0-beta/src/commands/cm/stacks/bulk-assets.ts)_
+_See code: [src/commands/cm/stacks/bulk-assets.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts)_
 
 ## `csdx cm:stacks:bulk-entries`
 
@@ -205,7 +244,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-entries --revert ./bulk-operation
 ```
 
-_See code: [src/commands/cm/stacks/bulk-entries.ts](./v1.0.0-beta/src/commands/cm/stacks/bulk-entries.ts)_
+_See code: [src/commands/cm/stacks/bulk-entries.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-entries.ts)_
 
 ## `csdx cm:stacks:bulk-taxonomies`
 
@@ -274,7 +313,7 @@ EXAMPLES
   $ csdx cm:stacks:bulk-taxonomies --operation publish --branch feature --environments development --locales en-us --taxonomies brands_tax -k blt123
 ```
 
-_See code: [src/commands/cm/stacks/bulk-taxonomies.ts](./v1.0.1/src/commands/cm/stacks/bulk-taxonomies.ts)_
+_See code: [src/commands/cm/stacks/bulk-taxonomies.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-taxonomies.ts)_
 <!-- commandsstop -->
 
 ## Requirements

@@ -15,6 +15,7 @@ describe('Marketplace App Helper Utils', () => {
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-stack-uid',
       exportDir: '/test/export',
       data: '/test/data',
@@ -116,6 +117,7 @@ describe('Marketplace App Helper Utils', () => {
 
       expect(managementSDKClientSpy.calledOnce).to.be.true;
       expect(mockStack.calledOnce).to.be.true;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'test-stack-uid' });
       expect(mockFetch.calledOnce).to.be.true;
       expect(result).to.equal('test-org-uid-123');
@@ -133,6 +135,7 @@ describe('Marketplace App Helper Utils', () => {
 
       await getOrgUid(mockExportConfig);
 
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'custom-stack-key' });
     });
 
@@ -316,6 +319,7 @@ describe('Marketplace App Helper Utils', () => {
       await createNodeCryptoInstance(mockExportConfig);
 
       expect(nodeCryptoConstructorSpy.calledOnce).to.be.true;
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(capturedArgs).to.deep.equal({ encryptionKey: 'test-encryption-key' });
     });
 

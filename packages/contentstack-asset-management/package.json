@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-asset-management",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.6",
   "description": "Contentstack Assets API adapter for export and import",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -30,7 +30,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@contentstack/cli-utilities": "~2.0.0-beta.9"
+    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "lodash": "^4.18.1"
   },
   "oclif": {
     "commands": "./lib/commands",
@@ -38,15 +39,16 @@
     "devPlugins": [
       "@oclif/plugin-help"
     ],
-    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-cs-assets/<%- commandPath %>"
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-asset-management/<%- commandPath %>"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",
+    "@types/lodash": "^4.17.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.17.50",
     "@types/sinon": "^17.0.4",
     "chai": "^4.4.1",
-    "eslint": "^8.57.1",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.68",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
@@ -54,6 +56,11 @@
     "sinon": "^17.0.2",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-asset-management"
   }
 }

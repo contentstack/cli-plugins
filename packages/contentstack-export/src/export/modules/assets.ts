@@ -19,13 +19,14 @@ import {
   log,
   handleAndLogError,
   messageHandler,
+  CLIProgressManager,
 } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
 import { ModuleClassParams } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
-import { ExportSpaces } from '@contentstack/cli-asset-management';
+import { ExportSpaces, type AssetExportCounts } from '@contentstack/cli-asset-management';
 import {
   getExportBasePath,
   PROCESS_NAMES,
@@ -54,6 +55,63 @@ export default class ExportAssets extends BaseClass {
       asc: 'created_at',
       include_count: false,
     };
+  }
+
+  /**
+   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
+   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
+   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
+   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
+   */
+  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
+    type SummaryModule = { successCount: number; failureCount: number };
+    type GlobalSummary = {
+      getModules(): Map<string, SummaryModule>;
+      registerModule(name: string, totalItems?: number): void;
+      startModule(name: string): void;
+      completeModule(name: string, success?: boolean): void;
+    };
+    // globalSummary is runtime-accessible but typed private; reach it via a structural cast.
+    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummary | null }).globalSummary;
+    // We reach into cli-utilities' summary internals, so feature-detect the shape and DEGRADE
+    // (skip the count overrides) instead of throwing if a future version changes it.
+    if (
+      !gs ||
+      typeof gs.getModules !== 'function' ||
+      typeof gs.registerModule !== 'function' ||
+      typeof gs.startModule !== 'function' ||
+      typeof gs.completeModule !== 'function'
+    ) {
+      log.debug('Global summary shape unavailable; skipping CS Assets summary count overrides', this.exportConfig.context);
+      return;
+    }
+
+    try {
+      // createNested() registers the module under an upper-cased name, so match that when overriding.
+      const assetsModule = gs.getModules().get(this.currentModuleName.toUpperCase());
+      if (assetsModule) {
+        assetsModule.successCount = counts.assets;
+        assetsModule.failureCount = 0;
+      }
+
+      const extraRows: Array<[string, number]> = [
+        ['ASSET TYPES', counts.assetTypes],
+        ['FIELDS', counts.fields],
+        ['FOLDERS', counts.folders],
+      ];
+      for (const [name, n] of extraRows) {
+        gs.registerModule(name, n);
+        gs.startModule(name);
+        const m = gs.getModules().get(name);
+        if (m) {
+          m.successCount = n;
+          m.failureCount = 0;
+        }
+        gs.completeModule(name, true);
+      }
+    } catch (e) {
+      log.debug(`Failed to apply CS Assets summary counts: ${e}`, this.exportConfig.context);
+    }
   }
 
   async start(): Promise<void> {
@@ -108,9 +166,14 @@ export default class ExportAssets extends BaseClass {
           chunkFileSizeMb: csAssetsModuleConfig?.chunkFileSizeMb,
           apiConcurrency: csAssetsModuleConfig?.apiConcurrency,
           downloadAssetsConcurrency: csAssetsModuleConfig?.downloadAssetsConcurrency,
+          pageSize: csAssetsModuleConfig?.pageSize,
+          fetchConcurrency: csAssetsModuleConfig?.fetchConcurrency,
         });
         exporter.setParentProgressManager(progress);
-        await exporter.start();
+        const counts = await exporter.start();
+        // Surface real entity counts in the final summary: ASSETS = downloaded binaries, plus
+        // dedicated ASSET TYPES / FIELDS / FOLDERS rows. Live multibar is untouched.
+        this.applyAssetSummaryCounts(counts);
         this.completeProgressWithMessage();
       } catch (error) {
         this.completeProgress(false, (error as Error)?.message ?? 'Contentstack Assets export failed');

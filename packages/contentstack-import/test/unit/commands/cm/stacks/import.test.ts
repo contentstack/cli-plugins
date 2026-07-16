@@ -68,6 +68,7 @@ describe('ImportCommand', () => {
       forceStopMarketplaceAppsPrompt: false,
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret      
       auth_token: 'auth-token',
       selectedModules: ['entries'],
       skipAudit: false,
@@ -194,6 +195,49 @@ describe('ImportCommand', () => {
       expect(flags['import-webhook-status']).to.have.property('options');
       expect((flags['import-webhook-status'] as any).options).to.include('disable');
       expect((flags['import-webhook-status'] as any).options).to.include('current');
+    });
+
+    it('should have options defined on the module flag', () => {
+      const flags = ImportCommand.flags;
+
+      expect(flags['module']).to.have.property('options');
+      expect((flags['module'] as any).options).to.be.an('array').that.is.not.empty;
+    });
+
+    it('should accept all valid module names', () => {
+      const validModules = [
+        'stack',
+        'assets',
+        'locales',
+        'environments',
+        'extensions',
+        'webhooks',
+        'global-fields',
+        'entries',
+        'content-types',
+        'custom-roles',
+        'workflows',
+        'publishing-rules',
+        'labels',
+        'marketplace-apps',
+        'taxonomies',
+        'personalize',
+        'variant-entries',
+        'composable-studio',
+      ];
+      const moduleOptions = (ImportCommand.flags['module'] as any).options as string[];
+
+      for (const mod of validModules) {
+        expect(moduleOptions).to.include(mod, `module flag options should include '${mod}'`);
+      }
+    });
+
+    it('should not accept invalid module names', () => {
+      const moduleOptions = (ImportCommand.flags['module'] as any).options as string[];
+
+      expect(moduleOptions).to.not.include('invalid-module');
+      expect(moduleOptions).to.not.include('foo');
+      expect(moduleOptions).to.not.include('');
     });
   });
 
