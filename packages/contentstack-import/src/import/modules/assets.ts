@@ -8,7 +8,7 @@ import uniq from 'lodash/uniq';
 import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
 import { resolve as pResolve, join } from 'node:path';
-import { FsUtility, log, handleAndLogError, generateUid } from '@contentstack/cli-utilities';
+import { FsUtility, log, handleAndLogError, generateUid, FeatureStatus } from '@contentstack/cli-utilities';
 import { ImportSpaces, type SpaceMapping } from '@contentstack/cli-asset-management';
 import { PATH_CONSTANTS } from '../../constants';
 
@@ -39,13 +39,13 @@ export default class ImportAssets extends BaseClass {
   private assetsUrlMap: Record<string, unknown> = {};
   private assetsFolderMap: Record<string, unknown> = {};
   private rootFolder: { uid: string; name: string; parent_uid: string; created_at: string };
-  private planStatus: Record<string, any> = {};
+  private planStatus: Record<string, FeatureStatus> = {};
 
   constructor({ importConfig, stackAPIClient }: ModuleClassParams) {
     super({ importConfig, stackAPIClient });
     this.importConfig.context.module = MODULE_CONTEXTS.ASSETS;
     this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.ASSETS];
-    this.planStatus = this.importConfig.planStatus;
+    this.planStatus = this.importConfig.planStatus || {};
 
     this.assetsPath = join(this.importConfig.backupDir, PATH_CONSTANTS.CONTENT_DIRS.ASSETS);
     this.mapperDirPath = join(this.importConfig.backupDir, PATH_CONSTANTS.MAPPER, PATH_CONSTANTS.MAPPER_MODULES.ASSETS);
