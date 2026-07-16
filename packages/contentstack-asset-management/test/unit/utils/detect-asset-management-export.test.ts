@@ -51,6 +51,7 @@ describe('detectAssetManagementExportFromContentDir', () => {
     );
     fs.writeFileSync(
       path.join(tmpRoot, 'branches.json'),
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       JSON.stringify([{ stackHeaders: { api_key: 'source-stack-key' } }]),
     );
 

@@ -105,10 +105,12 @@ describe('CloneHandler - Branch', () => {
       try {
         await handler.resolveBranchAliases(true);
         // If it doesn't throw, verify stack was called
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-source-key' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-source-key' })).to.be.true;
       }
     });
@@ -120,10 +122,12 @@ describe('CloneHandler - Branch', () => {
 
       try {
         await handler.resolveBranchAliases(false);
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
       }
     });
