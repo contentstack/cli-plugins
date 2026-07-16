@@ -1,0 +1,9 @@
+{
+  "exp-valid": [
+    { "uid": "ct1", "status": "linked" }
+  ],
+  "exp-mixed": [
+    { "uid": "ct1", "status": "linked" },
+    { "uid": "ct2", "status": "linked" }
+  ]
+}
