@@ -187,6 +187,23 @@ export default class ImportCommand extends Command {
 
       log.success(`The log has been stored at: ${getLogPath()}`, importConfig.context);
       log.info(`The backup content has been stored at: ${backupDir}`, importConfig.context);
+
+      // Closing reminder: when assets were imported but not published inline
+      // (asset scanning enabled, or --skip-assets-publish), point the user to
+      // cm:assets:publish with the backup dir and stack pre-filled so the note
+      // isn't lost in the per-module logs above.
+      const assetsImported = importConfig.moduleName
+        ? importConfig.moduleName === 'assets'
+        : importConfig.modules?.types?.includes('assets');
+      // Mirror the publish gate in assets.ts (`!skipAssetsPublish`): assets are
+      // left unpublished exactly when skipAssetsPublish is set — which also
+      // covers the scanning case, since detecting scanning sets skipAssetsPublish.
+      if (!result?.noSuccessMsg && assetsImported && importConfig.skipAssetsPublish) {
+        log.info(
+          `Note: assets were imported but not published asset scanning is enabled and must complete first. To publish them, run:\n  csdx cm:assets:publish --backup-dir ${backupDir} --stack-api-key ${importConfig.apiKey}`,
+          importConfig.context,
+        );
+      }
     } catch (error) {
       handleAndLogError(error);
       log.info(`The log has been stored at '${getLogPath()}'`);
