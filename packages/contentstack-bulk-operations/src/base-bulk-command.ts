@@ -136,10 +136,23 @@ export abstract class BaseBulkCommand extends Command {
   protected parsedFlags: any;
 
   /**
+   * Hook for subclasses to bypass the bulk-publish pipeline (stack setup, queue,
+   * rate limiter) when an operation uses a different execution path entirely.
+   * The subclass is then responsible for its own initialization after super.init().
+   */
+  protected shouldSkipBulkPipeline(): boolean {
+    return false;
+  }
+
+  /**
    * Initialize common components
    */
   protected async init(): Promise<void> {
     await super.init();
+
+    if (this.shouldSkipBulkPipeline()) {
+      return;
+    }
 
     let { flags } = await this.parse(this.constructor as typeof BaseBulkCommand);
 
