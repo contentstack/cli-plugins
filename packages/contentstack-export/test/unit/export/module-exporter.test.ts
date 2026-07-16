@@ -23,6 +23,7 @@ describe('ModuleExporter exportByBranches', () => {
     const exportConfig: Partial<ExportConfig> = {
       exportDir,
       branches,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-key',
       management_token: 'token',
       context: {} as any,
@@ -54,6 +55,7 @@ describe('ModuleExporter exportByBranches', () => {
       exportDir,
       branchName: 'dev',
       branches,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-key',
       management_token: 'token',
       context: {} as any,
@@ -82,6 +84,7 @@ describe('ModuleExporter exportByBranches', () => {
       exportDir,
       branchName: 'nonexistent',
       branches,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-key',
       management_token: 'token',
       context: {} as any,
@@ -107,6 +110,7 @@ describe('ModuleExporter exportByBranches', () => {
     const exportConfig: Partial<ExportConfig> = {
       exportDir,
       branches,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-key',
       management_token: 'token',
       context: {} as any,
