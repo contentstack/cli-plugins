@@ -1,43 +1,15 @@
 @contentstack/cli-cm-import
 
-It is Contentstack’s CLI plugin to import content in the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/developers/cli/migration/).
+It is Contentstack’s CLI plugin to import content in the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/headless-cms/cli/migration/).
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)it -m
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
 
-For switching to EU region update the hosts at config/default.js
-
-```js
-{
-  host:'https://eu-api.contentstack.com/v3',
-  cdn: 'https://eu-cdn.contentstack.com/v3',
- ...
-}
-```
-
-For switching to AZURE-NA region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-na-api.contentstack.com/v3',
-  cdn: 'https://azure-na-cdn.contentstack.com/v3'
- ...
-}
-```
-
-For switching to AZURE-EU region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-eu-api.contentstack.com/v3',
-  cdn: 'https://azure-eu-cdn.contentstack.com/v3'
- ...
-}
-```
+Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
 
 # Usage
 
@@ -47,7 +19,7 @@ $ npm install -g @contentstack/cli-cm-import
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-import/2.0.0-beta.19 darwin-arm64 node-v22.13.1
+@contentstack/cli-cm-import/2.0.0-beta.22 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -106,11 +78,13 @@ FLAGS
       stack. <options: disable|current>
       <options: disable|current>
 
-  --module=<value>
+  --module=<option>
       [optional] Specify the module to import into the target stack. If not specified, the import command will import all
-      the modules into the stack. The available modules are assets, content-types, entries, environments, extensions,
-      marketplace-apps, global-fields, labels, locales, webhooks, workflows, custom-roles, personalize projects,
-      taxonomies, and composable-studio.
+      the modules into the stack. The available modules are stack, assets, locales, environments, extensions, webhooks,
+      global-fields, entries, content-types, custom-roles, workflows, publishing-rules, labels, marketplace-apps,
+      taxonomies, personalize, variant-entries, and composable-studio.
+      <options: stack|assets|locales|environments|extensions|webhooks|global-fields|entries|content-types|custom-roles|wor
+      kflows|publishing-rules|labels|marketplace-apps|taxonomies|personalize|variant-entries|composable-studio>
 
   --personalize-project-name=<value>
       (optional) Provide a unique name for the Personalize project.
@@ -129,6 +103,9 @@ FLAGS
 
   --skip-existing
       Skips the module exists warning messages.
+
+  --skip-taxonomy-publish
+      Skips taxonomy publishing during the import process.
 
 DESCRIPTION
   Import content from a stack
@@ -151,5 +128,5 @@ EXAMPLES
   $ csdx cm:stacks:import --branch <branch name>  --yes --skip-audit
 ```
 
-_See code: [src/commands/cm/stacks/import.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-import/src/commands/cm/stacks/import.ts)_
+_See code: [src/commands/cm/stacks/import.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-import/src/commands/cm/stacks/import.ts)_
 <!-- commandsstop -->

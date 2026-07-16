@@ -89,5 +89,5 @@ EXAMPLES
   $ csdx cm:entries:migrate-html-rte --alias alias --content-type global_field_uid --global-field --html-path html-path --json-path json-path
 ```
 
-_See code: [src/commands/cm/entries/migrate-html-rte.js](./src/commands/cm/entries/migrate-html-rte.js)_
+_See code: [src/commands/cm/entries/migrate-html-rte.js](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-migrate-rte/src/commands/cm/entries/migrate-html-rte.js)_
 <!-- commandsstop -->

@@ -13,6 +13,8 @@ import {
   handleAndLogError,
   configHandler,
   createLogContext,
+  cliux,
+  loadChalk
 } from '@contentstack/cli-utilities';
 
 import { ImportConfig, Context } from '../../../types';
@@ -25,7 +27,7 @@ export default class ImportSetupCommand extends Command {
   );
 
   static examples: string[] = [
-    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --modules <module_name, module_name> --branch <branch_name>`,
+    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --module <module_name, module_name> --branch <branch_name>`,
   ];
 
   static flags: FlagInput = {
@@ -61,9 +63,10 @@ export default class ImportSetupCommand extends Command {
 
   static aliases: string[] = [];
 
-  static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]';
+  static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]';
 
   async run(): Promise<void> {
+    await loadChalk();
     try {
       const { flags } = await this.parse(ImportSetupCommand);
       let importSetupConfig = await setupImportConfig(flags);
@@ -95,17 +98,27 @@ export default class ImportSetupCommand extends Command {
 
       CLIProgressManager.printGlobalSummary();
 
-      log.success(
-        `Backup folder and mapper files have been successfully created for the stack using the API key ${importSetupConfig.apiKey}.`,
-        importSetupConfig.context,
+      const successMessage = messageHandler.parse('IMPORT_SETUP_SUCCESS', importSetupConfig.apiKey);
+      const backupPathMessage = messageHandler.parse(
+        'IMPORT_SETUP_BACKUP_PATH',
+        pathValidator(path.join(importSetupConfig.backupDir)),
       );
-      log.success(
-        `The backup folder has been created at '${pathValidator(path.join(importSetupConfig.backupDir))}'.`,
-        importSetupConfig.context,
-      );
+
+      log.success(successMessage, importSetupConfig.context);
+      log.success(backupPathMessage, importSetupConfig.context);
+
+      // log.success maps to the info level, which is suppressed on the console for
+      // progress-supported modules when showConsoleLogs is false. Print the backup
+      // folder path directly so it is always visible, regardless of that setting.
+      const showConsoleLogs = configHandler.get('log')?.showConsoleLogs ?? false;
+      if (!showConsoleLogs) {
+        cliux.print(successMessage);
+        cliux.print(backupPathMessage);
+      }
     } catch (error) {
       CLIProgressManager.printGlobalSummary();
       handleAndLogError(error);
+      cliux.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

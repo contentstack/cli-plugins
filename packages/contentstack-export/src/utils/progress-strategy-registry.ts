@@ -1,4 +1,3 @@
-import { CS_ASSETS_MAIN_PROCESS_NAME, isSpaceProcessName } from '@contentstack/cli-asset-management';
 import { MODULE_CONTEXTS, MODULE_NAMES, PROCESS_NAMES } from './constants';
 /**
  * Progress Strategy Registrations for Export Modules
@@ -13,85 +12,14 @@ import {
   DefaultProgressStrategy,
 } from '@contentstack/cli-utilities';
 
-/**
- * Sum the totals/success/failure counts across every per-space process row in
- * the multibar. Used by the CS Assets Assets strategy so the final summary reports
- * total assets-across-all-spaces instead of the placeholder row.
- *
- * Returns null when no per-space rows exist, letting the strategy fall back to
- * legacy process names.
- */
-function aggregateSpaceProcesses(
-  processes: Map<string, { total: number; successCount: number; failureCount: number }>,
-): { total: number; success: number; failures: number } | null {
-  let total = 0;
-  let success = 0;
-  let failures = 0;
-  let found = false;
-  for (const [name, data] of processes) {
-    if (!isSpaceProcessName(name)) continue;
-    found = true;
-    total += data.total;
-    success += data.successCount;
-    failures += data.failureCount;
-  }
-  return found ? { total, success, failures } : null;
-}
-
 // Wrap all registrations in try-catch to prevent module loading errors
 try {
   ProgressStrategyRegistry.register(MODULE_NAMES[MODULE_CONTEXTS.CONTENT_TYPES], new DefaultProgressStrategy());
 
-  // Register strategy for Assets - custom strategy to avoid double counting
-  ProgressStrategyRegistry.register(
-    MODULE_NAMES[MODULE_CONTEXTS.ASSETS],
-    new CustomProgressStrategy((processes) => {
-      // Both ASSET_METADATA and ASSET_DOWNLOADS represent the same assets
-      // Count only the downloads process to avoid double counting in summary
-      const downloadsProcess = processes.get(PROCESS_NAMES.ASSET_DOWNLOADS);
-      if (downloadsProcess) {
-        return {
-          total: downloadsProcess.total,
-          success: downloadsProcess.successCount,
-          failures: downloadsProcess.failureCount,
-        };
-      }
-      // Contentstack Assets (per-space layout): sum every "Space *" row so the
-      // final summary reports total assets-across-all-spaces. Falls through to
-      // the legacy AM_MAIN/SPACES rows when the per-space layout isn't in use.
-      const spaceTotals = aggregateSpaceProcesses(processes);
-      if (spaceTotals) return spaceTotals;
-
-      const amProcess = processes.get(CS_ASSETS_MAIN_PROCESS_NAME);
-      if (amProcess) {
-        return {
-          total: amProcess.total,
-          success: amProcess.successCount,
-          failures: amProcess.failureCount,
-        };
-      }
-      const spacesProcess = processes.get(PROCESS_NAMES.ASSET_MANAGEMENT_SPACES);
-      if (spacesProcess) {
-        return {
-          total: spacesProcess.total,
-          success: spacesProcess.successCount,
-          failures: spacesProcess.failureCount,
-        };
-      }
-
-      // Fallback to metadata process if downloads don't exist
-      const metadataProcess = processes.get(PROCESS_NAMES.ASSET_METADATA);
-      if (metadataProcess) {
-        return {
-          total: metadataProcess.total,
-          success: metadataProcess.successCount,
-          failures: metadataProcess.failureCount,
-        };
-      }
-
-      return null; // Fall back to default aggregation
-    }),
-  );
+  // Assets: the CS Assets module sets real entity counts directly on the summary modules after
+  // export (ASSETS = downloaded binaries, plus dedicated ASSET TYPES / FIELDS / FOLDERS rows).
+  // Use the default strategy so applyStrategyCorrections does NOT overwrite those explicit counts.
+  ProgressStrategyRegistry.register(MODULE_NAMES[MODULE_CONTEXTS.ASSETS], new DefaultProgressStrategy());
 
   ProgressStrategyRegistry.register(MODULE_NAMES[MODULE_CONTEXTS.GLOBAL_FIELDS], new DefaultProgressStrategy());
 

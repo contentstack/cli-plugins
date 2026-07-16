@@ -1,0 +1,15 @@
+[
+  {
+    "uid": "ver-draft-only-001",
+    "experienceUid": "exp-draft-only",
+    "status": "DRAFT",
+    "variants": [
+      {
+        "__type": "SegmentedVariant",
+        "audiences": ["contentstack-audience-001"],
+        "lyticsAudiences": []
+      }
+    ],
+    "variantSplit": "EQUALLY_SPLIT"
+  }
+]

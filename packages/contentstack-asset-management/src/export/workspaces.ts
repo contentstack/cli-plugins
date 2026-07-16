@@ -5,7 +5,7 @@ import { log } from '@contentstack/cli-utilities';
 import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import { CSAssetsExportAdapter } from './base';
-import ExportAssets from './assets';
+import ExportAssets, { type SpaceExportCounts } from './assets';
 
 export default class ExportWorkspace extends CSAssetsExportAdapter {
   constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
@@ -26,7 +26,7 @@ export default class ExportWorkspace extends CSAssetsExportAdapter {
     spaceDir: string,
     branchName: string,
     spaceProcessName?: string,
-  ): Promise<void> {
+  ): Promise<SpaceExportCounts> {
     await this.init();
 
     if (spaceProcessName) {
@@ -59,7 +59,8 @@ export default class ExportWorkspace extends CSAssetsExportAdapter {
     if (spaceProcessName) {
       assetsExporter.setProcessName(spaceProcessName);
     }
-    await assetsExporter.start(workspace, spaceDir);
+    const counts = await assetsExporter.start(workspace, spaceDir);
     log.debug(`Exported workspace structure for space ${workspace.space_uid}`, this.exportContext.context);
+    return counts;
   }
 }

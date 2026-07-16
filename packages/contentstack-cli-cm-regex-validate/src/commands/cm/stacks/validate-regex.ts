@@ -10,11 +10,11 @@ export default class ValidateRegex extends Command {
   static examples = [
     '$ csdx cm:stacks:validate-regex',
     '$ csdx cm:stacks:validate-regex -a <management_token_alias>',
-    '$ csdx cm:stacks:validate-regex -c',
-    '$ csdx cm:stacks:validate-regex -g',
-    '$ csdx cm:stacks:validate-regex -f <path/to/the/directory>',
-    '$ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g',
-    '$ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g -f <path/to/the/directory>',
+    '$ csdx cm:stacks:validate-regex --contentType',
+    '$ csdx cm:stacks:validate-regex --globalField',
+    '$ csdx cm:stacks:validate-regex --filePath <path/to/the/directory>',
+    '$ csdx cm:stacks:validate-regex -a <management_token_alias> --contentType --globalField',
+    '$ csdx cm:stacks:validate-regex -a <management_token_alias> --contentType --globalField --filePath <path/to/the/directory>',
   ]
   static flags: any = {
     alias: flags.string({
@@ -22,15 +22,12 @@ export default class ValidateRegex extends Command {
       description: regexMessages.command.alias,
     }),
     contentType: flags.boolean({
-      char: 'c',
       description: regexMessages.command.contentTypes,
     }),
     filePath: flags.string({
-      char: 'f',
       description: regexMessages.command.filePath,
     }),
     globalField: flags.boolean({
-      char: 'g',
       description: regexMessages.command.globalFields,
     }),
   }
