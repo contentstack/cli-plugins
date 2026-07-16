@@ -230,9 +230,9 @@ export default class ContentTypesImport extends BaseClass {
         `Content types imported, but failed to apply global field rules for: ${failedGFFieldRuleCTs.join(', ')}`,
         this.importConfig.context,
       );
-    } else {
-      log.success('Content types have been imported successfully!', this.importConfig.context);
-    }
+    } 
+    log.success('Content types have been imported successfully!', this.importConfig.context);
+    
   }
 
   /**
