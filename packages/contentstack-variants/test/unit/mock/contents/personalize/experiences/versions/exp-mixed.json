@@ -1,0 +1,15 @@
+[
+  {
+    "uid": "ver-mixed-001",
+    "experienceUid": "exp-mixed",
+    "status": "ACTIVE",
+    "variants": [
+      {
+        "__type": "SegmentedVariant",
+        "audiences": ["contentstack-audience-001"],
+        "lyticsAudiences": ["lytics-audience-001"]
+      }
+    ],
+    "variantSplit": "EQUALLY_SPLIT"
+  }
+]

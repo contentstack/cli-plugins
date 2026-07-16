@@ -4,6 +4,7 @@ jest.mock('@contentstack/cli-command', () => ({
     error = jest.fn()
     warn = jest.fn()
     getToken(_alias: string) {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       return { apiKey: 'default-api', type: 'management' }
     }
   },
@@ -11,6 +12,7 @@ jest.mock('@contentstack/cli-command', () => ({
 
 jest.mock('@contentstack/cli-utilities', () => ({
   authenticationHandler: {
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     accessToken: 'auth-token',
     getAuthDetails: jest.fn(),
   },
@@ -149,6 +151,7 @@ describe('ContentTypeCommand', () => {
 
     it('sets apiKey from alias token and warns on delivery token', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'from-token',
         type: 'delivery',
       } as any)
@@ -162,6 +165,7 @@ describe('ContentTypeCommand', () => {
 
     it('sets apiKey from management token alias without warning', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'mgmt-key',
         type: 'management',
       } as any)
