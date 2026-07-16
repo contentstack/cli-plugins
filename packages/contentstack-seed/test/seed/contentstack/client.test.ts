@@ -211,6 +211,7 @@ describe('ContentstackClient', () => {
         uid: 'stack-123',
         name: 'Test Stack',
         master_locale: 'en-us',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         api_key: 'api-key-123',
         org_uid: 'org-123',
       };
@@ -223,11 +224,13 @@ describe('ContentstackClient', () => {
 
       const result = await contentstackClient.getStack(stackUid);
 
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockClient.stack).toHaveBeenCalledWith({ api_key: stackUid });
       expect(result).toEqual({
         uid: 'stack-123',
         name: 'Test Stack',
         master_locale: 'en-us',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         api_key: 'api-key-123',
         org_uid: 'org-123',
       });
@@ -258,6 +261,7 @@ describe('ContentstackClient', () => {
           uid: 'stack-1',
           name: 'Stack 1',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-1',
           org_uid: orgUid,
         },
@@ -265,6 +269,7 @@ describe('ContentstackClient', () => {
           uid: 'stack-2',
           name: 'Stack 2',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-2',
           org_uid: orgUid,
         },
@@ -362,6 +367,7 @@ describe('ContentstackClient', () => {
 
   describe('getContentTypeCount', () => {
     it('should get content type count for a stack', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const mockResponse = {
         count: 5,
@@ -383,12 +389,14 @@ describe('ContentstackClient', () => {
 
       const result = await contentstackClient.getContentTypeCount(apiKey);
 
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockClient.stack).toHaveBeenCalledWith({ api_key: apiKey });
       expect(mockContentTypeInstance.query).toHaveBeenCalledWith({ include_count: true });
       expect(result).toBe(5);
     });
 
     it('should use management token when provided', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const managementToken = 'token-123';
       const mockResponse = { count: 3 };
@@ -410,12 +418,14 @@ describe('ContentstackClient', () => {
       await contentstackClient.getContentTypeCount(apiKey, managementToken);
 
       expect(mockClient.stack).toHaveBeenCalledWith({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         api_key: apiKey,
         management_token: managementToken,
       });
     });
 
     it('should throw ContentstackError on failure', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const mockError = {
         errorMessage: 'Unauthorized',
@@ -453,6 +463,7 @@ describe('ContentstackClient', () => {
 
       const mockStack = {
         uid: 'stack-123',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         api_key: 'api-key-123',
         master_locale: 'en-us',
         name: 'New Stack',
@@ -505,6 +516,7 @@ describe('ContentstackClient', () => {
 
   describe('createManagementToken', () => {
     it('should create management token successfully', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const managementToken = 'existing-token';
       const options = {
@@ -541,6 +553,7 @@ describe('ContentstackClient', () => {
       );
 
       expect(mockClient.stack).toHaveBeenCalledWith({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         api_key: apiKey,
         management_token: managementToken,
       });
@@ -556,6 +569,7 @@ describe('ContentstackClient', () => {
     });
 
     it('should handle error code 401', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const managementToken = 'existing-token';
       const options = {
@@ -590,6 +604,7 @@ describe('ContentstackClient', () => {
     });
 
     it('should throw ContentstackError on other errors', async () => {
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       const apiKey = 'api-key-123';
       const managementToken = 'existing-token';
       const options = {

@@ -168,11 +168,7 @@ export async function runCsAssetsOperation(options: CsAssetsRunnerOptions): Prom
     const assetUidsPath = f['asset-uids-file'].trim();
     const workspace = f.workspace ?? 'main';
 
-    const commonSummaryLines = [
-      `Space UID: ${spaceUid}`,
-      `Organization UID: ${orgUid}`,
-      `Workspace: ${workspace}`,
-    ];
+    const commonSummaryLines = [`Space UID: ${spaceUid}`, `Organization UID: ${orgUid}`, `Workspace: ${workspace}`];
 
     let plan: CsAssetsOperationPlan;
 

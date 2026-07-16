@@ -13,6 +13,7 @@ describe('ImportFields', () => {
   };
   const importContext: ImportContext = {
     spacesRootPath: '/tmp/import/spaces',
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: 'api-key-1',
     host: 'https://api.contentstack.io/v3',
     org_uid: 'org-1',
