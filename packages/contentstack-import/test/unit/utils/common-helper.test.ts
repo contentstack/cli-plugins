@@ -1280,8 +1280,10 @@ describe('Common Helper', () => {
         message: 'Base error',
         errors: {
           authorization: 'Invalid token',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'Invalid key',
           uid: 'Invalid UID',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           access_token: 'Invalid access token',
         },
       };
