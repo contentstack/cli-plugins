@@ -17,6 +17,7 @@ describe('ImportSpaces', () => {
     contentDir: '/tmp/import',
     csAssetsUrl: 'https://am.example.com',
     org_uid: 'org-1',
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     apiKey: 'api-key-1',
     host: 'https://api.contentstack.io/v3',
   };
