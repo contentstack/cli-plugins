@@ -1,0 +1,28 @@
+[
+  {
+    "uid": "ver-active-draft-active",
+    "experienceUid": "exp-active-and-draft",
+    "status": "ACTIVE",
+    "variants": [
+      {
+        "__type": "SegmentedVariant",
+        "audiences": ["contentstack-audience-001"],
+        "lyticsAudiences": []
+      }
+    ],
+    "variantSplit": "EQUALLY_SPLIT"
+  },
+  {
+    "uid": "ver-active-draft-draft",
+    "experienceUid": "exp-active-and-draft",
+    "status": "DRAFT",
+    "variants": [
+      {
+        "__type": "SegmentedVariant",
+        "audiences": ["contentstack-audience-001"],
+        "lyticsAudiences": []
+      }
+    ],
+    "variantSplit": "EQUALLY_SPLIT"
+  }
+]

@@ -34,24 +34,25 @@ npm install @contentstack/cli-cm-export-query
 # Export using management token alias
 csdx cm:stacks:export-query -a <alias> -q "{'title': {'$exists': true}}"
 
-# Export using API key and management token
-csdx cm:stacks:export-query --stack-api-key <api-key> -A <management-token> -q "{'title': {'$exists': true}}"
+# Export using API key
+csdx cm:stacks:export-query --stack-api-key <api-key> -q "{'title': {'$exists': true}}"
 ```
 
 ### Command Options
 
 | Flag | Description | Required |
 |------|-------------|----------|
-| `-a, --alias` | Management token alias | Yes (or use -A) |
-| `-A, --management-token` | Management token | Yes (or use -a) |
-| `--stack-api-key` | Stack API key | Yes |
+| `-a, --alias` | Management token alias | No |
+| `--stack-api-key` | Stack API key | No |
 | `-q, --query` | Query for content export | Yes |
 | `-d, --data-dir` | Export directory path | No |
-| `--branch` | Branch name | No |
+| `--branch` | Branch name to export from | No |
+| `--branch-alias` | Alias of Branch to export from | No |
 | `--skip-references` | Skip reference resolution | No |
 | `--skip-dependencies` | Skip dependency export | No |
 | `--secured-assets` | Include secured assets | No |
 | `--config` | External config file path | No |
+| `-y, --yes` | Skip confirmation prompts | No |
 
 ### Query Examples
 
