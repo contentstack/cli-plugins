@@ -148,6 +148,15 @@ export abstract class BaseBulkCommand extends Command {
   protected parsedFlags: any;
 
   /**
+   * Hook for subclasses to bypass the bulk-publish pipeline (stack setup, queue,
+   * rate limiter) when an operation uses a different execution path entirely.
+   * The subclass is then responsible for its own initialization after super.init().
+   */
+  protected shouldSkipBulkPipeline(): boolean {
+    return false;
+  }
+
+  /**
    * Initialize common components
    */
   protected async init(): Promise<void> {
@@ -156,6 +165,9 @@ export abstract class BaseBulkCommand extends Command {
     // Load chalk (ESM) up-front. The progress-module flag is set in buildConfig()
     // (config layer, mirrors export-config-handler) before the first log call.
     await loadChalk();
+    if (this.shouldSkipBulkPipeline()) {
+      return;
+    }
 
     let { flags } = await this.parse(this.constructor as typeof BaseBulkCommand);
 
