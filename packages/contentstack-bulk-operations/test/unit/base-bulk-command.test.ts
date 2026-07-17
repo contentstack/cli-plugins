@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import { Command } from '@contentstack/cli-command';
 import messages, { $t } from '../../src/messages';
 import { BaseBulkCommand } from '../../src/base-bulk-command';
-import { ResourceType, BulkOperationResult } from '../../src/interfaces';
+import { ResourceType, BulkOperationResult, PublishMode } from '../../src/interfaces';
 import * as utils from '../../src/utils';
 
 class TestBulkCommand extends BaseBulkCommand {
@@ -518,6 +518,135 @@ describe('BaseBulkCommand', () => {
       // Should handle error and return failed result
       expect(result.failed).to.be.greaterThan(0);
       // handleAndLogError is called (error logged to console)
+    });
+  });
+
+  describe('progress manager (summary + cleanup)', () => {
+    let cliUtils: any;
+    let progressStub: { tick: sinon.SinonStub; complete: sinon.SinonStub };
+
+    beforeEach(() => {
+      cliUtils = require('@contentstack/cli-utilities');
+      progressStub = { tick: sandbox.stub(), complete: sandbox.stub() };
+      sandbox.stub(cliUtils.CLIProgressManager, 'createSimple').returns(progressStub as any);
+      sandbox.stub(cliUtils.CLIProgressManager, 'initializeGlobalSummary').returns({} as any);
+      sandbox.stub(cliUtils.CLIProgressManager, 'printGlobalSummary').callsFake(() => {});
+      sandbox.stub(cliUtils.CLIProgressManager, 'clearGlobalSummary').callsFake(() => {});
+      // clearProgressModuleSetting is a frozen re-export (not stubbable); let the real one run
+      // and drive/assert it through configHandler instead.
+      sandbox.stub(cliUtils.configHandler, 'get').returns({ showConsoleLogs: false });
+      sandbox.stub(cliUtils.configHandler, 'set').callsFake(() => {});
+    });
+
+    describe('beginOperationSummary', () => {
+      it('builds a "BULK <OP>-<branch>" label and passes the branch', () => {
+        (command as any).bulkOperationConfig = { operation: 'publish', branch: 'main' };
+
+        (command as any).beginOperationSummary(5);
+
+        expect(cliUtils.CLIProgressManager.initializeGlobalSummary.calledOnce).to.be.true;
+        const args = cliUtils.CLIProgressManager.initializeGlobalSummary.firstCall.args;
+        expect(args[0]).to.equal('BULK PUBLISH-main');
+        expect(args[1]).to.equal('main');
+      });
+
+      it('omits the branch suffix when the branch is unset', () => {
+        (command as any).bulkOperationConfig = { operation: 'unpublish', branch: '' };
+
+        (command as any).beginOperationSummary(0);
+
+        expect(cliUtils.CLIProgressManager.initializeGlobalSummary.firstCall.args[0]).to.equal('BULK UNPUBLISH');
+      });
+
+      it('does not throw when bulkOperationConfig is undefined', () => {
+        (command as any).bulkOperationConfig = undefined;
+
+        expect(() => (command as any).beginOperationSummary(3)).to.not.throw();
+        expect(cliUtils.CLIProgressManager.initializeGlobalSummary.firstCall.args[0]).to.equal('BULK OPERATION');
+      });
+    });
+
+    describe('recordModuleSummary', () => {
+      it('SINGLE mode: uses the real success/failed counts from the result', () => {
+        (command as any).bulkOperationConfig = { publishMode: PublishMode.SINGLE };
+
+        (command as any).recordModuleSummary({ success: 8, failed: 2, total: 10 } as BulkOperationResult, 10);
+
+        expect(cliUtils.CLIProgressManager.createSimple.calledWith(ResourceType.ENTRY, 10)).to.be.true;
+        expect(progressStub.tick.withArgs(true).callCount).to.equal(8);
+        expect(progressStub.tick.withArgs(false).callCount).to.equal(2);
+        expect(progressStub.complete.calledWith(false)).to.be.true;
+      });
+
+      it('BULK mode: derives failures from batchResults and counts the rest as submitted', () => {
+        (command as any).bulkOperationConfig = { publishMode: PublishMode.BULK };
+        // buildBulkModeResult reports success:0/failed:0; failures live in batchResults.
+        (command as any).batchResults = new Map<string, any>([
+          ['b1', { status: 'failed', success: 0, failed: 50, jobId: '' }],
+          ['b2', { status: 'success', success: 0, failed: 0, jobId: 'job-2' }],
+        ]);
+
+        (command as any).recordModuleSummary({ success: 0, failed: 0, total: 126 } as BulkOperationResult, 126);
+
+        // failed = 50 (from batchResults); success = 126 - 50 = 76
+        expect(progressStub.tick.withArgs(true).callCount).to.equal(76);
+        expect(progressStub.tick.withArgs(false).callCount).to.equal(50);
+        expect(progressStub.complete.calledWith(false)).to.be.true;
+      });
+
+      it('BULK mode: with no submission failures, all submitted items count as success', () => {
+        (command as any).bulkOperationConfig = { publishMode: PublishMode.BULK };
+        (command as any).batchResults = new Map<string, any>([
+          ['b1', { status: 'success', success: 0, failed: 0, jobId: 'job-1' }],
+        ]);
+
+        (command as any).recordModuleSummary({ success: 0, failed: 0, total: 50 } as BulkOperationResult, 50);
+
+        expect(progressStub.tick.withArgs(true).callCount).to.equal(50);
+        expect(progressStub.tick.withArgs(false).callCount).to.equal(0);
+        expect(progressStub.complete.calledWith(true)).to.be.true;
+      });
+
+      it('clamps counts so failures never exceed the total', () => {
+        (command as any).bulkOperationConfig = { publishMode: PublishMode.BULK };
+        (command as any).batchResults = new Map<string, any>([
+          ['b1', { status: 'failed', success: 0, failed: 999, jobId: '' }],
+        ]);
+
+        (command as any).recordModuleSummary({ success: 0, failed: 0, total: 10 } as BulkOperationResult, 10);
+
+        expect(progressStub.tick.withArgs(false).callCount).to.equal(10); // clamped to total
+        expect(progressStub.tick.withArgs(true).callCount).to.equal(0);
+      });
+
+      it('falls back to submittedCount when the result has no total', () => {
+        (command as any).bulkOperationConfig = { publishMode: PublishMode.BULK };
+        (command as any).batchResults = new Map<string, any>();
+
+        (command as any).recordModuleSummary({ success: 0, failed: 0 } as BulkOperationResult, 7);
+
+        expect(cliUtils.CLIProgressManager.createSimple.calledWith(ResourceType.ENTRY, 7)).to.be.true;
+        expect(progressStub.tick.withArgs(true).callCount).to.equal(7);
+      });
+    });
+
+    describe('finalizeProgressSummary', () => {
+      it('prints the summary and clears it', () => {
+        (command as any).finalizeProgressSummary();
+
+        expect(cliUtils.CLIProgressManager.printGlobalSummary.calledOnce).to.be.true;
+        expect(cliUtils.CLIProgressManager.clearGlobalSummary.calledOnce).to.be.true;
+      });
+
+      it('clears the persisted progress-module flag', () => {
+        // Simulate the flag being set, then verify clearProgressModuleSetting removes it.
+        cliUtils.configHandler.get.returns({ progressSupportedModule: 'bulk-operations', showConsoleLogs: false });
+
+        (command as any).finalizeProgressSummary();
+
+        expect(cliUtils.configHandler.set.calledWith('log', sinon.match((v: any) => !('progressSupportedModule' in v)))).to
+          .be.true;
+      });
     });
   });
 

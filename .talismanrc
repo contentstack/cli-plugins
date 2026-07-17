@@ -97,4 +97,14 @@ fileignoreconfig:
   checksum: f612661a8b6784b20ea62794b35192b340a34d8424a54a1a2cffec1878ab7528
 - filename: packages/contentstack-import/test/unit/utils/marketplace-app-helper.test.ts
   checksum: de694e861560c4c242100eaf17a6d8e230247b99f94e4b428e55ef065084c10c
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: 8bca423db4c3815c651ad922d986a53b6271cce3ea27f5987b66ee594151165e
+- filename: packages/contentstack-bulk-operations/src/messages/index.ts
+  checksum: 07c2bf3f3130ad5e8b6a2971d76139e9b643c70a9ff5f7450adfb5c9bf3d7164
+- filename: packages/contentstack-bulk-operations/test/unit/utils/operation-flag-matrix.test.ts
+  checksum: 35451ca4c03359b06531a8461091f4a3a45c4dea1f8853081fb53e4ce28c1cc3
+- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets-init.test.ts
+  checksum: 590b1cfe42d46d0917ac90f363b1ccd05200b180bd9c58c770ffd1f12eb18327
+- filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
+  checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
 version: ""
