@@ -269,6 +269,12 @@ export interface CsAssetsBulkOperationResult {
   notice?: string;
   jobId?: string;
   error?: string;
+  /** Aggregate across the ≤100-item batches a single delete/move is split into. */
+  jobIds?: string[];
+  batchesTotal?: number;
+  batchesSucceeded?: number;
+  batchesFailed?: number;
+  failures?: { batchIndex: number; count: number; error: string; uids: string[] }[];
 }
 
 /** Typed flags for CS Assets delete/move operations (cm:stacks:bulk-assets). */
