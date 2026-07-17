@@ -4,7 +4,12 @@ import chunk from 'lodash/chunk';
 import { HttpClient, log, authenticationHandler, handleAndLogError } from '@contentstack/cli-utilities';
 
 import { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from './retry';
-import { FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE } from '../constants/index';
+import {
+  CS_ASSETS_BULK_MUTATE_MAX_ITEMS,
+  FALLBACK_AM_API_CONCURRENCY,
+  FALLBACK_AM_API_FETCH_CONCURRENCY,
+  FALLBACK_AM_API_PAGE_SIZE,
+} from '../constants/index';
 
 import type {
   CSAssetsAPIConfig,
@@ -13,6 +18,8 @@ import type {
   BulkDeleteAssetsResponse,
   BulkMoveAssetsPayload,
   BulkMoveAssetsResponse,
+  BulkMutateFailure,
+  CsAssetsMutateBatchResponse,
   CreateAssetMetadata,
   CreateAssetTypePayload,
   CreateFieldPayload,
@@ -90,6 +97,21 @@ export type CustomPromiseHandlerInput = {
 };
 
 export type CustomPromiseHandler = (input: CustomPromiseHandlerInput) => Promise<any>;
+
+/**
+ * Error thrown by {@link CSAssetsAdapter.postJson} for a failed POST. Carries the HTTP
+ * `status` (undefined for network/transport failures) so callers can classify failures
+ * without parsing the message string.
+ */
+export class CsAssetsPostError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'CsAssetsPostError';
+  }
+}
 
 export class CSAssetsAdapter implements ICSAssetsAdapter {
   private readonly config: CSAssetsAPIConfig;
@@ -607,10 +629,11 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
         }
         const text = await response.text().catch(() => '');
         const bodySnippet = this.formatResponseBodyForError(text);
-        throw new Error(
+        throw new CsAssetsPostError(
           `CS Assets API POST failed: status ${response.status} path ${path}${
             bodySnippet ? `\nResponse: ${bodySnippet}` : ''
           }`,
+          response.status,
         );
       }
       return response.json() as Promise<T>;
@@ -627,12 +650,17 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
         : await doPost();
     } catch (error) {
       if (error instanceof RetryableHttpError) {
-        throw new Error(`CS Assets API POST failed: path ${path} (status ${error.status ?? 'network'}) - ${error.message}`);
+        throw new CsAssetsPostError(
+          `CS Assets API POST failed: path ${path} (status ${error.status ?? 'network'}) - ${error.message}`,
+          error.status,
+        );
       }
-      if (error instanceof Error && error.message.includes('CS Assets API POST failed')) {
+      if (error instanceof CsAssetsPostError) {
         throw error;
       }
-      throw new Error(`CS Assets API POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`);
+      throw new CsAssetsPostError(
+        `CS Assets API POST failed: path ${path} - ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -737,11 +765,22 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     payload: BulkDeleteAssetsPayload,
   ): Promise<BulkDeleteAssetsResponse> {
     const path = `/api/spaces/${encodeURIComponent(spaceUid)}/assets/bulk/delete?workspace=${encodeURIComponent(workspaceUid)}`;
-    return this.postJson<BulkDeleteAssetsResponse>(path, payload, { space_key: spaceUid });
+    const bodies = chunk(payload.assets, CS_ASSETS_BULK_MUTATE_MAX_ITEMS).map((assets) => ({ assets }));
+    const { notices, jobIds, failures, batchesTotal } = await this.dispatchBulkMutateBatches(spaceUid, path, bodies);
+    return {
+      notice: notices[0],
+      primaryJobId: jobIds[0],
+      notices,
+      job_ids: jobIds,
+      failures,
+      batchesTotal,
+      batchesSucceeded: batchesTotal - failures.length,
+    };
   }
 
   /**
    * POST /api/spaces/{spaceUid}/assets/bulk-move — move assets into a folder.
+   * Split into ≤{@link CS_ASSETS_BULK_MUTATE_MAX_ITEMS}-item requests (same cap as delete).
    */
   async bulkMoveAssets(
     spaceUid: string,
@@ -749,6 +788,53 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     payload: BulkMoveAssetsPayload,
   ): Promise<BulkMoveAssetsResponse> {
     const path = `/api/spaces/${encodeURIComponent(spaceUid)}/assets/bulk-move?workspace=${encodeURIComponent(workspaceUid)}`;
-    return this.postJson<BulkMoveAssetsResponse>(path, payload, { space_key: spaceUid });
+    const bodies = chunk(payload.asset_uids, CS_ASSETS_BULK_MUTATE_MAX_ITEMS).map((asset_uids) => ({
+      asset_uids,
+      target_folder_uid: payload.target_folder_uid,
+    }));
+    const { notices, failures, batchesTotal } = await this.dispatchBulkMutateBatches(spaceUid, path, bodies);
+    return {
+      notice: notices[0],
+      notices,
+      failures,
+      batchesTotal,
+      batchesSucceeded: batchesTotal - failures.length,
+    };
+  }
+
+  /**
+   * Dispatch pre-chunked bulk-mutate request bodies (each already ≤100 items) through
+   * {@link postJson} with bounded concurrency via {@link makeConcurrentCall}. A batch
+   * failure is collected — never rethrown — because the CS Assets bulk endpoints commit
+   * each request independently, so earlier batches are already applied server-side and
+   * callers must be able to report partial outcomes. `postJson` retries transient
+   * (429/5xx) failures; 4xx like the 422 item-cap are not retried.
+   */
+  private async dispatchBulkMutateBatches(
+    spaceUid: string,
+    path: string,
+    bodies: unknown[],
+  ): Promise<{ notices: string[]; jobIds: string[]; failures: BulkMutateFailure[]; batchesTotal: number }> {
+    const notices: string[] = [];
+    const jobIds: string[] = [];
+    const failures: BulkMutateFailure[] = [];
+    const apiBatches = chunk(bodies, FALLBACK_AM_API_CONCURRENCY);
+
+    await this.makeConcurrentCall({ module: `bulk-mutate ${path}`, apiBatches }, async ({ element, batchIndex, index }) => {
+      const globalIndex = batchIndex * FALLBACK_AM_API_CONCURRENCY + index;
+      const body = element as { assets?: { uid: string }[]; asset_uids?: string[] };
+      const uids = body.assets ? body.assets.map((a) => a.uid) : (body.asset_uids ?? []);
+      try {
+        const r = await this.postJson<CsAssetsMutateBatchResponse>(path, body, { space_key: spaceUid }, { retry: true });
+        if (typeof r.notice === 'string') notices.push(r.notice);
+        if (typeof r.job_id === 'string') jobIds.push(r.job_id);
+      } catch (e) {
+        const status = e instanceof CsAssetsPostError ? e.status : undefined;
+        const message = e instanceof Error ? e.message : String(e);
+        failures.push({ batchIndex: globalIndex, count: uids.length, status, error: message, uids });
+      }
+    });
+
+    return { notices, jobIds, failures, batchesTotal: bodies.length };
   }
 }
