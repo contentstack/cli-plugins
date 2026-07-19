@@ -1,14 +1,14 @@
 {
   "name": "@contentstack/cli-cm-migrate-rte",
   "description": "Contentstack CLI plugin to migrate HTML RTE to JSON RTE",
-  "version": "2.0.0-beta.8",
+  "version": "2.0.0-beta.9",
   "author": "contentstack",
   "bugs": {
     "url": "https://github.com/contentstack/cli-plugins/issues"
   },
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-command": "~2.0.0-beta.10",
+    "@contentstack/cli-utilities": "~2.0.0-beta.11",
     "@contentstack/json-rte-serializer": "~2.1.0",
     "@oclif/core": "^4.11.4",
     "@oclif/plugin-help": "^6.2.49",
