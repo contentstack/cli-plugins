@@ -2,11 +2,16 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
-import BulkCsAssets from '../../../src/commands/cm/stacks/bulk-am-assets';
+import BulkAssets from '../../../src/commands/cm/stacks/bulk-assets';
 
-describe('BulkCsAssets command', () => {
+/**
+ * CS Assets delete/move path of the merged cm:stacks:bulk-assets command
+ * (formerly cm:stacks:bulk-am-assets).
+ */
+describe('BulkAssets command — CS Assets delete/move path', () => {
   let sandbox: sinon.SinonSandbox;
-  let command: BulkCsAssets;
+  let command: BulkAssets;
+  let authHandler: any;
 
   const baseDeleteFlags = {
     operation: 'delete',
@@ -32,12 +37,24 @@ describe('BulkCsAssets command', () => {
     Object.defineProperty(command, 'region', { value, configurable: true, writable: true });
   }
 
+  function setCsAssetsFlags(flags: object): void {
+    (command as any).csAssetsMode = true;
+    (command as any).csAssetsFlags = { ...flags };
+    (command as any).loggerContext = { module: 'cm:stacks:bulk-assets' };
+  }
+
+  function stubAuthSuccess(): void {
+    sandbox.stub(authHandler, 'getAuthDetails').resolves();
+    sandbox.stub(Object.getPrototypeOf(authHandler), 'accessToken').get(() => 'test-token');
+  }
+
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    command = new BulkCsAssets([], {} as any);
-    (command as any).parsedFlags = { ...baseDeleteFlags };
-    (command as any).loggerContext = { module: 'cm:stacks:bulk-am-assets' };
+    command = new BulkAssets([], {} as any);
+    setCsAssetsFlags(baseDeleteFlags);
     setRegion({});
+
+    authHandler = require('@contentstack/cli-utilities').authenticationHandler;
   });
 
   afterEach(() => {
@@ -47,7 +64,35 @@ describe('BulkCsAssets command', () => {
 
   describe('AM URL validation', () => {
     it('should set exitCode=1 when AM URL is not configured in region', async () => {
-      setRegion({});  // no csAssetsUrl
+      setRegion({}); // no csAssetsUrl
+
+      await command.run();
+
+      expect(process.exitCode).to.equal(1);
+    });
+  });
+
+  describe('auth pre-flight', () => {
+    it('should set exitCode=1 and skip the API when no auth token is available', async () => {
+      setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      sandbox.stub(authHandler, 'getAuthDetails').resolves();
+      sandbox.stub(Object.getPrototypeOf(authHandler), 'accessToken').get(() => '');
+
+      const assetUidsModule = require('../../../src/utils/asset-uids-from-file');
+      const loadStub = sandbox.stub(assetUidsModule, 'loadBulkDeleteItemsFromFile');
+      const amServiceModule = require('../../../src/services/am-asset-service');
+      const deleteStub = sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkDelete');
+
+      await command.run();
+
+      expect(process.exitCode).to.equal(1);
+      expect(loadStub.called).to.be.false; // fails before reading any files
+      expect(deleteStub.called).to.be.false;
+    });
+
+    it('should set exitCode=1 when fetching auth details throws', async () => {
+      setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      sandbox.stub(authHandler, 'getAuthDetails').rejects(new Error('not logged in'));
 
       await command.run();
 
@@ -57,8 +102,9 @@ describe('BulkCsAssets command', () => {
 
   describe('locale not allowed for move', () => {
     it('should set exitCode=1 when --locale is passed with --operation move', async () => {
-      (command as any).parsedFlags = { ...baseMoveFlags, locale: 'en-us' };
+      setCsAssetsFlags({ ...baseMoveFlags, locale: 'en-us' });
       setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      stubAuthSuccess();
 
       // Stub the file loader to confirm it is NOT reached
       const assetUidsModule = require('../../../src/utils/asset-uids-from-file');
@@ -67,12 +113,13 @@ describe('BulkCsAssets command', () => {
       await command.run();
 
       expect(process.exitCode).to.equal(1);
-      expect(loadStub.called).to.be.false;  // Should have exited before loading files
+      expect(loadStub.called).to.be.false; // Should have exited before loading files
     });
 
     it('should NOT set exitCode when --locale is absent for move and API succeeds', async () => {
-      (command as any).parsedFlags = { ...baseMoveFlags };
+      setCsAssetsFlags({ ...baseMoveFlags });
       setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      stubAuthSuccess();
 
       const assetUidsModule = require('../../../src/utils/asset-uids-from-file');
       sandbox.stub(assetUidsModule, 'loadAssetUidsFromFile').returns(['uid1', 'uid2']);
@@ -92,6 +139,7 @@ describe('BulkCsAssets command', () => {
   describe('delete operation', () => {
     beforeEach(() => {
       setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      stubAuthSuccess();
     });
 
     it('should NOT set exitCode on successful delete', async () => {
@@ -125,14 +173,30 @@ describe('BulkCsAssets command', () => {
     });
   });
 
-  describe('BaseCsAssetsCommand isolation — no publish/unpublish infrastructure', () => {
-    it('should not have bulkOperationConfig, queueManager, or managementStack on the instance', () => {
-      // BulkCsAssets extends BaseCsAssetsCommand, NOT BaseBulkCommand.
-      // None of these publish/unpublish properties should exist.
+  describe('CS Assets path isolation — no publish/unpublish infrastructure', () => {
+    it('should not touch bulkOperationConfig, queueManager, or managementStack when running delete/move', async () => {
+      setRegion({ csAssetsUrl: 'https://assets.example.com' });
+      stubAuthSuccess();
+
+      const assetUidsModule = require('../../../src/utils/asset-uids-from-file');
+      sandbox.stub(assetUidsModule, 'loadBulkDeleteItemsFromFile').returns([{ uid: 'u1', locale: 'en-us' }]);
+      const amServiceModule = require('../../../src/services/am-asset-service');
+      sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkDelete').resolves({ success: true, jobId: 'j1' });
+
+      await command.run();
+
+      // The CS Assets path must never initialize the bulk-publish pipeline.
       expect((command as any).bulkOperationConfig).to.be.undefined;
       expect((command as any).queueManager).to.be.undefined;
       expect((command as any).managementStack).to.be.undefined;
       expect((command as any).rateLimiter).to.be.undefined;
+    });
+
+    it('shouldSkipBulkPipeline() should reflect csAssetsMode', () => {
+      (command as any).csAssetsMode = true;
+      expect((command as any).shouldSkipBulkPipeline()).to.be.true;
+      (command as any).csAssetsMode = false;
+      expect((command as any).shouldSkipBulkPipeline()).to.be.false;
     });
   });
 });

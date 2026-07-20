@@ -262,6 +262,7 @@ describe('Interactive', () => {
           uid: 'stack-1',
           name: 'Existing Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-1',
           org_uid: 'org-1',
         },
@@ -287,6 +288,7 @@ describe('Interactive', () => {
           uid: 'stack-1',
           name: 'Existing Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-1',
           org_uid: 'org-1',
         },
@@ -294,6 +296,7 @@ describe('Interactive', () => {
           uid: 'stack-2',
           name: 'Another Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-2',
           org_uid: 'org-1',
         },
@@ -369,6 +372,7 @@ describe('Interactive', () => {
           uid: 'stack-3',
           name: 'Zebra Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-3',
           org_uid: 'org-1',
         },
@@ -376,6 +380,7 @@ describe('Interactive', () => {
           uid: 'stack-1',
           name: 'Alpha Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-1',
           org_uid: 'org-1',
         },
@@ -383,6 +388,7 @@ describe('Interactive', () => {
           uid: 'stack-2',
           name: 'Beta Stack',
           master_locale: 'en-us',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
           api_key: 'api-key-2',
           org_uid: 'org-1',
         },

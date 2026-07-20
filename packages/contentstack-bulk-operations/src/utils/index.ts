@@ -35,7 +35,15 @@ import {
   buildBulkModeResult,
   handleOperationError,
 } from './command-helpers';
-import { fillMissingFlags, fillMissingCsAssetsFlags } from './interactive';
+import { fillMissingFlags, fillMissingCsAssetsFlags, promptForOperation } from './interactive';
+import { runCsAssetsOperation } from './cs-assets-runner';
+import {
+  validateOperationFlagMatrix,
+  enforceOperationFlagMatrix,
+  getOperationFromArgv,
+  OperationFlagMatrixError,
+  RETRY_REVERT_CONTEXT,
+} from './operation-flag-matrix';
 import {
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,
@@ -99,6 +107,13 @@ export {
   handleOperationError,
   fillMissingFlags,
   fillMissingCsAssetsFlags,
+  promptForOperation,
+  runCsAssetsOperation,
+  validateOperationFlagMatrix,
+  enforceOperationFlagMatrix,
+  getOperationFromArgv,
+  OperationFlagMatrixError,
+  RETRY_REVERT_CONTEXT,
   fetchTaxonomyList,
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,

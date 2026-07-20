@@ -34,6 +34,7 @@ describe('Marketplace App Helper', () => {
 
     mockConfig = {
       org_uid: 'test-org-uid',
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       apiKey: 'test-stack-uid',
       host: 'https://api.contentstack.io',
       developerHubBaseUrl: 'https://developerhub-api.contentstack.com',
@@ -230,6 +231,7 @@ describe('Marketplace App Helper', () => {
       const result = await getOrgUid(mockConfig);
 
       expect(result).to.equal('test-org-123');
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockClient.stack.calledWith({ api_key: mockConfig.apiKey })).to.be.true;
     });
 
