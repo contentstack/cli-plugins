@@ -472,13 +472,13 @@ describe('Interactive Prompts', () => {
     it('should throw in non-TTY when required base flags are missing', async () => {
       Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
 
-      const flags = { workspace: 'main', yes: false };
+      const flags = { operation: 'delete', workspace: 'main', yes: false };
 
       try {
         await fillMissingCsAssetsFlags(flags);
         expect.fail('Should have thrown');
       } catch (error: any) {
-        expect(error.message).to.include('--operation');
+        expect(error.message).to.not.include('--operation,');
         expect(error.message).to.include('--space-uid');
         expect(error.message).to.include('--org-uid');
         expect(error.message).to.include('--asset-uids-file');
@@ -525,13 +525,13 @@ describe('Interactive Prompts', () => {
     it('should prompt for all missing base flags in TTY and show interactive header/footer', async () => {
       Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
 
-      const flags = {};
+      // operation is always resolved by the command's init() before this runs
+      const flags = { operation: 'delete' };
 
-      inquireStub.onCall(0).resolves('delete');        // operation
-      inquireStub.onCall(1).resolves('sp123');          // space-uid
-      inquireStub.onCall(2).resolves('org456');         // org-uid
-      inquireStub.onCall(3).resolves('./assets.json');  // asset-uids-file
-      inquireStub.onCall(4).resolves('en-us');          // locale (delete-conditional)
+      inquireStub.onCall(0).resolves('sp123');          // space-uid
+      inquireStub.onCall(1).resolves('org456');         // org-uid
+      inquireStub.onCall(2).resolves('./assets.json');  // asset-uids-file
+      inquireStub.onCall(3).resolves('en-us');          // locale (delete-conditional)
 
       const result = await fillMissingCsAssetsFlags(flags);
 
@@ -598,25 +598,22 @@ describe('Interactive Prompts', () => {
       expect(inquireStub.called).to.be.false;
     });
 
-    it('should present delete/move choices for the operation prompt', async () => {
+    it('should never prompt for the operation (resolved by init() before this runs)', async () => {
       Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
 
       const flags = {
+        operation: 'delete',
         'space-uid': 'sp123',
         'org-uid': 'org456',
         'asset-uids-file': './assets.json',
-        'target-folder-uid': 'folderABC',
       };
 
-      inquireStub.onCall(0).resolves('move');  // operation
+      inquireStub.onCall(0).resolves('en-us'); // locale
 
       await fillMissingCsAssetsFlags(flags);
 
-      const operationCall = inquireStub.firstCall.args[0];
-      expect(operationCall.type).to.equal('list');
-      const values = operationCall.choices.map((c: any) => c.value);
-      expect(values).to.include('delete');
-      expect(values).to.include('move');
+      const promptNames = inquireStub.getCalls().map((c: any) => c.args[0].name);
+      expect(promptNames).to.not.include('operation');
     });
 
     it('should validate that space-uid is not blank', async () => {
