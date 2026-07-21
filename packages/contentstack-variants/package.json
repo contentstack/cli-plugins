@@ -10,7 +10,8 @@
     "compile": "tsc -b tsconfig.json",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
-    "test:unit:report": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\""
+    "test:unit:report": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\"",
+    "lint": "eslint \"src/**/*.ts\""
   },
   "keywords": [
     "variant"

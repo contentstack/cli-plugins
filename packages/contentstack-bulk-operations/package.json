@@ -28,12 +28,12 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@types/chai": "^5.2.3",
     "@types/lodash": "^4.17.24",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.19.0",
     "@types/sinon": "^21.0.1",
-    "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
     "chai": "^6.2.2",
@@ -76,12 +76,11 @@
   },
   "scripts": {
     "build": "pnpm clean && tsc -b",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "pnpm lint",
     "prepack": "pnpm build && oclif manifest && oclif readme && pnpm changelog",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",

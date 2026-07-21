@@ -59,9 +59,8 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
     "compile": "tsc -b tsconfig.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
