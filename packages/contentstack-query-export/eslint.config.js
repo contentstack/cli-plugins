@@ -37,6 +37,7 @@ export default [
       '@typescript-eslint/no-wrapper-object-types': 'warn',
       '@typescript-eslint/no-unsafe-function-type': 'warn',
       '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/no-this-alias': 'warn',
       '@typescript-eslint/no-use-before-define': 'off',
       '@typescript-eslint/no-redeclare': 'off',
       'prefer-const': 'warn',

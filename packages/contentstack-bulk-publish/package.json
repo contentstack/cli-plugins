@@ -93,7 +93,6 @@
     "prepack": "oclif manifest && oclif readme",
     "build": "oclif manifest && oclif readme",
     "test:unit": "mocha --reporter spec --forbid-only \"test/unit/**/*.test.js\"",
-    "posttest": "eslint .",
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./node_modules tsconfig.build.tsbuildinfo"
   }
