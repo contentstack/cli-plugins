@@ -21,6 +21,7 @@ describe('BaseClass', () => {
       asset: sinon.stub().returns({
         create: sinon.stub().resolves({ uid: 'asset-123' }),
         replace: sinon.stub().resolves({ uid: 'asset-123' }),
+        addHeader: sinon.stub().returnsThis(),
         publish: sinon.stub().resolves({ uid: 'asset-123' }),
         folder: sinon.stub().returns({
           create: sinon.stub().resolves({ uid: 'folder-123' }),
@@ -30,6 +31,7 @@ describe('BaseClass', () => {
         create: sinon.stub().resolves({ uid: 'ct-123' }),
         entry: sinon.stub().returns({
           create: sinon.stub().resolves({ uid: 'entry-123' }),
+          addHeader: sinon.stub().returnsThis(),
           publish: sinon.stub().resolves({ uid: 'entry-123' }),
           delete: sinon.stub().resolves({ uid: 'entry-123' }),
         }),
@@ -534,6 +536,7 @@ describe('BaseClass', () => {
 
         await testClass.makeAPICall(mockApiOptions);
 
+        expect(mockStackClient.asset().addHeader.calledWith('api_version', '3.2')).to.be.true;
         expect(mockStackClient.asset().publish.calledOnce).to.be.true;
         expect(mockApiOptions.resolve.calledOnce).to.be.true;
       });
@@ -798,6 +801,7 @@ describe('BaseClass', () => {
 
         await testClass.makeAPICall(mockApiOptions);
 
+        expect(mockStackClient.contentType().entry().addHeader.calledWith('api_version', '3.2')).to.be.true;
         expect(mockStackClient.contentType().entry().publish.calledOnce).to.be.true;
         expect(mockApiOptions.resolve.calledOnce).to.be.true;
       });
