@@ -4,10 +4,12 @@ import { stub, assert } from 'sinon';
 import DiffCommand from '../../../../../src/commands/cm/branches/diff';
 import { BranchDiffHandler } from '../../../../../src/branch';
 import { mockData } from '../../../mock/data';
+import { stubAuthenticatedEnv } from '../../../helpers/stub-auth';
 
 
 describe('Diff Command', () => {
   it('Branch diff with all flags, should be successful', async function () {
+    const configStub = stubAuthenticatedEnv();
     const stub1 = stub(BranchDiffHandler.prototype, 'run').resolves(mockData.data);
     await DiffCommand.run([
       '--compare-branch',
@@ -21,6 +23,7 @@ describe('Diff Command', () => {
     ]);
     expect(stub1.calledOnce).to.be.true;
     stub1.restore();
+    configStub.restore();
   });
 
   it('Branch diff when format type is verbose, should display verbose view', async function () {
