@@ -19,4 +19,6 @@ fileignoreconfig:
   checksum: 68a9510db6f2746ac5006c091d276c1ba619a9e15c76a3edae3967e4f9c2dd4e
 - filename: CHANGELOG.md
   checksum: 88c7e1dee308fa4ae25e7815ead0842b1aac7ed669b02859cc8b25cba879595d
+- filename: packages/contentstack-bulk-operations/test/unit/services/taxonomy-service.test.ts
+  checksum: abc5ac707341760cf59d5b8b1c4e13cf2c79955e2735c33e2db3ec6bc48eddb6
 version: ""
