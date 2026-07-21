@@ -245,7 +245,7 @@ export function buildConfig(flags: CommandFlags): BulkOperationConfig {
     folderUid: flags['folder-uid'],
     sourceEnv: flags['source-env'],
     publishMode: (flags['publish-mode'] as PublishMode) || PublishMode.BULK,
-    apiVersion: flags['api-version'] || '3',
+    ...(flags['api-version'] ? { apiVersion: flags['api-version'] } : {}),
     branch: flags.branch || 'main',
     filter: flags.filter,
     maxRetries: flags['max-retries'] || 3,

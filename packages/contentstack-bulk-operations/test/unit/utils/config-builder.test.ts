@@ -336,7 +336,7 @@ describe('Config Builder Utilities', () => {
       expect(config.environments).to.deep.equal([]);
       expect(config.locales).to.deep.equal([]);
       expect(config.publishMode).to.equal(PublishMode.BULK);
-      expect(config.apiVersion).to.equal('3'); // Default to 3
+      expect(config.apiVersion).to.be.undefined; // No api-version flag → field not set
       expect(config.maxRetries).to.equal(3);
     });
 
