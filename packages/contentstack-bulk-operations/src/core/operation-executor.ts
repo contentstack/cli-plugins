@@ -164,7 +164,7 @@ export class OperationExecutor {
   private async executeEntryOperation(operation: OperationType, data: EntryPublishData): Promise<any> {
     const { uid, content_type, locale, version, publish_details } = data;
 
-    const entry = this.stack.contentType(content_type).entry(uid);
+    const entry = this.stack.contentType(content_type).entry(uid).addHeader('api_version', '3.2');
 
     switch (operation) {
       case OperationType.PUBLISH:
@@ -197,7 +197,7 @@ export class OperationExecutor {
   private async executeAssetOperation(operation: OperationType, data: AssetPublishData): Promise<any> {
     const { uid, locale, version, publish_details } = data;
 
-    const asset = this.stack.asset(uid);
+    const asset = this.stack.asset(uid).addHeader('api_version', '3.2');
 
     switch (operation) {
       case OperationType.PUBLISH:
