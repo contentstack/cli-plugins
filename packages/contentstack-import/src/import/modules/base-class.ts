@@ -371,12 +371,25 @@ export default abstract class BaseClass {
           .replace(pick(apiData, [...this.modulesConfig.assets.validKeys, 'upload']) as AssetData)
           .then(onSuccess)
           .catch(onReject);
-      case 'publish-assets':
-        return this.stack
-          .asset(uid)
+      case 'publish-assets': {
+        const assetClient = this.stack.asset(uid);
+        // CS Assets (spaces) publish must go to api_version 3.2. The SDK's asset `publish()` takes no
+        // api_version arg and only forwards `stackHeaders` as request headers, so inject it into this
+        // per-call instance's headers (a fresh object — the shared stack headers are untouched).
+        // `additionalInfo.api_version` is set only by the AM publish path; legacy asset publish omits
+        // it and is unaffected.
+        const publishApiVersion = additionalInfo?.api_version;
+        if (publishApiVersion) {
+          (assetClient as any).stackHeaders = {
+            ...((assetClient as any).stackHeaders ?? {}),
+            api_version: publishApiVersion,
+          };
+        }
+        return assetClient
           .publish(pick(apiData, ['publishDetails']) as PublishConfig)
           .then(onSuccess)
           .catch(onReject);
+      }
       case 'create-extensions':
         return this.stack
           .extension()

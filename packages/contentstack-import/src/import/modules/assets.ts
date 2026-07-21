@@ -138,6 +138,10 @@ export default class ImportAssets extends BaseClass {
 
         await this.linkImportedAmSpacesToBranch(spaceMappings);
 
+        if (!this.importConfig.skipAssetsPublish) {
+          await this.publishAmSpaces(spaceMappings);
+        }
+
         this.completeProgressWithMessage();
         return;
       }
@@ -246,6 +250,185 @@ export default class ImportAssets extends BaseClass {
         phase: 'CS Assets branch linking (linked_workspaces)',
       });
     }
+  }
+
+  /**
+   * Returns true when an AM asset will actually be published, so counting and enqueuing stay in sync
+   * with the ticks emitted per publish attempt. Requires all three:
+   *  - a UID mapping (old AM UID → new AM UID); without it the asset was never uploaded and cannot be
+   *    published — counting it would leave the progress bar short a tick,
+   *  - at least one publish_details entry for the source stack (matching api_key) — an AM asset is
+   *    shared and may be published into multiple stacks; only this export's stack is replayed,
+   *  - that entry targets an environment present in the source environments map (so we can map it).
+   */
+  private isAmAssetPublishable(asset: Record<string, any>, sourceStack: string): boolean {
+    if (!asset?.uid || !this.assetsUidMap?.[asset.uid]) {
+      return false;
+    }
+    return (
+      filter(
+        asset?.publish_details,
+        (pd: any) => pd?.api_key === sourceStack && this.environments?.hasOwnProperty(pd?.environment),
+      ).length > 0
+    );
+  }
+
+  /**
+   * Publishes imported AM (Contentstack Assets / spaces) assets, mirroring the legacy `publish()`
+   * but re-pointed at each space's chunk store under `spaces/{oldSpaceUid}/assets`.
+   *
+   * Environments and asset UIDs are resolved from the same maps the legacy path uses:
+   *  - `this.environments` (source env UID → { name }) loaded in the constructor,
+   *  - `this.assetsUidMap` (old AM UID → new AM UID) from `mapper/assets/uid-mapping.json`, which the
+   *    AM import already wrote.
+   * Only publish_details for the source stack (`config.source_stack`) are honored — see
+   * {@link isAmAssetPublishable}.
+   *
+   * @param {SpaceMapping[]} spaceMappings mappings produced by the AM import
+   */
+  private async publishAmSpaces(spaceMappings: SpaceMapping[]): Promise<void> {
+    const sourceStack = this.importConfig.source_stack;
+    if (!sourceStack) {
+      log.warn(
+        'Skipping CS Assets publish: source stack API key (stack/stack.json) not found, so publish_details cannot be scoped to this stack.',
+        this.importConfig.context,
+      );
+      return;
+    }
+
+    if (isEmpty(this.assetsUidMap)) {
+      log.debug('Loading asset UID mappings from file for CS Assets publish', this.importConfig.context);
+      this.assetsUidMap = (this.fs.readFile(this.assetUidMapperPath, true) as Record<string, unknown>) || {};
+    }
+
+    const assetsFileName = this.assetConfig.fileName;
+
+    // Resolve each space's on-disk assets dir (spaces/{oldSpaceUid}/assets), matching where the AM
+    // import read from. Skip spaces without an assets index (empty/reused).
+    const spaceAssetDirs = spaceMappings
+      .map(({ oldSpaceUid }) => join(this.importConfig.contentDir, 'spaces', oldSpaceUid, 'assets'))
+      .filter((dir) => existsSync(join(dir, assetsFileName)));
+
+    if (spaceAssetDirs.length === 0) {
+      // Imported spaces exist but none expose an assets index at the expected on-disk path. This is
+      // usually a layout change in the AM export (a silently-skipped publish would look like success),
+      // so surface it loudly rather than at debug.
+      if (spaceMappings.length > 0) {
+        log.warn(
+          `CS Assets publish skipped: no assets index found under spaces/{spaceUid}/${assetsFileName} for ${spaceMappings.length} imported space(s). Assets were imported but not published.`,
+          this.importConfig.context,
+        );
+      } else {
+        log.debug('No CS Assets spaces to publish', this.importConfig.context);
+      }
+      return;
+    }
+
+    // Pass 1: count publishable assets (source-stack scoped) for the progress row total.
+    let publishableCount = 0;
+    for (const assetsDir of spaceAssetDirs) {
+      const fsUtil = new FsUtility({ basePath: assetsDir, indexFileName: assetsFileName });
+      for (const _ of values(fsUtil.indexFileContent)) {
+        const chunkData = await fsUtil.readChunkFiles.next().catch(() => ({}));
+        publishableCount += filter(values(chunkData as Record<string, any>[]), (asset) =>
+          this.isAmAssetPublishable(asset, sourceStack),
+        ).length;
+      }
+    }
+
+    if (publishableCount === 0) {
+      log.info('No CS Assets to publish for the source stack', this.importConfig.context);
+      return;
+    }
+
+    this.progressManager?.addProcess(PROCESS_NAMES.ASSET_PUBLISH, publishableCount);
+    this.progressManager
+      ?.startProcess(PROCESS_NAMES.ASSET_PUBLISH)
+      .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_PUBLISH].PUBLISHING, PROCESS_NAMES.ASSET_PUBLISH);
+
+    const onSuccess = ({ apiData: { uid, title } = undefined }: any) => {
+      this.progressManager?.tick(true, `published: ${title || uid}`, null, PROCESS_NAMES.ASSET_PUBLISH);
+      log.success(`Asset '${uid}: ${title}' published successfully`, this.importConfig.context);
+    };
+
+    const onReject = ({ error, apiData: { uid, title } = undefined }: any) => {
+      this.progressManager?.tick(
+        false,
+        `publish failed: ${title || uid}`,
+        error?.message || PROCESS_STATUS[PROCESS_NAMES.ASSET_PUBLISH].FAILED,
+        PROCESS_NAMES.ASSET_PUBLISH,
+      );
+      log.error(`Asset '${uid}: ${title}' not published`, this.importConfig.context);
+      handleAndLogError(error, { ...this.importConfig.context, uid, title });
+    };
+
+    const serializeData = (apiOptions: ApiOptions) => {
+      const { apiData: asset } = apiOptions;
+      const publishDetails = filter(
+        asset.publish_details,
+        (pd: any) => pd?.api_key === sourceStack && this.environments?.hasOwnProperty(pd?.environment),
+      );
+
+      if (!publishDetails.length) {
+        apiOptions.entity = undefined;
+        return apiOptions;
+      }
+
+      const environments = uniq(map(publishDetails, ({ environment }) => this.environments[environment].name));
+      const locales = uniq(map(publishDetails, 'locale'));
+
+      if (environments.length === 0 || locales.length === 0) {
+        log.debug(`Skipping publish for asset ${asset.uid} - no valid environments/locales`, this.importConfig.context);
+        apiOptions.entity = undefined;
+        return apiOptions;
+      }
+
+      asset.locales = locales;
+      asset.environments = environments;
+      apiOptions.apiData.publishDetails = { locales, environments };
+
+      apiOptions.uid = this.assetsUidMap[asset.uid] as string;
+      if (!apiOptions.uid) {
+        log.debug(`Skipping publish for asset ${asset.uid} - no UID mapping found`, this.importConfig.context);
+        apiOptions.entity = undefined;
+      }
+
+      return apiOptions;
+    };
+
+    // Pass 2: publish, one space's chunks at a time. Only source-stack-scoped assets are enqueued so
+    // every ticked item is a real publish attempt.
+    for (const assetsDir of spaceAssetDirs) {
+      const fsUtil = new FsUtility({ basePath: assetsDir, indexFileName: assetsFileName });
+      const indexer = fsUtil.indexFileContent;
+      const indexerCount = values(indexer).length;
+
+      for (const index in indexer) {
+        const apiContent = filter(values(await fsUtil.readChunkFiles.next()), (asset) =>
+          this.isAmAssetPublishable(asset, sourceStack),
+        );
+        log.debug(`Found ${apiContent.length} publishable CS Assets in chunk ${index}`, this.importConfig.context);
+
+        await this.makeConcurrentCall({
+          apiContent,
+          indexerCount,
+          currentIndexer: +index,
+          processName: 'cs-assets publish',
+          apiParams: {
+            serializeData,
+            reject: onReject,
+            resolve: onSuccess,
+            entity: 'publish-assets',
+            includeParamOnCompletion: true,
+            // CS Assets publish requires api_version 3.2 (see base-class 'publish-assets').
+            additionalInfo: { api_version: '3.2' },
+          },
+          concurrencyLimit: this.assetConfig.uploadAssetsConcurrency,
+        });
+      }
+    }
+
+    this.progressManager?.completeProcess(PROCESS_NAMES.ASSET_PUBLISH, true);
   }
 
   /**
