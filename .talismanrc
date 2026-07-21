@@ -1,4 +1,18 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
-  checksum: 9756a3aa8a948bfd66a5fdc371f720ef380da007f0b8e6df348cafbd3d7d8a76
+  checksum: e6eecc09255df3dcb320328998d5faef14f2d1e18f561d4b9efcd8ed599476b9
+- filename: packages/contentstack-bulk-operations/src/messages/index.ts
+  checksum: 07c2bf3f3130ad5e8b6a2971d76139e9b643c70a9ff5f7450adfb5c9bf3d7164
+- filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
+  checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
+- filename: packages/contentstack-bulk-operations/src/base-bulk-command.ts
+  checksum: cb1147ac666b607a093c4c827d143d0bd2de5b6e9d59973f1b7052451e82a89b
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: 8bca423db4c3815c651ad922d986a53b6271cce3ea27f5987b66ee594151165e
+- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets-init.test.ts
+  checksum: 590b1cfe42d46d0917ac90f363b1ccd05200b180bd9c58c770ffd1f12eb18327
+- filename: packages/contentstack-bulk-operations/test/unit/utils/operation-flag-matrix.test.ts
+  checksum: 35451ca4c03359b06531a8461091f4a3a45c4dea1f8853081fb53e4ce28c1cc3
+- filename: packages/contentstack-bulk-operations/test/unit/base-bulk-command.test.ts
+  checksum: ca699a9d73757d44ded4d9d27beb4f460f911a7c88a14551a9402a3ac0c69873
 version: ""
