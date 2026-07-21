@@ -123,6 +123,7 @@ describe('BulkOperationService', () => {
 
       expect(jobId).to.equal('job123');
       expect(mockPublish.called).to.be.true;
+      expect(mockPublish.firstCall.args[0].api_version).to.equal('3.2');
     });
 
     it('should submit bulk unpublish job', async () => {
@@ -147,6 +148,7 @@ describe('BulkOperationService', () => {
 
       expect(jobId).to.equal('job456');
       expect(mockUnpublish.called).to.be.true;
+      expect(mockUnpublish.firstCall.args[0].api_version).to.equal('3.2');
     });
 
     it('should handle unsupported operation', async () => {
