@@ -271,7 +271,7 @@ export interface CsAssetsBulkOperationResult {
   error?: string;
 }
 
-/** Typed flags for the bulk-am-assets command. */
+/** Typed flags for CS Assets delete/move operations (cm:stacks:bulk-assets). */
 export interface CsAssetsFlags {
   operation: string;
   'space-uid': string;
