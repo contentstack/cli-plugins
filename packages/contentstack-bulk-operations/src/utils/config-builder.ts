@@ -99,11 +99,6 @@ function validateConfig(config: BulkOperationConfig): string[] {
     }
   }
 
-  // API version validation
-  if (config.apiVersion && !['3', '3.2'].includes(config.apiVersion)) {
-    errors.push(`Invalid API version: ${config.apiVersion}. Supported versions: 3, 3.2`);
-  }
-
   // Publish mode validation
   if (config.publishMode && config.publishMode !== PublishMode.BULK && config.publishMode !== PublishMode.SINGLE) {
     errors.push(`Invalid publish mode: ${String(config.publishMode)}. Must be 'bulk' or 'single'`);
@@ -179,11 +174,6 @@ function validateCommandFlags(flags: CommandFlags): string[] {
     }
   }
 
-  // API version validation
-  if (flags['api-version'] && !['3', '3.2'].includes(flags['api-version'])) {
-    errors.push(`Invalid API version: ${flags['api-version']}. Supported versions: 3, 3.2`);
-  }
-
   // Publish mode validation
   if (flags['publish-mode'] && !['bulk', 'single'].includes(flags['publish-mode'])) {
     errors.push(`Invalid publish mode: ${flags['publish-mode']}. Must be 'bulk' or 'single'`);
@@ -197,11 +187,6 @@ function validateCommandFlags(flags: CommandFlags): string[] {
   }
   if (flags['source-alias'] && !flags['source-env']) {
     errors.push('--source-alias can only be used with --source-env for cross-publish operations');
-  }
-
-  // Variants require api-version 3.2
-  if (flags['include-variants'] && flags['api-version'] !== '3.2') {
-    errors.push('--include-variants requires --api-version 3.2');
   }
 
   return errors;
@@ -245,7 +230,6 @@ export function buildConfig(flags: CommandFlags): BulkOperationConfig {
     folderUid: flags['folder-uid'],
     sourceEnv: flags['source-env'],
     publishMode: (flags['publish-mode'] as PublishMode) || PublishMode.BULK,
-    ...(flags['api-version'] ? { apiVersion: flags['api-version'] } : {}),
     branch: flags.branch || 'main',
     filter: flags.filter,
     maxRetries: flags['max-retries'] || 3,
