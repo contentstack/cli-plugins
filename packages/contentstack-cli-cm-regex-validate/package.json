@@ -22,13 +22,13 @@
     "eslint-plugin-unicorn": "^48.0.1",
     "globby": "^11.1.0",
     "husky": "^9.1.7",
+    "jest": "^30.4.2",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.21",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
-    "jest": "^30.4.2"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -59,15 +59,15 @@
   "scripts": {
     "mocha": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --ext .ts",
     "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
     "test": "jest --detectOpenHandles --silent",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
     "@contentstack/cli-command": "^1.8.4",
     "@contentstack/cli-utilities": "^1.18.5",
-    "@contentstack/management": "^1.30.3",
+    "@contentstack/management": "^1.30.4",
     "cli-table3": "^0.6.5",
     "cli-ux": "^6.0.9",
     "inquirer": "12.11.1",

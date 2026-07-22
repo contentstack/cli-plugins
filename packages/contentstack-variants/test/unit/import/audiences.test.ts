@@ -1,6 +1,6 @@
-import { expect } from '@oclif/test';
 import cloneDeep from 'lodash/cloneDeep';
-import { fancy } from '@contentstack/cli-dev-dependencies';
+import { test as fancyBase, spy, expect } from '@contentstack/cli-dev-dependencies';
+const fancy = fancyBase.register('spy', spy);
 
 import importConf from '../mock/import-config.json';
 import { Import, ImportConfig } from '../../../src';
