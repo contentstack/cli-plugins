@@ -5,43 +5,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  # Emit one matrix leg per plugin (any packages/* dir with a `test` script) so the list
-  # stays in sync with the workspace with no hard-coded package list.
-  discover:
+  run-tests:
     runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.set.outputs.packages }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Discover plugin packages
-        id: set
-        run: |
-          packages=$(node -e '
-            const fs = require("fs");
-            const out = [];
-            for (const d of fs.readdirSync("packages")) {
-              const f = "packages/" + d + "/package.json";
-              if (!fs.existsSync(f)) continue;
-              const p = JSON.parse(fs.readFileSync(f, "utf8"));
-              if (!(p.scripts || {}).test) continue;
-              out.push(d);
-            }
-            process.stdout.write(JSON.stringify(out));
-          ')
-          echo "packages=$packages" >> "$GITHUB_OUTPUT"
-          echo "Discovered packages: $packages"
-
-  # One check per package (fail-fast: false) so a failure is attributed to a package at a glance.
-  test:
-    needs: discover
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJson(needs.discover.outputs.packages) }}
-    name: test (${{ matrix.package }})
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,19 +14,24 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.28.0
+          version: 10.28.0 # or your local pnpm version
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
-          cache: 'pnpm'
+          cache: 'pnpm' # optional but recommended
 
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build ${{ matrix.package }} and its dependencies
-        run: NODE_ENV=PREPACK_MODE pnpm --filter "./packages/${{ matrix.package }}..." --sort run build
+      - name: Build all plugins
+        run: NODE_ENV=PREPACK_MODE pnpm -r --sort run build
 
-      - name: Run ${{ matrix.package }} tests
-        run: pnpm --filter "./packages/${{ matrix.package }}" run test
+      # Single run over every plugin's `test` (unit) script. --no-bail runs all packages even
+      # when one fails, and pnpm prints a per-package summary at the end, so failures are still
+      # easy to locate in the one log. --workspace-concurrency=1 keeps the output sequential and
+      # readable. Integration suites live under a separate `test:integration` script and do not
+      # run here; the tsgen integration suite has its own workflow (tsgen-integration-test.yml).
+      - name: Run unit tests for all plugins
+        run: pnpm -r --no-bail --workspace-concurrency=1 --filter './packages/*' run test
