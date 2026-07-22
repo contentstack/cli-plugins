@@ -71,7 +71,7 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "pretest": "tsc -p test",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "eslint src/**/*.ts --fix",
+    "format": "eslint \"src/**/*.ts\" --fix",
     "version": "oclif readme && git add README.md",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\""
   },

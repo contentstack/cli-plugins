@@ -78,7 +78,7 @@
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme && pnpm changelog",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",

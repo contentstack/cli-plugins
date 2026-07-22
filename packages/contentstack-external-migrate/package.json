@@ -19,7 +19,8 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "pretest": "tsc -p test",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif readme && git add README.md"
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.10",

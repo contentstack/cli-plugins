@@ -35,8 +35,7 @@
     "pretest": "tsc -p test",
     "test": "mocha --forbid-only \"test/unit/**/*.test.ts\" --exit",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "eslint src/**/*.ts --fix",
-    "test:integration": "mocha --forbid-only \"test/integration/*.test.ts\""
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"

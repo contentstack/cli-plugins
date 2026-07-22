@@ -10,7 +10,8 @@
     "compile": "tsc -b tsconfig.json",
     "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
-    "lint": "eslint \"src/**/*.ts\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "keywords": [
     "variant"

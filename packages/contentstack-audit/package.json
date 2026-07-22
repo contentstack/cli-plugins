@@ -69,7 +69,8 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "mocha --timeout 10000 --forbid-only --file test/unit/logger-config.js \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json"
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"

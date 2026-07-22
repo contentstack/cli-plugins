@@ -48,7 +48,8 @@
     "pretest": "tsc -p test",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "version": "oclif readme && git add README.md"
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"
