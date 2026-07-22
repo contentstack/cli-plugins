@@ -17,6 +17,8 @@ fileignoreconfig:
   checksum: ca699a9d73757d44ded4d9d27beb4f460f911a7c88a14551a9402a3ac0c69873
 - filename: packages/contentstack-external-migrate/src/lib/create-stack.ts
   checksum: 68a9510db6f2746ac5006c091d276c1ba619a9e15c76a3edae3967e4f9c2dd4e
+- filename: packages/contentstack-external-migrate/test/lib/create-stack.test.ts
+  checksum: 45af4e45e4baadf7e418a11a46a6243b8ffabafdbf32d0269d89c5d3db837a13
 - filename: CHANGELOG.md
   checksum: 88c7e1dee308fa4ae25e7815ead0842b1aac7ed669b02859cc8b25cba879595d
 - filename: packages/contentstack-bulk-operations/test/unit/services/taxonomy-service.test.ts
