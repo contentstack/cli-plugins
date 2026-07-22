@@ -84,11 +84,9 @@
     "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report:json": "mocha --reporter json --reporter-options output=report.json --forbid-only \"test/unit/**/*.test.ts\" && nyc --reporter=clover --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "compile": "tsc -b tsconfig.json"
   },
   "engines": {

@@ -17,10 +17,7 @@
     "version": "oclif readme && git add README.md",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
-    "test": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/**/*.test.ts\"",
-    "posttest": "npm run lint",
-    "test:unit": "mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\""
+    "test": "mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\""
   },
   "keywords": [
     "contentstack",

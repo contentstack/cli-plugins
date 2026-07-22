@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import {
   formatMigrationStatus,
   inferWorkspace,
@@ -39,8 +39,8 @@ describe('manifest I/O', () => {
       source: { exportFile: 'export.json' },
     };
     await writeManifest(ws, manifest);
-    expect(fs.existsSync(path.join(ws, MANIFEST_FILENAME))).toBe(true);
-    expect(await readManifest(ws)).toEqual(manifest);
+    expect(fs.existsSync(path.join(ws, MANIFEST_FILENAME))).to.equal(true);
+    expect(await readManifest(ws)).to.deep.equal(manifest);
   });
 
   it('patchManifest merges nested sections', async () => {
@@ -53,14 +53,14 @@ describe('manifest I/O', () => {
       },
     });
     const manifest = await readManifest(ws);
-    expect(manifest?.source?.spaceId).toBe('abc');
-    expect(manifest?.convert?.stats?.entries).toBe(10);
+    expect(manifest?.source?.spaceId).to.equal('abc');
+    expect(manifest?.convert?.stats?.entries).to.equal(10);
   });
 
   it('never stores full stack API keys', () => {
-    expect(stackApiKeyPrefix('blt1234567890abcdef')).toBe('blt1234…');
+    expect(stackApiKeyPrefix('blt1234567890abcdef')).to.equal('blt1234…');
     const raw = JSON.stringify({ import: { stackApiKeyPrefix: stackApiKeyPrefix('bltSECRETKEY') } });
-    expect(raw).not.toContain('SECRETKEY');
+    expect(raw).to.not.include('SECRETKEY');
   });
 });
 
@@ -69,7 +69,7 @@ describe('inferWorkspace', () => {
     const ws = makeWorkspace();
     const importDir = path.join(ws, 'contentstack-import');
     fs.mkdirSync(importDir, { recursive: true });
-    expect(inferWorkspace({ output: importDir })).toBe(ws);
+    expect(inferWorkspace({ output: importDir })).to.equal(ws);
   });
 
   it('finds workspace from existing manifest', async () => {
@@ -77,7 +77,7 @@ describe('inferWorkspace', () => {
     await patchManifest(ws, { source: { spaceId: '1' } }, { legacy: 'contentful' });
     const bundle = path.join(ws, 'contentstack-import', 'bundle');
     fs.mkdirSync(bundle, { recursive: true });
-    expect(inferWorkspace({ dataDir: bundle })).toBe(ws);
+    expect(inferWorkspace({ dataDir: bundle })).to.equal(ws);
   });
 });
 
@@ -97,14 +97,14 @@ describe('formatMigrationStatus', () => {
       audit: { lastRunAt: 't', reportPath: 'audit-reports' },
     };
     const lines = formatMigrationStatus(manifest, ws);
-    expect(lines.some((l) => l.includes('[✓] export'))).toBe(true);
-    expect(lines.some((l) => l.includes('[✓] audit'))).toBe(true);
-    expect(suggestNextCommand(manifest, ws)).toContain('migrate:import');
+    expect(lines.some((l) => l.includes('[✓] export'))).to.equal(true);
+    expect(lines.some((l) => l.includes('[✓] audit'))).to.equal(true);
+    expect(suggestNextCommand(manifest, ws)).to.include('migrate:import');
   });
 
   it('uses workspace-relative paths', () => {
     const ws = makeWorkspace();
     const rel = toWorkspaceRelative(ws, path.join(ws, 'export.json'));
-    expect(rel).toBe('export.json');
+    expect(rel).to.equal('export.json');
   });
 });

@@ -70,8 +70,6 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "postpack": "rm -f oclif.manifest.json",
     "test": "jest",
-    "test:unit": "jest",
-    "test:coverage": "jest --coverage",
     "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "version": "oclif readme && git add README.md",

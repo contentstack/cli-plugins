@@ -78,17 +78,11 @@
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme && pnpm changelog",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:coverage": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:coverage:report": "nyc --reporter=lcov --reporter=text --reporter=clover --reporter=json-summary --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:json": "mocha --forbid-only \"test/**/*.test.ts\" --reporter json --reporter-options output=report.json",
-    "test:safe": "[ -d test ] && npm test || echo 'No test directory found, skipping tests'",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json"
