@@ -15,4 +15,6 @@ fileignoreconfig:
     checksum: 118cc140edf3b68191d1ef770c4142f9f5aa7af87a5a1832d6b3edee53d61c83
   - filename: packages/contentstack-cli-tsgen/test/unit/helper.test.ts
     checksum: 146ff2a85a8f5ec463e51821f54c5f08143fa04209541a51017270e83b6ed46d
+  - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts
+    checksum: 018980aa2b919967b9ef9ab1bdf635d4867fe21593fba5890afa443f440228ff
 version: '1.0'
