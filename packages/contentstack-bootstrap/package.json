@@ -11,9 +11,10 @@
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test": "npm run build && npm run test:e2e",
-    "test:e2e": "nyc mocha \"test/**/*.test.js\" || exit 0",
-    "lint": "eslint \"src/**/*.ts\""
+    "pretest": "pnpm compile",
+    "test": "mocha \"test/**/*.test.js\"",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
     "@contentstack/cli-cm-seed": "~2.0.0-beta.24",

@@ -16,7 +16,7 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "eslint src/**/*.ts --fix",
+    "format": "eslint \"src/**/*.ts\" --fix",
     "test": "mocha --require ts-node/register --forbid-only \"test/unit/**/*.test.ts\""
   },
   "keywords": [
