@@ -1,7 +1,7 @@
 import { join } from 'path';
-import { expect } from '@oclif/test';
 import cloneDeep from 'lodash/cloneDeep';
-import { fancy } from '@contentstack/cli-dev-dependencies';
+import { test as fancyBase, spy, expect } from '@contentstack/cli-dev-dependencies';
+const fancy = fancyBase.register('spy', spy);
 
 import importConf from '../mock/import-config.json';
 import ContentType from '../mock/contents/content_types/CT-1.json';
@@ -12,7 +12,9 @@ import variantEntries from '../mock/contents/entries/CT-1/en-us/variants/E-1/9b0
 describe('Variant Entries Import', () => {
   let config: ImportConfig;
 
-  const test = fancy.stdout({ print: process.env.PRINT === 'true' || false });
+  const test = fancy
+    .stdout({ print: process.env.PRINT === 'true' || false })
+    .stub(VariantHttpClient.prototype, 'init', async () => {});
 
   beforeEach(() => {
     config = cloneDeep(importConf) as unknown as ImportConfig;
@@ -77,21 +79,21 @@ describe('Variant Entries Import', () => {
 
   describe('importVariantEntries method', () => {
     test
-      .stub(Import.VariantEntries.prototype, 'handleCuncurrency', async () => {})
-      .spy(Import.VariantEntries.prototype, 'handleCuncurrency')
+      .stub(Import.VariantEntries.prototype, 'handleConcurrency', async () => {})
+      .spy(Import.VariantEntries.prototype, 'handleConcurrency')
       .it('should call handle Cuncurrency method to manage import batch', async ({ spy }) => {
         let entryVariantInstace = new Import.VariantEntries(config);
         await entryVariantInstace.importVariantEntries(variantEntryData[0]);
 
-        expect(spy.handleCuncurrency.called).to.be.true;
-        expect(spy.handleCuncurrency.calledWith(ContentType, variantEntries, variantEntryData[0])).to.be.true;
+        expect(spy.handleConcurrency.called).to.be.true;
+        expect(spy.handleConcurrency.calledWith(ContentType, variantEntries, variantEntryData[0])).to.be.true;
       });
 
     test
-      .stub(Import.VariantEntries.prototype, 'handleCuncurrency', async () => {
+      .stub(Import.VariantEntries.prototype, 'handleConcurrency', async () => {
         throw new Error('Dummy error');
       })
-      .spy(Import.VariantEntries.prototype, 'handleCuncurrency')
+      .spy(Import.VariantEntries.prototype, 'handleConcurrency')
       .it('should catch and log errors on catch block', async (ctx) => {
         let entryVariantInstace = new Import.VariantEntries(config);
         await entryVariantInstace.importVariantEntries(variantEntryData[0]);
@@ -100,7 +102,7 @@ describe('Variant Entries Import', () => {
       });
   });
 
-  describe('handleCuncurrency method', () => {
+  describe('handleConcurrency method', () => {
     test
       .stub(VariantHttpClient.prototype, 'createVariantEntry', async () => {})
       .stub(Import.VariantEntries.prototype, 'handleVariantEntryRelationalData', () => variantEntries[0])
@@ -111,7 +113,8 @@ describe('Variant Entries Import', () => {
         const { content_type, entry_uid, locale } = variantEntryData[0];
         let entryVariantInstace = new Import.VariantEntries(config);
         entryVariantInstace.variantIdList = { 'VARIANT-ID-1': 'VARIANT-ID-2' };
-        await entryVariantInstace.handleCuncurrency(ContentType, variantEntries, variantEntryData[0]);
+        entryVariantInstace.entriesUidMapper = { [variantEntryData[0].entry_uid]: variantEntryData[0].entry_uid };
+        await entryVariantInstace.handleConcurrency(ContentType, variantEntries, variantEntryData[0]);
 
         expect(spy.createVariantEntry.called).to.be.true;
         expect(spy.handleVariantEntryRelationalData.called).to.be.true;
@@ -133,7 +136,8 @@ describe('Variant Entries Import', () => {
       .spy(Import.VariantEntries.prototype, 'handleVariantEntryRelationalData')
       .it('should return without any execution if empty batch found', async (ctx) => {
         let entryVariantInstace = new Import.VariantEntries(config);
-        const result = await entryVariantInstace.handleCuncurrency(ContentType, [], variantEntryData[0]);
+        entryVariantInstace.entriesUidMapper = {};
+        const result = await entryVariantInstace.handleConcurrency(ContentType, [], variantEntryData[0]);
 
         expect(result).to.be.undefined;
       });
@@ -147,7 +151,8 @@ describe('Variant Entries Import', () => {
         let entryVariantInstace = new Import.VariantEntries(config);
         entryVariantInstace.config.modules.variantEntry.apiConcurrency = null as any; // NOTE Missing apiConcurrency value in config
         entryVariantInstace.variantIdList = { 'VARIANT-ID-2': 'VARIANT-ID-NEW-2' };
-        await entryVariantInstace.handleCuncurrency(ContentType, variantEntries, variantEntryData[0]);
+        entryVariantInstace.entriesUidMapper = {};
+        await entryVariantInstace.handleConcurrency(ContentType, variantEntries, variantEntryData[0]);
 
         expect(ctx.stdout).to.be.includes(entryVariantInstace.messages.VARIANT_ID_NOT_FOUND);
       });
@@ -160,8 +165,8 @@ describe('Variant Entries Import', () => {
         helpers: {
           lookUpTerms: () => {},
           lookupExtension: () => {},
-          lookupAssets: (entry: any) => entry,
-          lookupEntries: (entry: any) => entry,
+          lookupAssets: ({ entry }: any) => entry,
+          lookupEntries: ({ entry }: any) => entry,
           restoreJsonRteEntryRefs: (entry: any) => entry,
         },
       });
@@ -177,8 +182,8 @@ describe('Variant Entries Import', () => {
       let conf = Object.assign(config, {
         helpers: {
           lookUpTerms: () => {},
-          lookupAssets: (entry: any) => entry,
-          lookupEntries: (entry: any) => entry,
+          lookupAssets: ({ entry }: any) => entry,
+          lookupEntries: ({ entry }: any) => entry,
           restoreJsonRteEntryRefs: (entry: any) => entry,
         },
       });
