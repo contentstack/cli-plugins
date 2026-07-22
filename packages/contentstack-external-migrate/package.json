@@ -12,11 +12,10 @@
   ],
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json && node scripts/copy-assets.js",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --fix",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "vitest run",
     "test:integration": "jest --testPathPattern=tests/integration",
