@@ -96,7 +96,8 @@
   "csdxConfig": {
     "shortCommandName": {
       "cm:stacks:export": "EXPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
   },
   "repository": {
     "type": "git",

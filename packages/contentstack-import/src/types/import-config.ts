@@ -1,3 +1,4 @@
+import { FeatureStatus } from '@contentstack/cli-utilities';
 import { Context, Modules, Region } from '.';
 import DefaultConfig from './default-config';
 
@@ -61,6 +62,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   context: Context;
   csAssetsUrl?: string;
   csAssetsEnabled?: boolean;
+  planStatus?: Record<string, FeatureStatus>;
 }
 
 type branch = {

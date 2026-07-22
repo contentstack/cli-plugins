@@ -1,4 +1,5 @@
 fileignoreconfig:
+
 - filename: pnpm-lock.yaml
   checksum: 2e1116588e19b058f0d6a5efa28f54c6a3af11b0f0d8c442ed9866a90b77b713
 - filename: packages/contentstack-export-to-csv/test/unit/commands/export-to-csv.test.ts
@@ -147,4 +148,4 @@ fileignoreconfig:
   checksum: de694e861560c4c242100eaf17a6d8e230247b99f94e4b428e55ef065084c10c
 - filename: packages/contentstack-export/test/unit/utils/export-config-handler.test.ts
   checksum: f612661a8b6784b20ea62794b35192b340a34d8424a54a1a2cffec1878ab7528
-version: ""
+  version: ""
