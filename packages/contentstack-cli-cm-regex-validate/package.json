@@ -4,6 +4,16 @@
   "version": "2.0.0-beta.3",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
+  "scripts": {
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "prepack": "pnpm compile && oclif manifest && oclif readme",
+    "postpack": "rm -f oclif.manifest.json",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "test": "jest --detectOpenHandles --silent",
+    "version": "oclif readme && git add README.md",
+    "lint": "eslint \"src/**/*.ts\"",
+    "compile": "tsc -b tsconfig.json"
+  },
   "dependencies": {
     "@contentstack/cli-command": "~2.0.0-beta.10",
     "@contentstack/cli-utilities": "~2.0.0-beta.11",
@@ -29,6 +39,7 @@
     "eslint-config-oclif": "^6.0.62",
     "eslint-config-oclif-typescript": "^3.1.14",
     "globby": "^11.1.0",
+    "husky": "^9.1.7",
     "jest": "^30.4.2",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
@@ -67,17 +78,6 @@
     "type": "git",
     "url": "git+https://github.com/contentstack/cli-plugins.git",
     "directory": "packages/contentstack-cli-cm-regex-validate"
-  },
-  "scripts": {
-    "build": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
-    "prepack": "pnpm run build",
-    "postpack": "rm -f oclif.manifest.json",
-    "test": "jest --detectOpenHandles --silent",
-    "test:unit": "jest --detectOpenHandles --silent",
-    "posttest": "eslint src/**/*.ts --fix",
-    "lint": "eslint src/**/*.ts --fix",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
-    "version": "oclif readme && git add README.md"
   },
   "csdxConfig": {
     "shortCommandName": {

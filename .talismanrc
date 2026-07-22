@@ -1,18 +1,12 @@
 fileignoreconfig:
-- filename: pnpm-lock.yaml
-  checksum: e6eecc09255df3dcb320328998d5faef14f2d1e18f561d4b9efcd8ed599476b9
-- filename: packages/contentstack-bulk-operations/src/messages/index.ts
-  checksum: 07c2bf3f3130ad5e8b6a2971d76139e9b643c70a9ff5f7450adfb5c9bf3d7164
-- filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
-  checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
-- filename: packages/contentstack-bulk-operations/src/base-bulk-command.ts
-  checksum: cb1147ac666b607a093c4c827d143d0bd2de5b6e9d59973f1b7052451e82a89b
-- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
-  checksum: 8bca423db4c3815c651ad922d986a53b6271cce3ea27f5987b66ee594151165e
-- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets-init.test.ts
-  checksum: 590b1cfe42d46d0917ac90f363b1ccd05200b180bd9c58c770ffd1f12eb18327
-- filename: packages/contentstack-bulk-operations/test/unit/utils/operation-flag-matrix.test.ts
-  checksum: 35451ca4c03359b06531a8461091f4a3a45c4dea1f8853081fb53e4ce28c1cc3
-- filename: packages/contentstack-bulk-operations/test/unit/base-bulk-command.test.ts
-  checksum: ca699a9d73757d44ded4d9d27beb4f460f911a7c88a14551a9402a3ac0c69873
-version: ""
+  - filename: pnpm-lock.yaml
+    checksum: bcb3d8954c7b21ebb15d31fc19d1e779bf3c203eca5fae08014341e74c32abfc
+  - filename: packages/contentstack-branches/test/unit/helpers/stub-auth.ts
+    checksum: 8cafd5994d3ec13ba9af74c80b330bfd14721ea4e0359b456598964a6c2913ce
+  - filename: packages/contentstack-export/src/config/index.ts
+    checksum: 0219426b1873decef4d74bef5bfd50d1ed8f2567a2136122d869e4e53e4b4b99
+  - filename: packages/contentstack-clone/README.md
+    checksum: fad666bf6290c980406ddd18caec2dd89d9c7a22b422010865199659956ab523
+  - filename: packages/contentstack-migration/README.md
+    checksum: ceb7631888ee81711a32e2ac07762957bbf0f9c6c7f3f6bbc5d86326bd4352cc
+version: '1.0'

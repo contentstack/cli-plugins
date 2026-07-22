@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+ 
 /**
  * External module Dependencies.
  */
@@ -11,7 +11,7 @@ const fs = require('fs');
 const cleanJsonContent = function (raw) {
   let s = raw;
   if (s.charCodeAt(0) === 0xfeff) s = s.slice(1); // strip BOM
-  // eslint-disable-next-line no-control-regex
+   
   s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // control chars, keep \t \n \r
   s = s.replace(/,(\s*[}\]])/g, '$1'); // trailing commas
   return s;
@@ -20,7 +20,7 @@ const cleanJsonContent = function (raw) {
 const parseJsonLoose = function (raw) {
   try {
     return JSON.parse(raw);
-  } catch (e) {
+  } catch {
     return JSON.parse(cleanJsonContent(raw));
   }
 };

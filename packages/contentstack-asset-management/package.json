@@ -9,13 +9,13 @@
     "oclif.manifest.json"
   ],
   "scripts": {
-    "build": "pnpm compile",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.build.tsbuildinfo",
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
     "test": "nyc --extension .ts mocha --require ts-node/register --forbid-only \"test/**/*.test.ts\"",
     "posttest": "npm run lint",
