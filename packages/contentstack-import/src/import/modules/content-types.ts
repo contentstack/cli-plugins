@@ -6,7 +6,7 @@
  */
 import * as path from 'path';
 import { find, cloneDeep, map } from 'lodash';
-import { sanitizePath, log, handleAndLogError, readContentTypeSchemas } from '@contentstack/cli-utilities';
+import { sanitizePath, log, handleAndLogError, readContentTypeSchemas, readGlobalFieldSchemas } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 import { ImportConfig, ModuleClassParams } from '../../types';
 import BaseClass, { ApiOptions } from './base-class';
@@ -50,7 +50,6 @@ export default class ContentTypesImport extends BaseClass {
   };
   private gFsConfig: {
     dirName: string;
-    fileName: string;
     validKeys: string[];
     limit: number;
     writeConcurrency?: number;
@@ -105,6 +104,7 @@ export default class ContentTypesImport extends BaseClass {
       ['__master.json', 'true'],
       ['__priority.json', 'true'],
       [PATH_CONSTANTS.FILES.SCHEMA, 'true'],
+      ['globalfields.json', 'true'],
       ['.DS_Store', 'true'],
     ]);
 
@@ -499,7 +499,7 @@ export default class ContentTypesImport extends BaseClass {
       'CONTENT TYPES: Analyzing import data...',
       async () => {
         const cts = readContentTypeSchemas(this.cTsFolderPath);
-        const gfs = fsUtil.readFile(path.resolve(this.gFsFolderPath, this.gFsConfig.fileName));
+        const gfs = readGlobalFieldSchemas(this.gFsFolderPath);
         const pendingGfs = fsUtil.readFile(this.gFsPendingPath);
         const pendingExt = fsUtil.readFile(this.extPendingPath);
         return [cts, gfs, pendingGfs, pendingExt];
