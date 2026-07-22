@@ -9,4 +9,10 @@ fileignoreconfig:
     checksum: fad666bf6290c980406ddd18caec2dd89d9c7a22b422010865199659956ab523
   - filename: packages/contentstack-migration/README.md
     checksum: ceb7631888ee81711a32e2ac07762957bbf0f9c6c7f3f6bbc5d86326bd4352cc
+  - filename: packages/contentstack-external-migrate/test/commands/migrate/import.test.ts
+    checksum: 1d955eb34ab7e7e11cfad35cdbcb00692e39568bc690f46089fcbc0ca22a4852
+  - filename: packages/contentstack-external-migrate/test/adapters/contentful/export.test.ts
+    checksum: 118cc140edf3b68191d1ef770c4142f9f5aa7af87a5a1832d6b3edee53d61c83
+  - filename: packages/contentstack-cli-tsgen/test/unit/helper.test.ts
+    checksum: 146ff2a85a8f5ec463e51821f54c5f08143fa04209541a51017270e83b6ed46d
 version: '1.0'

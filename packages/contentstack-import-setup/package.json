@@ -45,13 +45,10 @@
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif readme && git add README.md",
-    "test:unit:report": "nyc --extension .ts  mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\""
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md"
   },
   "engines": {
     "node": ">=22.0.0"

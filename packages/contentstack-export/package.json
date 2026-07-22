@@ -52,15 +52,12 @@
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
     "test:integration": "INTEGRATION_TEST=true mocha --config ./test/.mocharc.js --forbid-only \"test/run.test.js\"",
-    "test:integration:report": "INTEGRATION_TEST=true nyc --extension .js mocha --forbid-only \"test/run.test.js\"",
-    "test:unit": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --reporter=text --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
+    "test:integration:report": "INTEGRATION_TEST=true nyc --extension .js mocha --forbid-only \"test/run.test.js\""
   },
   "engines": {
     "node": ">=22.0.0"

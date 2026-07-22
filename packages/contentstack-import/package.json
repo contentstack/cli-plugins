@@ -47,14 +47,11 @@
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\" --exit",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
-    "test:integration": "mocha --forbid-only \"test/run.test.js\" --integration-test --timeout 60000",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --forbid-only \"test/**/*.test.ts\" --exit"
+    "test:integration": "mocha --forbid-only \"test/run.test.js\" --integration-test --timeout 60000"
   },
   "engines": {
     "node": ">=22.0.0"

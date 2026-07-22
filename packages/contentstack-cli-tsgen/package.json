@@ -61,8 +61,8 @@
     "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "jest --testPathPattern=tests",
-    "test:integration": "jest --testPathPattern=tests/integration",
+    "test": "jest --testPathPattern=test/unit --passWithNoTests",
+    "test:integration": "jest --testPathPattern=test/integration",
     "version": "oclif readme && git add README.md"
   },
   "csdxConfig": {

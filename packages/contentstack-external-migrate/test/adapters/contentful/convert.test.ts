@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { convertContentfulExport } from '../../../src/adapters/contentful/convert';
 
 const FIXTURE = path.resolve(__dirname, '../../fixtures/contentful-export.json');
@@ -35,11 +35,11 @@ describe('convertContentfulExport', () => {
       verbose: false,
     });
 
-    expect(fs.existsSync(path.join(result.bundleDir, 'mapper.json'))).toBe(true);
-    expect(fs.existsSync(path.join(result.bundleDir, 'content_types'))).toBe(true);
-    expect(fs.existsSync(path.join(result.bundleDir, 'locales'))).toBe(true);
-    expect(fs.existsSync(path.join(result.bundleDir, 'export-info.json'))).toBe(true);
-    expect(result.stats.contentTypes).toBeGreaterThan(0);
+    expect(fs.existsSync(path.join(result.bundleDir, 'mapper.json'))).to.equal(true);
+    expect(fs.existsSync(path.join(result.bundleDir, 'content_types'))).to.equal(true);
+    expect(fs.existsSync(path.join(result.bundleDir, 'locales'))).to.equal(true);
+    expect(fs.existsSync(path.join(result.bundleDir, 'export-info.json'))).to.equal(true);
+    expect(result.stats.contentTypes).to.be.greaterThan(0);
   });
 
   it('processes all export assets (not capped at 10)', async () => {
@@ -59,10 +59,10 @@ describe('convertContentfulExport', () => {
     });
 
     const indexPath = path.join(result.bundleDir, 'assets', 'index.json');
-    expect(fs.existsSync(indexPath)).toBe(true);
+    expect(fs.existsSync(indexPath)).to.equal(true);
     const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
     const convertedCount = Object.keys(index).length;
-    expect(convertedCount).toBeGreaterThan(10);
-    expect(convertedCount).toBeLessThanOrEqual(exportAssetCount);
+    expect(convertedCount).to.be.greaterThan(10);
+    expect(convertedCount).to.be.at.most(exportAssetCount);
   });
 });
