@@ -80,7 +80,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm compile && oclif manifest && oclif readme",
+    "build": "pnpm compile",
     "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",

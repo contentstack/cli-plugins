@@ -12,26 +12,10 @@ import { BaseCommand } from "../../../../src/base-command";
 import * as libCommonUtils from "../../../../src/util/common-utils";
 import * as libInquirer from "../../../../src/util/inquirer";
 
-// Hermetic: seed a complete region at module load so the nock URLs below are deterministic
-// regardless of test execution order or ambient CLI config. These tests previously read
-// whatever region happened to be in the shared config, which made them order-dependent
-// (they passed only when another package seeded a region first, e.g. in the old CI order).
-configHandler.set("region", {
-  name: "NA",
-  cma: "https://api.contentstack.io",
-  cda: "https://cdn.contentstack.io",
-  uiHost: "https://app.contentstack.com",
-});
 const region = configHandler.get("region");
 const BaseCommandToStub = BaseCommand;
 const LibDeploy = Deploy;
 const developerHubBaseUrl = getDeveloperHubUrl();
-
-// TEMP diagnostic (removed once CI is green): reveal any request nock did not intercept.
-nock.emitter.on("no match", (req: any) => {
-  // eslint-disable-next-line no-console
-  console.log("NOCK NO MATCH >>", req?.method, req?.options?.host || req?.host, req?.path || req?.options?.path);
-});
 
 describe("app:deploy", () => {
   let sandbox: sinon.SinonSandbox;
