@@ -67,13 +67,11 @@
     "build": "pnpm compile && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "version": "oclif readme && git add README.md"
+    "test": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   }
 }

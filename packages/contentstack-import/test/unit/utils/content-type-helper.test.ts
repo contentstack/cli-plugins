@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { schemaTemplate, suppressSchemaReference, removeReferenceFields, updateFieldRules } from '../../../src/utils/content-type-helper';
+import { schemaTemplate, suppressSchemaReference, removeReferenceFields, updateFieldRules, isGlobalFieldRule } from '../../../src/utils/content-type-helper';
 
 describe('Content Type Helper', () => {
   let sandbox: sinon.SinonSandbox;
@@ -751,6 +751,108 @@ describe('Content Type Helper', () => {
 
       expect(result).to.be.an('array');
       expect(result).to.have.length(1); // Rule should remain as field type is unknown
+    });
+
+    it('should drop global field rules by default', () => {
+      const contentType = {
+        uid: 'test_fvr',
+        schema: [
+          { uid: 'title', data_type: 'text' },
+          { uid: 'global_field', data_type: 'global_field' }
+        ],
+        field_rules: [
+          { conditions: [{ operand_field: 'title' }] },
+          {
+            is_global_field_rule: true,
+            conditions: [{ operand_field: 'global_field.multi_line' }],
+            actions: [{ action: 'show', target_field: 'global_field.reference' }]
+          }
+        ]
+      };
+
+      const result = updateFieldRules(contentType);
+
+      expect(result).to.have.length(1); // global field rule dropped
+      expect(result[0].conditions[0].operand_field).to.equal('title');
+      expect(result.some((r: any) => r.is_global_field_rule)).to.be.false;
+    });
+
+    it('should drop BOTH global field rules and reference-condition rules by default', () => {
+      const contentType = {
+        uid: 'test_fvr',
+        schema: [
+          { uid: 'title', data_type: 'text' },
+          { uid: 'reference_field', data_type: 'reference' },
+          { uid: 'global_field', data_type: 'global_field' }
+        ],
+        field_rules: [
+          { conditions: [{ operand_field: 'title' }] },                          // keep
+          { conditions: [{ operand_field: 'reference_field' }] },                // drop (reference)
+          { is_global_field_rule: true, conditions: [{ operand_field: 'global_field.multi_line' }] } // drop (GF)
+        ]
+      };
+
+      const result = updateFieldRules(contentType);
+
+      expect(result).to.have.length(1);
+      expect(result[0].conditions[0].operand_field).to.equal('title');
+    });
+
+    it('should KEEP global field rules but still DROP reference-condition rules with keepGlobalFieldRules (P0 regression)', () => {
+      const contentType = {
+        uid: 'test_fvr',
+        schema: [
+          { uid: 'title', data_type: 'text' },
+          { uid: 'reference_field', data_type: 'reference' },
+          { uid: 'global_field', data_type: 'global_field' }
+        ],
+        field_rules: [
+          { conditions: [{ operand_field: 'title' }] },                          // keep
+          { conditions: [{ operand_field: 'reference_field' }] },                // still dropped
+          { is_global_field_rule: true, conditions: [{ operand_field: 'global_field.multi_line' }] } // kept now
+        ]
+      };
+
+      const result = updateFieldRules(contentType, { keepGlobalFieldRules: true });
+
+      expect(result).to.have.length(2);
+      // the global field rule survives
+      expect(result.some((r: any) => r.is_global_field_rule)).to.be.true;
+      // the reference-condition rule is NOT resurrected (owned by the entries stage)
+      expect(result.some((r: any) => r.conditions[0].operand_field === 'reference_field')).to.be.false;
+      // the plain rule survives
+      expect(result.some((r: any) => r.conditions[0].operand_field === 'title')).to.be.true;
+    });
+
+    it('should not mutate the original field_rules array', () => {
+      const contentType = {
+        uid: 'test_fvr',
+        schema: [{ uid: 'global_field', data_type: 'global_field' }],
+        field_rules: [
+          { is_global_field_rule: true, conditions: [{ operand_field: 'global_field.x' }] }
+        ]
+      };
+
+      updateFieldRules(contentType);
+
+      expect(contentType.field_rules).to.have.length(1); // source untouched
+    });
+  });
+
+  describe('isGlobalFieldRule', () => {
+    it('should be a function', () => {
+      expect(isGlobalFieldRule).to.be.a('function');
+    });
+
+    it('should return true when is_global_field_rule is true', () => {
+      expect(isGlobalFieldRule({ is_global_field_rule: true })).to.be.true;
+    });
+
+    it('should return false when the flag is missing, false, or the rule is nullish', () => {
+      expect(isGlobalFieldRule({ conditions: [] })).to.be.false;
+      expect(isGlobalFieldRule({ is_global_field_rule: false })).to.be.false;
+      expect(isGlobalFieldRule(null)).to.be.false;
+      expect(isGlobalFieldRule(undefined)).to.be.false;
     });
   });
 });

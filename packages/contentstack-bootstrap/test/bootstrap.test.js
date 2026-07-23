@@ -80,37 +80,27 @@ describe('Bootstrapping an app', () => {
       sandbox.stub(configHandler, 'get').withArgs('tokens').returns(configHandlerTokens);
     }
 
-    // ContentstackClient stubs
-    const contentstackStubMethods = {
-      getOrganizations: sandbox.stub().resolves(mock.organizations),
-      getOrganization: sandbox.stub().resolves(mock.organizations[0]),
-      createStack: sandbox.stub().resolves(mock.stack),
-      getStack: sandbox.stub().resolves(mock.stack),
-      getContentTypeCount: sandbox.stub().resolves(0),
-      createManagementToken: sandbox.stub().resolves(mock.managementToken),
+    // ContentstackClient stubs — stub each prototype method individually so sinon wraps the
+    // real property and sandbox.restore() fully reverts it. (Stubbing the whole prototype and
+    // then Object.assign-ing anonymous stubs over it leaves un-wrapped stubs behind that
+    // restore() can't remove, which leaks into the next test as "already stubbed".)
+    contentstackClientStub = {
+      getOrganizations: sandbox.stub(ContentstackClient.prototype, 'getOrganizations').resolves(mock.organizations),
+      getOrganization: sandbox.stub(ContentstackClient.prototype, 'getOrganization').resolves(mock.organizations[0]),
+      createStack: sandbox.stub(ContentstackClient.prototype, 'createStack').resolves(mock.stack),
+      getStack: sandbox.stub(ContentstackClient.prototype, 'getStack').resolves(mock.stack),
+      getContentTypeCount: sandbox.stub(ContentstackClient.prototype, 'getContentTypeCount').resolves(0),
+      createManagementToken: sandbox.stub(ContentstackClient.prototype, 'createManagementToken').resolves(mock.managementToken),
     };
-    contentstackClientStub = sandbox.stub(ContentstackClient.prototype);
-    Object.assign(contentstackClientStub, contentstackStubMethods);
-    sandbox.stub(ContentstackClient.prototype, 'constructor').callsFake(function () {
-      Object.assign(this, contentstackStubMethods);
-      return this;
-    });
 
     // GitHubClient stubs
-    const githubStubMethods = {
-      getAllRepos: sandbox.stub().resolves(mock.githubRepos),
-      getLatest: sandbox.stub().resolves(),
-      streamRelease: sandbox.stub().resolves(),
-      extract: sandbox.stub().resolves(),
-      makeGetApiCall: sandbox.stub().resolves({ statusCode: 200 }),
-      getLatestTarballUrl: sandbox.stub().resolves(mock.githubRelease.tarball_url),
+    githubClientStub = {
+      getLatest: sandbox.stub(GitHubClient.prototype, 'getLatest').resolves(),
+      streamRelease: sandbox.stub(GitHubClient.prototype, 'streamRelease').resolves(),
+      extract: sandbox.stub(GitHubClient.prototype, 'extract').resolves(),
+      makeGetApiCall: sandbox.stub(GitHubClient.prototype, 'makeGetApiCall').resolves({ statusCode: 200 }),
+      getLatestTarballUrl: sandbox.stub(GitHubClient.prototype, 'getLatestTarballUrl').resolves(mock.githubRelease.tarball_url),
     };
-    githubClientStub = sandbox.stub(GitHubClient.prototype);
-    Object.assign(githubClientStub, githubStubMethods);
-    sandbox.stub(GitHubClient.prototype, 'constructor').callsFake(function () {
-      Object.assign(this, githubStubMethods);
-      return this;
-    });
 
     // HttpClient stub
     httpClientStub = {

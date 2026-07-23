@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { buildStacksImportArgs } from '../../../src/commands/migrate/import';
 
 describe('buildStacksImportArgs', () => {
   it('maps stack key and data-dir to native import', () => {
-    expect(buildStacksImportArgs('bltKEY', './bundle', {})).toEqual([
+    expect(buildStacksImportArgs('bltKEY', './bundle', {})).to.deep.equal([
       'cm:stacks:import',
       '--stack-api-key',
       'bltKEY',
@@ -15,7 +15,7 @@ describe('buildStacksImportArgs', () => {
 
   it('omits --yes when yes is false', () => {
     const args = buildStacksImportArgs('bltKEY', './bundle', { yes: false });
-    expect(args).not.toContain('--yes');
+    expect(args).to.not.include('--yes');
   });
 
   it('forwards skip-audit, module, and branch', () => {
@@ -25,7 +25,7 @@ describe('buildStacksImportArgs', () => {
         module: 'entries',
         branch: 'main',
       }),
-    ).toEqual([
+    ).to.deep.equal([
       'cm:stacks:import',
       '--stack-api-key',
       'bltKEY',

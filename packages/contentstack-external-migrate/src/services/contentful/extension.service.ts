@@ -17,7 +17,7 @@ const writeExtFile = async ({ destinationStackId, extensionData }: any) => {
   const dirPath = path.join(MIGRATION_DATA_CONFIG.DATA, destinationStackId, EXTENSION_APPS_DIR_NAME);
   try {
     await fs.promises.access(dirPath);
-  } catch (err) {
+  } catch {
     try {
       await fs.promises.mkdir(dirPath, { recursive: true });
     } catch (mkdirErr) {
