@@ -420,8 +420,6 @@ export default class ImportAssets extends BaseClass {
             resolve: onSuccess,
             entity: 'publish-assets',
             includeParamOnCompletion: true,
-            // CS Assets publish requires api_version 3.2 (see base-class 'publish-assets').
-            additionalInfo: { api_version: '3.2' },
           },
           concurrencyLimit: this.assetConfig.uploadAssetsConcurrency,
         });

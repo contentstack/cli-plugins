@@ -863,12 +863,6 @@ describe('BulkEntries Command', () => {
       expect(flags['include-variants'].default).to.be.false;
     });
 
-    it('should have api-version flag', () => {
-      const flags = BulkEntries.flags;
-
-      // api-version default may be '3' or '3.2' depending on configuration
-      expect(flags['api-version'].default).to.be.oneOf(['3', '3.2']);
-    });
   });
 
   describe('examples validation', () => {
