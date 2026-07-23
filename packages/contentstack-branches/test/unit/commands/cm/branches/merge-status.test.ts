@@ -1,33 +1,8 @@
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import { stub } from 'sinon';
-import { cliux } from '@contentstack/cli-utilities';
 import BranchMergeStatusCommand from '../../../../../src/commands/cm/branches/merge-status';
-import * as utils from '../../../../../src/utils';
 
 describe('Merge Status Command', () => {
-  let printStub;
-  let loaderStub;
-  let isAuthenticatedStub;
-  let managementSDKClientStub;
-  let displayMergeStatusDetailsStub;
-
-  beforeEach(() => {
-    printStub = stub(cliux, 'print');
-    loaderStub = stub(cliux, 'loaderV2').returns('spinner');
-    isAuthenticatedStub = stub().returns(true);
-    managementSDKClientStub = stub();
-    displayMergeStatusDetailsStub = stub(utils, 'displayMergeStatusDetails');
-  });
-
-  afterEach(() => {
-    printStub.restore();
-    loaderStub.restore();
-    isAuthenticatedStub.restore();
-    managementSDKClientStub.restore();
-    displayMergeStatusDetailsStub.restore();
-  });
-
   it('should have correct description', () => {
     expect(BranchMergeStatusCommand.description).to.equal('Check the status of a branch merge job');
   });

@@ -63,16 +63,14 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint .",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
+    "lint": "eslint \"src/**/*.ts\"",
+    "postpack": "rm -f oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --timeout 10000 --forbid-only --file test/unit/logger-config.js \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only --file test/unit/logger-config.js \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only --file test/unit/logger-config.js \"test/unit/**/*.test.ts\""
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"
