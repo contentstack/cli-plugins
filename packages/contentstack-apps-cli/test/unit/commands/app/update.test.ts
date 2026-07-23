@@ -12,21 +12,7 @@ import { stubAuthentication } from "../../helpers/auth-stub-helper";
 import Update from "../../../../src/commands/app/update";
 import { BaseCommand } from "../../../../src/base-command";
 
-// Hermetic: seed a complete region at module load so the nock URL(s) below are deterministic
-// regardless of test execution order or ambient CLI config.
-configHandler.set("region", {
-  name: "NA",
-  cma: "https://api.contentstack.io",
-  cda: "https://cdn.contentstack.io",
-  uiHost: "https://app.contentstack.com",
-});
 const region = configHandler.get("region");
-
-// TEMP diagnostic (removed once CI is green): reveal any request nock did not intercept.
-nock.emitter.on("no match", (req: any) => {
-  // eslint-disable-next-line no-console
-  console.log("NOCK NO MATCH >>", req?.method, req?.options?.host || req?.host, req?.path || req?.options?.path);
-});
 
 // oclif loads commands from src/ (ts-node is registered), so stub the src classes directly
 const BaseCommandToStub = BaseCommand;
