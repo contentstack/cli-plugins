@@ -219,12 +219,10 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fsUtil, 'makeDirectory').callsFake(fsUtilStub.makeDirectory);
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
-      const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
       const mockUidMapper = { gf1: 'mapped-gf1' };
 
       fileHelperStub.fileExistsSync.withArgs(sinon.match(/uid-mapping\.json/)).returns(true);
       fileHelperStub.fileExistsSync.returns(false);
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/uid-mapping\.json/)).returns(mockUidMapper);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
@@ -302,7 +300,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['pendingGFs'] = ['gf1', 'gf2'];
@@ -330,6 +327,8 @@ describe('ImportGlobalFields', () => {
       await importGlobalFields.start();
 
       expect(fsUtilStub.writeFile.calledWith(sinon.match(/pending_global_fields\.js/))).to.be.true;
+      // Confirm readFile was NOT called with globalfields.json — import now uses readGlobalFieldSchemas
+      expect(fsUtilStub.readFile.calledWith(sinon.match(/globalfields\.json/))).to.be.false;
     });
 
     it('should write success file when global fields created', async () => {
@@ -341,7 +340,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['createdGFs'] = [{ uid: 'gf1' }, { uid: 'gf2' }];
@@ -380,7 +378,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['failedGFs'] = [{ uid: 'gf1' }];
@@ -422,7 +419,6 @@ describe('ImportGlobalFields', () => {
       importGlobalFields['importConfig'].replaceExisting = true;
       importGlobalFields['existingGFs'] = [{ uid: 'gf1', global_field: { uid: 'gf1' } }];
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
@@ -466,7 +462,6 @@ describe('ImportGlobalFields', () => {
       importGlobalFields['importConfig'].replaceExisting = true;
       importGlobalFields['existingGFs'] = [{ uid: 'gf1', global_field: { uid: 'gf1' } }];
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
@@ -495,6 +490,74 @@ describe('ImportGlobalFields', () => {
 
       // Should not throw, error is caught and handled
       expect(replaceGFsStub.called).to.be.true;
+    });
+  });
+
+  describe('analyzeGlobalFields() — readGlobalFieldSchemas integration', () => {
+    it('should populate gFs from per-uid files in gFsFolderPath', async () => {
+      sinon.restore();
+      sinon.stub(fsUtil, 'readFile').callsFake(fsUtilStub.readFile);
+      sinon.stub(fsUtil, 'writeFile').callsFake(fsUtilStub.writeFile);
+      sinon.stub(fsUtil, 'makeDirectory').callsFake(fsUtilStub.makeDirectory);
+
+      // fileHelper.fileExistsSync guards the folder check
+      sinon.stub(fileHelper, 'fileExistsSync').returns(true);
+
+      // readGlobalFieldSchemas uses node:fs internally — stub at the fs level
+      const mockGF1 = { uid: 'gf_1', title: 'GF 1', schema: [] as any[] };
+      const mockGF2 = { uid: 'gf_2', title: 'GF 2', schema: [] as any[] };
+      sinon.stub(require('fs'), 'existsSync').returns(true);
+      sinon.stub(require('fs'), 'readdirSync').returns(['gf_1.json', 'gf_2.json', 'globalfields.json'] as any);
+      const readFileStub = sinon.stub(require('fs'), 'readFileSync');
+      readFileStub.withArgs(sinon.match(/gf_1\.json/), 'utf8').returns(JSON.stringify(mockGF1));
+      readFileStub.withArgs(sinon.match(/gf_2\.json/), 'utf8').returns(JSON.stringify(mockGF2));
+
+      sinon
+        .stub(importGlobalFields as any, 'withLoadingSpinner')
+        .callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+
+      const result = await (importGlobalFields as any).analyzeGlobalFields();
+
+      // readGlobalFieldSchemas ignores globalfields.json — only 2 per-uid files loaded
+      expect(result).to.deep.equal([2]);
+      expect(importGlobalFields['gFs']).to.have.lengthOf(2);
+      expect((importGlobalFields['gFs'] as any)[0].uid).to.equal('gf_1');
+    });
+
+    it('should return [0] when folder does not exist (fileExistsSync returns false)', async () => {
+      sinon.restore();
+      sinon.stub(fsUtil, 'readFile').callsFake(fsUtilStub.readFile);
+      sinon.stub(fsUtil, 'writeFile').callsFake(fsUtilStub.writeFile);
+      sinon.stub(fsUtil, 'makeDirectory').callsFake(fsUtilStub.makeDirectory);
+      sinon.stub(fileHelper, 'fileExistsSync').returns(false);
+
+      sinon
+        .stub(importGlobalFields as any, 'withLoadingSpinner')
+        .callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+
+      const result = await (importGlobalFields as any).analyzeGlobalFields();
+
+      expect(result).to.deep.equal([0]);
+    });
+
+    it('should return [0] when directory has only globalfields.json (ignored by readGlobalFieldSchemas)', async () => {
+      sinon.restore();
+      sinon.stub(fsUtil, 'readFile').callsFake(fsUtilStub.readFile);
+      sinon.stub(fsUtil, 'writeFile').callsFake(fsUtilStub.writeFile);
+      sinon.stub(fsUtil, 'makeDirectory').callsFake(fsUtilStub.makeDirectory);
+      sinon.stub(fileHelper, 'fileExistsSync').returns(true);
+
+      // Directory exists but contains only legacy globalfields.json — must be ignored
+      sinon.stub(require('fs'), 'existsSync').returns(true);
+      sinon.stub(require('fs'), 'readdirSync').returns(['globalfields.json'] as any);
+
+      sinon
+        .stub(importGlobalFields as any, 'withLoadingSpinner')
+        .callsFake(async (_msg: string, fn: () => Promise<any>) => fn());
+
+      const result = await (importGlobalFields as any).analyzeGlobalFields();
+
+      expect(result).to.deep.equal([0]);
     });
   });
 
@@ -1197,7 +1260,6 @@ describe('ImportGlobalFields', () => {
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
       fileHelperStub.fileExistsSync.withArgs(sinon.match(/uid-mapping\.json/)).returns(true);
       fileHelperStub.fileExistsSync.returns(false);
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/uid-mapping\.json/)).returns(null);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
@@ -1238,7 +1300,6 @@ describe('ImportGlobalFields', () => {
       importGlobalFields['importConfig'].replaceExisting = false;
       importGlobalFields['existingGFs'] = [{ uid: 'gf1', global_field: { uid: 'gf1' } }];
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
@@ -1280,7 +1341,6 @@ describe('ImportGlobalFields', () => {
       importGlobalFields['importConfig'].replaceExisting = true;
       importGlobalFields['existingGFs'] = [];
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
@@ -1319,7 +1379,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['pendingGFs'] = [];
@@ -1358,7 +1417,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['createdGFs'] = [];
@@ -1397,7 +1455,6 @@ describe('ImportGlobalFields', () => {
       sinon.stub(fileHelper, 'fileExistsSync').callsFake(fileHelperStub.fileExistsSync);
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       importGlobalFields['failedGFs'] = [];
@@ -1476,7 +1533,6 @@ describe('ImportGlobalFields', () => {
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
       importGlobalFields['importConfig'].replaceExisting = true;
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
@@ -1520,7 +1576,6 @@ describe('ImportGlobalFields', () => {
 
       const mockGFs = [{ uid: 'gf1', title: 'GF 1', schema: [] as any }];
 
-      fsUtilStub.readFile.withArgs(sinon.match(/globalfields\.json/)).returns(mockGFs);
       fsUtilStub.readFile.withArgs(sinon.match(/marketplace_apps.*uid-mapping\.json/)).returns({ extension_uid: {} });
 
       sinon
