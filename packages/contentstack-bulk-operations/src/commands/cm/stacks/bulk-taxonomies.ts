@@ -30,9 +30,6 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     // Multiple locales with a Management token alias
     '<%= config.bin %> <%= command.id %> --operation publish --environments staging --locales en-us,fr-fr --taxonomies taxonomy_a -a myAlias',
 
-    // Explicit CMA version for taxonomy publish (default is 3.2)
-    '<%= config.bin %> <%= command.id %> --operation publish --environments development --locales en-us --taxonomies products_tax --api-version 3.2 -k blt123',
-
     // Publish taxonomies on a non-main branch
     '<%= config.bin %> <%= command.id %> --operation publish --branch feature --environments development --locales en-us --taxonomies brands_tax -k blt123',
   ];
@@ -41,10 +38,6 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     ...BaseBulkCommand.baseFlags,
     taxonomies: flags.string({
       description: messages.TAXONOMY_ITEMS,
-    }),
-    'api-version': flags.string({
-      default: '3.2',
-      description: messages.TAXONOMY_API_VERSION,
     }),
   } as any;
 
@@ -173,7 +166,6 @@ export default class BulkTaxonomies extends BaseBulkCommand {
       throw new Error($t(messages.UNSUPPORTED_OPERATION, { operation: operation ?? 'unknown' }));
     }
 
-    const apiVersion = this.parsedFlags['api-version'] || '3.2';
     const locales = this.bulkOperationConfig.locales || [];
     const environments = this.bulkOperationConfig.environments || [];
 
@@ -185,8 +177,8 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     };
     const response =
       operation === OperationType.UNPUBLISH
-        ? await taxonomyService.unpublish(payload, apiVersion, this.bulkOperationConfig.branch)
-        : await taxonomyService.publish(payload, apiVersion, this.bulkOperationConfig.branch);
+        ? await taxonomyService.unpublish(payload, this.bulkOperationConfig.branch)
+        : await taxonomyService.publish(payload, this.bulkOperationConfig.branch);
 
     const duration = Date.now() - startTime;
     const rawJobId = response.job_id;

@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { buildStacksAuditArgs } from '../../../src/commands/migrate/audit';
 
 describe('buildStacksAuditArgs', () => {
   it('maps required data-dir to native audit', () => {
-    expect(buildStacksAuditArgs('./bundle', {})).toEqual([
+    expect(buildStacksAuditArgs('./bundle', {})).to.deep.equal([
       'cm:stacks:audit',
       '--data-dir',
       './bundle',
@@ -17,7 +17,7 @@ describe('buildStacksAuditArgs', () => {
         modules: 'content-types,entries',
         csv: true,
       }),
-    ).toEqual([
+    ).to.deep.equal([
       'cm:stacks:audit',
       '--data-dir',
       '/data/bundle',
@@ -31,6 +31,6 @@ describe('buildStacksAuditArgs', () => {
 
   it('omits csv when false', () => {
     const args = buildStacksAuditArgs('./bundle', { csv: false });
-    expect(args).not.toContain('--csv');
+    expect(args).to.not.include('--csv');
   });
 });
