@@ -15,4 +15,6 @@ fileignoreconfig:
   checksum: 35451ca4c03359b06531a8461091f4a3a45c4dea1f8853081fb53e4ce28c1cc3
 - filename: packages/contentstack-bulk-operations/test/unit/base-bulk-command.test.ts
   checksum: ca699a9d73757d44ded4d9d27beb4f460f911a7c88a14551a9402a3ac0c69873
+- filename: packages/contentstack-export/src/utils/export-config-handler.ts
+  checksum: 7e9807759211ce97c041462fa12fd77e76e6003d5ff5774d2107d5ae9cec1705
 version: ""

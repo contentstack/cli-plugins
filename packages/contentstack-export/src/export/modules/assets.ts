@@ -20,6 +20,7 @@ import {
   handleAndLogError,
   messageHandler,
   CLIProgressManager,
+  FEATURE,
 } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 
@@ -36,6 +37,23 @@ import {
   getOrgUid,
 } from '../../utils';
 import { handle } from '@oclif/core';
+
+// cli-utilities' CLIProgressManager.globalSummary is runtime-accessible but typed private. These
+// shapes describe the slice we mutate; the single accessor (getGlobalSummary) owns the structural
+// cast + feature-detect so applyAssetSummaryCounts and markAssetsSkippedInSummary don't each copy it.
+type SummaryModuleShape = {
+  status: string;
+  successCount: number;
+  failureCount: number;
+  failures: Array<{ item: string; error: string }>;
+  endTime?: number;
+};
+type GlobalSummaryShape = {
+  getModules(): Map<string, SummaryModuleShape>;
+  registerModule(name: string, totalItems?: number): void;
+  startModule(name: string): void;
+  completeModule(name: string, success?: boolean): void;
+};
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -58,23 +76,13 @@ export default class ExportAssets extends BaseClass {
   }
 
   /**
-   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
-   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
-   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
-   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
+   * cli-utilities' CLIProgressManager.globalSummary is runtime-accessible but typed private. Reach it
+   * via a single structural cast + feature-detect here so both callers share one copy of the
+   * private-shape assumption; returns null (caller degrades) if a future cli-utilities version
+   * changes the shape.
    */
-  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
-    type SummaryModule = { successCount: number; failureCount: number };
-    type GlobalSummary = {
-      getModules(): Map<string, SummaryModule>;
-      registerModule(name: string, totalItems?: number): void;
-      startModule(name: string): void;
-      completeModule(name: string, success?: boolean): void;
-    };
-    // globalSummary is runtime-accessible but typed private; reach it via a structural cast.
-    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummary | null }).globalSummary;
-    // We reach into cli-utilities' summary internals, so feature-detect the shape and DEGRADE
-    // (skip the count overrides) instead of throwing if a future version changes it.
+  private getGlobalSummary(): GlobalSummaryShape | null {
+    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummaryShape | null }).globalSummary;
     if (
       !gs ||
       typeof gs.getModules !== 'function' ||
@@ -82,6 +90,20 @@ export default class ExportAssets extends BaseClass {
       typeof gs.startModule !== 'function' ||
       typeof gs.completeModule !== 'function'
     ) {
+      return null;
+    }
+    return gs;
+  }
+
+  /**
+   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
+   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
+   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
+   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
+   */
+  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
       log.debug('Global summary shape unavailable; skipping CS Assets summary count overrides', this.exportConfig.context);
       return;
     }
@@ -114,7 +136,60 @@ export default class ExportAssets extends BaseClass {
     }
   }
 
+  /**
+   * DX-9314 — record the AM 2.0 asset skip in the FINAL export summary without a live progress bar.
+   * We do NOT call createNestedProgress (it would print an empty "ASSETS:" section); instead we reach
+   * the global summary directly (same structural cast + feature-detect + degrade pattern as
+   * applyAssetSummaryCounts) and push a failure entry so the Module Details row shows `✗ ASSETS` and the
+   * Failure Summary prints the reason verbatim. failureCount stays 0 so the row reads `0/0 items`.
+   * NOTE: this reuses the failure channel deliberately — a first-class "skipped" summary status is a
+   * separate cli-utilities ticket.
+   */
+  private markAssetsSkippedInSummary(reason: string): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
+      log.debug('Global summary shape unavailable; skipping ASSETS skip row', this.exportConfig.context);
+      return;
+    }
+
+    try {
+      const name = this.currentModuleName.toUpperCase();
+      gs.registerModule(name);
+      gs.startModule(name);
+      const module = gs.getModules().get(name);
+      if (module) {
+        module.failures.push({ item: reason, error: reason });
+        module.status = 'failed';
+        module.endTime = Date.now();
+      }
+    } catch (e) {
+      log.debug(`Failed to mark ASSETS as skipped in summary: ${e}`, this.exportConfig.context);
+    }
+  }
+
   async start(): Promise<void> {
+    // AM 2.0 assets cannot be exported with a management token — the CS Assets API only
+    // accepts a logged-in session (auth token / OAuth). Today the linked-workspaces lookup silently
+    // returns [] under a management token, so the export falls back to the legacy layout and import
+    // later reports success with broken entry->asset references. Detect the AM 2.0 org up front via
+    // the plan-check (which DOES accept a management token) and skip the assets module with a loud
+    // warning instead of silently emitting the wrong layout.
+    const amInPlan = this.exportConfig.planStatus?.[FEATURE.ASSET_MANAGEMENT]?.is_part_of_plan;
+    if (amInPlan && this.exportConfig.management_token) {
+      const warning =
+        'Skipping AM 2.0 asset export: management token authentication is not supported by the Assets APIs. ' +
+        'Entry-to-asset references will NOT resolve in the exported content. ' +
+        'Re-run the export with a logged-in session (auth token or OAuth) to export AM 2.0 assets.';
+      cliux.print(`\nWARNING!!! ${warning}`, { color: 'yellow' });
+      // Log at error level so the reason lands in error.log — the final summary's failure section
+      // points users to the error logs, and a bare warn would leave error.log empty.
+      log.error(warning, this.exportConfig.context);
+      // Surface the skip in the FINAL global summary without opening a live progress section
+      // (createNestedProgress would render an empty "ASSETS:" bar). See markAssetsSkippedInSummary.
+      this.markAssetsSkippedInSummary(warning);
+      return;
+    }
+
     const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
 
     if (linkedWorkspaces.length > 0) {
