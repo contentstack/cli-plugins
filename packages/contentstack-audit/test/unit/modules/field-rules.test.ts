@@ -271,6 +271,53 @@ describe('Field Rules', () => {
     });
   });
 
+  describe('global field rules', () => {
+    const gfWithRuleSchema = () => [
+      {
+        uid: 'gf_with_rule',
+        title: 'GF With Rule',
+        schema: [{ uid: 'single_line', data_type: 'text', display_name: 'Single Line' }],
+        field_rules: [
+          {
+            conditions: [{ operand_field: 'single_line', operator: 'equals', value: 'x' }],
+            actions: [{ action: 'show', target_field: 'missing_field' }],
+          },
+        ],
+      },
+    ];
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(FieldRule.prototype, 'prepareEntryMetaData', async () => {})
+      .stub(FieldRule.prototype, 'prerequisiteData', async () => {})
+      .it("scans a global field's own field_rules and flags missing target fields", async () => {
+        const gfInstance = new FieldRule({
+          ...constructorParam,
+          moduleName: 'global-fields',
+          gfSchema: gfWithRuleSchema() as any,
+        });
+        const result = await gfInstance.run();
+        expect(result).to.have.property('gf_with_rule');
+        expect(JSON.stringify(result)).to.include('missing_field');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(FieldRule.prototype, 'prepareEntryMetaData', async () => {})
+      .stub(FieldRule.prototype, 'prerequisiteData', async () => {})
+      .it('does not flag a global field whose field_rules reference existing fields', async () => {
+        const okSchema = gfWithRuleSchema();
+        okSchema[0].field_rules[0].actions[0].target_field = 'single_line';
+        const gfInstance = new FieldRule({
+          ...constructorParam,
+          moduleName: 'global-fields',
+          gfSchema: okSchema as any,
+        });
+        const result = await gfInstance.run();
+        expect(result).to.not.have.property('gf_with_rule');
+      });
+  });
+
   describe('writeFixContent method', () => {
     fancy
       .stdout({ print: process.env.PRINT === 'true' || false })

@@ -10,7 +10,7 @@ import { sanitizePath, log, handleAndLogError, readContentTypeSchemas, readGloba
 import { PATH_CONSTANTS } from '../../constants';
 import { ImportConfig, ModuleClassParams } from '../../types';
 import BaseClass, { ApiOptions } from './base-class';
-import { updateFieldRules } from '../../utils/content-type-helper';
+import { updateFieldRules, isGlobalFieldRule } from '../../utils/content-type-helper';
 import {
   fsUtil,
   schemaTemplate,
@@ -39,7 +39,7 @@ export default class ContentTypesImport extends BaseClass {
   private reqConcurrency: number;
   private ignoredFilesInContentTypesFolder: Map<string, string>;
   private titleToUIdMap: Map<string, string>;
-  private fieldRules: Array<Record<string, unknown>>;
+  private fieldRules: string[];
   private installedExtensions: Record<string, unknown>;
   private cTsConfig: {
     dirName: string;
@@ -196,8 +196,6 @@ export default class ContentTypesImport extends BaseClass {
       await fsUtil.makeDirectory(this.cTsMapperPath);
       log.debug('Created content types mapper directory.', this.importConfig.context);
 
-      await fsUtil.makeDirectory(this.cTsMapperPath);
-      log.debug('Created content types mapper directory', this.importConfig.context);
       const progress = this.initializeProgress();
 
       if (this.cTs.length > 0) {
@@ -218,11 +216,98 @@ export default class ContentTypesImport extends BaseClass {
         await this.handlePendingGlobalFields(progress);
       }
 
+      // Global field rules were skipped during the content type update (see updateFieldRules)
+      // because the embedded global field schema was not yet complete on the stack. By now global
+      // fields are expected to be complete (deferred ones via handlePendingGlobalFields above;
+      // others already applied in the global-fields module / pre-existing on the stack for
+      // module-only imports). Re-apply the global field rules now; failures are surfaced below.
+      const failedGFFieldRuleCTs = await this.updateGFFieldRules().catch((error) => {
+        handleAndLogError(error, { ...this.importConfig.context });
+        return [] as string[];
+      });
+      if (failedGFFieldRuleCTs.length) {
+        // Surface the partial failure instead of claiming an unqualified success.
+        log.error(
+          `Content types imported, but failed to apply global field rules for: ${failedGFFieldRuleCTs.join(', ')}`,
+          this.importConfig.context,
+        );
+      }
+
       this.completeProgressWithMessage();
     } catch (error) {
       this.completeProgress(false, error?.message || 'Content types import failed');
       handleAndLogError(error, { ...this.importConfig.context });
     }
+  }
+
+  /**
+   * Applies the global field rules that were skipped during the content type update (updateFieldRules
+   * strips rules flagged is_global_field_rule, because their paths reference an embedded global field
+   * whose schema is not yet complete when the content type is first updated). By the time this runs,
+   * every embedded global field is complete, so the rules validate. Runs for deferred, non-deferred
+   * and module-only imports alike.
+   * @returns the uids of content types whose global field rule update failed.
+   */
+  async updateGFFieldRules(): Promise<string[]> {
+    const failedCTs: string[] = [];
+
+    if (!this.fieldRules?.length) {
+      log.debug('No content types with field rules; skipping global field rules update.', this.importConfig.context);
+      return failedCTs;
+    }
+
+    const cTs = (fsUtil.readFile(path.join(this.cTsFolderPath, 'schema.json')) || []) as Record<string, any>[];
+
+    for (const cTUid of this.fieldRules) {
+      const contentType: any = find(cTs, { uid: cTUid });
+      if (!contentType?.field_rules?.length) {
+        continue;
+      }
+
+      // Only content types carrying a global field rule need re-applying; the rest were fully
+      // updated (schema + their own rules) in updateCTs.
+      const hasGFFieldRule = contentType.field_rules.some((rule: any) => isGlobalFieldRule(rule));
+      if (!hasGFFieldRule) {
+        continue;
+      }
+
+      log.info(`Re-applying global field rules for content type: ${contentType.uid}`, this.importConfig.context);
+
+      const contentTypeResponse: any = await this.stack
+        .contentType(contentType.uid)
+        .fetch()
+        .catch((error: unknown) => {
+          handleAndLogError(error, { ...this.importConfig.context, uid: contentType.uid });
+        });
+      if (!contentTypeResponse) {
+        log.debug(
+          `Skipping global field rules update for ${contentType.uid} - content type not found`,
+          this.importConfig.context,
+        );
+        failedCTs.push(contentType.uid);
+        continue;
+      }
+
+      // Send the global field rules together with the content type's own non-reference rules,
+      // NOT the raw on-disk set. updateFieldRules(..., { keepGlobalFieldRules: true }) keeps the
+      // now-valid global field rules while still dropping reference-condition rules, which are
+      // owned by the entries module (it remaps their entry-uid values post entry-import). Sending
+      // the raw set here would resurrect those reference rules prematurely with stale uids.
+      // NOTE: field_rules is a whole-array PUT — if any single rule is invalid the API rejects the
+      // entire array, so a malformed rule would take the global field rules down with it.
+      contentTypeResponse.field_rules = updateFieldRules(contentType, { keepGlobalFieldRules: true });
+      await contentTypeResponse
+        .update()
+        .then(() => {
+          log.success(`Re-applied global field rules for content type: ${contentType.uid}`, this.importConfig.context);
+        })
+        .catch((error: Error) => {
+          handleAndLogError(error, { ...this.importConfig.context, uid: contentType.uid });
+          failedCTs.push(contentType.uid);
+        });
+    }
+
+    return failedCTs;
   }
 
   async seedCTs(): Promise<any> {
