@@ -120,7 +120,7 @@ export default class ExportCommand extends Command {
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);
-      const exportConfig = await setupExportConfig(flags);
+      const exportConfig = await setupExportConfig(flags, this.context);
       
       // Store apiKey in configHandler for session.json (return value not needed)
       createLogContext(
