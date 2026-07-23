@@ -1,9 +1,12 @@
 {
   "extends": "../tsconfig",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "composite": false,
+    "rootDir": "..",
+    "skipLibCheck": true,
+    "strict": false
   },
-  "references": [
-    {"path": ".."}
-  ]
+  "include": ["../src/**/*", "../test/**/*"],
+  "exclude": ["../node_modules", "../lib"]
 }
