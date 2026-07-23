@@ -2,7 +2,6 @@
   "extends": "../tsconfig",
   "compilerOptions": {
     "noEmit": true,
-    "composite": false,
     "rootDir": "..",
     "skipLibCheck": true,
     "strict": false
