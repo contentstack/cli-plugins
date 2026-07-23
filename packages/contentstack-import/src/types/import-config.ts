@@ -1,3 +1,4 @@
+import { FeatureStatus } from '@contentstack/cli-utilities';
 import { Context, Modules, Region } from '.';
 import DefaultConfig from './default-config';
 
@@ -60,6 +61,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   personalizeProjectName?: string;
   'exclude-global-modules': false;
   context: Context;
+  planStatus?: Record<string, FeatureStatus>;
 }
 
 type branch = {

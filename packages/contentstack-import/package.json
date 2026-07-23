@@ -85,7 +85,8 @@
     "shortCommandName": {
       "cm:stacks:import": "IMPRT",
       "cm:import": "O-IMPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
   },
   "repository": "https://github.com/contentstack/cli"
 }

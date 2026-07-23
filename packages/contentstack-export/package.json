@@ -93,7 +93,8 @@
     "shortCommandName": {
       "cm:stacks:export": "EXPRT",
       "cm:export": "O-EXPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
   },
   "repository": "https://github.com/contentstack/cli"
 }

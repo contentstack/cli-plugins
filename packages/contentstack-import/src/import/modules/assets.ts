@@ -53,11 +53,15 @@ export default class ImportAssets extends BaseClass {
    */
   async start(): Promise<void> {
     try {
-    // NOTE Step 1: Import folders and create uid mapping file
+      if (this.importConfig.assetScanningEnabled) {
+        log.info('Assets Scanning is enabled in this stack', this.importConfig.context);
+        log.warn('Assets publishing will be skipped', this.importConfig.context);
+      }
+      // NOTE Step 1: Import folders and create uid mapping file
       log.debug('Starting folder import process...', this.importConfig.context);
       await this.importFolders();
 
-    // NOTE Step 2: Import versioned assets and create it mapping files (uid, url)
+      // NOTE Step 2: Import versioned assets and create it mapping files (uid, url)
       if (this.assetConfig.includeVersionedAssets) {
         const versionsPath = `${this.assetsPath}/versions`;
         if (existsSync(versionsPath)) {
@@ -68,11 +72,11 @@ export default class ImportAssets extends BaseClass {
         }
       }
 
-    // NOTE Step 3: Import Assets and create it mapping files (uid, url)
+      // NOTE Step 3: Import Assets and create it mapping files (uid, url)
       log.debug('Starting assets import...', this.importConfig.context);
       await this.importAssets();
 
-    // NOTE Step 4: Publish assets
+      // NOTE Step 4: Publish assets
       if (!this.importConfig.skipAssetsPublish) {
         log.debug('Starting assets publishing...', this.importConfig.context);
         await this.publish();

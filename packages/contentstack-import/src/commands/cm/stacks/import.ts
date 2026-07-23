@@ -154,7 +154,7 @@ export default class ImportCommand extends Command {
     let importConfig: ImportConfig;
     try {
       const { flags } = await this.parse(ImportCommand);
-      importConfig = await setupImportConfig(flags);
+      importConfig = await setupImportConfig(flags, this.context);
       // Prepare the context object
       createLogContext(
         this.context?.info?.command || 'cm:stacks:export',
