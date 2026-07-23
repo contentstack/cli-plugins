@@ -1,6 +1,15 @@
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import {
+  configHandler,
+  isAuthenticated,
+  cliux,
+  sanitizePath,
+  log,
+  isFeatureEnabled,
+  FeatureCtx,
+  FEATURE,
+} from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, isDirectoryNonEmpty } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
@@ -8,7 +17,10 @@ import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
+const setupConfig = async (
+  exportCmdFlags: any,
+  context?: { planCheckRequired?: string[] },
+): Promise<ExportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'export');
@@ -150,6 +162,31 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   }
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
+
+  // DX-9314: detect AM 2.0 via the plan-check API. Unlike the CS Assets API (which rejects
+  // management tokens), the auth-api /feature-status endpoint accepts a management token, so this
+  // reliably tells us the org is AM 2.0 even under `--alias`. The assets module uses this to skip
+  // AM 2.0 asset export with a loud warning instead of silently emitting the legacy layout.
+  // `context.planCheckRequired` is honored if PR #2627's plan-guard prerun hook populated it, but
+  // we always check ASSET_MANAGEMENT directly so this works even without that hook.
+  const featuresToCheck: string[] = Array.from(
+    new Set<string>([FEATURE.ASSET_MANAGEMENT, ...(context?.planCheckRequired ?? [])]),
+  );
+  config.planStatus = config.planStatus || {};
+  const planCtx: FeatureCtx = {
+    apiKey: config.apiKey,
+    managementToken: config.management_token,
+    authToken: config.auth_token,
+  };
+  for (const featureUid of featuresToCheck) {
+    try {
+      config.planStatus[featureUid] = await isFeatureEnabled(featureUid, planCtx);
+      log.debug(`[export] Plan status fetched for "${featureUid}".`);
+    } catch (error) {
+      log.warn(`[export] Could not fetch plan status for "${featureUid}": ${(error as Error).message}`);
+    }
+  }
+
   log.debug('Export configuration setup completed.', { ...config });
 
   return config;
