@@ -14,9 +14,10 @@ import {
   CLIProgressManager,
   clearProgressModuleSetting,
   readContentTypeSchemas,
+  readGlobalFieldSchemas,
   generateUid
 } from '@contentstack/cli-utilities';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { createWriteStream, existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import config from './config';
 import { print } from './util/log';
 import { auditMsg } from './messages';
@@ -507,13 +508,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
    */
   getCtAndGfSchema() {
     const ctDirPath = join(this.sharedConfig.basePath, this.sharedConfig.moduleConfig['content-types'].dirName);
-    const gfPath = join(
-      this.sharedConfig.basePath,
-      this.sharedConfig.moduleConfig['global-fields'].dirName,
-      this.sharedConfig.moduleConfig['global-fields'].fileName,
-    );
+    const gfDirPath = join(this.sharedConfig.basePath, this.sharedConfig.moduleConfig['global-fields'].dirName);
 
-    const gfSchema = existsSync(gfPath) ? (JSON.parse(readFileSync(gfPath, 'utf8')) as ContentTypeStruct[]) : [];
+    const gfSchema = (readGlobalFieldSchemas(gfDirPath) || []) as ContentTypeStruct[];
     const ctSchema = (readContentTypeSchemas(ctDirPath) || []) as ContentTypeStruct[];
 
     return { ctSchema, gfSchema };
