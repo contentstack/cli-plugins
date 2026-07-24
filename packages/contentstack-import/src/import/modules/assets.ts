@@ -274,6 +274,48 @@ export default class ImportAssets extends BaseClass {
   }
 
   /**
+   * Groups already-filtered `publish_details` into publish payloads that preserve the source
+   * env↔locale pairing. Entries are grouped by environment, then environments sharing an
+   * identical locale set are coalesced into one payload. Each returned group is a rectangle
+   * (its environments × its locales), so the CMA env×locale cross-product reproduces exactly
+   * the source pairs — never a phantom combination (the DX-9772 over-publish).
+   *
+   * A fully-rectangular input (every env published to the same locales) collapses to a single
+   * group, so behavior is unchanged for the common case; a ragged input fans out into one group
+   * per distinct locale set. Only environments present in `this.environments` are kept, so the
+   * env-name lookup is always safe — this preserves the DX-1656 invalid-environment guard.
+   * Callers apply any further scoping (e.g. AM's `api_key`) before calling.
+   */
+  private buildPublishGroups(
+    publishDetails: Record<string, any>[],
+  ): { environments: string[]; locales: string[] }[] {
+    const localesByEnv = new Map<string, Set<string>>();
+    for (const { environment, locale } of publishDetails || []) {
+      if (!locale || !this.environments?.hasOwnProperty(environment)) continue;
+      let set = localesByEnv.get(environment);
+      if (!set) {
+        set = new Set<string>();
+        localesByEnv.set(environment, set);
+      }
+      set.add(locale);
+    }
+
+    // Coalesce environments with an identical locale set into a single payload.
+    const groups = new Map<string, { environments: string[]; locales: string[] }>();
+    for (const [envUid, localeSet] of localesByEnv) {
+      const locales = [...localeSet].sort();
+      const signature = locales.join(' ');
+      const existing = groups.get(signature);
+      if (existing) {
+        existing.environments.push(this.environments[envUid].name);
+      } else {
+        groups.set(signature, { environments: [this.environments[envUid].name], locales });
+      }
+    }
+    return [...groups.values()];
+  }
+
+  /**
    * Publishes imported AM (Contentstack Assets / spaces) assets, mirroring the legacy `publish()`
    * but re-pointed at each space's chunk store under `spaces/{oldSpaceUid}/assets`.
    *
@@ -330,9 +372,13 @@ export default class ImportAssets extends BaseClass {
       const fsUtil = new FsUtility({ basePath: assetsDir, indexFileName: assetsFileName });
       for (const _ of values(fsUtil.indexFileContent)) {
         const chunkData = await fsUtil.readChunkFiles.next().catch(() => ({}));
-        publishableCount += filter(values(chunkData as Record<string, any>[]), (asset) =>
-          this.isAmAssetPublishable(asset, sourceStack),
-        ).length;
+        for (const asset of values(chunkData as Record<string, any>[])) {
+          if (!this.isAmAssetPublishable(asset, sourceStack)) continue;
+          // Count publish calls (one per env-locale-set group), not assets, so ticks stay 1:1.
+          publishableCount += this.buildPublishGroups(
+            filter(asset.publish_details, (pd: any) => pd?.api_key === sourceStack),
+          ).length;
+        }
       }
     }
 
@@ -362,37 +408,15 @@ export default class ImportAssets extends BaseClass {
       handleAndLogError(error, { ...this.importConfig.context, uid, title });
     };
 
+    // apiData is a pre-expanded sub-item ({ uid, title, publishDetails }); one per env-locale-set
+    // group (see Pass 2). Pairing is already preserved, so this only resolves the destination UID.
     const serializeData = (apiOptions: ApiOptions) => {
-      const { apiData: asset } = apiOptions;
-      const publishDetails = filter(
-        asset.publish_details,
-        (pd: any) => pd?.api_key === sourceStack && this.environments?.hasOwnProperty(pd?.environment),
-      );
-
-      if (!publishDetails.length) {
-        apiOptions.entity = undefined;
-        return apiOptions;
-      }
-
-      const environments = uniq(map(publishDetails, ({ environment }) => this.environments[environment].name));
-      const locales = uniq(map(publishDetails, 'locale'));
-
-      if (environments.length === 0 || locales.length === 0) {
-        log.debug(`Skipping publish for asset ${asset.uid} - no valid environments/locales`, this.importConfig.context);
-        apiOptions.entity = undefined;
-        return apiOptions;
-      }
-
-      asset.locales = locales;
-      asset.environments = environments;
-      apiOptions.apiData.publishDetails = { locales, environments };
-
-      apiOptions.uid = this.assetsUidMap[asset.uid] as string;
+      const { apiData } = apiOptions;
+      apiOptions.uid = this.assetsUidMap[apiData.uid] as string;
       if (!apiOptions.uid) {
-        log.debug(`Skipping publish for asset ${asset.uid} - no UID mapping found`, this.importConfig.context);
+        log.debug(`Skipping publish for asset ${apiData.uid} - no UID mapping found`, this.importConfig.context);
         apiOptions.entity = undefined;
       }
-
       return apiOptions;
     };
 
@@ -404,10 +428,15 @@ export default class ImportAssets extends BaseClass {
       const indexerCount = values(indexer).length;
 
       for (const index in indexer) {
-        const apiContent = filter(values(await fsUtil.readChunkFiles.next()), (asset) =>
-          this.isAmAssetPublishable(asset, sourceStack),
-        );
-        log.debug(`Found ${apiContent.length} publishable CS Assets in chunk ${index}`, this.importConfig.context);
+        // Expand each publishable asset into one sub-item per env-locale-set group, so each
+        // makeConcurrentCall item is a single-rectangle publish (preserves env↔locale pairing).
+        const apiContent = values(await fsUtil.readChunkFiles.next()).flatMap((asset: Record<string, any>) => {
+          if (!this.isAmAssetPublishable(asset, sourceStack)) return [];
+          return this.buildPublishGroups(
+            filter(asset.publish_details, (pd: any) => pd?.api_key === sourceStack),
+          ).map((publishDetails) => ({ uid: asset.uid, title: asset.title, publishDetails }));
+        });
+        log.debug(`Found ${apiContent.length} CS Asset publish calls in chunk ${index}`, this.importConfig.context);
 
         await this.makeConcurrentCall({
           apiContent,
