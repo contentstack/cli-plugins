@@ -498,7 +498,7 @@ export default abstract class BaseClass {
           .addHeader('api_version', '3.2')
           .publish({
             publishDetails: { environments: apiData.environments, locales: apiData.locales },
-            locale: apiData.locales[0],
+            locale: additionalInfo.locale,
           })
           .then(onSuccess)
           .catch(onReject);
