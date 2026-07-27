@@ -1,5 +1,5 @@
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, handleAndLogError, loadChalk } from '@contentstack/cli-utilities';
+import { flags, log, createLogContext, handleAndLogError, loadChalk, configHandler, cliux } from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../../../messages';
 import { BaseBulkCommand } from '../../../base-bulk-command';
@@ -116,8 +116,36 @@ export default class BulkTaxonomies extends BaseBulkCommand {
       this.printOperationSummary(result);
     } catch (error) {
       handleAndLogError(error);
+      this.surfaceError(error);
     } finally {
       await this.finally(undefined);
+    }
+  }
+
+  /**
+   * Taxonomy stack/env validation errors are thrown in init() (setupStack) and reach oclif's
+   * catch() rather than run(). In progress-manager mode the console logger is suppressed
+   * (log.showConsoleLogs === false), so handleAndLogError writes only to the log file and the
+   * user sees nothing. Surface the message on the console here, then delegate to the base handler.
+   */
+  async catch(error: Error): Promise<void> {
+    await super.catch(error);
+    this.surfaceError(error);
+  }
+
+  /**
+   * Print an error to the console when progress-manager mode has suppressed console logging.
+   * No-op when console logging is enabled (the logger already printed it) or for DisplayedError
+   * (validators print those directly, so printing again would duplicate them).
+   */
+  private surfaceError(error: unknown): void {
+    if (error instanceof Error && error.name === 'DisplayedError') {
+      return;
+    }
+    const showConsoleLogs = configHandler.get('log')?.showConsoleLogs;
+    if (!showConsoleLogs) {
+      const message = error instanceof Error ? error.message : String(error);
+      cliux.print(`Error: ${message}`);
     }
   }
 
