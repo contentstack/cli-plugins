@@ -42,13 +42,13 @@ describe('ExportAssets', () => {
    * through the `onPage` sink, and the download read-back (`forEachChunkedJsonStore`) yields the
    * same `items` back as one chunk (or signals empty).
    */
-  const wireStreaming = (items: Array<Record<string, unknown>>) => {
+  const wireStreaming = (items: Array<Record<string, unknown>>, missing = 0) => {
     sinon.stub(ExportAssets.prototype, 'getWorkspaceFolders').resolves(foldersData as any);
     sinon
       .stub(ExportAssets.prototype, 'streamWorkspaceAssets')
       .callsFake(async (_s: string, _ws: string | undefined, onPage: (i: unknown[]) => void | Promise<void>) => {
         await onPage(items);
-        return items.length;
+        return { streamed: items.length, missing };
       });
     sinon
       .stub(chunkedJsonReader, 'forEachChunkedJsonStore')
@@ -149,6 +149,27 @@ describe('ExportAssets', () => {
         expect(t.args[0]).to.be.false;
         expect(String(t.args[2])).to.include('network failure');
       }
+    });
+
+    it('should count missing metadata records (failed pages) as failedAssets without aborting', async () => {
+      wireStreaming(assetItems, 3); // stream succeeded for 2 items, 3 records lost to failed pages
+      fetchStub.callsFake(async () => makeFetchResponse() as any);
+
+      const exporter = new ExportAssets(apiConfig, exportContext);
+      const counts = await exporter.start(workspace, spaceDir);
+
+      expect(counts.failedAssets).to.equal(3);
+    });
+
+    it('should count failed binary downloads in failedAssets', async () => {
+      wireStreaming(assetItems);
+      fetchStub.rejects(new Error('network failure'));
+
+      const exporter = new ExportAssets(apiConfig, exportContext);
+      const counts = await exporter.start(workspace, spaceDir);
+
+      expect(counts.assets).to.equal(0);
+      expect(counts.failedAssets).to.equal(assetItems.length);
     });
 
     it('should tick per asset with success=true and null error on successful downloads', async () => {

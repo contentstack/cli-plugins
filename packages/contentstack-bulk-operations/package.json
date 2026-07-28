@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-bulk-operations",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "description": "Contentstack CLI plugin for bulk operations",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-bulk-operations",
@@ -20,21 +20,21 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@contentstack/cli-asset-management": "1.0.0-beta.6",
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-asset-management": "1.0.0-beta.7",
+    "@contentstack/cli-command": "~2.0.0-beta.10",
+    "@contentstack/cli-utilities": "~2.0.0-beta.11",
     "@contentstack/delivery-sdk": "^5.2.0",
     "@contentstack/management": "^1.30.2",
     "lodash": "^4.18.1",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@types/chai": "^5.2.3",
     "@types/lodash": "^4.17.24",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.19.0",
     "@types/sinon": "^21.0.1",
-    "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
     "chai": "^6.2.2",
@@ -76,22 +76,16 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && shx rm -rf lib && tsc -b",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
-    "prepack": "npm run build && oclif manifest && oclif readme && npm run changelog",
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "pnpm compile && oclif manifest && oclif readme && pnpm changelog",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:coverage": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:coverage:report": "nyc --reporter=lcov --reporter=text --reporter=clover --reporter=json-summary --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:json": "mocha --forbid-only \"test/**/*.test.ts\" --reporter json --reporter-options output=report.json",
-    "test:safe": "[ -d test ] && npm test || echo 'No test directory found, skipping tests'",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json"
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "compile": "tsc -b tsconfig.json"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -112,7 +106,6 @@
   },
   "csdxConfig": {
     "shortCommandName": {
-      "cm:stacks:bulk-am-assets": "BOAM",
       "cm:stacks:bulk-assets": "BOA",
       "cm:stacks:bulk-entries": "BOE",
       "cm:stacks:bulk-taxonomies": "BOT"
