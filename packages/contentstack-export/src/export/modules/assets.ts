@@ -91,7 +91,9 @@ export default class ExportAssets extends BaseClass {
       const assetsModule = gs.getModules().get(this.currentModuleName.toUpperCase());
       if (assetsModule) {
         assetsModule.successCount = counts.assets;
-        assetsModule.failureCount = 0;
+        // Metadata records lost to permanently-failed page fetches + failed binary downloads —
+        // recoverable via re-export/query-export, so they surface as failures instead of aborting.
+        assetsModule.failureCount = counts.failedAssets ?? 0;
       }
 
       const extraRows: Array<[string, number]> = [
