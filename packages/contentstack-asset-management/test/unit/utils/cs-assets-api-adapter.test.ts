@@ -791,25 +791,64 @@ describe('CSAssetsAdapter', () => {
       });
     });
 
+    const deleteItems = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({ uid: `a${i}`, locale: 'en-us' }));
+
     describe('bulkDeleteAssets', () => {
       it('POSTs to the bulk delete endpoint with workspace query param', async () => {
-        fetchStub.resolves(okJsonResponse({ deleted: 2 }));
+        fetchStub.resolves(okJsonResponse({ notice: 'ok', job_id: 'j1' }));
         const adapter = new CSAssetsAdapter(baseConfig);
-        await adapter.bulkDeleteAssets('sp-1', 'ws-main', { asset_uids: ['a1', 'a2'] } as any);
+        await adapter.bulkDeleteAssets('sp-1', 'ws-main', { assets: deleteItems(2) });
 
         const [url, opts] = fetchStub.firstCall.args;
         expect(url).to.include('/api/spaces/sp-1/assets/bulk/delete');
         expect(url).to.include('workspace=ws-main');
         expect(opts.headers['space_key']).to.equal('sp-1');
+        expect(JSON.parse(opts.body).assets).to.have.length(2);
       });
 
       it('uses "main" as default workspace uid', async () => {
         fetchStub.resolves(okJsonResponse({}));
         const adapter = new CSAssetsAdapter(baseConfig);
-        await adapter.bulkDeleteAssets('sp-1', undefined as any, {} as any);
+        await adapter.bulkDeleteAssets('sp-1', undefined as any, { assets: deleteItems(1) });
 
         const [url] = fetchStub.firstCall.args;
         expect(url).to.include('workspace=main');
+      });
+
+      it('splits >100 assets into ≤100-item batches and aggregates job ids', async () => {
+        fetchStub.callsFake(async () => okJsonResponse({ notice: 'batch ok', job_id: 'job-x' }));
+        const adapter = new CSAssetsAdapter(baseConfig);
+        const result = await adapter.bulkDeleteAssets('sp-1', 'main', { assets: deleteItems(250) });
+
+        expect(fetchStub.callCount).to.equal(3); // 100 + 100 + 50
+        for (const call of fetchStub.getCalls()) {
+          expect(JSON.parse(call.args[1].body).assets.length).to.be.at.most(100);
+        }
+        expect(result.batchesTotal).to.equal(3);
+        expect(result.batchesSucceeded).to.equal(3);
+        expect(result.job_ids).to.have.length(3);
+        expect(result.failures).to.have.length(0);
+      });
+
+      it('keeps succeeded batches and records failures when one batch fails (partial)', async () => {
+        // 3 batches; the 2nd (second fetch) returns 422, others succeed.
+        let n = 0;
+        fetchStub.callsFake(async () => {
+          n += 1;
+          return n === 2 ? failResponse(422, 'Assets cannot exceed the max limit of 100.') : okJsonResponse({ job_id: `j${n}` });
+        });
+        const adapter = new CSAssetsAdapter(baseConfig);
+        const result = await adapter.bulkDeleteAssets('sp-1', 'main', { assets: deleteItems(250) });
+
+        expect(result.batchesTotal).to.equal(3);
+        expect(result.batchesSucceeded).to.equal(2);
+        expect(result.failures).to.have.length(1);
+        expect(result.failures![0].status).to.equal(422);
+        expect(result.failures![0].error).to.include('422');
+        // Failed batch carries its uids so callers can re-run just the failures.
+        expect(result.failures![0].uids).to.have.length(100);
+        expect(result.failures![0].uids.every((u) => u.startsWith('a'))).to.equal(true);
       });
     });
 
@@ -817,12 +856,28 @@ describe('CSAssetsAdapter', () => {
       it('POSTs to the bulk-move endpoint with workspace query param', async () => {
         fetchStub.resolves(okJsonResponse({ moved: 1 }));
         const adapter = new CSAssetsAdapter(baseConfig);
-        await adapter.bulkMoveAssets('sp-1', 'ws-main', { asset_uids: ['a1'], folder_uid: 'f1' } as any);
+        await adapter.bulkMoveAssets('sp-1', 'ws-main', { asset_uids: ['a1'], target_folder_uid: 'f1' });
 
         const [url, opts] = fetchStub.firstCall.args;
         expect(url).to.include('/api/spaces/sp-1/assets/bulk-move');
         expect(url).to.include('workspace=ws-main');
         expect(opts.headers['space_key']).to.equal('sp-1');
+      });
+
+      it('splits >100 uids into ≤100-item batches, re-attaching target_folder_uid', async () => {
+        fetchStub.callsFake(async () => okJsonResponse({ notice: 'moved' }));
+        const adapter = new CSAssetsAdapter(baseConfig);
+        const uids = Array.from({ length: 150 }, (_, i) => `u${i}`);
+        const result = await adapter.bulkMoveAssets('sp-1', 'main', { asset_uids: uids, target_folder_uid: 'f1' });
+
+        expect(fetchStub.callCount).to.equal(2); // 100 + 50
+        for (const call of fetchStub.getCalls()) {
+          const body = JSON.parse(call.args[1].body);
+          expect(body.asset_uids.length).to.be.at.most(100);
+          expect(body.target_folder_uid).to.equal('f1');
+        }
+        expect(result.batchesTotal).to.equal(2);
+        expect(result.batchesSucceeded).to.equal(2);
       });
     });
 
