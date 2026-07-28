@@ -153,44 +153,134 @@ describe('CSAssetsAdapter', () => {
     });
 
     it('should fetch all fields across multiple pages', async () => {
-      getStub.onCall(0).resolves({ status: 200, data: { fields: [{ uid: 'f1' }, { uid: 'f2' }], count: 3 } });
-      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f3' }], count: 3 } });
+      // Call 0 is the limit=1 probe that resolves the total; pages follow.
+      getStub.onCall(0).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 3 } });
+      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f1' }, { uid: 'f2' }], count: 3 } });
+      getStub.onCall(2).resolves({ status: 200, data: { fields: [{ uid: 'f3' }], count: 3 } });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceFields('sp-1', 2, 5);
 
-      expect(getStub.callCount).to.equal(2);
-      expect(getStub.secondCall.args[0]).to.include('skip=2');
+      expect(getStub.callCount).to.equal(3);
+      expect(getStub.firstCall.args[0]).to.include('limit=1');
+      expect(getStub.thirdCall.args[0]).to.include('skip=2');
       expect(result.count).to.equal(3);
       expect(result.fields).to.have.lengthOf(3);
     });
   });
 
-  describe('getWorkspaceAssets', () => {
-    it('should GET /api/spaces/{spaceUid}/assets', async () => {
-      getStub.resolves({ status: 200, data: { items: [] } });
+  describe('getAssetsCount', () => {
+    it('should GET /api/bff/spaces/{spaceUid}/assets/count with is_dir=false and workspace param, and return the count', async () => {
+      getStub.resolves({ status: 200, data: { count: 42 } });
       const adapter = new CSAssetsAdapter(baseConfig);
-      await adapter.getWorkspaceAssets('sp-1');
+      const result = await adapter.getAssetsCount('sp-1', 'ws-main');
 
-      expect(getStub.firstCall.args[0]).to.include('/api/spaces/sp-1/assets');
+      const path = getStub.firstCall.args[0] as string;
+      expect(path).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(path).to.include('is_dir=false');
+      expect(path).to.include('workspace=ws-main');
+      expect(result).to.equal(42);
+    });
+
+    it('getFoldersCount: should pass is_dir=true for folder counts', async () => {
+      getStub.resolves({ status: 200, data: { count: 7 } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.getFoldersCount('sp-1', 'ws-main');
+
+      const path = getStub.firstCall.args[0] as string;
+      expect(path).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(path).to.include('is_dir=true');
+      expect(result).to.equal(7);
+    });
+
+    it('should omit the workspace param when workspaceUid is undefined', async () => {
+      getStub.resolves({ status: 200, data: { count: 0 } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      await adapter.getAssetsCount('sp-1');
+
+      const path = getStub.firstCall.args[0] as string;
+      expect(path).to.not.include('workspace=');
     });
 
     it('should URL-encode the spaceUid in the path', async () => {
-      getStub.resolves({ status: 200, data: { items: [] } });
+      getStub.resolves({ status: 200, data: { count: 1 } });
       const adapter = new CSAssetsAdapter(baseConfig);
-      await adapter.getWorkspaceAssets('sp uid/special');
+      await adapter.getAssetsCount('sp uid/special');
 
       const path = getStub.firstCall.args[0] as string;
       expect(path).to.include('sp%20uid%2Fspecial');
     });
+
+    it('should return 0 (not throw) for a genuinely empty space', async () => {
+      getStub.resolves({ status: 200, data: { count: 0 } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.getAssetsCount('sp-1', 'ws-main');
+
+      expect(result).to.equal(0);
+    });
+
+    it('should throw when the response has no numeric count', async () => {
+      getStub.resolves({ status: 200, data: { notice: 'ok' } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+
+      try {
+        await adapter.getAssetsCount('sp-1', 'ws-main');
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.include('count');
+      }
+    });
+
+    it('should throw (not fall back) when the count endpoint returns a terminal error', async () => {
+      getStub.resolves({ status: 404, data: { error: 'not found' } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+
+      try {
+        await adapter.getAssetsCount('sp-1', 'ws-main');
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.include('CS Assets API GET failed');
+      }
+    });
+  });
+
+  describe('streamWorkspaceAssets (URLs)', () => {
+    it('should GET /api/spaces/{spaceUid}/assets after resolving the count', async () => {
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 1 } };
+        return { status: 200, data: { assets: [{ uid: 'a1' }], count: 1 } };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      await adapter.streamWorkspaceAssets('sp-1', undefined, () => {});
+
+      expect(getStub.firstCall.args[0]).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(getStub.secondCall.args[0]).to.include('/api/spaces/sp-1/assets');
+    });
+
+    it('should URL-encode the spaceUid in the path', async () => {
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 1 } };
+        return { status: 200, data: { assets: [{ uid: 'a1' }], count: 1 } };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      await adapter.streamWorkspaceAssets('sp uid/special', undefined, () => {});
+
+      expect(getStub.firstCall.args[0] as string).to.include('sp%20uid%2Fspecial');
+      expect(getStub.secondCall.args[0] as string).to.include('sp%20uid%2Fspecial');
+    });
   });
 
   describe('getWorkspaceFolders', () => {
-    it('should GET /api/spaces/{spaceUid}/folders', async () => {
-      getStub.resolves({ status: 200, data: [] });
+    it('should GET /api/spaces/{spaceUid}/folders after resolving the folder count', async () => {
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 1 } };
+        return { status: 200, data: { folders: [{ uid: 'f1' }], count: 1 } };
+      });
       const adapter = new CSAssetsAdapter(baseConfig);
       await adapter.getWorkspaceFolders('sp-1');
 
-      expect(getStub.firstCall.args[0]).to.include('/api/spaces/sp-1/folders');
+      expect(getStub.firstCall.args[0]).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(getStub.firstCall.args[0]).to.include('is_dir=true');
+      expect(getStub.secondCall.args[0]).to.include('/api/spaces/sp-1/folders');
     });
   });
 
@@ -209,14 +299,18 @@ describe('CSAssetsAdapter', () => {
     });
 
     it('should fetch all asset types across multiple pages, preserving include_fields', async () => {
-      getStub.onCall(0).resolves({ status: 200, data: { asset_types: [{ uid: 'at1' }, { uid: 'at2' }], count: 3 } });
-      getStub.onCall(1).resolves({ status: 200, data: { asset_types: [{ uid: 'at3' }], count: 3 } });
+      // Call 0 is the limit=1 probe that resolves the total; pages follow.
+      getStub.onCall(0).resolves({ status: 200, data: { asset_types: [{ uid: 'at1' }], count: 3 } });
+      getStub.onCall(1).resolves({ status: 200, data: { asset_types: [{ uid: 'at1' }, { uid: 'at2' }], count: 3 } });
+      getStub.onCall(2).resolves({ status: 200, data: { asset_types: [{ uid: 'at3' }], count: 3 } });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceAssetTypes('sp-1', 2, 5);
 
-      expect(getStub.callCount).to.equal(2);
-      expect(getStub.secondCall.args[0]).to.include('include_fields=true');
-      expect(getStub.secondCall.args[0]).to.include('skip=2');
+      expect(getStub.callCount).to.equal(3);
+      expect(getStub.firstCall.args[0]).to.include('limit=1');
+      expect(getStub.firstCall.args[0]).to.include('include_fields=true');
+      expect(getStub.thirdCall.args[0]).to.include('include_fields=true');
+      expect(getStub.thirdCall.args[0]).to.include('skip=2');
       expect(result.count).to.equal(3);
       expect(result.asset_types).to.have.lengthOf(3);
     });
@@ -252,10 +346,12 @@ describe('CSAssetsAdapter', () => {
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.listSpaces(100, 5);
 
-      expect(getStub.callCount).to.equal(1);
+      // Call 0 is the limit=1 probe; call 1 is the single page.
+      expect(getStub.callCount).to.equal(2);
       expect(getStub.firstCall.args[0]).to.include('/api/spaces');
-      expect(getStub.firstCall.args[0]).to.include('limit=100');
-      expect(getStub.firstCall.args[0]).to.include('skip=0');
+      expect(getStub.firstCall.args[0]).to.include('limit=1');
+      expect(getStub.secondCall.args[0]).to.include('limit=100');
+      expect(getStub.secondCall.args[0]).to.include('skip=0');
       expect(result.spaces).to.deep.equal(spaces);
       expect(result.count).to.equal(2);
     });
@@ -263,13 +359,14 @@ describe('CSAssetsAdapter', () => {
     it('should issue additional page requests when total exceeds first page', async () => {
       const page1 = Array.from({ length: 2 }, (_, i) => ({ uid: `sp-${i}` }));
       const page2 = Array.from({ length: 1 }, (_, i) => ({ uid: `sp-${i + 2}` }));
-      getStub.onCall(0).resolves({ status: 200, data: { spaces: page1, count: 3 } });
-      getStub.onCall(1).resolves({ status: 200, data: { spaces: page2, count: 3 } });
+      getStub.onCall(0).resolves({ status: 200, data: { spaces: [page1[0]], count: 3 } }); // probe
+      getStub.onCall(1).resolves({ status: 200, data: { spaces: page1, count: 3 } });
+      getStub.onCall(2).resolves({ status: 200, data: { spaces: page2, count: 3 } });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.listSpaces(2, 5);
 
-      expect(getStub.callCount).to.equal(2);
-      expect(getStub.secondCall.args[0]).to.include('skip=2');
+      expect(getStub.callCount).to.equal(3);
+      expect(getStub.thirdCall.args[0]).to.include('skip=2');
       expect(result.spaces).to.have.lengthOf(3);
       expect(result.count).to.equal(3);
     });
@@ -279,45 +376,53 @@ describe('CSAssetsAdapter', () => {
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.listSpaces();
 
+      // Probe reports 0 → no page requests at all.
       expect(getStub.callCount).to.equal(1);
+      expect(getStub.firstCall.args[0]).to.include('limit=1');
       expect(result.spaces).to.deep.equal([]);
       expect(result.count).to.equal(0);
     });
 
     it('should batch additional page requests by fetchConcurrency', async () => {
-      // 5 total, pageSize=1, concurrency=2 → 4 additional pages in 2 batches
+      // 5 total, pageSize=1, concurrency=2 → probe + 5 pages in 3 batches
       const pages = Array.from({ length: 5 }, (_, i) => [{ uid: `sp-${i}` }]);
-      getStub.onCall(0).resolves({ status: 200, data: { spaces: pages[0], count: 5 } });
-      getStub.onCall(1).resolves({ status: 200, data: { spaces: pages[1], count: 5 } });
-      getStub.onCall(2).resolves({ status: 200, data: { spaces: pages[2], count: 5 } });
-      getStub.onCall(3).resolves({ status: 200, data: { spaces: pages[3], count: 5 } });
-      getStub.onCall(4).resolves({ status: 200, data: { spaces: pages[4], count: 5 } });
+      getStub.onCall(0).resolves({ status: 200, data: { spaces: pages[0], count: 5 } }); // probe
+      getStub.onCall(1).resolves({ status: 200, data: { spaces: pages[0], count: 5 } });
+      getStub.onCall(2).resolves({ status: 200, data: { spaces: pages[1], count: 5 } });
+      getStub.onCall(3).resolves({ status: 200, data: { spaces: pages[2], count: 5 } });
+      getStub.onCall(4).resolves({ status: 200, data: { spaces: pages[3], count: 5 } });
+      getStub.onCall(5).resolves({ status: 200, data: { spaces: pages[4], count: 5 } });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.listSpaces(1, 2);
 
-      expect(getStub.callCount).to.equal(5);
+      expect(getStub.callCount).to.equal(6);
       expect(result.spaces).to.have.lengthOf(5);
     });
 
     it('should request each page with its OWN skip when pages run concurrently (no shared-mutation race)', async () => {
-      // total 6, pageSize 2, concurrency 5 → page0 inline, then skips [2,4] in a single concurrent batch.
-      // If makeAPICall did not snapshot queryParam, both concurrent calls would read the last skip.
+      // total 6, pageSize 2, concurrency 5 → probe, then skips [0,2,4] in a single concurrent batch.
+      // If makeAPICall did not snapshot queryParam, concurrent calls would read the last skip.
       const bySkip: Record<string, unknown> = {
         '0': { spaces: [{ uid: 's0' }, { uid: 's1' }], count: 6 },
         '2': { spaces: [{ uid: 's2' }, { uid: 's3' }], count: 6 },
         '4': { spaces: [{ uid: 's4' }, { uid: 's5' }], count: 6 },
       };
       getStub.callsFake(async (path: string) => {
-        const skip = new URL(`https://x${path}`).searchParams.get('skip') ?? '0';
-        return { status: 200, data: bySkip[skip] };
+        const params = new URL(`https://x${path}`).searchParams;
+        if (params.get('limit') === '1') return { status: 200, data: { spaces: [{ uid: 's0' }], count: 6 } };
+        return { status: 200, data: bySkip[params.get('skip') ?? '0'] };
       });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.listSpaces(2, 5);
 
       const uids = (result.spaces as Array<{ uid: string }>).map((s) => s.uid).sort();
       expect(uids).to.deep.equal(['s0', 's1', 's2', 's3', 's4', 's5']);
-      const requestedSkips = getStub.getCalls().map((c) => new URL(`https://x${c.args[0]}`).searchParams.get('skip'));
-      expect([...requestedSkips].sort()).to.deep.equal(['0', '2', '4']);
+      const pageSkips = getStub
+        .getCalls()
+        .map((c) => new URL(`https://x${c.args[0]}`).searchParams)
+        .filter((p) => p.get('limit') !== '1')
+        .map((p) => p.get('skip'));
+      expect([...pageSkips].sort()).to.deep.equal(['0', '2', '4']);
     });
   });
 
@@ -352,23 +457,27 @@ describe('CSAssetsAdapter', () => {
     const retryConfig: CSAssetsAPIConfig = { ...baseConfig, retryBaseDelayMs: 0 };
 
     it('should retry a 429 and then succeed', async () => {
+      // Calls 0-2: probe retried through two 429s; call 3: the single page.
       getStub.onCall(0).resolves({ status: 429, data: {} });
       getStub.onCall(1).resolves({ status: 429, data: {} });
+      getStub.onCall(2).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
+      getStub.onCall(3).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
+      const adapter = new CSAssetsAdapter(retryConfig);
+      const result = await adapter.getWorkspaceFields('sp-1');
+
+      expect(getStub.callCount).to.equal(4);
+      expect(result.fields).to.deep.equal([{ uid: 'f1' }]);
+    });
+
+    it('should retry a 5xx and then succeed', async () => {
+      // Calls 0-1: probe retried through a 503; call 2: the single page.
+      getStub.onCall(0).resolves({ status: 503, data: {} });
+      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
       getStub.onCall(2).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
       const adapter = new CSAssetsAdapter(retryConfig);
       const result = await adapter.getWorkspaceFields('sp-1');
 
       expect(getStub.callCount).to.equal(3);
-      expect(result.fields).to.deep.equal([{ uid: 'f1' }]);
-    });
-
-    it('should retry a 5xx and then succeed', async () => {
-      getStub.onCall(0).resolves({ status: 503, data: {} });
-      getStub.onCall(1).resolves({ status: 200, data: { fields: [{ uid: 'f1' }], count: 1 } });
-      const adapter = new CSAssetsAdapter(retryConfig);
-      const result = await adapter.getWorkspaceFields('sp-1');
-
-      expect(getStub.callCount).to.equal(2);
       expect(result.fields).to.deep.equal([{ uid: 'f1' }]);
     });
 
@@ -386,23 +495,41 @@ describe('CSAssetsAdapter', () => {
     });
   });
 
-  describe('getWorkspaceAssets (paginated)', () => {
-    it('should fetch all assets across multiple pages', async () => {
+  describe('streamWorkspaceAssets (paginated)', () => {
+    it('should stream all assets across multiple pages and report zero missing', async () => {
       const page1 = [{ uid: 'a-1' }, { uid: 'a-2' }];
       const page2 = [{ uid: 'a-3' }];
-      getStub.onCall(0).resolves({ status: 200, data: { assets: page1, count: 3 } });
-      getStub.onCall(1).resolves({ status: 200, data: { assets: page2, count: 3 } });
+      getStub.onCall(0).resolves({ status: 200, data: { count: 3 } }); // count API
+      getStub.onCall(1).resolves({ status: 200, data: { assets: page1, count: 3 } });
+      getStub.onCall(2).resolves({ status: 200, data: { assets: page2, count: 3 } });
       const adapter = new CSAssetsAdapter(baseConfig);
-      const result = await adapter.getWorkspaceAssets('sp-1', undefined, 2, 5) as any;
+      const streamed: unknown[] = [];
+      const result = await adapter.streamWorkspaceAssets('sp-1', undefined, (items) => {
+        streamed.push(...items);
+      }, 2, 5);
 
-      expect(result.assets).to.have.lengthOf(3);
-      expect(result.count).to.equal(3);
+      expect(streamed).to.have.lengthOf(3);
+      expect(result).to.deep.equal({ streamed: 3, missing: 0 });
+    });
+
+    it('should report missing records when a page request fails permanently (export continues)', async () => {
+      // Count says 4; pageSize 2 → 2 pages; the skip=2 page 404s → 2 records lost but no throw.
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 4 } };
+        const skip = new URL(`https://x${path}`).searchParams.get('skip');
+        if (skip === '2') return { status: 404, data: { error: 'gone' } };
+        return { status: 200, data: { assets: [{ uid: 'a0' }, { uid: 'a1' }], count: 4 } };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.streamWorkspaceAssets('sp-1', 'ws-main', () => {}, 2, 5);
+
+      expect(result).to.deep.equal({ streamed: 2, missing: 2 });
     });
 
     it('should include workspace query param when workspaceUid is provided', async () => {
       getStub.resolves({ status: 200, data: { assets: [], count: 0 } });
       const adapter = new CSAssetsAdapter(baseConfig);
-      await adapter.getWorkspaceAssets('sp-1', 'ws-main', 100, 5);
+      await adapter.streamWorkspaceAssets('sp-1', 'ws-main', () => {}, 100, 5);
 
       const path = getStub.firstCall.args[0] as string;
       expect(path).to.include('workspace=ws-main');
@@ -411,7 +538,7 @@ describe('CSAssetsAdapter', () => {
     it('should NOT include workspace param when workspaceUid is undefined', async () => {
       getStub.resolves({ status: 200, data: { assets: [], count: 0 } });
       const adapter = new CSAssetsAdapter(baseConfig);
-      await adapter.getWorkspaceAssets('sp-1', undefined, 100, 5);
+      await adapter.streamWorkspaceAssets('sp-1', undefined, () => {}, 100, 5);
 
       const path = getStub.firstCall.args[0] as string;
       expect(path).to.not.include('workspace=');
@@ -422,8 +549,9 @@ describe('CSAssetsAdapter', () => {
     it('should fetch all folders across multiple pages', async () => {
       const page1 = [{ uid: 'f-1' }];
       const page2 = [{ uid: 'f-2' }];
-      getStub.onCall(0).resolves({ status: 200, data: { folders: page1, count: 2 } });
-      getStub.onCall(1).resolves({ status: 200, data: { folders: page2, count: 2 } });
+      getStub.onCall(0).resolves({ status: 200, data: { count: 2 } }); // count API (is_dir=true)
+      getStub.onCall(1).resolves({ status: 200, data: { folders: page1, count: 2 } });
+      getStub.onCall(2).resolves({ status: 200, data: { folders: page2, count: 2 } });
       const adapter = new CSAssetsAdapter(baseConfig);
       const result = await adapter.getWorkspaceFolders('sp-1', undefined, 1, 5) as any;
 
@@ -438,6 +566,129 @@ describe('CSAssetsAdapter', () => {
 
       const path = getStub.firstCall.args[0] as string;
       expect(path).to.include('workspace=ws-main');
+    });
+  });
+
+  describe('count-driven pagination (single flow)', () => {
+    it('streamWorkspaceAssets: fetches the exact total from the count API first, then pages', async () => {
+      // Count API says 5; page responses report a (capped-style) count of 2 — the count API total must win.
+      const bySkip: Record<string, unknown> = {
+        '0': { assets: [{ uid: 'a0' }, { uid: 'a1' }], count: 2 },
+        '2': { assets: [{ uid: 'a2' }, { uid: 'a3' }], count: 2 },
+        '4': { assets: [{ uid: 'a4' }], count: 2 },
+      };
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 5 } };
+        const skip = new URL(`https://x${path}`).searchParams.get('skip') ?? '0';
+        return { status: 200, data: bySkip[skip] };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const streamed: unknown[] = [];
+      const result = await adapter.streamWorkspaceAssets('sp-1', 'ws-main', (items) => {
+        streamed.push(...items);
+      }, 2, 5);
+
+      const firstPath = getStub.firstCall.args[0] as string;
+      expect(firstPath).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(firstPath).to.include('is_dir=false');
+      expect(streamed).to.have.lengthOf(5);
+      expect(result).to.deep.equal({ streamed: 5, missing: 0 });
+    });
+
+    it('getWorkspaceFolders: uses is_dir=true for the count call', async () => {
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 1 } };
+        return { status: 200, data: { folders: [{ uid: 'f0' }], count: 1 } };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.getWorkspaceFolders('sp-1', 'ws-main', 100, 5) as any;
+
+      const firstPath = getStub.firstCall.args[0] as string;
+      expect(firstPath).to.include('/api/bff/spaces/sp-1/assets/count');
+      expect(firstPath).to.include('is_dir=true');
+      expect(result.folders).to.have.lengthOf(1);
+    });
+
+    it('streamWorkspaceAssets: fetches count first and streams every page', async () => {
+      const bySkip: Record<string, unknown> = {
+        '0': { assets: [{ uid: 'a0' }, { uid: 'a1' }], count: 2 },
+        '2': { assets: [{ uid: 'a2' }], count: 2 },
+      };
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 3 } };
+        const skip = new URL(`https://x${path}`).searchParams.get('skip') ?? '0';
+        return { status: 200, data: bySkip[skip] };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const streamed: unknown[] = [];
+      const result = await adapter.streamWorkspaceAssets('sp-1', 'ws-main', (items) => {
+        streamed.push(...items);
+      }, 2, 5);
+
+      expect(getStub.firstCall.args[0]).to.include('/assets/count');
+      expect(result.streamed).to.equal(3);
+      expect(streamed).to.have.lengthOf(3);
+    });
+
+    it('streamWorkspaceAssets: propagates a count API failure without fetching any pages', async () => {
+      getStub.resolves({ status: 404, data: { error: 'not found' } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+
+      try {
+        await adapter.streamWorkspaceAssets('sp-1', 'ws-main', () => {}, 2, 5);
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.include('CS Assets API GET failed');
+      }
+      // Only the count request went out — pagination never started.
+      expect(getStub.callCount).to.equal(1);
+      expect(getStub.firstCall.args[0]).to.include('/assets/count');
+    });
+
+    it('streamWorkspaceAssets: makes no page requests when the count is 0', async () => {
+      getStub.callsFake(async (path: string) => {
+        if (path.includes('/assets/count')) return { status: 200, data: { count: 0 } };
+        return { status: 200, data: { assets: [], count: 0 } };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.streamWorkspaceAssets('sp-1', 'ws-main', () => {}, 100, 5);
+
+      expect(getStub.callCount).to.equal(1);
+      expect(result).to.deep.equal({ streamed: 0, missing: 0 });
+    });
+
+    it('listSpaces: throws when the probe response has no numeric count (malformed response ≠ empty list)', async () => {
+      // A genuinely empty org returns { count: 0 } and is fine; a response with NO count field is
+      // malformed and must fail loudly instead of silently exporting nothing.
+      getStub.resolves({ status: 200, data: { spaces: [] } });
+      const adapter = new CSAssetsAdapter(baseConfig);
+
+      try {
+        await adapter.listSpaces(2, 5);
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.include('count');
+      }
+    });
+
+    it('listSpaces: derives the total from a limit=1 probe of the list endpoint (no count API exists)', async () => {
+      const bySkip: Record<string, unknown> = {
+        '0': { spaces: [{ uid: 's0' }, { uid: 's1' }], count: 3 },
+        '2': { spaces: [{ uid: 's2' }], count: 3 },
+      };
+      getStub.callsFake(async (path: string) => {
+        const params = new URL(`https://x${path}`).searchParams;
+        if (params.get('limit') === '1') return { status: 200, data: { spaces: [{ uid: 's0' }], count: 3 } };
+        return { status: 200, data: bySkip[params.get('skip') ?? '0'] };
+      });
+      const adapter = new CSAssetsAdapter(baseConfig);
+      const result = await adapter.listSpaces(2, 5);
+
+      const probePath = getStub.firstCall.args[0] as string;
+      expect(probePath).to.include('/api/spaces');
+      expect(probePath).to.include('limit=1');
+      expect(result.spaces).to.have.lengthOf(3);
+      expect(result.count).to.equal(3);
     });
   });
 

@@ -159,6 +159,21 @@ export type SearchAssetsParams = {
   limit?: number;
 };
 
+/** Response shape of GET /api/bff/spaces/{space_uid}/assets/count. */
+export type AssetCountResponse = {
+  count: number;
+};
+
+/**
+ * Result of streaming a workspace's assets. `missing` is the gap between the authoritative
+ * count-API total and the records actually streamed (permanently failed pages and/or items
+ * changed mid-export) — surfaced as failures in the export summary rather than aborting the run.
+ */
+export type StreamWorkspaceAssetsResult = {
+  streamed: number;
+  missing: number;
+};
+
 /** Response shape from POST /api/search for assets. */
 export type SearchAssetsResponse = {
   count?: number;
@@ -174,14 +189,15 @@ export interface ICSAssetsAdapter {
   listSpaces(pageSize?: number, fetchConcurrency?: number): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
   getWorkspaceFields(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<FieldsResponse>;
-  getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
+  getAssetsCount(spaceUid: string, workspaceUid?: string): Promise<number>;
+  getFoldersCount(spaceUid: string, workspaceUid?: string): Promise<number>;
   streamWorkspaceAssets(
     spaceUid: string,
     workspaceUid: string | undefined,
     onPage: (items: unknown[]) => void | Promise<void>,
     pageSize?: number,
     fetchConcurrency?: number,
-  ): Promise<number>;
+  ): Promise<StreamWorkspaceAssetsResult>;
   getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<AssetTypesResponse>;
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
