@@ -1,6 +1,6 @@
 fileignoreconfig:
   - filename: pnpm-lock.yaml
-    checksum: f149ffa2864c1e5aa5b3f3363ea0d690e288168167d103775cb1f61be81151d5
+    checksum: 8eb82c59ad8b81af64587af55c6788d09a34d1b651d030d1ef01dce472716f2a
   - filename: packages/contentstack-branches/test/unit/helpers/stub-auth.ts
     checksum: 8cafd5994d3ec13ba9af74c80b330bfd14721ea4e0359b456598964a6c2913ce
   - filename: packages/contentstack-export/src/config/index.ts
@@ -18,7 +18,7 @@ fileignoreconfig:
   - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts
     checksum: 018980aa2b919967b9ef9ab1bdf635d4867fe21593fba5890afa443f440228ff
   - filename: packages/contentstack-bulk-operations/src/messages/index.ts
-    checksum: 07c2bf3f3130ad5e8b6a2971d76139e9b643c70a9ff5f7450adfb5c9bf3d7164
+    checksum: ba38daefd561d9acd018b6ebcb65847eceab6d375b28988d7b5624dcea9ccfe0
   - filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
     checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
   - filename: packages/contentstack-bulk-operations/src/base-bulk-command.ts
@@ -39,4 +39,6 @@ fileignoreconfig:
     checksum: 88c7e1dee308fa4ae25e7815ead0842b1aac7ed669b02859cc8b25cba879595d
   - filename: packages/contentstack-bulk-operations/test/unit/services/taxonomy-service.test.ts
     checksum: abc5ac707341760cf59d5b8b1c4e13cf2c79955e2735c33e2db3ec6bc48eddb6
+  - filename: packages/contentstack-import/src/import/modules/assets.ts
+    checksum: cda61a9c90bb39f27c09951b8a2623851296aefd0d3220d066032287a712d899
 version: '1.0'
