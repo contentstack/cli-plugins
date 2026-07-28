@@ -245,13 +245,17 @@ export class BulkOperationService {
   }
 
   private prepareAssetBulkPayload(items: AssetPublishData[], operation: OperationType): any {
-    const assets = items.map((item) => ({
-      uid: item.uid,
-      version: item.version,
-    }));
+    const seen = new Set<string>();
+    const assets = items.reduce<Array<{ uid: string; version: number | undefined }>>((acc, item) => {
+      if (!seen.has(item.uid)) {
+        seen.add(item.uid);
+        acc.push({ uid: item.uid, version: item.version });
+      }
+      return acc;
+    }, []);
 
     const environments = items[0]?.publish_details?.map((pd) => pd.environment) || [];
-    const locales = items[0]?.publish_details?.map((pd) => pd.locale) || [];
+    const locales = Array.from(new Set(items.map((item) => item.locale)));
 
     return {
       assets,

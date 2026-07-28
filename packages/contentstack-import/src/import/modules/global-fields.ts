@@ -7,7 +7,7 @@
 
 import * as path from 'path';
 import { isEmpty, cloneDeep } from 'lodash';
-import { sanitizePath, log, handleAndLogError, GlobalFieldData, GlobalField } from '@contentstack/cli-utilities';
+import { sanitizePath, log, handleAndLogError, GlobalFieldData, GlobalField, readGlobalFieldSchemas } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 import {   fsUtil,
   fileHelper,
@@ -41,7 +41,6 @@ export default class ImportGlobalFields extends BaseClass {
   private existingGFs: Record<string, any>[];
   private gFsConfig: {
     dirName: string;
-    fileName: string;
     validKeys: string[];
     limit: number;
     writeConcurrency?: number;
@@ -430,12 +429,9 @@ export default class ImportGlobalFields extends BaseClass {
       }
 
       log.debug(`Found global fields folder: ${this.gFsFolderPath}`, this.importConfig.context);
-      this.gFs = fsUtil.readFile(path.join(this.gFsFolderPath, this.gFsConfig.fileName)) as Record<string, unknown>[];
+      this.gFs = readGlobalFieldSchemas(this.gFsFolderPath) as Record<string, unknown>[];
       if (!this.gFs || isEmpty(this.gFs)) {
-        log.info(
-          `No global fields found in file - '${path.join(this.gFsFolderPath, this.gFsConfig.fileName)}'`,
-          this.importConfig.context,
-        );
+        log.info(`No global fields found in directory - '${this.gFsFolderPath}'`, this.importConfig.context);
         return [0];
       }
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { assertBundleDir } from '../../src/lib/bundle';
 
 const tempDirs: string[] = [];
@@ -33,7 +33,7 @@ describe('assertBundleDir', () => {
       locales: 'dir',
       'export-info.json': 'file',
     });
-    expect(() => assertBundleDir(bundle)).not.toThrow();
+    expect(() => assertBundleDir(bundle)).to.not.throw();
   });
 
   it('throws when required entries are missing', () => {
@@ -41,7 +41,7 @@ describe('assertBundleDir', () => {
       content_types: 'dir',
       locales: 'dir',
     });
-    expect(() => assertBundleDir(bundle)).toThrow(
+    expect(() => assertBundleDir(bundle)).to.throw(
       /Invalid bundle.*missing export-info\.json.*migrate:convert/,
     );
   });

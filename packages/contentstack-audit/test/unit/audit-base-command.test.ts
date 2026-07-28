@@ -369,6 +369,30 @@ describe('AuditBaseCommand class', () => {
           gfSchema: [],
         });
       });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(winston.transports, 'File', () => fsTransport)
+      .stub(winston, 'createLogger', createMockWinstonLogger)
+      .stub(fs, 'createWriteStream', () => new PassThrough())
+      .it('should return per-uid global field schemas and skip globalfields.json', async () => {
+        class CMD extends AuditBaseCommand {
+          async run() {
+            // Point basePath at mock/contents which has global_fields/gf_1.json (per-uid)
+            // and global_fields/globalfields.json (bulk legacy — must be ignored)
+            this.sharedConfig.basePath = resolve(__dirname, 'mock', 'contents');
+            return this.getCtAndGfSchema();
+          }
+        }
+
+        const result = await CMD.run([]);
+        // gf_1.json is read; globalfields.json is excluded by readGlobalFieldSchemas
+        expect(result.gfSchema).to.be.an('array');
+        expect(result.gfSchema.length).to.equal(1);
+        expect((result.gfSchema[0] as any).uid).to.equal('gf_1');
+        // content_types dir absent → ctSchema empty
+        expect(result.ctSchema).to.deep.equal([]);
+      });
   });
 
   describe('Progress Manager Integration', () => {
