@@ -5,8 +5,8 @@
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.4",
-    "@contentstack/cli-utilities": "~1.18.5",
+    "@contentstack/cli-command": "~1.8.5",
+    "@contentstack/cli-utilities": "~1.19.0",
     "@oclif/core": "^4.11.4",
     "big-json": "^3.2.0",
     "chalk": "^4.1.2",

@@ -7,8 +7,8 @@
     "url": "https://github.com/contentstack/cli-plugins/issues"
   },
   "dependencies": {
-    "@contentstack/cli-command": "1.8.4",
-    "@contentstack/cli-utilities": "1.18.5",
+    "@contentstack/cli-command": "1.8.5",
+    "@contentstack/cli-utilities": "1.19.0",
     "@contentstack/json-rte-serializer": "~2.1.0",
     "@oclif/core": "^4.12.0",
     "@oclif/plugin-help": "^6.2.53",
