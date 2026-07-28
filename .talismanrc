@@ -18,7 +18,7 @@ fileignoreconfig:
   - filename: packages/contentstack-cli-cm-regex-validate/test/utils/connect-stack.test.ts
     checksum: 018980aa2b919967b9ef9ab1bdf635d4867fe21593fba5890afa443f440228ff
   - filename: packages/contentstack-bulk-operations/src/messages/index.ts
-    checksum: ba38daefd561d9acd018b6ebcb65847eceab6d375b28988d7b5624dcea9ccfe0
+    checksum: c8acefdd18f499a82d839e3cf99e34af9dd464f63f92282739411174ae7b7c37
   - filename: packages/contentstack-bulk-operations/src/utils/operation-flag-matrix.ts
     checksum: 99a3c3eb422a17f73f4c8f15088004fa4c95df3545bdf510310c1f3a20e4c2c2
   - filename: packages/contentstack-bulk-operations/src/base-bulk-command.ts
@@ -43,4 +43,8 @@ fileignoreconfig:
     checksum: cda61a9c90bb39f27c09951b8a2623851296aefd0d3220d066032287a712d899
   - filename: packages/contentstack-asset-management/test/unit/utils/cs-assets-api-adapter.test.ts
     checksum: 63c6bff4d51842d8fa3cce88545259d0a2c3cfe71df95d303d993f692cee883b
+  - filename: packages/contentstack-asset-management/src/utils/cs-assets-api-adapter.ts
+    checksum: bc4a53f96be6a10786e00133245c7bdc43c965c8a98b753e3879e1110cf9c601
+  - filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets-cs-assets.test.ts
+    checksum: 1b6b5b0302d3efd9508e2e5d4fe3783da97a110735ca3106ce829cfe93874150
 version: '1.0'

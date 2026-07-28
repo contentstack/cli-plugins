@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { configHandler } from '@contentstack/cli-utilities';
 
 import ExportAssets from '../../../src/export/assets';
 import { CSAssetsExportAdapter } from '../../../src/export/base';
 import * as chunkedJsonReader from '../../../src/utils/chunked-json-reader';
+import * as exportHelpers from '../../../src/utils/export-helpers';
 import * as retryModule from '../../../src/utils/retry';
 
 import type { CSAssetsAPIConfig, LinkedWorkspace } from '../../../src/types/cs-assets-api';
@@ -230,7 +230,7 @@ describe('ExportAssets', () => {
     });
 
     it('should append authtoken to URL when securedAssets is true', async () => {
-      sinon.stub(configHandler, 'get').returns('my-auth-token');
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ authtoken: 'my-auth-token' });
       wireStreaming([{ uid: 'a1', url: 'https://cdn.example.com/a1.png', filename: 'img.png' }] as any);
       fetchStub.callsFake(async () => makeFetchResponse() as any);
 
@@ -241,7 +241,7 @@ describe('ExportAssets', () => {
     });
 
     it('should use "&" separator when URL already contains "?"', async () => {
-      sinon.stub(configHandler, 'get').returns('my-token');
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ authtoken: 'my-token' });
       wireStreaming([{ uid: 'a1', url: 'https://cdn.example.com/a1?v=1', filename: 'img.png' }] as any);
       fetchStub.callsFake(async () => makeFetchResponse() as any);
 
@@ -277,6 +277,89 @@ describe('ExportAssets', () => {
       expect(assetTicks).to.have.length(1);
       expect(assetTicks[0].args[0]).to.be.false;
       expect(assetTicks[0].args[2]).to.equal('No response body');
+    });
+  });
+
+  describe('secured asset downloads', () => {
+    const securedContext: ExportContext = { ...exportContext, securedAssets: true };
+    const asset = { uid: 'a1', url: 'https://cdn.example.com/a1.png', filename: 'img.png' };
+    const make401 = () => ({ ok: false, status: 401, headers: { get: (): string | null => null } });
+
+    it('should send the Authorization header (and no authtoken param) for OAuth', async () => {
+      wireStreaming([asset] as any);
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ headers: { authorization: 'Bearer oauth-token' } });
+      fetchStub.callsFake(async () => makeFetchResponse() as any);
+
+      const exporter = new ExportAssets(apiConfig, securedContext);
+      await exporter.start(workspace, spaceDir);
+
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal(asset.url);
+      expect(init).to.deep.equal({ headers: { authorization: 'Bearer oauth-token' } });
+    });
+
+    it('should append ?authtoken= (and no headers) for basic auth', async () => {
+      wireStreaming([asset] as any);
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ authtoken: 'basic-token' });
+      fetchStub.callsFake(async () => makeFetchResponse() as any);
+
+      const exporter = new ExportAssets(apiConfig, securedContext);
+      await exporter.start(workspace, spaceDir);
+
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal(`${asset.url}?authtoken=basic-token`);
+      expect(init).to.be.undefined;
+    });
+
+    it('should not resolve auth or attach credentials for unsecured exports', async () => {
+      wireStreaming([asset] as any);
+      const authStub = sinon.stub(exportHelpers, 'getSecuredAssetAuth');
+      fetchStub.callsFake(async () => makeFetchResponse() as any);
+
+      const exporter = new ExportAssets(apiConfig, exportContext);
+      await exporter.start(workspace, spaceDir);
+
+      expect(authStub.called).to.be.false;
+      const [url, init] = fetchStub.firstCall.args;
+      expect(url).to.equal(asset.url);
+      expect(init).to.be.undefined;
+    });
+
+    it('should force-refresh once on 401 and succeed with the fresh token', async () => {
+      wireStreaming([asset] as any);
+      const authStub = sinon
+        .stub(exportHelpers, 'getSecuredAssetAuth')
+        .callsFake(async (force?: boolean) =>
+          force ? { headers: { authorization: 'Bearer fresh' } } : { headers: { authorization: 'Bearer stale' } },
+        );
+      fetchStub.callsFake(async (_url: any, init: any) =>
+        init?.headers?.authorization === 'Bearer fresh' ? (makeFetchResponse() as any) : (make401() as any),
+      );
+
+      const exporter = new ExportAssets(apiConfig, securedContext);
+      await exporter.start(workspace, spaceDir);
+
+      expect(authStub.calledWith(true)).to.be.true;
+      expect(fetchStub.callCount).to.equal(2);
+      const tickStub = (CSAssetsExportAdapter.prototype as any).tick as sinon.SinonStub;
+      const assetTicks = tickStub.getCalls().filter((c) => String(c.args[1]).startsWith('asset:'));
+      expect(assetTicks).to.have.length(1);
+      expect(assetTicks[0].args[0]).to.be.true;
+    });
+
+    it('should abort the space with SecuredAssetAuthError when 401 persists after refresh', async () => {
+      wireStreaming(assetItems);
+      sinon.stub(exportHelpers, 'getSecuredAssetAuth').resolves({ headers: { authorization: 'Bearer bad' } });
+      fetchStub.callsFake(async () => make401() as any);
+
+      const exporter = new ExportAssets(apiConfig, securedContext);
+      try {
+        await exporter.start(workspace, spaceDir);
+        expect.fail('should have thrown');
+      } catch (e: any) {
+        expect(e).to.be.instanceOf(exportHelpers.SecuredAssetAuthError);
+        expect(e.message).to.include('401');
+      }
     });
   });
 });
