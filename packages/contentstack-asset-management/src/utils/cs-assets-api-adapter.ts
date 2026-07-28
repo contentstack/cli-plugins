@@ -13,6 +13,7 @@ import {
 
 import type {
   CSAssetsAPIConfig,
+  AssetCountResponse,
   AssetTypesResponse,
   BulkDeleteAssetsPayload,
   BulkDeleteAssetsResponse,
@@ -30,6 +31,7 @@ import type {
   SearchAssetsParams,
   SearchAssetsResponse,
   Space,
+  StreamWorkspaceAssetsResult,
   SpaceResponse,
   SpacesListResponse,
 } from '../types/cs-assets-api';
@@ -265,12 +267,15 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
 
   async listSpaces(pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<SpacesListResponse> {
     log.debug('Fetching all spaces in org', this.config.context);
+    const total = await this.getListTotal('', '/api/spaces');
     const items = await this.fetchAllPages(
       '',
       '/api/spaces',
       'spaces',
       pageSize,
       fetchConcurrency,
+      {},
+      total,
     );
     log.debug(`Fetched ${items.length} space(s)`, this.config.context);
     return { spaces: items as Space[], count: items.length };
@@ -293,33 +298,75 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY,
   ): Promise<FieldsResponse> {
     log.debug(`Fetching fields for space: ${spaceUid}`, this.config.context);
-    const items = await this.fetchAllPages(spaceUid, '/api/fields', 'fields', pageSize, fetchConcurrency, {});
+    const total = await this.getListTotal(spaceUid, '/api/fields');
+    const items = await this.fetchAllPages(spaceUid, '/api/fields', 'fields', pageSize, fetchConcurrency, {}, total);
     log.debug(`Fetched fields (count: ${items.length})`, this.config.context);
     return { fields: items, count: items.length } as FieldsResponse;
   }
 
   /**
-   * GET a workspace collection (assets or folders), log count, and return result.
+   * GET /api/bff/spaces/{spaceUid}/assets/count — exact total for a space's assets
+   * (`isDir: false`) or folders (`isDir: true`). Unlike the `count` field on the paginated
+   * collection responses (capped at 10k by the server), this endpoint returns the true total,
+   * so it is the authoritative source for pagination planning. Throws when the endpoint is
+   * unavailable or the response has no numeric count — paginating without the true total
+   * would silently truncate data. A `count` of 0 is valid (genuinely empty space).
    */
-  private async getWorkspaceCollection(
-    spaceUid: string,
-    path: string,
-    logLabel: string,
-    queryParams: Record<string, unknown> = {},
-  ): Promise<unknown> {
-    log.debug(`Fetching ${logLabel} for space: ${spaceUid}`, this.config.context);
-    const result = await this.getSpaceLevel<unknown>(spaceUid, path, queryParams);
-    const count = (result as { count?: number })?.count ?? (Array.isArray(result) ? result.length : '?');
-    log.debug(`Fetched ${logLabel} (count: ${count})`, this.config.context);
-    return result;
+  private async getEntityCount(spaceUid: string, workspaceUid: string | undefined, isDir: boolean): Promise<number> {
+    const apiPath = `/api/bff/spaces/${encodeURIComponent(spaceUid)}/assets/count`;
+    const queryParams: Record<string, unknown> = { is_dir: String(isDir) };
+    if (workspaceUid) queryParams.workspace = workspaceUid;
+    const result = await this.getSpaceLevel<AssetCountResponse>(spaceUid, apiPath, queryParams);
+    const count = Number(result?.count);
+    if (!Number.isFinite(count)) {
+      throw new Error(`CS Assets API returned no numeric count for ${apiPath} (space ${spaceUid})`);
+    }
+    log.debug(`Fetched ${isDir ? 'folder' : 'asset'} count for space ${spaceUid}: ${count}`, this.config.context);
+    return count;
   }
 
+  /** Exact asset count for a space (see {@link getEntityCount}). */
+  async getAssetsCount(spaceUid: string, workspaceUid?: string): Promise<number> {
+    return this.getEntityCount(spaceUid, workspaceUid, false);
+  }
+
+  /** Exact folder count for a space — same count endpoint with `is_dir=true` (see {@link getEntityCount}). */
+  async getFoldersCount(spaceUid: string, workspaceUid?: string): Promise<number> {
+    return this.getEntityCount(spaceUid, workspaceUid, true);
+  }
 
   /**
-   * Core pagination: read the total `count` from page 0, then drive the remaining pages through
-   * {@link makeConcurrentCall}. Every page (including page 0) is handed to `onPage` — writes are
-   * serialized through a promise chain so a streaming sink (e.g. FsUtility) is never called
-   * reentrantly while pages fetch concurrently. Returns the number of items seen.
+   * Resolve the total item count for a list endpoint that has NO dedicated count API
+   * (spaces, fields, asset types) by probing it with `limit=1` and reading the reported `count`.
+   * Assets and folders must NOT use this — their list `count` is capped at 10k by the server;
+   * use {@link getAssetsCount} instead.
+   */
+  private async getListTotal(
+    spaceUid: string,
+    path: string,
+    baseParams: Record<string, unknown> = {},
+  ): Promise<number> {
+    const probe = await this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
+      ...baseParams, limit: '1', skip: '0',
+    });
+    const count = Number(probe?.count);
+    if (!Number.isFinite(count)) {
+      // `count: 0` is a valid empty list; a MISSING count is a malformed response — failing loudly
+      // beats silently planning zero pages and "succeeding" with an empty export.
+      throw new Error(`CS Assets API returned no numeric count for ${path} (limit=1 probe)`);
+    }
+    return count;
+  }
+
+  /**
+   * Core pagination: given the authoritative `total` (resolved by the caller — count API for
+   * assets/folders, `limit=1` probe for other lists), drive every page through
+   * {@link makeConcurrentCall}. Each page is handed to `onPage` — writes are serialized through
+   * a promise chain so a streaming sink (e.g. FsUtility) is never called reentrantly while pages
+   * fetch concurrently. Returns the number of items seen.
+   *
+   * `paginate` never derives the total itself: a single flow driven by a passed-in total means
+   * there is no code path where a server-capped response `count` can silently truncate the plan.
    *
    * Peak memory is bounded by the sink: the array wrapper holds everything, but a disk-writing
    * sink keeps only the in-flight pages (~concurrency × pageSize).
@@ -332,15 +379,10 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     concurrency: number,
     baseParams: Record<string, unknown>,
     onPage: (items: unknown[]) => void | Promise<void>,
-  ): Promise<number> {
-    const first = await this.getSpaceLevel<Record<string, unknown>>(spaceUid, path, {
-      ...baseParams, limit: String(pageSize), skip: '0',
-    });
-
-    const total: number = Number(first?.count ?? 0);
-    const firstItems: unknown[] = Array.isArray(first?.[itemsKey]) ? (first[itemsKey] as unknown[]) : [];
-
+    total: number,
+  ): Promise<{ collected: number; failedPages: number }> {
     let collected = 0;
+    let failedPages = 0;
     let writeFailures = 0;
     let writeChain: Promise<void> = Promise.resolve();
     const enqueue = (items: unknown[]) => {
@@ -356,17 +398,14 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       });
     };
 
-    enqueue(firstItems);
-
-    if (firstItems.length < total) {
-      // Remaining skip offsets (page 0 already fetched), pre-chunked into batches of `concurrency`.
+    if (total > 0) {
+      // All skip offsets derived from the authoritative total, pre-chunked into batches of `concurrency`.
       const skips: string[] = Array.from(
-        { length: Math.ceil(total / pageSize) - 1 },
-        (_, i) => String((i + 1) * pageSize),
+        { length: Math.ceil(total / pageSize) },
+        (_, i) => String(i * pageSize),
       );
       const apiBatches = chunk(skips, concurrency);
 
-      let failedPages = 0;
       const onSuccess = ({ response }: any) => {
         const items = Array.isArray(response?.[itemsKey]) ? (response[itemsKey] as unknown[]) : [];
         enqueue(items);
@@ -390,7 +429,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       });
 
       // Completeness check: the export "succeeding" with silently-missing pages is the worst failure
-      // mode for a backup/migration, so reconcile what we saw against the server's reported total.
+      // mode for a backup/migration, so reconcile what we saw against the authoritative total.
       if (collected !== total) {
         log.warn(
           `Incomplete pagination for ${itemsKey} (${path}): expected ${total}, collected ${collected}` +
@@ -407,7 +446,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
         this.config.context,
       );
     }
-    return collected;
+    return { collected, failedPages };
   }
 
   /**
@@ -421,18 +460,22 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     itemsKey: string,
     pageSize: number,
     concurrency: number,
-    baseParams: Record<string, unknown> = {},
+    baseParams: Record<string, unknown>,
+    total: number,
   ): Promise<unknown[]> {
     const out: unknown[] = [];
     await this.paginate(spaceUid, path, itemsKey, pageSize, concurrency, baseParams, (items) => {
       out.push(...items);
-    });
+    }, total);
     return out;
   }
 
   /**
    * Stream a workspace's assets page-by-page to `onPage` (e.g. an incremental chunked-JSON writer)
-   * instead of buffering the whole set. Returns the number of asset records streamed.
+   * instead of buffering the whole set. Returns the number of records streamed plus the number
+   * missing versus the authoritative total (`missing > 0` means page requests failed permanently
+   * or items changed mid-export) — callers surface `missing` as failures in the export summary;
+   * page-level failures are recoverable by re-exporting, so they don't abort the run.
    */
   async streamWorkspaceAssets(
     spaceUid: string,
@@ -440,9 +483,17 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     onPage: (items: unknown[]) => void | Promise<void>,
     pageSize = FALLBACK_AM_API_PAGE_SIZE,
     fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY,
-  ): Promise<number> {
-    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
-    return this.paginate(
+  ): Promise<StreamWorkspaceAssetsResult> {
+    // include_publish_details=true so each asset carries its `publish_details` array (env/api_key/
+    // locale) — persisted in the chunk files and consumed by the import publish step.
+    const baseParams: Record<string, unknown> = {
+      include_publish_details: 'true',
+      ...(workspaceUid ? { workspace: workspaceUid } : {}),
+    };
+    // The assets list response caps `count` at 10k — the dedicated count API is the only
+    // trustworthy total. Its failure propagates: exporting with a wrong total means silent data loss.
+    const total = await this.getAssetsCount(spaceUid, workspaceUid);
+    const { collected } = await this.paginate(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
       'assets',
@@ -450,7 +501,9 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       fetchConcurrency,
       baseParams,
       onPage,
+      total,
     );
+    return { streamed: collected, missing: Math.max(0, total - collected) };
   }
 
   /**
@@ -509,21 +562,9 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     }
   }
 
-  async getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {
-    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
-    const items = await this.fetchAllPages(
-      spaceUid,
-      `/api/spaces/${encodeURIComponent(spaceUid)}/assets`,
-      'assets',
-      pageSize,
-      fetchConcurrency,
-      baseParams,
-    );
-    return { assets: items, count: items.length };
-  }
-
   async getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize = FALLBACK_AM_API_PAGE_SIZE, fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY): Promise<unknown> {
     const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    const total = await this.getFoldersCount(spaceUid, workspaceUid);
     const items = await this.fetchAllPages(
       spaceUid,
       `/api/spaces/${encodeURIComponent(spaceUid)}/folders`,
@@ -531,6 +572,7 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
       pageSize,
       fetchConcurrency,
       baseParams,
+      total,
     );
     return { folders: items, count: items.length };
   }
@@ -541,9 +583,9 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY,
   ): Promise<AssetTypesResponse> {
     log.debug(`Fetching asset types for space: ${spaceUid}`, this.config.context);
-    const items = await this.fetchAllPages(spaceUid, '/api/asset_types', 'asset_types', pageSize, fetchConcurrency, {
-      include_fields: 'true',
-    });
+    const baseParams = { include_fields: 'true' };
+    const total = await this.getListTotal(spaceUid, '/api/asset_types', baseParams);
+    const items = await this.fetchAllPages(spaceUid, '/api/asset_types', 'asset_types', pageSize, fetchConcurrency, baseParams, total);
     log.debug(`Fetched asset types (count: ${items.length})`, this.config.context);
     return { asset_types: items, count: items.length } as AssetTypesResponse;
   }

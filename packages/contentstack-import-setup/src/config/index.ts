@@ -87,7 +87,7 @@ const config: DefaultConfig = {
     },
     'global-fields': {
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads individual {uid}.json files
       dependencies: ['extensions', 'marketplace-apps'],
     },
     'marketplace-apps': {

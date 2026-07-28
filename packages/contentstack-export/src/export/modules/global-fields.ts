@@ -17,14 +17,12 @@ export default class GlobalFieldsExport extends BaseClass {
   };
   private globalFieldsConfig: {
     dirName?: string;
-    fileName?: string;
     validKeys?: string[];
     fetchConcurrency?: number;
     writeConcurrency?: number;
     limit?: number;
   };
   private globalFieldsDirPath: string;
-  private globalFields: Record<string, unknown>[];
 
   constructor({ exportConfig, stackAPIClient }: ModuleClassParams) {
     super({ exportConfig, stackAPIClient });
@@ -41,7 +39,6 @@ export default class GlobalFieldsExport extends BaseClass {
       sanitizePath(getExportBasePath(exportConfig)),
       sanitizePath(this.globalFieldsConfig.dirName),
     );
-    this.globalFields = [];
     this.applyQueryFilters(this.qs, 'global-fields');
     this.exportConfig.context.module = MODULE_CONTEXTS.GLOBAL_FIELDS;
     this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.GLOBAL_FIELDS];
@@ -66,19 +63,12 @@ export default class GlobalFieldsExport extends BaseClass {
 
       if (totalCount === 0) {
         log.info(messageHandler.parse('GLOBAL_FIELDS_NOT_FOUND'), this.exportConfig.context);
-        const globalFieldsFilePath = path.join(this.globalFieldsDirPath, this.globalFieldsConfig.fileName);
-        log.debug(`Writing global fields to: ${globalFieldsFilePath}`, this.exportConfig.context);
-        fsUtil.writeFile(globalFieldsFilePath, this.globalFields);
         this.completeProgress(true);
         return;
       }
 
       progress.updateStatus('Fetching global fields...');
       await this.getGlobalFields();
-
-      const globalFieldsFilePath = path.join(this.globalFieldsDirPath, this.globalFieldsConfig.fileName);
-      log.debug(`Writing global fields to: ${globalFieldsFilePath}`, this.exportConfig.context);
-      fsUtil.writeFile(globalFieldsFilePath, this.globalFields);
 
     
 
@@ -133,14 +123,15 @@ export default class GlobalFieldsExport extends BaseClass {
           delete globalField[key];
         }
       }
-      this.globalFields.push(globalField);
+      const filePath = path.join(this.globalFieldsDirPath, `${globalField.uid}.json`);
+      fsUtil.writeFile(filePath, globalField);
 
       // Track progress for each global field
       this.progressManager?.tick(true, `global-field: ${globalField.uid}`);
     });
 
     log.debug(
-      `Sanitization complete. Total global fields processed: ${this.globalFields.length}`,
+      `Sanitization complete. Total global fields processed: ${globalFields.length}`,
       this.exportConfig.context,
     );
   }
