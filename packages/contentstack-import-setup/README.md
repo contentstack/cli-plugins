@@ -47,7 +47,7 @@ $ npm install -g @contentstack/cli-cm-import-setup
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-import-setup/2.0.0-beta.16 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-import-setup/2.0.0-beta.18 darwin-arm64 node-v24.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -58,7 +58,7 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`](#csdx-cmstacksimport-setup--k-value--d-value--a-value---modules-valuevalue)
+* [`csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`](#csdx-cmstacksimport-setup--k-value--d-value--a-value---module-valuevalue)
 
 ## `csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`
 

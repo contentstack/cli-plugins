@@ -420,10 +420,6 @@ const flagDescriptions = {
     '(optional) Revert publish operations from a log folder. Specify the folder path containing success logs. Works similar to retry-failed.',
   BULK_OPERATION_FOLDER:
     '(optional) Folder path to store operation logs. Creates separate files for success and failed operations. Default: bulk-operation',
-  API_VERSION:
-    'Specifies the Content Management API version used for publishing. Use version `3.2` when publishing entries with nested references, otherwise, use the default version 3.2',
-  TAXONOMY_API_VERSION:
-    'Content Management API version for taxonomy publish (default: `3.2`; required for the `items` + locales/environments body on POST /v3/taxonomies/publish).',
   TAXONOMY_ITEMS:
     'Comma-separated taxonomy UIDs to include in the job. If omitted, all taxonomies in the stack (current branch) are included. Example: products_tax,brands_tax',
 };
