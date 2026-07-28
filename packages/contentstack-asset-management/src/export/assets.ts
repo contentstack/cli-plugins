@@ -2,12 +2,13 @@ import { resolve as pResolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { mkdir, writeFile } from 'node:fs/promises';
 import chunk from 'lodash/chunk';
-import { configHandler, log, FsUtility } from '@contentstack/cli-utilities';
+import { log, FsUtility } from '@contentstack/cli-utilities';
 
 import type { CSAssetsAPIConfig, LinkedWorkspace } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
 import { CSAssetsExportAdapter } from './base';
-import { writeStreamToFile, getArrayFromResponse } from '../utils/export-helpers';
+import { writeStreamToFile, getArrayFromResponse, getSecuredAssetAuth, SecuredAssetAuthError } from '../utils/export-helpers';
+import type { SecuredAssetAuth } from '../utils/export-helpers';
 import { forEachChunkedJsonStore } from '../utils/chunked-json-reader';
 import { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from '../utils/retry';
 import type { CustomPromiseHandler } from '../utils/cs-assets-api-adapter';
@@ -111,7 +112,6 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     await mkdir(filesDir, { recursive: true });
 
     const securedAssets = this.exportContext.securedAssets ?? false;
-    const authtoken = securedAssets ? configHandler.get('authtoken') : null;
     log.debug(
       `Asset downloads: securedAssets=${securedAssets}, concurrency=${this.downloadAssetsBatchConcurrency}, expected=${expectedDownloads}`,
       this.exportContext.context,
@@ -120,6 +120,9 @@ export default class ExportAssets extends CSAssetsExportAdapter {
 
     let downloadOk = 0;
     let downloadFail = 0;
+    // Set when a 401 persists after a forced token refresh — from then on, skip the network
+    // entirely and abort the phase, instead of individually failing every remaining asset.
+    let authFailure: SecuredAssetAuthError | null = null;
 
     await forEachChunkedJsonStore<AssetRecord>(
       assetsDir,
@@ -154,6 +157,17 @@ export default class ExportAssets extends CSAssetsExportAdapter {
       async (records) => {
         const valid = records.filter((asset) => this.isDownloadable(asset));
         if (valid.length === 0) return;
+        const chunkAuthFailure = authFailure;
+        if (chunkAuthFailure) {
+          // Auth already failed hard — count the remaining downloadables without hitting the network.
+          for (const rec of valid) {
+            downloadFail += 1;
+            this.tick(false, `asset: ${rec.filename ?? rec.file_name ?? rec.uid ?? 'asset'}`, chunkAuthFailure.message);
+          }
+          return;
+        }
+        // Resolve per chunk so long download phases pick up proactively refreshed OAuth tokens.
+        let auth: SecuredAssetAuth = securedAssets ? await getSecuredAssetAuth() : {};
         const apiBatches = chunk(valid, this.downloadAssetsBatchConcurrency);
         const promisifyHandler: CustomPromiseHandler = async ({ index, batchIndex }) => {
           const asset = apiBatches[batchIndex][index] as AssetRecord;
@@ -161,17 +175,41 @@ export default class ExportAssets extends CSAssetsExportAdapter {
           const url = asset.url as string;
           const filename = asset.filename ?? asset.file_name ?? 'asset';
           if (!url || !uid) return;
+          const knownAuthFailure = authFailure as SecuredAssetAuthError | null;
+          if (knownAuthFailure) {
+            downloadFail += 1;
+            this.tick(false, `asset: ${filename}`, knownAuthFailure.message);
+            return;
+          }
           try {
             const separator = url.includes('?') ? '&' : '?';
-            const downloadUrl = securedAssets && authtoken ? `${url}${separator}authtoken=${authtoken}` : url;
+            const doFetch = () =>
+              fetch(
+                securedAssets && auth.authtoken ? `${url}${separator}authtoken=${auth.authtoken}` : url,
+                securedAssets && auth.headers ? { headers: auth.headers } : undefined,
+              );
             // Binary GET is idempotent — retry transient failures with backoff.
             const response = await withRetry(
               async () => {
                 let resp: Response;
                 try {
-                  resp = await fetch(downloadUrl);
+                  resp = await doFetch();
                 } catch (e) {
                   throw new RetryableHttpError(`download network error: ${(e as Error)?.message ?? String(e)}`);
+                }
+                if (securedAssets && resp.status === 401) {
+                  // Token expired or was revoked mid-run — force one refresh (deduped upstream)
+                  // and refetch. A second 401 means auth is unrecoverable: abort the phase.
+                  auth = await getSecuredAssetAuth(true);
+                  try {
+                    resp = await doFetch();
+                  } catch (e) {
+                    throw new RetryableHttpError(`download network error: ${(e as Error)?.message ?? String(e)}`);
+                  }
+                  if (resp.status === 401) {
+                    authFailure = new SecuredAssetAuthError(resp.status);
+                    throw authFailure;
+                  }
                 }
                 if (!resp.ok) {
                   if (isRetryableStatus(resp.status)) {
@@ -208,6 +246,16 @@ export default class ExportAssets extends CSAssetsExportAdapter {
         await this.makeConcurrentCall({ apiBatches, module: 'asset downloads' }, promisifyHandler);
       },
     );
+
+    const terminalAuthFailure = authFailure as SecuredAssetAuthError | null;
+    if (terminalAuthFailure) {
+      // Fail the space loudly — a "completed with errors" summary would bury the real cause.
+      log.error(
+        `Aborted asset downloads for space ${spaceUid}: ${terminalAuthFailure.message}`,
+        this.exportContext.context,
+      );
+      throw terminalAuthFailure;
+    }
 
     log.info(
       downloadFail === 0

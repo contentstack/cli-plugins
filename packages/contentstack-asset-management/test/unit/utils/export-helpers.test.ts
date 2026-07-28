@@ -1,10 +1,13 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 import { PassThrough } from 'node:stream';
+import { authHandler, authenticationHandler, configHandler } from '@contentstack/cli-utilities';
 
 import {
   getArrayFromResponse,
   getAssetItems,
   getReadableStreamFromDownloadResponse,
+  getSecuredAssetAuth,
   writeStreamToFile,
 } from '../../../src/utils/export-helpers';
 
@@ -93,6 +96,72 @@ describe('export-helpers', () => {
     it('should return null for non-stream objects without data', () => {
       const obj = { something: 'else' } as any;
       expect(getReadableStreamFromDownloadResponse(obj)).to.be.null;
+    });
+  });
+
+  describe('getSecuredAssetAuth', () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it('should return an authorization header when OAuth is enabled', async () => {
+      sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => true);
+      sinon.stub(authenticationHandler, 'accessToken').get(() => 'Bearer oauth-token-123');
+
+      const auth = await getSecuredAssetAuth();
+      expect(auth.headers).to.deep.equal({ authorization: 'Bearer oauth-token-123' });
+      expect(auth.authtoken).to.be.undefined;
+    });
+
+    it('should return the authtoken for basic auth', async () => {
+      sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => false);
+      sinon.stub(configHandler, 'get').withArgs('authtoken').returns('basic-token-456');
+
+      const auth = await getSecuredAssetAuth();
+      expect(auth.authtoken).to.equal('basic-token-456');
+      expect(auth.headers).to.be.undefined;
+    });
+
+    it('should return an empty object when no authtoken is configured', async () => {
+      sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => false);
+      sinon.stub(configHandler, 'get').withArgs('authtoken').returns(undefined);
+
+      const auth = await getSecuredAssetAuth();
+      expect(auth).to.deep.equal({});
+    });
+
+    it('should refresh auth details before resolving the token', async () => {
+      const getAuthDetailsStub = sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => true);
+      sinon.stub(authenticationHandler, 'accessToken').get(() => 'Bearer fresh-token');
+
+      await getSecuredAssetAuth();
+      expect(getAuthDetailsStub.calledOnce).to.be.true;
+    });
+
+    it('should force an upstream token refresh when forceRefresh is set and OAuth is enabled', async () => {
+      const compareStub = sinon.stub(authHandler, 'compareOAuthExpiry').resolves();
+      sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => true);
+      sinon.stub(authenticationHandler, 'accessToken').get(() => 'Bearer fresh');
+
+      const auth = await getSecuredAssetAuth(true);
+      expect(compareStub.calledOnceWith(true)).to.be.true;
+      expect(auth.headers).to.deep.equal({ authorization: 'Bearer fresh' });
+    });
+
+    it('should not force a refresh for basic auth (cannot be refreshed)', async () => {
+      const compareStub = sinon.stub(authHandler, 'compareOAuthExpiry').resolves();
+      sinon.stub(authenticationHandler, 'getAuthDetails').resolves();
+      sinon.stub(authenticationHandler, 'isOauthEnabled').get(() => false);
+      sinon.stub(configHandler, 'get').withArgs('authtoken').returns('basic-token');
+
+      const auth = await getSecuredAssetAuth(true);
+      expect(compareStub.called).to.be.false;
+      expect(auth.authtoken).to.equal('basic-token');
     });
   });
 
