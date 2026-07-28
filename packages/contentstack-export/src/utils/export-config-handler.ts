@@ -8,7 +8,6 @@ import {
   log,
   isFeatureEnabled,
   FeatureCtx,
-  FEATURE,
 } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, isDirectoryNonEmpty } from './file-helper';
@@ -17,10 +16,7 @@ import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (
-  exportCmdFlags: any,
-  context?: { planCheckRequired?: string[] },
-): Promise<ExportConfig> => {
+const setupConfig = async (exportCmdFlags: any, context: any): Promise<ExportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'export');
@@ -162,32 +158,33 @@ const setupConfig = async (
   }
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
+  log.debug('Export configuration setup completed.', { ...config });
 
-  // DX-9314: detect AM 2.0 via the plan-check API. Unlike the CS Assets API (which rejects
-  // management tokens), the auth-api /feature-status endpoint accepts a management token, so this
-  // reliably tells us the org is AM 2.0 even under `--alias`. The assets module uses this to skip
-  // AM 2.0 asset export with a loud warning instead of silently emitting the legacy layout.
-  // `context.planCheckRequired` is honored if PR #2627's plan-guard prerun hook populated it, but
-  // we always check ASSET_MANAGEMENT directly so this works even without that hook.
-  const featuresToCheck: string[] = Array.from(
-    new Set<string>([FEATURE.ASSET_MANAGEMENT, ...(context?.planCheckRequired ?? [])]),
-  );
-  config.planStatus = config.planStatus || {};
-  const planCtx: FeatureCtx = {
-    apiKey: config.apiKey,
-    managementToken: config.management_token,
-    authToken: config.auth_token,
-  };
-  for (const featureUid of featuresToCheck) {
-    try {
-      config.planStatus[featureUid] = await isFeatureEnabled(featureUid, planCtx);
-      log.debug(`[export] Plan status fetched for "${featureUid}".`);
-    } catch (error) {
-      log.warn(`[export] Could not fetch plan status for "${featureUid}": ${(error as Error).message}`);
+  // Deferred plan check — credentials now available after setupExportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) {
+          context.planStatus[featureUid] = status;
+        }
+
+        log.debug(`[export] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[export] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
     }
   }
 
-  log.debug('Export configuration setup completed.', { ...config });
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
+  }
 
   return config;
 };

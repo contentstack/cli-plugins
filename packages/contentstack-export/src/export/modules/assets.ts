@@ -25,7 +25,7 @@ import {
 import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
-import { ModuleClassParams } from '../../types';
+import { ModuleClassParams, GlobalSummary } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
 import { ExportSpaces, type AssetExportCounts } from '@contentstack/cli-asset-management';
 import {
@@ -37,23 +37,6 @@ import {
   getOrgUid,
 } from '../../utils';
 import { handle } from '@oclif/core';
-
-// cli-utilities' CLIProgressManager.globalSummary is runtime-accessible but typed private. These
-// shapes describe the slice we mutate; the single accessor (getGlobalSummary) owns the structural
-// cast + feature-detect so applyAssetSummaryCounts and markAssetsSkippedInSummary don't each copy it.
-type SummaryModuleShape = {
-  status: string;
-  successCount: number;
-  failureCount: number;
-  failures: Array<{ item: string; error: string }>;
-  endTime?: number;
-};
-type GlobalSummaryShape = {
-  getModules(): Map<string, SummaryModuleShape>;
-  registerModule(name: string, totalItems?: number): void;
-  startModule(name: string): void;
-  completeModule(name: string, success?: boolean): void;
-};
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -75,14 +58,10 @@ export default class ExportAssets extends BaseClass {
     };
   }
 
-  /**
-   * cli-utilities' CLIProgressManager.globalSummary is runtime-accessible but typed private. Reach it
-   * via a single structural cast + feature-detect here so both callers share one copy of the
-   * private-shape assumption; returns null (caller degrades) if a future cli-utilities version
-   * changes the shape.
-   */
-  private getGlobalSummary(): GlobalSummaryShape | null {
-    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummaryShape | null }).globalSummary;
+  // globalSummary is runtime-accessible but typed private; feature-detect the shape and return null
+  // so callers degrade instead of throwing if a future cli-utilities version changes it.
+  private getGlobalSummary(): GlobalSummary | null {
+    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummary | null }).globalSummary;
     if (
       !gs ||
       typeof gs.getModules !== 'function' ||
@@ -138,15 +117,9 @@ export default class ExportAssets extends BaseClass {
     }
   }
 
-  /**
-   * DX-9314 — record the AM 2.0 asset skip in the FINAL export summary without a live progress bar.
-   * We do NOT call createNestedProgress (it would print an empty "ASSETS:" section); instead we reach
-   * the global summary directly (same structural cast + feature-detect + degrade pattern as
-   * applyAssetSummaryCounts) and push a failure entry so the Module Details row shows `✗ ASSETS` and the
-   * Failure Summary prints the reason verbatim. failureCount stays 0 so the row reads `0/0 items`.
-   * NOTE: this reuses the failure channel deliberately — a first-class "skipped" summary status is a
-   * separate cli-utilities ticket.
-   */
+  // Records the skip in the final summary via the failure channel, which is the only per-module
+  // slot carrying a message. createNestedProgress is intentionally not used: it would render an
+  // empty "ASSETS:" live section.
   private markAssetsSkippedInSummary(reason: string): void {
     const gs = this.getGlobalSummary();
     if (!gs) {
@@ -170,24 +143,14 @@ export default class ExportAssets extends BaseClass {
   }
 
   async start(): Promise<void> {
-    // AM 2.0 assets cannot be exported with a management token — the CS Assets API only
-    // accepts a logged-in session (auth token / OAuth). Today the linked-workspaces lookup silently
-    // returns [] under a management token, so the export falls back to the legacy layout and import
-    // later reports success with broken entry->asset references. Detect the AM 2.0 org up front via
-    // the plan-check (which DOES accept a management token) and skip the assets module with a loud
-    // warning instead of silently emitting the wrong layout.
-    const amInPlan = this.exportConfig.planStatus?.[FEATURE.ASSET_MANAGEMENT]?.is_part_of_plan;
-    if (amInPlan && this.exportConfig.management_token) {
+    const csAssetsInPlan = this.exportConfig.planStatus?.[FEATURE.ASSET_MANAGEMENT]?.is_part_of_plan;
+    if (csAssetsInPlan && this.exportConfig.management_token) {
       const warning =
-        'Skipping AM 2.0 asset export: management token authentication is not supported by the Assets APIs. ' +
+        'Skipping Contentstack Assets export: management token authentication is not supported by the Assets APIs. ' +
         'Entry-to-asset references will NOT resolve in the exported content. ' +
-        'Re-run the export with a logged-in session (auth token or OAuth) to export AM 2.0 assets.';
+        'Re-run the export with a logged-in session (auth token or OAuth) to export Contentstack Assets.';
       cliux.print(`\nWARNING!!! ${warning}`, { color: 'yellow' });
-      // Log at error level so the reason lands in error.log — the final summary's failure section
-      // points users to the error logs, and a bare warn would leave error.log empty.
       log.error(warning, this.exportConfig.context);
-      // Surface the skip in the FINAL global summary without opening a live progress section
-      // (createNestedProgress would render an empty "ASSETS:" bar). See markAssetsSkippedInSummary.
       this.markAssetsSkippedInSummary(warning);
       return;
     }
