@@ -41,4 +41,6 @@ fileignoreconfig:
     checksum: abc5ac707341760cf59d5b8b1c4e13cf2c79955e2735c33e2db3ec6bc48eddb6
   - filename: packages/contentstack-import/src/import/modules/assets.ts
     checksum: cda61a9c90bb39f27c09951b8a2623851296aefd0d3220d066032287a712d899
+  - filename: packages/contentstack-asset-management/test/unit/utils/cs-assets-api-adapter.test.ts
+    checksum: 63c6bff4d51842d8fa3cce88545259d0a2c3cfe71df95d303d993f692cee883b
 version: '1.0'
