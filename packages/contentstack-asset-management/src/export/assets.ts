@@ -17,8 +17,11 @@ const ASSET_META_KEYS = ['uid', 'url', 'filename', 'file_name', 'parent_uid'];
 
 type AssetRecord = { uid?: string; _uid?: string; url?: string; filename?: string; file_name?: string };
 
-/** Per-space export counts surfaced to the summary (assets = downloaded binaries; folders = entities). */
-export type SpaceExportCounts = { assets: number; folders: number };
+/**
+ * Per-space export counts surfaced to the summary (assets = downloaded binaries; folders = entities;
+ * failedAssets = metadata records missing after permanent page failures + binary download failures).
+ */
+export type SpaceExportCounts = { assets: number; folders: number; failedAssets: number };
 
 export default class ExportAssets extends CSAssetsExportAdapter {
   constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
@@ -53,10 +56,21 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     };
 
     log.debug(`Fetching folders and streaming assets for space ${workspace.space_uid}`, this.exportContext.context);
-    const [folders] = await Promise.all([
+    const [folders, streamResult] = await Promise.all([
       this.getWorkspaceFolders(workspace.space_uid, workspace.uid, this.apiPageSize, this.apiFetchConcurrency),
       this.streamWorkspaceAssets(workspace.space_uid, workspace.uid, onPage, this.apiPageSize, this.apiFetchConcurrency),
     ]);
+
+    // Permanently failed metadata pages (or mid-export drift) — these records never reached
+    // assets.json, so the download loop can't see them. Count them as failures in the summary;
+    // they are recoverable via a re-export or a targeted query-export, so don't abort the run.
+    if (streamResult.missing > 0) {
+      log.error(
+        `${streamResult.missing} asset metadata record(s) could not be fetched for space ${workspace.space_uid} — ` +
+          'they are missing from this export. Re-export (or use query-export) to recover them.',
+        this.exportContext.context,
+      );
+    }
 
     if (fsWriter) fsWriter.completeFile(true);
     else await this.writeEmptyChunkedJson(assetsDir, 'assets.json');
@@ -78,17 +92,21 @@ export default class ExportAssets extends CSAssetsExportAdapter {
     this.tick(true, `metadata: ${workspace.space_uid} (${totalStreamed})`, null);
 
     log.debug(`Starting binary downloads for space ${workspace.space_uid}`, this.exportContext.context);
-    const assetsDownloaded = await this.downloadWorkspaceAssets(assetsDir, workspace.space_uid, downloadableCount);
+    const downloads = await this.downloadWorkspaceAssets(assetsDir, workspace.space_uid, downloadableCount);
 
     const folderCount = getArrayFromResponse(folders, 'folders').length;
-    return { assets: assetsDownloaded, folders: folderCount };
+    return { assets: downloads.ok, folders: folderCount, failedAssets: streamResult.missing + downloads.fail };
   }
 
   /**
    * Download asset binaries by reading the just-written chunked `assets.json` back from disk
    * (one chunk at a time), so we never re-materialize the whole asset list in memory.
    */
-  private async downloadWorkspaceAssets(assetsDir: string, spaceUid: string, expectedDownloads: number): Promise<number> {
+  private async downloadWorkspaceAssets(
+    assetsDir: string,
+    spaceUid: string,
+    expectedDownloads: number,
+  ): Promise<{ ok: number; fail: number }> {
     const filesDir = pResolve(assetsDir, 'files');
     await mkdir(filesDir, { recursive: true });
 
@@ -202,7 +220,7 @@ export default class ExportAssets extends CSAssetsExportAdapter {
       this.exportContext.context,
     );
 
-    return downloadOk;
+    return { ok: downloadOk, fail: downloadFail };
   }
 
 }
