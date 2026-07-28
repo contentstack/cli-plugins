@@ -22,8 +22,8 @@
     "version": "oclif readme && git add README.md"
   },
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.4",
-    "@contentstack/cli-utilities": "~1.18.5",
+    "@contentstack/cli-command": "~1.8.5",
+    "@contentstack/cli-utilities": "~1.19.0",
     "@contentstack/json-rte-serializer": "~2.1.0",
     "@contentstack/marketplace-sdk": "~1.5.3",
     "@oclif/core": "^4.8.0",
