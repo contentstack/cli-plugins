@@ -1,3 +1,8 @@
+jest.mock('@contentstack/cli-cm-import', () => ({
+  __esModule: true,
+  default: { run: jest.fn() },
+}));
+
 jest.mock('@contentstack/cli-utilities', () => ({
   configHandler: {
     get: jest.fn().mockReturnValue(null),

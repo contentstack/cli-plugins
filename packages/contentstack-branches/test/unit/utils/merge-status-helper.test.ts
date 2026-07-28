@@ -2,8 +2,8 @@ import { describe, it, beforeEach, afterEach } from 'mocha';
 import { expect } from 'chai';
 import { stub } from 'sinon';
 import { cliux } from '@contentstack/cli-utilities';
-import { displayMergeStatusDetails, getMergeStatusMessage, getMergeStatusWithContentTypes } from '../../../../../src/utils/merge-status-helper';
-import * as utils from '../../../../../src/utils';
+import { displayMergeStatusDetails, getMergeStatusMessage, getMergeStatusWithContentTypes } from '../../../src/utils/merge-status-helper';
+import * as utils from '../../../src/utils';
 
 describe('Merge Status Helper', () => {
   let printStub;

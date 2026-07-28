@@ -5,5 +5,8 @@
     "test/helpers/mocha-root-hooks.js"
   ],
   "recursive": true,
-  "timeout": 10000
+  "timeout": 10000,
+  "node-option": [
+    "no-experimental-strip-types"
+  ]
 }

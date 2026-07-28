@@ -112,9 +112,9 @@ describe('ExportGlobalFields', () => {
       });
     });
 
-    it('should initialize empty globalFields array', () => {
-      expect(exportGlobalFields.globalFields).to.be.an('array');
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+    it('should initialize global fields dir path', () => {
+      expect(exportGlobalFields.globalFieldsDirPath).to.be.a('string');
+      expect(exportGlobalFields.globalFieldsDirPath).to.include('global_fields');
     });
 
     it('should set correct directory path', () => {
@@ -140,12 +140,12 @@ describe('ExportGlobalFields', () => {
 
       await exportGlobalFields.getGlobalFields();
 
-      // Verify global fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(2);
-      // Verify invalid keys were removed
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[0].title).to.equal('Field 1');
+      // Verify each global field written to its own per-uid file (not globalfields.json)
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(2);
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should call getGlobalFields recursively when more fields exist', async () => {
@@ -171,9 +171,10 @@ describe('ExportGlobalFields', () => {
 
       await exportGlobalFields.getGlobalFields();
 
-      // Verify multiple calls were made
+      // Verify multiple calls were made and each item written as per-uid file
       expect(callCount).to.be.greaterThan(1);
-      expect(exportGlobalFields.globalFields.length).to.equal(150);
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(150);
     });
 
     it('should handle API errors gracefully', async () => {
@@ -201,11 +202,11 @@ describe('ExportGlobalFields', () => {
         }),
       });
 
-      const initialCount = exportGlobalFields.globalFields.length;
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       await exportGlobalFields.getGlobalFields();
 
-      // Verify no new global fields were added
-      expect(exportGlobalFields.globalFields.length).to.equal(initialCount);
+      // No items → writeFile never called
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should handle empty items array', async () => {
@@ -218,11 +219,11 @@ describe('ExportGlobalFields', () => {
         }),
       });
 
-      const initialCount = exportGlobalFields.globalFields.length;
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       await exportGlobalFields.getGlobalFields();
 
-      // Verify no processing occurred with null items
-      expect(exportGlobalFields.globalFields.length).to.equal(initialCount);
+      // Null items → writeFile never called
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should update query params with skip value', async () => {
@@ -251,11 +252,16 @@ describe('ExportGlobalFields', () => {
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      // Verify invalid keys were removed
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[0].title).to.equal('Field 1');
-      expect(exportGlobalFields.globalFields[0].validKey).to.equal('value1');
+      // sanitizeAttribs modifies the array elements in-place
+      expect(globalFields[0].invalidKey).to.be.undefined;
+      expect(globalFields[0].uid).to.equal('gf-1');
+      expect(globalFields[0].title).to.equal('Field 1');
+      expect(globalFields[0].validKey).to.equal('value1');
+      // Each field written to its own per-uid file (never to globalfields.json)
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should handle global fields without required keys', () => {
@@ -263,8 +269,8 @@ describe('ExportGlobalFields', () => {
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      expect(exportGlobalFields.globalFields[0]).to.exist;
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
+      expect(globalFields[0]).to.exist;
+      expect(globalFields[0].invalidKey).to.be.undefined;
     });
 
     it('should handle empty global fields array', () => {
@@ -272,7 +278,7 @@ describe('ExportGlobalFields', () => {
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+      expect(globalFields.length).to.equal(0);
     });
 
     it('should keep only valid keys from validKeys config', () => {
@@ -289,7 +295,7 @@ describe('ExportGlobalFields', () => {
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      const processedField = exportGlobalFields.globalFields[0];
+      const processedField = globalFields[0];
 
       // Should only keep uid, title, validKey
       expect(processedField.keyToRemove1).to.be.undefined;
@@ -298,6 +304,10 @@ describe('ExportGlobalFields', () => {
       expect(processedField.uid).to.equal('gf-1');
       expect(processedField.title).to.equal('Field 1');
       expect(processedField.validKey).to.equal('value1');
+      // Written to per-uid file path
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
   });
 
@@ -322,16 +332,14 @@ describe('ExportGlobalFields', () => {
 
       await exportGlobalFields.start();
 
-      // Verify global fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(2);
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[1].uid).to.equal('gf-2');
-      // Verify file was written
-      expect(writeFileStub.called).to.be.true;
+      // Verify each field written to its own per-uid file (not globalfields.json)
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
       expect(makeDirectoryStub.called).to.be.true;
     });
 
-    it('should handle empty global fields and still write file', async () => {
+    it('should return early when no global fields found', async () => {
       const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
 
       mockStackClient.globalField.returns({
@@ -343,12 +351,10 @@ describe('ExportGlobalFields', () => {
         }),
       });
 
-      exportGlobalFields.globalFields = [];
       await exportGlobalFields.start();
 
-      // Verify writeFile was called even with empty array
-      expect(writeFileStub.called).to.be.true;
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+      // start() exits early on count=0 — no per-uid files written
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should handle errors during export without throwing', async () => {
@@ -398,9 +404,11 @@ describe('ExportGlobalFields', () => {
 
       await exportGlobalFields.start();
 
-      // Verify all fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(150);
+      // Verify all fields processed — one writeFile call per item, no globalfields.json
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(150);
       expect(callCount).to.be.greaterThan(1);
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should call makeDirectory and writeFile with correct paths', async () => {
@@ -418,9 +426,10 @@ describe('ExportGlobalFields', () => {
 
       await exportGlobalFields.start();
 
-      // Verify directories and files were created
+      // Verify directory created and per-uid file written (not globalfields.json)
       expect(makeDirectoryStub.called).to.be.true;
-      expect(writeFileStub.called).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
   });
 });

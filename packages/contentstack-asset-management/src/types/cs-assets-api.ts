@@ -127,9 +127,31 @@ export type BulkDeleteAssetItem = { uid: string; locale: string };
 
 export type BulkDeleteAssetsPayload = { assets: BulkDeleteAssetItem[] };
 
+/** One failed batch when a bulk mutate is split across multiple ≤100-item requests. */
+export type BulkMutateFailure = {
+  batchIndex: number;
+  count: number;
+  status?: number;
+  error: string;
+  /** Asset uids in the failed batch, so callers can re-run just the failures. */
+  uids: string[];
+};
+
+/** Raw response of a single bulk-mutate request (one ≤100-item POST) as returned by the API. */
+export type CsAssetsMutateBatchResponse = { notice?: string; job_id?: string };
+
+/** Aggregate result of a bulk delete, combining every dispatched ≤100-item batch. */
 export type BulkDeleteAssetsResponse = {
+  /** First notice returned; a human-facing message, safe to surface as the summary line. */
   notice?: string;
-  job_id?: string;
+  /** One submitted job id, for a short summary line; `job_ids` holds all of them (batches
+   *  run concurrently, so this is whichever completed first — not a stable "first batch"). */
+  primaryJobId?: string;
+  notices?: string[];
+  job_ids?: string[];
+  failures?: BulkMutateFailure[];
+  batchesTotal?: number;
+  batchesSucceeded?: number;
 };
 
 export type BulkMoveAssetsPayload = {
@@ -137,8 +159,13 @@ export type BulkMoveAssetsPayload = {
   target_folder_uid: string;
 };
 
+/** Aggregate result of a bulk move (sync; no job ids). */
 export type BulkMoveAssetsResponse = {
   notice?: string;
+  notices?: string[];
+  failures?: BulkMutateFailure[];
+  batchesTotal?: number;
+  batchesSucceeded?: number;
 };
 
 /**
@@ -159,6 +186,21 @@ export type SearchAssetsParams = {
   limit?: number;
 };
 
+/** Response shape of GET /api/bff/spaces/{space_uid}/assets/count. */
+export type AssetCountResponse = {
+  count: number;
+};
+
+/**
+ * Result of streaming a workspace's assets. `missing` is the gap between the authoritative
+ * count-API total and the records actually streamed (permanently failed pages and/or items
+ * changed mid-export) — surfaced as failures in the export summary rather than aborting the run.
+ */
+export type StreamWorkspaceAssetsResult = {
+  streamed: number;
+  missing: number;
+};
+
 /** Response shape from POST /api/search for assets. */
 export type SearchAssetsResponse = {
   count?: number;
@@ -174,14 +216,15 @@ export interface ICSAssetsAdapter {
   listSpaces(pageSize?: number, fetchConcurrency?: number): Promise<SpacesListResponse>;
   getSpace(spaceUid: string): Promise<SpaceResponse>;
   getWorkspaceFields(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<FieldsResponse>;
-  getWorkspaceAssets(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
+  getAssetsCount(spaceUid: string, workspaceUid?: string): Promise<number>;
+  getFoldersCount(spaceUid: string, workspaceUid?: string): Promise<number>;
   streamWorkspaceAssets(
     spaceUid: string,
     workspaceUid: string | undefined,
     onPage: (items: unknown[]) => void | Promise<void>,
     pageSize?: number,
     fetchConcurrency?: number,
-  ): Promise<number>;
+  ): Promise<StreamWorkspaceAssetsResult>;
   getWorkspaceFolders(spaceUid: string, workspaceUid?: string, pageSize?: number, fetchConcurrency?: number): Promise<unknown>;
   getWorkspaceAssetTypes(spaceUid: string, pageSize?: number, fetchConcurrency?: number): Promise<AssetTypesResponse>;
   searchAssets(params: SearchAssetsParams): Promise<SearchAssetsResponse>;
