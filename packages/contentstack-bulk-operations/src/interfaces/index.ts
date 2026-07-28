@@ -65,7 +65,6 @@ export interface BulkOperationConfig {
 
   // API configuration
   publishMode?: PublishMode;
-  apiVersion?: string;
 
   // Filtering and selection
   branch?: string;
@@ -215,7 +214,6 @@ export interface CommandFlags {
   'source-alias'?: string;
 
   // API configuration
-  'api-version'?: string;
   'publish-mode'?: string;
 
   // Retry, reliability, and operations log
@@ -271,7 +269,7 @@ export interface CsAssetsBulkOperationResult {
   error?: string;
 }
 
-/** Typed flags for the bulk-am-assets command. */
+/** Typed flags for CS Assets delete/move operations (cm:stacks:bulk-assets). */
 export interface CsAssetsFlags {
   operation: string;
   'space-uid': string;

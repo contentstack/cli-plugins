@@ -291,13 +291,13 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
    * would silently truncate data. A `count` of 0 is valid (genuinely empty space).
    */
   private async getEntityCount(spaceUid: string, workspaceUid: string | undefined, isDir: boolean): Promise<number> {
-    const path = `/api/bff/spaces/${encodeURIComponent(spaceUid)}/assets/count`;
+    const apiPath = `/api/bff/spaces/${encodeURIComponent(spaceUid)}/assets/count`;
     const queryParams: Record<string, unknown> = { is_dir: String(isDir) };
     if (workspaceUid) queryParams.workspace = workspaceUid;
-    const result = await this.getSpaceLevel<AssetCountResponse>(spaceUid, path, queryParams);
+    const result = await this.getSpaceLevel<AssetCountResponse>(spaceUid, apiPath, queryParams);
     const count = Number(result?.count);
     if (!Number.isFinite(count)) {
-      throw new Error(`CS Assets API returned no numeric count for ${path} (space ${spaceUid})`);
+      throw new Error(`CS Assets API returned no numeric count for ${apiPath} (space ${spaceUid})`);
     }
     log.debug(`Fetched ${isDir ? 'folder' : 'asset'} count for space ${spaceUid}: ${count}`, this.config.context);
     return count;
@@ -462,7 +462,12 @@ export class CSAssetsAdapter implements ICSAssetsAdapter {
     pageSize = FALLBACK_AM_API_PAGE_SIZE,
     fetchConcurrency = FALLBACK_AM_API_FETCH_CONCURRENCY,
   ): Promise<StreamWorkspaceAssetsResult> {
-    const baseParams: Record<string, unknown> = workspaceUid ? { workspace: workspaceUid } : {};
+    // include_publish_details=true so each asset carries its `publish_details` array (env/api_key/
+    // locale) — persisted in the chunk files and consumed by the import publish step.
+    const baseParams: Record<string, unknown> = {
+      include_publish_details: 'true',
+      ...(workspaceUid ? { workspace: workspaceUid } : {}),
+    };
     // The assets list response caps `count` at 10k — the dedicated count API is the only
     // trustworthy total. Its failure propagates: exporting with a wrong total means silent data loss.
     const total = await this.getAssetsCount(spaceUid, workspaceUid);

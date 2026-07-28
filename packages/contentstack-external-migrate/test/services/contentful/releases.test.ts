@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { mapContentfulReleases } from '../../../src/services/contentful/releases';
 
 // Synthetic Contentful release, shaped per the CF Releases API: each release has
@@ -34,31 +34,31 @@ describe('mapContentfulReleases', () => {
   const mapped = mapContentfulReleases(CF_RELEASES, { entryUidMap, assetUidMap, entryCtUid, locale: 'en-us' });
 
   it('maps one Contentstack release per Contentful release', () => {
-    expect(mapped).toHaveLength(2);
-    expect(mapped[0].name).toBe('Launch bundle');
-    expect(mapped[0].description).toBe('Homepage + hero');
+    expect(mapped).to.have.lengthOf(2);
+    expect(mapped[0].name).to.equal('Launch bundle');
+    expect(mapped[0].description).to.equal('Homepage + hero');
   });
 
   it('translates entry ids to CS uids with content-type uid + publish action', () => {
     const a = mapped[0].items.find((i) => i.uid === 'blt_a');
-    expect(a).toEqual({ uid: 'blt_a', content_type_uid: 'home_page', action: 'publish', locale: 'en-us' });
+    expect(a).to.deep.equal({ uid: 'blt_a', content_type_uid: 'home_page', action: 'publish', locale: 'en-us' });
     const b = mapped[0].items.find((i) => i.uid === 'blt_b');
-    expect(b?.content_type_uid).toBe('author');
+    expect(b?.content_type_uid).to.equal('author');
   });
 
   it('translates assets to their CS uid + sys_assets', () => {
     const asset = mapped[0].items.find((i) => i.uid === 'blt_x');
-    expect(asset).toEqual({ uid: 'blt_x', content_type_uid: 'sys_assets', action: 'publish', locale: 'en-us' });
+    expect(asset).to.deep.equal({ uid: 'blt_x', content_type_uid: 'sys_assets', action: 'publish', locale: 'en-us' });
   });
 
   it('skips entries that were not migrated (no uid/content-type), counted not lost', () => {
-    expect(mapped[0].items.find((i) => i.uid === 'notMigrated')).toBeUndefined();
-    expect(mapped[0].items).toHaveLength(3); // blt_a, blt_b, blt_x
-    expect(mapped[0].skipped).toBe(1);
+    expect(mapped[0].items.find((i) => i.uid === 'notMigrated')).to.be.undefined;
+    expect(mapped[0].items).to.have.lengthOf(3); // blt_a, blt_b, blt_x
+    expect(mapped[0].skipped).to.equal(1);
   });
 
   it('handles an empty release', () => {
-    expect(mapped[1].items).toHaveLength(0);
-    expect(mapped[1].skipped).toBe(0);
+    expect(mapped[1].items).to.have.lengthOf(0);
+    expect(mapped[1].skipped).to.equal(0);
   });
 });

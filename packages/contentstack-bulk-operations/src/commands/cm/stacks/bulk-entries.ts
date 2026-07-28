@@ -65,11 +65,6 @@ export default class BulkEntries extends BaseBulkCommand {
       description: messages.INCLUDE_VARIANTS,
       default: false,
     }),
-
-    'api-version': flags.string({
-      description: messages.API_VERSION,
-      default: '3.2',
-    }),
   };
 
   protected resourceType: ResourceType = ResourceType.ENTRY;
