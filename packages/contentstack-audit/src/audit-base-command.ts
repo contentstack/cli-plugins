@@ -14,9 +14,10 @@ import {
   CLIProgressManager,
   clearProgressModuleSetting,
   readContentTypeSchemas,
+  readGlobalFieldSchemas,
   generateUid
 } from '@contentstack/cli-utilities';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { createWriteStream, existsSync, mkdirSync, writeFileSync, rmSync } from 'fs';
 import config from './config';
 import { print } from './util/log';
 import { auditMsg } from './messages';
@@ -370,21 +371,37 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
           );
 
           break;
-        case 'field-rules':
+        case 'field-rules': {
           log.info('Executing field-rules audit', this.auditContext);
-          // NOTE: We are using the fixed content-type for validation of field rules
+          // NOTE: We are using the fixed content-type/global-field for validation of field rules.
           const data = this.getCtAndGfSchema();
           constructorParam.ctSchema = data.ctSchema;
           constructorParam.gfSchema = data.gfSchema;
-          const fieldRulesTotalCount = dataModuleWise['content-types']?.Total || 0;
-          missingFieldRules = await new FieldRule(cloneDeep(constructorParam)).run(fieldRulesTotalCount);
+
+          // Field rules live on both content types and global fields. FieldRule.run() picks its
+          // schema from moduleName, so invoke it once per schema (overriding moduleName per
+          // instance) and merge the results. Merged object is keyed by schema uid; a content type
+          // and global field sharing a uid would collide, which is not expected in practice.
+          const ctFieldRules = await new FieldRule(
+            cloneDeep({ ...constructorParam, moduleName: 'content-types' }),
+          ).run(data.ctSchema?.length || 0);
+          let gfFieldRules: Record<string, any> = {};
+          if (data.gfSchema?.length) {
+            gfFieldRules = await new FieldRule(
+              cloneDeep({ ...constructorParam, moduleName: 'global-fields' }),
+            ).run(data.gfSchema.length);
+          }
+          missingFieldRules = { ...ctFieldRules, ...gfFieldRules };
+
           await this.prepareReport(module, missingFieldRules);
-          this.getAffectedData('field-rules', dataModuleWise['content-types'], missingFieldRules);
+          const total = (data.ctSchema?.length || 0) + (data.gfSchema?.length || 0);
+          this.getAffectedData('field-rules', { Total: total }, missingFieldRules);
           log.success(
             `Field-rules audit completed. Found ${Object.keys(missingFieldRules || {}).length} issues`,
             this.auditContext,
           );
           break;
+        }
         case 'composable-studio':
           log.info('Executing composable-studio audit', this.auditContext);
           missingRefsInComposableStudio = await new ComposableStudio(cloneDeep(constructorParam)).run();
@@ -491,13 +508,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
    */
   getCtAndGfSchema() {
     const ctDirPath = join(this.sharedConfig.basePath, this.sharedConfig.moduleConfig['content-types'].dirName);
-    const gfPath = join(
-      this.sharedConfig.basePath,
-      this.sharedConfig.moduleConfig['global-fields'].dirName,
-      this.sharedConfig.moduleConfig['global-fields'].fileName,
-    );
+    const gfDirPath = join(this.sharedConfig.basePath, this.sharedConfig.moduleConfig['global-fields'].dirName);
 
-    const gfSchema = existsSync(gfPath) ? (JSON.parse(readFileSync(gfPath, 'utf8')) as ContentTypeStruct[]) : [];
+    const gfSchema = (readGlobalFieldSchemas(gfDirPath) || []) as ContentTypeStruct[];
     const ctSchema = (readContentTypeSchemas(ctDirPath) || []) as ContentTypeStruct[];
 
     return { ctSchema, gfSchema };

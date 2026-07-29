@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import path from 'node:path';
 import chalk from 'chalk';
 import { log, createLogContext, cliux, handleAndLogError, authenticationHandler } from '@contentstack/cli-utilities';
 
@@ -5,6 +7,7 @@ import messages, { $t } from '../messages';
 import { CsAssetsService } from '../services';
 import { loadAssetUidsFromFile, loadBulkDeleteItemsFromFile, LoadAssetUidsError } from './asset-uids-from-file';
 import { generateCsAssetsJobStatusUrl } from './bulk-publish-url-generator';
+import { ensureLogFolder } from './bulk-operation-log-handler';
 import { CsAssetsFlags, CsAssetsBulkOperationResult, OperationType } from '../interfaces';
 
 /**
@@ -30,20 +33,37 @@ interface CsAssetsOperationPlan {
   successOpts: (result: CsAssetsBulkOperationResult) => Parameters<typeof printCsAssetsSummary>[1];
 }
 
+interface CsAssetsSummaryOpts {
+  jobId?: string;
+  jobIds?: string[];
+  count?: number;
+  folderUid?: string;
+  notice?: string;
+  error?: string;
+  spaceUid?: string;
+  batchesTotal?: number;
+  batchesSucceeded?: number;
+}
+
 function printCsAssetsSummary(
   op: 'delete' | 'move',
-  opts: { jobId?: string; count?: number; folderUid?: string; notice?: string; error?: string; spaceUid?: string },
+  opts: CsAssetsSummaryOpts,
   loggerContext: { module: string }
 ): void {
   if (opts.error) {
     log.error($t(messages.CS_ASSETS_OPERATION_FAILED, { operation: op }), loggerContext);
     log.error(opts.error, loggerContext);
-  } else if (op === 'delete') {
+    return;
+  }
+
+  if (op === 'delete') {
+    const jobIds = opts.jobIds?.length ? opts.jobIds : opts.jobId ? [opts.jobId] : [];
     log.success($t(messages.CS_ASSETS_DELETE_SUCCESS), loggerContext);
-    if (opts.jobId) log.info($t(messages.CS_ASSETS_DELETE_JOB_ID, { jobId: opts.jobId }), loggerContext);
-    log.info($t(messages.CS_ASSETS_DELETE_ASYNC_NOTE), loggerContext);
-    const statusUrl = generateCsAssetsJobStatusUrl(opts.spaceUid);
-    if (statusUrl) log.info(statusUrl, loggerContext);
+    // Delete is async: a submitted job is not a completed deletion. Say so, and point at the status URL.
+    log.info($t(messages.CS_ASSETS_DELETE_JOBS_SUBMITTED, { count: jobIds.length }), loggerContext);
+    for (const jobId of jobIds) {
+      log.info($t(messages.CS_ASSETS_DELETE_JOB_ID, { jobId }), loggerContext);
+    }
   } else {
     log.success($t(messages.CS_ASSETS_MOVE_SUCCESS), loggerContext);
     if (opts.count !== undefined && opts.folderUid) {
@@ -52,10 +72,86 @@ function printCsAssetsSummary(
         loggerContext
       );
     }
-    const statusUrl = generateCsAssetsJobStatusUrl(opts.spaceUid);
-    if (statusUrl) log.info(statusUrl, loggerContext);
   }
+
+  const batchesTotal = opts.batchesTotal ?? 0;
+  if (batchesTotal > 1) {
+    log.info(
+      $t(messages.CS_ASSETS_BATCH_SUMMARY, {
+        batchesTotal,
+        batchesSucceeded: opts.batchesSucceeded ?? batchesTotal,
+      }),
+      loggerContext
+    );
+  }
+
+  const statusUrl = generateCsAssetsJobStatusUrl(opts.spaceUid);
+  if (statusUrl) log.info(statusUrl, loggerContext);
   if (opts.notice) log.info(opts.notice, loggerContext);
+}
+
+/**
+ * Writes the uids from all failed batches to a `{ "uids": [...] }` file (deduped) so the
+ * user can re-run just the failures via `--asset-uids-file`. Returns the path, or undefined
+ * if there were no failed uids or the write failed.
+ */
+function writeFailedUidsFile(
+  op: 'delete' | 'move',
+  result: CsAssetsBulkOperationResult,
+  loggerContext: { module: string }
+): string | undefined {
+  const uids = [...new Set((result.failures ?? []).flatMap((f) => f.uids))];
+  if (uids.length === 0) return undefined;
+
+  const fileName = `cs-assets-${op}-failed-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  try {
+    // Co-locate with the other bulk-operation logs rather than polluting cwd.
+    const filePath = path.join(ensureLogFolder(), fileName);
+    fs.writeFileSync(filePath, JSON.stringify({ uids }), 'utf8');
+    return filePath;
+  } catch (e) {
+    log.warn(`Could not write failed-uids file: ${e instanceof Error ? e.message : String(e)}`, loggerContext);
+    return undefined;
+  }
+}
+
+/**
+ * True if at least one ≤100-item batch was accepted by the server, so there is a real
+ * (full or partial) outcome to report. When the operation ran, `batchesSucceeded` reflects it.
+ * A total transport failure before any batch leaves `batchesSucceeded` undefined and `success`
+ * false → falls through to false, and the caller reports it as a full failure.
+ */
+function didAnyBatchCommit(result: CsAssetsBulkOperationResult): boolean {
+  if (result.batchesSucceeded !== undefined) return result.batchesSucceeded > 0;
+  return result.success;
+}
+
+/** Warns about failed batches after a partial success (some batches committed, some did not). */
+function printCsAssetsPartialFailure(
+  op: 'delete' | 'move',
+  result: CsAssetsBulkOperationResult,
+  loggerContext: { module: string }
+): void {
+  log.warn(
+    $t(messages.CS_ASSETS_PARTIAL_FAILURE, {
+      operation: op,
+      batchesFailed: result.batchesFailed ?? result.failures?.length ?? 0,
+      batchesTotal: result.batchesTotal ?? 0,
+    }),
+    loggerContext
+  );
+  for (const f of result.failures ?? []) {
+    log.error(
+      $t(messages.CS_ASSETS_FAILED_BATCH, { batchIndex: f.batchIndex, count: f.count, error: f.error }),
+      loggerContext
+    );
+  }
+
+  const failedFile = writeFailedUidsFile(op, result, loggerContext);
+  if (failedFile) {
+    log.info($t(messages.CS_ASSETS_FAILED_UIDS_WRITTEN, { operation: op, path: failedFile }), loggerContext);
+    log.info($t(messages.CS_ASSETS_RETRY_HINT, { operation: op, path: failedFile }), loggerContext);
+  }
 }
 
 function handleAssetUidsFileError(e: LoadAssetUidsError, loggerContext: { module: string }): void {
@@ -195,7 +291,14 @@ export async function runCsAssetsOperation(options: CsAssetsRunnerOptions): Prom
           log.info($t(messages.CS_ASSETS_DELETING_ASSETS, { count: deleteRows.length, spaceUid }), loggerContext),
         execute: (service) => service.bulkDelete(spaceUid, workspace, deleteRows),
         failureFallback: 'CS Assets bulk delete failed',
-        successOpts: (result) => ({ jobId: result.jobId, notice: result.notice, spaceUid }),
+        successOpts: (result) => ({
+          jobId: result.jobId,
+          jobIds: result.jobIds,
+          notice: result.notice,
+          spaceUid,
+          batchesTotal: result.batchesTotal,
+          batchesSucceeded: result.batchesSucceeded,
+        }),
       };
     } else {
       if (f.locale) {
@@ -229,7 +332,14 @@ export async function runCsAssetsOperation(options: CsAssetsRunnerOptions): Prom
           ),
         execute: (service) => service.bulkMove(spaceUid, workspace, uids, moveFolderUid),
         failureFallback: 'CS Assets bulk move failed',
-        successOpts: (result) => ({ count: uids.length, folderUid: moveFolderUid, notice: result.notice, spaceUid }),
+        successOpts: (result) => ({
+          count: uids.length,
+          folderUid: moveFolderUid,
+          notice: result.notice,
+          spaceUid,
+          batchesTotal: result.batchesTotal,
+          batchesSucceeded: result.batchesSucceeded,
+        }),
       };
     }
 
@@ -242,12 +352,19 @@ export async function runCsAssetsOperation(options: CsAssetsRunnerOptions): Prom
 
     plan.logStart();
     const result = await plan.execute(csAssetsService);
-    if (!result.success) {
+
+    if (!didAnyBatchCommit(result)) {
       printCsAssetsSummary(op, { error: result.error ?? plan.failureFallback, spaceUid }, loggerContext);
       process.exitCode = 1;
       return;
     }
+
+    // Full or partial success: report what committed, then flag any failed batches.
     printCsAssetsSummary(op, plan.successOpts(result), loggerContext);
+    if (!result.success) {
+      printCsAssetsPartialFailure(op, result, loggerContext);
+      process.exitCode = 1;
+    }
   } catch (error) {
     handleAndLogError(error as Error);
   }

@@ -15,8 +15,10 @@ import { readFileSync, promises as fsPromises } from 'fs';
 import { CloneConfig } from '../../../types/clone-config';
 import { CloneContext } from '../../../types/clone-context';
 
-// Resolve path to package root (works in both src and lib contexts)
-const packageRoot = __dirname.includes('/src/') ? __dirname.split('/src/')[0] : __dirname.split('/lib/')[0];
+// Resolve path to package root by directory depth (commands/cm/stacks is 3 levels below src|lib),
+// matching the pattern used in clone-handler.ts. Avoids breaking when the install path itself
+// contains '/lib/' (e.g. Node's own lib/node_modules), which substring-splitting did not handle.
+const packageRoot = path.resolve(__dirname, '../../../..');
 const pathdir = path.join(packageRoot, 'contents');
 let config: CloneConfig = {};
 
