@@ -45,6 +45,7 @@ describe('OperationExecutor', () => {
       contentType: sandbox.stub().returnsThis(),
       entry: sandbox.stub().returnsThis(),
       asset: sandbox.stub().returnsThis(),
+      addHeader: sandbox.stub().returnsThis(),
       publish: sandbox.stub().resolves({ notice: 'Published successfully' }),
       unpublish: sandbox.stub().resolves({ notice: 'Unpublished successfully' }),
     };
@@ -143,6 +144,7 @@ describe('OperationExecutor', () => {
 
       expect(mockStack.contentType.calledWith('blog_post')).to.be.true;
       expect(mockStack.entry.calledWith('entry123')).to.be.true;
+      expect(mockStack.addHeader.calledWith('api_version', '3.2')).to.be.true;
       expect(mockStack.publish.called).to.be.true;
     });
 
@@ -166,6 +168,7 @@ describe('OperationExecutor', () => {
 
       expect(mockStack.contentType.calledWith('blog_post')).to.be.true;
       expect(mockStack.entry.calledWith('entry123')).to.be.true;
+      expect(mockStack.addHeader.calledWith('api_version', '3.2')).to.be.true;
       expect(mockStack.unpublish.called).to.be.true;
     });
 
@@ -211,6 +214,7 @@ describe('OperationExecutor', () => {
       await clock.tickAsync(100);
 
       expect(mockStack.asset.calledWith('asset123')).to.be.true;
+      expect(mockStack.addHeader.calledWith('api_version', '3.2')).to.be.true;
       expect(mockStack.publish.called).to.be.true;
     });
 
@@ -232,6 +236,7 @@ describe('OperationExecutor', () => {
       await clock.tickAsync(100);
 
       expect(mockStack.asset.calledWith('asset123')).to.be.true;
+      expect(mockStack.addHeader.calledWith('api_version', '3.2')).to.be.true;
       expect(mockStack.unpublish.called).to.be.true;
     });
   });
