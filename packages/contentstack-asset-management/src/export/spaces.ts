@@ -18,6 +18,8 @@ export type AssetExportCounts = {
   folders: number;
   assetTypes: number;
   fields: number;
+  /** Assets missing from the export: permanently failed metadata pages + failed binary downloads. */
+  failedAssets: number;
 };
 
 /**
@@ -53,7 +55,7 @@ export class ExportSpaces {
 
     if (!linkedWorkspaces.length) {
       log.debug('No linked workspaces to export', context);
-      return { assets: 0, folders: 0, assetTypes: 0, fields: 0 };
+      return { assets: 0, folders: 0, assetTypes: 0, fields: 0, failedAssets: 0 };
     }
 
     log.debug('Starting Contentstack Assets export process...', context);
@@ -105,6 +107,7 @@ export class ExportSpaces {
     // Real entity counts accumulated for the summary (Bug 3).
     let assetsTotal = 0;
     let foldersTotal = 0;
+    let failedAssetsTotal = 0;
     let assetTypesCount = 0;
     let fieldsCount = 0;
     try {
@@ -140,6 +143,7 @@ export class ExportSpaces {
           const spaceCounts = await exportWorkspace.start(ws, spaceDir, branchName || 'main', spaceProcess);
           assetsTotal += spaceCounts.assets;
           foldersTotal += spaceCounts.folders;
+          failedAssetsTotal += spaceCounts.failedAssets;
           progress.completeProcess(spaceProcess, true);
           log.debug(`Exported workspace structure for space ${ws.space_uid}`, context);
         } catch (err) {
@@ -157,14 +161,20 @@ export class ExportSpaces {
       }
 
       log.info(
-        anySpaceFailed
+        anySpaceFailed || failedAssetsTotal > 0
           ? 'Contentstack Assets export completed with errors in one or more spaces'
           : 'Contentstack Assets export completed successfully',
         context,
       );
       log.debug('Contentstack Assets export completed', context);
 
-      return { assets: assetsTotal, folders: foldersTotal, assetTypes: assetTypesCount, fields: fieldsCount };
+      return {
+        assets: assetsTotal,
+        folders: foldersTotal,
+        assetTypes: assetTypesCount,
+        fields: fieldsCount,
+        failedAssets: failedAssetsTotal,
+      };
     } catch (err) {
       if (!bootstrapFailed) {
         // Mark any spaces that hadn't been processed as failed so the multibar
