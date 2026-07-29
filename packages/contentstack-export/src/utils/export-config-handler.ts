@@ -16,7 +16,7 @@ import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (exportCmdFlags: any, context: any): Promise<ExportConfig> => {
+const setupConfig = async (exportCmdFlags: any, context?: any): Promise<ExportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'export');
