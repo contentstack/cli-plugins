@@ -149,8 +149,6 @@ export default class ExportAssets extends BaseClass {
         'Skipping Contentstack Assets export: management token authentication is not supported by the Assets APIs. ' +
         'Entry-to-asset references will NOT resolve in the exported content. ' +
         'Re-run the export with a logged-in session (auth token or OAuth) to export Contentstack Assets.';
-      cliux.print(`\nWARNING!!! ${warning}`, { color: 'yellow' });
-      log.error(warning, this.exportConfig.context);
       this.markAssetsSkippedInSummary(warning);
       return;
     }
