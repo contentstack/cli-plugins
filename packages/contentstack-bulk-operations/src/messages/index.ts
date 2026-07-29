@@ -255,7 +255,8 @@ const csAssetsBulkMsg = {
   CS_ASSETS_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
   CS_ASSETS_OPERATION_FAILED: 'CS Assets {operation} failed.',
   CS_ASSETS_BATCH_SUMMARY: 'Dispatched in {batchesTotal} batch(es) of up to 100 — {batchesSucceeded} succeeded.',
-  CS_ASSETS_PARTIAL_FAILURE: 'CS Assets {operation} partially failed: {batchesFailed} of {batchesTotal} batch(es) failed.',
+  CS_ASSETS_PARTIAL_FAILURE:
+    'CS Assets {operation} partially failed: {batchesFailed} of {batchesTotal} batch(es) failed.',
   CS_ASSETS_FAILED_BATCH: 'Batch {batchIndex} ({count} item(s)) failed: {error}',
   CS_ASSETS_FAILED_UIDS_WRITTEN:
     'Uids whose {operation} request did not confirm success written to: {path} (these requests failed to return success — the server may or may not have applied them).',
