@@ -19,7 +19,7 @@ describe('interactive', () => {
       expect.assertions(1);
       const repos = [] as any[];
       await interactive.inquireRepo(repos);
-    } catch (error) {
+    } catch (error: any) {
       expect(error.message).toMatch(/No Repositories/);
     }
   });
@@ -61,7 +61,7 @@ describe('interactive', () => {
       expect.assertions(1);
       const organizations: Organization[] = [];
       await interactive.inquireOrganization(organizations);
-    } catch (error) {
+    } catch (error: any) {
       expect(error.message).toMatch(/No Organizations/);
     }
   });
