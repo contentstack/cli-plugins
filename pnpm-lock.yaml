@@ -31,13 +31,13 @@ importers:
         specifier: ^3.14.1
         version: 3.14.1(graphql@16.14.2)
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-launch':
         specifier: ^1.11.1
         version: 1.11.1(@types/node@20.19.43)(tslib@2.8.1)(typescript@5.9.3)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       adm-zip:
         specifier: ^0.5.18
@@ -89,7 +89,7 @@ importers:
         specifier: ^8.58.2
         version: 8.65.0(eslint@10.8.0)(typescript@5.9.3)
       axios:
-        specifier: ^1.16.1
+        specifier: ^1.18.1
         version: 1.18.1(debug@4.4.3)
       chai:
         specifier: ^4.5.0
@@ -131,7 +131,7 @@ importers:
   packages/contentstack-asset-management:
     dependencies:
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       lodash:
         specifier: 4.18.1
@@ -186,10 +186,10 @@ importers:
   packages/contentstack-audit:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@oclif/core':
         specifier: ^4.11.4
@@ -262,16 +262,16 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-        specifier: ~2.0.0-beta.24
+        specifier: ~2.0.0-beta.25
         version: link:../contentstack-seed
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-config':
-        specifier: ~2.0.0-beta.14
+        specifier: ~2.0.0-beta.15
         version: 2.0.0-beta.15(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
       '@oclif/core':
         specifier: ^4.11.4
@@ -283,7 +283,7 @@ importers:
         specifier: ^2.1.6
         version: 2.1.6
       tar:
-        specifier: ^7.5.20
+        specifier: ^7.5.22
         version: 7.5.22
     devDependencies:
       '@oclif/test':
@@ -329,10 +329,10 @@ importers:
   packages/contentstack-branches:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@oclif/core':
         specifier: ^4.11.4
@@ -384,13 +384,13 @@ importers:
   packages/contentstack-bulk-operations:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: 1.0.0-beta.7
+        specifier: 1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@contentstack/delivery-sdk':
         specifier: ^5.2.0
@@ -490,10 +490,10 @@ importers:
   packages/contentstack-cli-cm-regex-validate:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
       '@contentstack/management':
         specifier: ^1.30.2
@@ -584,10 +584,10 @@ importers:
   packages/contentstack-cli-tsgen:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@contentstack/types-generator':
         specifier: ^3.10.2
@@ -642,16 +642,16 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.24
+        specifier: ~2.0.0-beta.25
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.24
+        specifier: ~2.0.0-beta.25
         version: link:../contentstack-import
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
       '@oclif/core':
         specifier: ^4.11.4
@@ -727,10 +727,10 @@ importers:
   packages/contentstack-content-type:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@types/diff2html':
         specifier: ^3.0.3
@@ -748,7 +748,7 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       axios:
-        specifier: ^1.16.1
+        specifier: ^1.18.1
         version: 1.18.1(debug@4.4.3)
       diff2html:
         specifier: ^3.4.56
@@ -815,16 +815,16 @@ importers:
   packages/contentstack-export:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.7
+        specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@contentstack/cli-variants':
-        specifier: ~2.0.0-beta.19
+        specifier: ~2.0.0-beta.20
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -861,10 +861,10 @@ importers:
         version: 3.19.0
     devDependencies:
       '@contentstack/cli-auth':
-        specifier: ~2.0.0-beta.16
+        specifier: ~2.0.0-beta.17
         version: 2.0.0-beta.17(@types/node@22.20.1)
       '@contentstack/cli-config':
-        specifier: ~2.0.0-beta.14
+        specifier: ~2.0.0-beta.15
         version: 2.0.0-beta.15(@types/node@22.20.1)
       '@contentstack/cli-dev-dependencies':
         specifier: ~2.0.0-beta.0
@@ -930,10 +930,10 @@ importers:
   packages/contentstack-export-to-csv:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@inquirer/prompts':
         specifier: ^7.0.0
@@ -994,10 +994,10 @@ importers:
   packages/contentstack-external-migrate:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
@@ -1091,19 +1091,19 @@ importers:
   packages/contentstack-import:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.7
+        specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-audit':
-        specifier: ~2.0.0-beta.15
+        specifier: ~2.0.0-beta.16
         version: link:../contentstack-audit
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)(debug@4.4.3)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
       '@contentstack/cli-variants':
-        specifier: ~2.0.0-beta.19
+        specifier: ~2.0.0-beta.20
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1191,13 +1191,13 @@ importers:
   packages/contentstack-import-setup:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.7
+        specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.11.4
@@ -1288,10 +1288,10 @@ importers:
   packages/contentstack-migrate-rte:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
@@ -1358,10 +1358,10 @@ importers:
   packages/contentstack-migration:
     dependencies:
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
       '@oclif/core':
         specifier: ^4.11.4
@@ -1440,19 +1440,19 @@ importers:
   packages/contentstack-query-export:
     dependencies:
       '@contentstack/cli-asset-management':
-        specifier: ~1.0.0-beta.7
+        specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-cm-export':
-        specifier: ~2.0.0-beta.24
+        specifier: ~2.0.0-beta.25
         version: link:../contentstack-export
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@contentstack/cli-variants':
-        specifier: ~2.0.0-beta.19
+        specifier: ~2.0.0-beta.20
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1558,13 +1558,13 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-        specifier: ~2.0.0-beta.24
+        specifier: ~2.0.0-beta.25
         version: link:../contentstack-import
       '@contentstack/cli-command':
-        specifier: ~2.0.0-beta.10
+        specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
       inquirer:
         specifier: 12.11.1
@@ -1573,7 +1573,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       tar:
-        specifier: ^7.5.20
+        specifier: ^7.5.22
         version: 7.5.22
       tmp:
         specifier: 0.2.7
@@ -1631,7 +1631,7 @@ importers:
   packages/contentstack-variants:
     dependencies:
       '@contentstack/cli-utilities':
-        specifier: ~2.0.0-beta.11
+        specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@oclif/core':
         specifier: ^4.11.4
