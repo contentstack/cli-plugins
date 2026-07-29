@@ -24,7 +24,7 @@ const config = {
     'global-fields': {
       name: 'global field',
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads from individual files via readGlobalFieldSchemas
     },
     entries: {
       name: 'entries',

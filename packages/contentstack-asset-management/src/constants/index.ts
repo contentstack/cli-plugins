@@ -6,6 +6,8 @@ export const FALLBACK_AM_API_CONCURRENCY = 5;
 export const DEFAULT_AM_API_CONCURRENCY = FALLBACK_AM_API_CONCURRENCY;
 export const FALLBACK_AM_API_PAGE_SIZE = 100;
 export const FALLBACK_AM_API_FETCH_CONCURRENCY = 5;
+/** Max assets/uids the CS Assets bulk delete/move endpoints accept per request. */
+export const CS_ASSETS_BULK_MUTATE_MAX_ITEMS = 100;
 
 /** Fallback strip lists when import options omit `fieldsImportInvalidKeys` / `assetTypesImportInvalidKeys`. */
 export const FALLBACK_FIELDS_IMPORT_INVALID_KEYS = [

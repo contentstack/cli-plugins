@@ -5,8 +5,11 @@ export {
   getArrayFromResponse,
   getAssetItems,
   getReadableStreamFromDownloadResponse,
+  getSecuredAssetAuth,
+  SecuredAssetAuthError,
   writeStreamToFile,
 } from './export-helpers';
+export type { SecuredAssetAuth } from './export-helpers';
 export { chunkArray, runInBatches } from './concurrent-batch';
 export { withRetry, RetryableHttpError, isRetryableStatus, parseRetryAfterMs } from './retry';
 export { detectAssetManagementExportFromContentDir } from './detect-asset-management-export';

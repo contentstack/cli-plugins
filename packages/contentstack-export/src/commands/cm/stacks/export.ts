@@ -111,7 +111,7 @@ export default class ExportCommand extends Command {
     let exportDir: string = pathValidator('logs');
     try {
       const { flags } = await this.parse(ExportCommand);
-      const exportConfig = await setupExportConfig(flags);
+      const exportConfig = await setupExportConfig(flags, this.context);
       // Prepare the context object
       const context = this.createExportContext(exportConfig.apiKey, exportConfig.authenticationMethod);
       exportConfig.context = { ...context };

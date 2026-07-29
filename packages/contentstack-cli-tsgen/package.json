@@ -56,15 +56,15 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --fix",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "jest --testPathPattern=tests",
-    "test:integration": "jest --testPathPattern=tests/integration",
-    "version": "oclif readme && git add README.md"
+    "test": "jest --testPathPattern=test/unit",
+    "test:integration": "jest --testPathPattern=test/integration",
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "csdxConfig": {
     "shortCommandName": {

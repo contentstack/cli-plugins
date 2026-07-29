@@ -101,7 +101,7 @@ describe('Login Handler', () => {
         }),
       ).to.be.true;
 
-      expect(logStub.calledWith(result, 'Contentstack account authenticated successfully!', 'success')).to.be.true;
+      expect(logSuccessStub.calledWith('Contentstack account authenticated successfully!')).to.be.true;
     });
 
     it('should throw error when authtoken is missing after login', async () => {

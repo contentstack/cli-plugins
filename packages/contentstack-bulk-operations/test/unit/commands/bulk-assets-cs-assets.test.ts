@@ -171,6 +171,33 @@ describe('BulkAssets command — CS Assets delete/move path', () => {
 
       expect(process.exitCode).to.equal(1);
     });
+
+    it('on partial failure: sets exitCode=1 and writes the failed uids to a {uids:[...]} file', async () => {
+      const assetUidsModule = require('../../../src/utils/asset-uids-from-file');
+      sandbox.stub(assetUidsModule, 'loadBulkDeleteItemsFromFile').returns([{ uid: 'u1', locale: 'en-us' }]);
+
+      const amServiceModule = require('../../../src/services/am-asset-service');
+      // batch 0 committed, batch 1 (uids u2,u3) failed → partial success.
+      sandbox.stub(amServiceModule.CsAssetsService.prototype, 'bulkDelete').resolves({
+        success: false,
+        jobId: 'job-ok-0',
+        jobIds: ['job-ok-0'],
+        batchesTotal: 2,
+        batchesSucceeded: 1,
+        batchesFailed: 1,
+        failures: [{ batchIndex: 1, count: 2, error: 'status 422 ...', uids: ['u2', 'u3'] }],
+      });
+
+      const writeStub = sandbox.stub(require('node:fs'), 'writeFileSync');
+
+      await command.run();
+
+      expect(process.exitCode).to.equal(1);
+      expect(writeStub.calledOnce).to.equal(true);
+      const [filePath, contents] = writeStub.firstCall.args;
+      expect(String(filePath)).to.match(/cs-assets-delete-failed-.*\.json$/);
+      expect(JSON.parse(contents as string)).to.deep.equal({ uids: ['u2', 'u3'] });
+    });
   });
 
   describe('CS Assets path isolation — no publish/unpublish infrastructure', () => {
