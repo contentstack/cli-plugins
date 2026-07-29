@@ -180,6 +180,21 @@ export interface Context {
   authenticationMethod?: string;
 }
 
+export interface SummaryModule {
+  status: string;
+  successCount: number;
+  failureCount: number;
+  failures: Array<{ item: string; error: string }>;
+  endTime?: number;
+}
+
+export interface GlobalSummary {
+  getModules(): Map<string, SummaryModule>;
+  registerModule(name: string, totalItems?: number): void;
+  startModule(name: string): void;
+  completeModule(name: string, success?: boolean): void;
+}
+
 export { default as DefaultConfig } from './default-config';
 export { default as ExportConfig } from './export-config';
 export * from './marketplace-app';

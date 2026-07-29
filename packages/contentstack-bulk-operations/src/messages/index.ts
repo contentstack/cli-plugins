@@ -247,11 +247,21 @@ const csAssetsBulkMsg = {
   CS_ASSETS_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
   CS_ASSETS_CONFIRM_SUMMARY: 'Proceed with CS Assets {operation} on {count} item(s)?',
   CS_ASSETS_DELETE_SUCCESS: 'CS Assets bulk delete job submitted successfully!',
+  CS_ASSETS_DELETE_JOBS_SUBMITTED:
+    '{count} bulk delete job(s) submitted. Deletion runs asynchronously — this confirms submission, not completion. Verify at the status URL below:',
   CS_ASSETS_DELETE_JOB_ID: 'Job ID: {jobId}',
   CS_ASSETS_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
   CS_ASSETS_MOVE_SUCCESS: 'CS Assets bulk move completed successfully!',
   CS_ASSETS_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
   CS_ASSETS_OPERATION_FAILED: 'CS Assets {operation} failed.',
+  CS_ASSETS_BATCH_SUMMARY: 'Dispatched in {batchesTotal} batch(es) of up to 100 — {batchesSucceeded} succeeded.',
+  CS_ASSETS_PARTIAL_FAILURE:
+    'CS Assets {operation} partially failed: {batchesFailed} of {batchesTotal} batch(es) failed.',
+  CS_ASSETS_FAILED_BATCH: 'Batch {batchIndex} ({count} item(s)) failed: {error}',
+  CS_ASSETS_FAILED_UIDS_WRITTEN:
+    'Uids whose {operation} request did not confirm success written to: {path} (these requests failed to return success — the server may or may not have applied them).',
+  CS_ASSETS_RETRY_HINT:
+    'Re-run just these with: --operation {operation} --asset-uids-file {path} (plus the same --space-uid/--org-uid, and --locale for delete). Safe to re-run — the operation is idempotent, so assets already applied are a no-op.',
 
   // Merged-command flag matrix validation
   FLAG_NOT_ALLOWED_FOR_OPERATION: '{flag} is not valid for operation "{operation}".{hint}',
@@ -411,10 +421,6 @@ const flagDescriptions = {
     '(optional) Revert publish operations from a log folder. Specify the folder path containing success logs. Works similar to retry-failed.',
   BULK_OPERATION_FOLDER:
     '(optional) Folder path to store operation logs. Creates separate files for success and failed operations. Default: bulk-operation',
-  API_VERSION:
-    'Specifies the Content Management API version used for publishing. Use version `3.2` when publishing entries with nested references, otherwise, use the default version 3.2',
-  TAXONOMY_API_VERSION:
-    'Content Management API version for taxonomy publish (default: `3.2`; required for the `items` + locales/environments body on POST /v3/taxonomies/publish).',
   TAXONOMY_ITEMS:
     'Comma-separated taxonomy UIDs to include in the job. If omitted, all taxonomies in the stack (current branch) are included. Example: products_tax,brands_tax',
 };

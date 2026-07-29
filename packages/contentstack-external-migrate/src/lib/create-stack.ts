@@ -518,7 +518,7 @@ export async function scheduleEntryAction(
 ): Promise<void> {
   await ensureFreshAuth();
   const session = resolveSession();
-  const headers = { ...session.authHeaders, api_key: apiKey, 'Content-Type': 'application/json', ...(opts.branch ? { branch: opts.branch } : {}) };
+  const headers = { ...session.authHeaders, api_key: apiKey, 'Content-Type': 'application/json', api_version: '3.2', ...(opts.branch ? { branch: opts.branch } : {}) };
   const isAsset = opts.contentTypeUid === 'sys_assets';
   const url = isAsset
     ? `${session.cma}/v3/assets/${opts.entryUid}/${opts.action}`

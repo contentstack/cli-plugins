@@ -33,7 +33,11 @@ describe('ImportAssets', () => {
   afterEach(() => sinon.restore());
 
   const makeSpaceDir = () => {
-    const dir = path.join(os.tmpdir(), `am-test-${Date.now()}`);
+    // mkdtempSync guarantees a unique dir. Using `am-test-${Date.now()}` collided when two
+    // tests ran within the same millisecond, letting one test's asset index leak into
+    // another — which intermittently skipped the "empty space" branch and flaked the
+    // tick-count assertion.
+    const dir = fsReal.mkdtempSync(path.join(os.tmpdir(), 'am-test-'));
     fsReal.mkdirSync(path.join(dir, 'assets'), { recursive: true });
     return dir;
   };
