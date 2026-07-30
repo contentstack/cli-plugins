@@ -171,20 +171,7 @@ Source token resolution order (export/create): explicit `--management-token`/`--
 - `csdxConfig.shortCommandName`: maps `external-migrate:create` → `EMCRT`.
 - Runtime deps of note: `@oclif/core ^4.8.0`, `@contentstack/cli-utilities ~2.0.0-beta.10`, `axios`, `jsdom`, `@contentstack/json-rte-serializer` (RTE conversion), `@contentstack/marketplace-sdk` (marketplace app field migration).
 
----
-
-## 7. Documentation & README accuracy (gaps to close)
-
-- **No official doc page exists** for this plugin on the Contentstack docs site. This is the primary gap: the plugin is user-installable but undocumented outside the package README. Because it is **still pre-GA (alpha/beta)**, calling this out is important — behavior and flags may change before a documented GA release.
-- **README "See code" links** point to `https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-external-migrate/src/commands/migrate/<cmd>.ts`. Verified: the package and all six command files **exist on `origin/main`**, so the links resolve. (Note the linked `main` copy is the `1.0.0-alpha.4` line, not v2 — standard oclif `repositoryPrefix` behaviour.)
-- **Stale `migrate:export` example** — README shows `csdx migrate:export -l contentful --space-id YOUR_SPACE -o ./migration-workspace`, but `-o` is not a defined short char (§4). Would error. Replace `-o` with `--output`.
-- **README `migrate:create` `USAGE` is incomplete** — it omits `--input`/`-i`, `--cf-org-id`, `--stack-name`, `--branch`, `--verbose` because those flags are `hidden: true`. The `create` example uses `--input`, a hidden flag; consider documenting the `--input` vs `--space-id` choice explicitly.
-- **`package.json` has no `homepage` or `bugs` fields** for this package (present on some sibling packages). Minor metadata gap.
-- **README frames all six commands as co-equal**, but five are `static hidden` (§2). Docs should make clear `migrate:create` is the intended entry point.
-
----
-
-## 8. Agent rules
+## 7. Agent rules
 
 1. This plugin is **new in 2.x** — there is no 1.x equivalent. Never emit a "1.x → 2.x" translation for `migrate:*`; there is nothing to translate from.
 2. Prefer **`migrate:create`** for end-to-end migration. Only reach for `migrate:export/convert/audit/import/status` when the user explicitly wants a single stage — and warn that they are hidden/internal.

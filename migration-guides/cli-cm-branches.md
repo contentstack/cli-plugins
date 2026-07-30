@@ -5,7 +5,7 @@
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0` (branches `1.6.3`), v2 = `contentstack/cli-plugins @ origin/v2-dev` (branches `2.0.0-beta.9`).
 > Official doc cross-checked: <https://www.contentstack.com/docs/developers/cli/compare-and-merge-branches-using-the-cli>
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Agent rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Agent rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 **TL;DR:** The branches plugin is one of the *least* breaking plugins in the 2.x line. **Every flag on every pre-existing command is byte-for-byte identical between v1.59.0 and v2-dev.** The only changes that matter are: (1) Node `>=22`, (2) one brand-new command `cm:branches:merge-status`, and (3) a rewrite of the merge status-polling loop (DX-5584). There are no removed flags, no removed short chars, no renames, and no changed flag defaults.
 
@@ -167,24 +167,7 @@ Both flags are `required: true` (`merge-status.ts`). The command fetches `stack.
 
 Supporting helpers new in v2: `merge-status-helper.ts` (whole file is new) and `getMergeStatusWithContentTypes` (`merge-status-helper.ts:138`) for script generation off a completed merge.
 
----
-
-## 6. Doc-site / README accuracy issues
-
-### 6.1 Official doc site — `merge-status` is undocumented (doc gap)
-The page <https://www.contentstack.com/docs/developers/cli/compare-and-merge-branches-using-the-cli> documents only `cm:branches`, `:create`, `:delete`, `:diff`, `:merge`. The new **`cm:branches:merge-status` command is not mentioned at all.** This is a known documentation gap — the command ships in 2.x but the doc site has not been updated. Flag for docs before GA.
-
-Otherwise the doc's flag lists agree with the code, with expected omissions: the doc does not list `cm:branches:merge`'s **hidden** flags (`--strategy`, `--strategy-sub-options`, `--merge-action`) — correct, they are `hidden: true` in both versions and not intended for public docs.
-
-### 6.2 v2 README (`packages/contentstack-branches/README.md` on `v2-dev`)
-- **`merge-status` IS in the auto-generated README** (command list line ~38, section at line ~217, example `-k bltxxxxxxxx --merge-uid merge_abc123`). So the README is *ahead* of the doc site here — the gap is doc-site-only.
-- **"See code" links are correct** — they point to `github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/...` (README lines 63, 91, 120, 176, 215, 238), i.e. the cli-plugins monorepo, **not** the old `contentstack/cli`. No fix needed on these links (unlike some other 2.x plugin READMEs).
-- **Stale repo metadata in `package.json`** (feeds oclif README generation): `homepage` and `repository` are still `https://github.com/contentstack/cli` (should be `cli-plugins`), and the oclif `repositoryPrefix` reads `<repo>/blob/main/packages/contentstack-export/<commandPath>` — a **copy-paste from the export package** pointing at `contentstack-export/` instead of `contentstack-branches/`. Cosmetic, but it makes generated links/prefixes inconsistent with the (correct) per-command "See code" links.
-- README version banner shows `@contentstack/cli-cm-branches/2.0.0-beta.9 … node-v22.21.1`, consistent with `engines.node >=22.0.0`.
-
----
-
-## 7. Migration checklist
+## 6. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22` (was `>=14` in branches `1.6.3`).
 - [ ] No flag/command rewrites needed for `cm:branches` / `:create` / `:delete` / `:diff` / `:merge` — confirm scripts run as-is.
@@ -196,7 +179,7 @@ Otherwise the doc's flag lists agree with the code, with expected omissions: the
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 7. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x branches command should apply these rules and output the 2.x equivalent:
 

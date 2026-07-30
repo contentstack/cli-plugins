@@ -5,7 +5,7 @@
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0`, v2 = `contentstack/cli-plugins @ v2-dev`.
 > Pairs with the [export guide](cli-cm-export.md) — import consumes what export produces, so the directory/`schema.json` changes are shared.
 
-This guide is written for **both a human and an LLM/agent**. Feed it to an agent with a 1.x import command and the [Agent rules](#9-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written for **both a human and an LLM/agent**. Feed it to an agent with a 1.x import command and the [Agent rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -151,25 +151,7 @@ Most 1.x import config keys carry over. Key changes:
 - [ ] Auth switched off auth-token to management token / api-key.
 - [ ] For content types with a non-`title` unique field: de-duplicate source data on that field before re-importing, and confirm the unique-fields fix status (§4.7).
 
----
-
-## 8. v2 README / doc-site accuracy issues (fix before GA)
-
-The v2 import `README.md` is bare auto-generated `oclif readme` output and is stale. Fix in the command flag text (README is regenerated):
-
-| Location | Problem | Correct value |
-|---|---|---|
-| `--module` help list | Lists the old set (`assets, content-types, entries, …`) | Real enum is 18 modules incl. **`stack`, `publishing-rules`, `variant-entries`, `composable-studio`** (§3) |
-| `--skip-taxonomy-publish` | Not surfaced/documented | New flag; add to docs (§6) |
-| `--skip-app-recreation` | May still appear in older docs | Removed in 2.x (§4.5) |
-| "See code" source link | Points to `github.com/contentstack/cli/blob/main/…` | Plugin now lives in **`contentstack/cli-plugins`** — link is wrong |
-| Config-file / Node / output-mode | Not documented | Add config-file section, `>=22`, progress-manager default |
-
-**Legacy doc page** (`/import-content-using-the-cli/old-commands`, the `cm:import` form): the entire page uses the removed `cm:import` alias and lists only the auth-token/`-s`/`--data` flow. It should be marked legacy/1.x-only or redirected — every command form on it is removed in 2.x.
-
----
-
-## 9. Agent rules: 1.x → 2.x command translation
+## 8. Agent rules: 1.x → 2.x command translation
 
 Apply in order; output the 2.x command:
 

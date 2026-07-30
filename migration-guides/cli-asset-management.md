@@ -16,6 +16,3 @@
   - [cli-cm-import.md](cli-cm-import.md) — §6 (cs-assets import path).
 - AM 2.0 is **additive and conditional**: the cs-assets path is taken only when the stack has linked workspaces and the region exposes `csAssetsUrl`; otherwise export/import fall back to the legacy asset path.
 
-## Doc-site
-
-- No standalone doc page is needed (library). Ensure the AM 2.0 behavior is covered on the export/import pages instead.

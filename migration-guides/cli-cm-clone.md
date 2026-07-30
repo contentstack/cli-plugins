@@ -175,18 +175,3 @@ Input: `csdx cm:stacks:clone -n "Prod copy" --source-management-token-alias src 
 Output: `csdx cm:stacks:clone -n "Prod copy" --source-management-token-alias src --destination-management-token-alias dst --type b -y` (identical)
 Warnings: source export now defaults to `main` if no `--source-branch`; output is progress bars (set `--show-console-logs` for CI); requires Node >=22.
 
----
-
-## 9. v2 README / doc-site accuracy issues (fix before GA)
-
-The v2 clone `README.md` (`packages/contentstack-clone/README.md` on `v2-dev`) is `oclif readme` auto-generated output and has stale/duplicated content. Fix at the source (flag descriptions in `clone.ts` and the `package.json` repo/homepage fields — the README is regenerated on version bump).
-
-| # | Location | Problem | Correct value / fix |
-|---|---|---|---|
-| 1 | `--import-webhook-status` help | Text is **doubled**: `[default: disable] [default: disable] (optional) … <options: disable\|current>` followed by a second `<options: disable\|current>` | The flag description hardcodes `[default: disable]` and `<options: disable\|current>`, which oclif then auto-appends again. Remove the hardcoded prefix/suffix from the `import-webhook-status` description in `clone.ts` so oclif renders it once. |
-| 2 | `_See code_` link | Points to `github.com/contentstack/cli-plugins/blob/**main**/packages/contentstack-clone/src/commands/cm/stacks/clone.ts` | Repo is now correctly `contentstack/cli-plugins` (v1 wrongly pointed at `contentstack/cli`), but the link targets the **`main`** branch, where clone is still **1.x (1.21.8)** — not the 2.x beta code. Point it at the released tag/branch, or note the version mismatch. |
-| 3 | `homepage` field (`package.json:48`) | `https://github.com/rohitmishra209/cli-cm-clone` — a **personal fork**, carried over unchanged from v1 | Set to the Contentstack repo / docs URL. |
-| 4 | Top-of-README doc link | `https://www.contentstack.com/docs/headless-cms/clone-a-stack/` | Official CLI doc is `https://www.contentstack.com/docs/developers/cli/cloning-a-stack`; reconcile the two URLs. |
-| 5 | Config-file / Node / output-mode | Absent | README omits the `--config` usage, the `>=22` requirement, and the progress-manager default (same gap as export/import READMEs). |
-
-> Note: unlike the export/import READMEs (whose "See code" link pointed at the old `contentstack/cli` repo), clone's `repository` and `bugs` fields were already corrected to `contentstack/cli-plugins` on `v2-dev`. The remaining repo-link problems are the wrong **branch** (`main`) and the stale personal-fork `homepage`.

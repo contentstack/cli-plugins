@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-cm-bootstrap`  ·  v1 line: `1.x` (baseline `1.18.4`, bundled in `contentstack/cli @ v1.59.0`)  ·  v2 line: `2.x` (e.g. `2.0.0-beta.22`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0` (`packages/contentstack-bootstrap`), v2 = `contentstack/cli-plugins @ origin/v2-dev` (`packages/contentstack-bootstrap`). Cross-checked against `cli-plugins @ origin/main`.
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#6-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -87,19 +87,9 @@ The beta changelog claimed: *"Live Preview 2.0 + auto-publish + `--run-dev-serve
 | **Live Preview 2.0** is **new in v2** | ❌ **FALSE — pre-existing in v1.59.0** | Live Preview (including the preview-token / "2.0" flow via `create_with_preview_token: true`) is present in v1: `src/bootstrap/utils.ts:107` `.create(body, livePreviewEnabled ? { create_with_preview_token: true } : {})`, identical to v2 `utils.ts:108`. The `inquireLivePreviewSupport()` prompt and `livePreviewEnabled` plumbing exist in both (v1 `interactive.ts:93`, `index.ts:115-125`; v2 `interactive.ts:92`, `index.ts:115-125`). |
 | **auto-publish** is **new in v2** | ❌ **FALSE — feature absent in both** | No `autoPublish` / `auto-publish` / `auto_publish` token exists anywhere in the v2 bootstrap package (`git grep` returns nothing) — nor in v1. There is no auto-publish capability in this plugin. |
 
-**Bottom line:** none of the three headline beta claims for bootstrap is a genuine v2 addition. `--run-dev-server` and Live Preview shipped in the v1.59.0 baseline; auto-publish does not exist. The only substantive changes in v2 are the **Node bump**, the **removal of three deprecated hidden flags**, the **`--yes` string→boolean change**, and **TypeScript modernization** (see §6). Treat the changelog as inaccurate for this plugin.
+**Bottom line:** none of the three headline beta claims for bootstrap is a genuine v2 addition. `--run-dev-server` and Live Preview shipped in the v1.59.0 baseline; auto-publish does not exist. The only substantive changes in v2 are the **Node bump**, the **removal of three deprecated hidden flags**, the **`--yes` string→boolean change**, and **TypeScript modernization** (see §5). Treat the changelog as inaccurate for this plugin.
 
----
-
-## 5. README / doc-site accuracy
-
-- **"See code" link — correct.** v1 README pointed to `https://github.com/contentstack/cli/blob/main/packages/contentstack-bootstrap/src/commands/cm/bootstrap.ts` (v1 README `bootstrap` section). v2 README points to `https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bootstrap/src/commands/cm/bootstrap.ts` (v2 README, `_See code:_` line). The package moved repos (`cli` → `cli-plugins`), the file exists on `cli-plugins@main`, so the v2 link resolves correctly.
-- **Stale `homepage` — needs fixing.** v2 `package.json` still has `"homepage": "https://github.com/contentstack/cli"` while `repository.url` is `git+https://github.com/contentstack/cli-plugins.git`. The `homepage` should point at `cli-plugins`. (`bugs` was correctly updated to `cli-plugins/issues`.)
-- v2 README example/usage block correctly lists `--app-name`, `--project-dir`, `--run-dev-server`, `-k`, `--org`, `-n`, `-y`, `-a` and no longer documents the removed `--appName/--directory/--appType` aliases.
-
----
-
-## 6. Other changes (non-breaking / internal)
+## 5. Other changes (non-breaking / internal)
 
 - **Node engine:** `package.json` `engines.node` `>=14.0.0` (v1) → `>=22.0.0` (v2). This is the only hard runtime prerequisite change.
 - **TypeScript modernization in `interactive.ts`:** `const inquirer = require('inquirer')` → `import inquirer from 'inquirer'`; the custom-path prompt `type` changed from the invalid `'string'` to `'input'`; minor dedup of `pathValidator` call. Behavior for end users is unchanged.
@@ -107,7 +97,7 @@ The beta changelog claimed: *"Live Preview 2.0 + auto-publish + `--run-dev-serve
 
 ---
 
-## 7. Agent rules: 1.x → 2.x command translation
+## 6. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x `cm:bootstrap` command should apply these rules in order and output the 2.x equivalent:
 
@@ -132,7 +122,7 @@ Notes: `-a` here meant the app name (v1 collision) → `--app-name`; `--director
 
 ---
 
-## 8. Migration checklist
+## 7. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22`.
 - [ ] `--appName` → `--app-name` in all scripts.

@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-cm-seed`  ·  v1 line: `1.x` (e.g. `1.14.3`)  ·  v2 line: `2.x` (e.g. `2.0.0-beta.22`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0` (`packages/contentstack-seed`, `1.14.3`), v2 = `contentstack/cli-plugins @ origin/v2-dev` (`packages/contentstack-seed`, `2.0.0-beta.22`). v1 doc = the [Seed command docs](https://www.contentstack.com/docs/developers/cli/import-content-using-the-seed-command).
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#6-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -101,23 +101,7 @@ There are **no genuinely new user-facing flags** in seed 2.x. Two flags are some
 
 The 2.x seed still uses the same curated official-repo list + arbitrary GitHub repo import model described in the README; no new command surface was added.
 
----
-
-## 6. README / doc accuracy (v2 `packages/contentstack-seed/README.md`)
-
-Issues found in the auto-generated v2 README (verified against `seed.ts @ v2-dev`):
-
-1. **"See code" link points to the wrong branch.** The README links to
-   `https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-seed/src/commands/cm/stacks/seed.ts`.
-   The `main` branch of `cli-plugins` currently holds the **1.15.7 (v1-line)** code, not the 2.x code being documented (which lives on `v2-dev`). The link should target the v2 branch/tag (e.g. `v2-dev` or the release tag), not `blob/main`. (For reference, the v1 README in the `cli` repo linked to `contentstack/cli/blob/main/...`.)
-2. **`Advanced Flags` section uses the removed `-r` short char.** Examples such as `csdx cm:stacks:seed -r "account/repository"` and `csdx cm:stacks:seed -r "account"` appear multiple times. `--repo` **no longer has a `-r` short char** in 2.x (`seed.ts` line 20 has no `char`). These examples are invalid — they must use `--repo`.
-3. **References the removed export `-A` flag.** The section says *"running `csdx cm:stacks:export -A` … should work"*. `-A` (auth-token) was **removed** from export in 2.x. Stale cross-reference.
-4. **Hidden flags absent from the `FLAGS` block.** The README `FLAGS` list omits `--fetch-limit` and `--locale` because both are `hidden: true`. This is expected oclif behavior, but users migrating from 1.x should know these flags still exist (see §5).
-5. **Documentation footer link uses a legacy path.** The bottom link is `.../docs/headless-cms/import-content-using-the-seed-command`; the canonical CLI doc path is `.../docs/developers/cli/import-content-using-the-seed-command`.
-
----
-
-## 7. Migration checklist
+## 6. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22`.
 - [ ] `cm:seed` → `cm:stacks:seed` in all scripts.
@@ -130,7 +114,7 @@ Issues found in the auto-generated v2 README (verified against `seed.ts @ v2-dev
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 7. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x `cm:seed`/`cm:stacks:seed` command should apply these rules in order and output the 2.x equivalent:
 

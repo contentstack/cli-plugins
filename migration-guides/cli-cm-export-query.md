@@ -5,7 +5,7 @@
 > Status: verified against code — v1 = `contentstack/cli-plugins @ origin/main` (package `1.0.4`), v2 = `contentstack/cli-plugins @ origin/v2-dev` (package `2.0.0-beta.6`).
 > This plugin is **external** in v1 (it was never part of the `contentstack/cli` monorepo `v1.59.0`). Both the v1 and v2 sources now live in `contentstack/cli-plugins` under `packages/contentstack-query-export`; this guide diffs `origin/main` → `origin/v2-dev`.
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -91,20 +91,7 @@ This plugin does **not** re-implement export. It is a **query-driven orchestrato
 - **How it delegates (`src/core/module-exporter.ts`):** for each module it builds an export command (`cmd.push('--module', moduleName)`, plus `--secured-assets` when set) and runs the base export plugin per module. So export 2.x behaviours (progress bars, flat output layout, `main`-only default branch, dropped `schema.json`/`export-info.json`, AM 2.0 assets, etc.) are **inherited transitively** in v2.
   - See the base plugin's own migration guide (`cli-cm-export.md`) for those downstream behavioural changes — they apply to the artifacts this command produces.
 
----
-
-## 5. README / doc accuracy issues (v2-dev)
-
-Verified against `origin/v2-dev:packages/contentstack-query-export/README.md` and the source:
-
-1. **`-q` short flag is fabricated.** README's options table lists `-q, --query` and every example uses `-q "..."`. The command defines `query` **without** a `char`, so `-q` errors. Use `--query`.
-2. **Wrong default-config path.** README says the default config lives at `src/config/export-defaults.json`. The actual files are `src/config/index.ts` (the `DefaultConfig` object) and `src/config/export-config.json` (`{ "skipDependencies": true, "skipStackSettings": false, "personalizationEnabled": true }`). No `export-defaults.json` exists.
-3. **README default-config JSON block is illustrative, not real.** The keys shown (`includeGlobalFieldSchema`, `includePublishDetails`, `includeDimension`, `batchSize` at top level, …) do not match `src/config/index.ts` (which nests `queryConfig.batchSize`, uses `fetchConcurrency`/`writeConcurrency: 5`, `maxCTReferenceDepth: 20`, etc.).
-4. **No oclif "See code:" link.** Unlike auto-generated plugin READMEs, this README is hand-written and contains **no** `See code:` link. The package's `oclif.repositoryPrefix` in v2-dev points at `contentstack/cli-plugins/blob/main/packages/contentstack-query-export/...` (correct for where the code now lives), but `homepage` is still `https://github.com/contentstack/cli` (stale). `origin/fix/DX-9363` *reverts* `repository` back to `contentstack/cli` and drops the structured `repository` object — a regression relative to v2-dev; do not carry that back.
-
----
-
-## 6. What did NOT change (safe)
+## 5. What did NOT change (safe)
 
 - Command id `cm:stacks:export-query` and short alias `cm:export:query`.
 - The entire flag set — names, short chars, `--query` requiredness, boolean defaults.
@@ -114,7 +101,7 @@ Verified against `origin/v2-dev:packages/contentstack-query-export/README.md` an
 
 ---
 
-## 7. Migration checklist
+## 6. Migration checklist
 
 - [ ] Confirm Node runtime is `>=22` (already required by v1 `1.0.4` on `origin/main`; no change).
 - [ ] No flag changes required — 1.x commands run as-is on 2.x.
@@ -125,7 +112,7 @@ Verified against `origin/v2-dev:packages/contentstack-query-export/README.md` an
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 7. Agent rules: 1.x → 2.x command translation
 
 1. **Command & alias unchanged:** keep `cm:stacks:export-query` (or `cm:export:query`) exactly.
 2. **Flags unchanged:** pass every flag through verbatim. There are **no** renames, no removed flags, no changed defaults between `1.0.4` and `2.0.0-beta.6`.

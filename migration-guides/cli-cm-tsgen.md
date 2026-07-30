@@ -6,7 +6,7 @@
 >   - **v1 ref used:** `contentstack/cli-plugins @ origin/main` → `packages/contentstack-cli-tsgen` (version **4.10.1**). tsgen was an **external plugin** in the v1 era (installed via `csdx plugins:install contentstack-cli-tsgen`); `origin/main` is the pre-v2 line and is the concrete v1 source inspected here. Cross-checked against the official v1 doc: <https://www.contentstack.com/docs/headless-cms/tsgen-plugin>.
 >   - **v2 ref used:** `contentstack/cli-plugins @ origin/v2-dev` → `packages/contentstack-cli-tsgen` (version **5.0.0-beta.2**). (The task brief referenced `5.0.0-beta.0`; the branch currently reads `5.0.0-beta.2` — noted so the version string isn't mistaken for a discrepancy.)
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a v1 `tsgen` command, the [Command Translation Rules](#7-agent-rules-v1--v2-command-translation) section is enough to emit the correct v2 command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a v1 `tsgen` command, the [Command Translation Rules](#6-agent-rules-v1--v2-command-translation) section is enough to emit the correct v2 command.
 
 ---
 
@@ -118,30 +118,7 @@ The only real differences on the `origin/fix/DX-9363` branch versus `v2-dev` are
 - `package.json` version `5.0.0-beta.1` on DX-9363 vs `5.0.0-beta.2` on `v2-dev`.
 - An **older README** on DX-9363 that still documents `-a/--token-alias`, `-o/--output`, `-p/--prefix`, `-d/--[no-]doc` (i.e. the pre-cleanup docs) — see §6.
 
----
-
-## 6. README / "See code" accuracy issues (v2-dev)
-
-Two inaccuracies in the current `origin/v2-dev` `README.md` for this package, both verified against `src/commands/tsgen.ts`:
-
-1. **`-o` documented but not implemented.** The README FLAGS block lists:
-   ```
-   -a, --alias=<value>    (required) delivery token alias
-   -o, --output=<value>   (required) full path to output
-   ```
-   The source defines `output` with **no `char`** — `-o` does not exist in v2. The README's `-o, --output` is stale. (`--alias`, `--prefix`, `--[no-]doc` are shown correctly without short chars.)
-
-2. **"See code" link points to the wrong branch.** The README footer reads:
-   ```
-   _See code: [src/commands/tsgen.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-tsgen/src/commands/tsgen.ts)_
-   ```
-   `blob/main` resolves to the **v1 line (4.10.1)**, whose `tsgen.ts` still has `--token-alias` and `-o/-p/-d`. A reader following this link from the v2 README lands on v1 source. It should point at the v2 branch (e.g. `v2-beta`/`v2-dev`). The link is generated from `oclif`'s `repositoryPrefix` in `package.json`, which is set to `…/blob/main/…` while `homepage` uses `…/tree/v2-beta/…` — the two disagree.
-
-Neither issue affects runtime; both are doc-accuracy fixes to make before GA.
-
----
-
-## 7. Agent rules: v1 → v2 command translation
+## 6. Agent rules: v1 → v2 command translation
 
 Apply in order and output the v2 equivalent:
 
@@ -161,7 +138,7 @@ Output: `csdx tsgen --alias prod --output ./types/gen.d.ts --prefix I --doc`
 
 ---
 
-## 8. Migration checklist
+## 7. Migration checklist
 
 - [ ] `--token-alias` → `--alias` in all scripts (`-a` needs no change).
 - [ ] `-o` → `--output`, `-p` → `--prefix`, `-d` → `--doc` (long forms).

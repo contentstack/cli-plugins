@@ -4,7 +4,7 @@
 > Package: `@contentstack/apps-cli`  ·  v1 line: `1.x` (baseline ref `origin/main` = `1.7.1`, last true v1 = `1.7.0`)  ·  v2 line: `2.x` (`2.0.0-beta.2`)
 > Status: verified against code — v1 = `contentstack/cli-plugins @ origin/main`, v2 = `contentstack/cli-plugins @ origin/v2-dev`. The apps plugin is an **external** plugin; it is **not** part of the `contentstack/cli` monorepo `v1.59.0`.
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#6-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -78,27 +78,13 @@ Flags shared by **all 8 commands** (from `base-command.ts` `baseFlags`, unchange
 
 No removed flags, no renamed flags, no changed defaults, no removed aliases on any of these five.
 
----
-
-## 4. README / doc-gen accuracy issues (v2 `origin/v2-dev`)
-
-Verified against `packages/contentstack-apps-cli/README.md` and `package.json` on `origin/v2-dev`:
-
-1. **"See code" links point to the wrong branch.** v2 `package.json` adds `oclif.repositoryPrefix = ".../blob/main/packages/contentstack-apps-cli/<commandPath>"`. Because it is hardcoded to `blob/main`, every generated "See code:" link in the v2 README resolves to source on the **`main` branch (v1.7.x)**, not the v2 code. A reader clicking "See code" for `app:create` lands on the v1 file that **still has `-n`**, contradicting the v2 behavior in §3.1. Fix: point `repositoryPrefix` at the v2 branch/tag (or a version-pinned ref) before GA.
-2. **Usage-banner Node string is stale/misleading:** README shows `node-v18.20.2` while the package requires `>=22` (see §2). Regenerate the README on a Node 22 host.
-3. **Version banner drift** is a known doc-gen pattern here — the v1 README banner shows `1.6.1` vs `package.json` `1.7.1`. Cosmetic; regenerate via `oclif readme`.
-
-(v1's `package.json` has **no** `repositoryPrefix`; its README links to `blob/main` too, which is correct for v1 since v1 source lives on `main`.)
-
----
-
-## 5. Command additions / removals
+## 4. Command additions / removals
 
 None. All eight commands (`create`, `delete`, `deploy`, `get`, `install`, `reinstall`, `uninstall`, `update`) plus the `app` topic command (`app/index.ts`) exist on both `origin/main` and `origin/v2-dev` (verified via `git ls-tree`). No command was added, removed, or renamed. No command aliases are defined in either version.
 
 ---
 
-## 6. Migration checklist
+## 5. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22`.
 - [ ] `app:create -n <name>` → `app:create --name <name>` in all scripts (§3.1).
@@ -108,7 +94,7 @@ None. All eight commands (`create`, `delete`, `deploy`, `get`, `install`, `reins
 
 ---
 
-## 7. Agent rules: 1.x → 2.x command translation
+## 6. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x apps command should apply these rules and output the 2.x equivalent:
 

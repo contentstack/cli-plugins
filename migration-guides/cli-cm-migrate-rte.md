@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-cm-migrate-rte`  ·  v1 line: `1.x` (bundled `1.6.4` in `@contentstack/cli@1.59.0`)  ·  v2 line: `2.x` (`2.0.0-beta.8`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0` (bundled plugin `1.6.4`), v2 = `contentstack/cli-plugins @ origin/v2-dev` + core `contentstack/cli @ origin/v2-dev` (`@contentstack/cli@2.0.0-beta.26`).
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -106,23 +106,7 @@ No new flags were added in 2.x.
 
 Unchanged. The config-file contract (`getConfig` / `normalizeFlags` in `src/lib/util/index.js`, schema at `src/lib/util/config_schema.json`) is the same in both versions; the command still throws `No value provided for the "paths" property in config.` when `paths` is empty. Existing config JSON files continue to work as-is.
 
----
-
-## 6. README / doc-site accuracy issues (v2)
-
-Checked `git show origin/v2-dev:packages/contentstack-migrate-rte/README.md`:
-
-- **Stale version string.** The generated Usage block advertises `@contentstack/cli-cm-migrate-rte/2.0.0-beta.4`, but `package.json` is `2.0.0-beta.8`. Regenerate with `oclif readme`.
-- **"See code" link is wrong for the shipped code.** The footer link points to
-  `https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-migrate-rte/src/commands/cm/entries/migrate-html-rte.js`
-  (from `oclif.repositoryPrefix` → `blob/main`). The v2 code actually lives on the **`v2-dev`** branch; the `main` branch of `cli-plugins` still carries an older, pre-v2 variant of this file (it uses a direct `chalk` import and lacks the v2 `load-chalk` hook), so the link does not point at the code the README documents. Fix the `repositoryPrefix` branch (or merge v2 to `main`) before GA.
-- **Missing install/bundling note.** The README's install line (`npm install -g @contentstack/cli-cm-migrate-rte`) is the standalone-package install; it does **not** tell existing `csdx` users that this plugin is no longer bundled and must be added with `csdx plugins:install @contentstack/cli-cm-migrate-rte`. Given §2 this is the single most important thing to document.
-
-The official v1 doc-site page (contentstack.com/docs/.../migrate-content-from-html-rte-to-json-rte) documents the same canonical flags and, as expected for v1, says nothing about installing the plugin (it was bundled). It needs a v2 prerequisite/install section added.
-
----
-
-## 7. Migration checklist
+## 6. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22`.
 - [ ] **`csdx plugins:install @contentstack/cli-cm-migrate-rte`** run on every machine/CI image that uses this command (§2).
@@ -133,7 +117,7 @@ The official v1 doc-site page (contentstack.com/docs/.../migrate-content-from-ht
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 7. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x `cm:entries:migrate-html-rte` (or `cm:migrate-rte`) command should apply these rules in order and output the 2.x equivalent:
 

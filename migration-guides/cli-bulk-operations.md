@@ -149,16 +149,7 @@ v1 bulk commands streamed plain, line-by-line `[timestamp] INFO:` logs. In v2, e
 - [ ] CI/scripts that parse bulk-command stdout updated for the progress-UI + summary output; run `config:set:log --show-console-logs` where raw logs are still needed (§5).
 - [ ] Confirm `--api-version` decision before finalizing scripts.
 
----
-
-## 8. Doc-site accuracy issues (fix before GA)
-
-- The **v1 doc page** (`bulk-publish-and-unpublish-content`) documents commands whose package (`contentstack-bulk-publish`) is **empty/removed** in v2 — mark it 1.x-only or redirect.
-- The **v2 doc page** (`bulk-operations-in-cli`) covers only `bulk-entries` + `bulk-assets`. **Missing: `cm:stacks:bulk-am-assets` and `cm:stacks:bulk-taxonomies`** — both need documenting. No beta page exists.
-
----
-
-## 9. Agent rules: 1.x → 2.x command translation
+## 8. Agent rules: 1.x → 2.x command translation
 
 1. **Identify the old command** and map to a v2 command + `--operation` per §2.
 2. **Set `--operation`:** `publish` for any `*:publish*`, `unpublish` for any `*:unpublish`.

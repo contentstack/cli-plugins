@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-audit`  ·  v1 line: `1.x` (verified `1.18.0`)  ·  v2 line: `2.x` (`2.0.0-beta.14`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0` (audit package `1.18.0`), v2 = `contentstack/cli-plugins @ origin/v2-dev`. Also cross-checked against the v1 doc-site page (audit-plugin).
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x audit command, the [Command Translation Rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x audit command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -12,16 +12,16 @@ This guide is written to be read by **both a human and an LLM/agent**. If you fe
 
 | Area | 1.x | 2.x | Action needed |
 |---|---|---|---|
-| Command id | `cm:stacks:audit` / `cm:stacks:audit:fix` | same | none (ids unchanged) |
+| Command ids | `cm:stacks:audit` / `cm:stacks:audit:fix` | same | none (ids unchanged) |
 | Short aliases `audit` / `audit:fix` | worked (registered as command aliases) | **removed** | replace `csdx audit` → `csdx cm:stacks:audit`, `csdx audit:fix` → `csdx cm:stacks:audit:fix` (§4.1) |
 | Node.js | `>=16` | **`>=22`** | upgrade Node runtime |
-| Console output | line-by-line module results by default | **progress bar + summary table; per-module console output suppressed by default** | pass `--show-console-output`, or set `log.showConsoleLogs` for CI (§4.2) |
-| Flags (both commands) | see §3 | **identical set** | none — no flag renamed/removed/added |
-| `--copy-dir` | already present | present (unchanged) | none — **not** new in v2 (§5) |
-| `fixSelectField` config | already present (`false`) | present (`false`, unchanged) | none — **not** new in v2 (§5) |
-| Taxonomy audit checks (DX-4981) | none | **still none** (taxonomy is skipped) | none — no new taxonomy checks exist (§6) |
+| Console output | line-by-line module results by default | **progress bar + summary table; per-module output suppressed by default** | pass `--show-console-output`, or set `log.showConsoleLogs` for CI (§4.2) |
 
-**The common path is unchanged.** `csdx cm:stacks:audit -d ./content --report-path ./report` and `csdx cm:stacks:audit:fix -d ./content --copy-dir` behave the same in 2.x except for the console-output default (§4.2).
+That's the complete list of changes — **only two are actionable**: the removed short aliases and the console-output default. **Flags are identical** (nothing renamed/removed/added).
+
+> Note — things people assume changed but **did not**: `--copy-dir` and the `fixSelectField` config already existed in 1.x (not new in v2), and there are still **no** taxonomy audit checks. Debunked with citations in §5–§6.
+
+**Common path unchanged:** `csdx cm:stacks:audit -d ./content --report-path ./report` and `csdx cm:stacks:audit:fix -d ./content --copy-dir` behave the same in 2.x except for the console-output default (§4.2).
 
 ---
 
@@ -117,21 +117,7 @@ The v1 doc-site also documents both `--copy-dir` and the `fixSelectField` JSON c
 
 Checked for new taxonomy audit checks in v2. **None exist in the audit plugin.** Taxonomy is explicitly **skipped**: `skipFieldTypes: ['taxonomy', 'group']` (`src/config/index.ts:4`). There is no `taxonomy` entry in the `modules` enum (`:6-16`), no `taxonomy` module file under `src/modules/`, and the only match for "taxonom" in the entire v2 audit source is that skip list. DX-4981's taxonomy work (seen in the export plugin) did **not** introduce audit-side taxonomy checks. Do not document a taxonomy audit capability.
 
----
-
-## 7. README / doc accuracy (v2 `packages/contentstack-audit/README.md`)
-
-Issues found in the auto-generated v2 README (flag for correction before GA):
-
-1. **Wrong "See code" repository link.** Both command sections link to `https://github.com/contentstack/audit/blob/main/packages/contentstack-audit/...` (README, `_See code:_` lines). The repo `contentstack/audit` does not host this package — the source lives in `contentstack/cli-plugins` (and historically `contentstack/cli`). Root cause: `package.json` `"repository": "contentstack/audit"` feeds the `oclif.repositoryPrefix` template `<%- repo %>/blob/main/packages/contentstack-audit/<%- commandPath %>`. Fix the `repository` field (and/or the prefix) to point at `contentstack/cli-plugins`.
-2. **Unfilled auto-gen placeholders.** README lines 1-2 still contain the literal comments `<!-- Insert Nodejs CI here -->` and `<!-- Insert Audit version here -->` — the badge/version blocks were never populated.
-3. **Doc-site vs README module list drift.** The doc-site page lists audit modules as `content-types, global-fields, entries, extensions, workflows, custom-roles, assets, field-rules` and omits `composable-studio`, which is a valid enum value in both v1 `1.18.0` and v2 (`src/config/index.ts`). The doc-site module list is stale.
-
-(The README version string and `_See code:_` paths are otherwise accurate for 2.x; the version banner reads `@contentstack/cli-audit/2.0.0-beta.14`, matching `package.json`.)
-
----
-
-## 8. Migration checklist
+## 7. Migration checklist
 
 - [ ] Node runtime upgraded to `>=22`.
 - [ ] `csdx audit` → `csdx cm:stacks:audit` and `csdx audit:fix` → `csdx cm:stacks:audit:fix` in all scripts (§4.1).
@@ -142,7 +128,7 @@ Issues found in the auto-generated v2 README (flag for correction before GA):
 
 ---
 
-## 9. Agent rules: 1.x → 2.x command translation
+## 8. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x audit command should apply these rules in order and output the 2.x equivalent:
 

@@ -16,6 +16,3 @@
   - Variant-entries already carried a `branch` scope in v1, so that part is **not** net-new.
 - In v2, `variant-entries` is also now a selectable `--module` value on the import command — see [cli-cm-import.md](cli-cm-import.md) §3.
 
-## Doc-site
-
-- No standalone doc page needed (library). Ensure variant/personalize branch behavior is covered on the export/import pages.

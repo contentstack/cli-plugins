@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-cm-export-to-csv`  ·  v1 line: `1.x` (baseline `1.11.0`)  ·  v2 line: `2.x` (`2.0.0-beta.9`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0`, v2 = `contentstack/cli-plugins @ v2-dev`.
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#7-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 > **TL;DR — this is the easy one.** Unlike `cm:stacks:export`, the export-to-csv command has **no flag removals, no renames, no short-char drops, and no changed defaults** between v1.59.0 and v2. The command source is byte-for-byte identical. The only migration actions are a **Node runtime bump** and awareness that the package now ships from a different repo. Every documented 1.x invocation runs verbatim on 2.x.
 
@@ -124,19 +124,7 @@ The `--include-fallback` (boolean, default `false`) and `--fallback-locale` (str
 
 Git history in `contentstack/cli` shows the feature landed in commit `d364abf80` *"feat: Added taxonomy localization support in export-to-csv"* (2025-10-16), first released in tag **v1.52.0** — well before the v1.59.0 baseline. **Verdict: pre-existing (since v1.52.0).**
 
----
-
-## 7. README / doc accuracy
-
-- **"See code" link — v1.59.0:** `https://github.com/contentstack/cli/blob/main/packages/contentstack-export-to-csv/src/commands/cm/export-to-csv.js` — points at the **`.js`** path in the **`cli`** repo. (The bundled v1.59.0 source is actually `.ts`, so the `.js` link is a legacy artifact of the pre-rewrite README, but it resolves to the right area.)
-- **"See code" link — v2-dev:** `https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-export-to-csv/src/commands/cm/export-to-csv.ts` — points at the **`.ts`** path in the **`cli-plugins`** repo. **Accurate:** the file exists at that path on `cli-plugins@main` (verified via `git ls-tree origin/main`), and the `/blob/main/` branch segment is correct.
-- **Version banner (v2 README):** `@contentstack/cli-cm-export-to-csv/2.0.0-beta.9 darwin-arm64 node-v22.21.1` — consistent with the `>=22` engine bump.
-
-No doc-accuracy defects found for the v2 README of this command (unlike `cm:stacks:export`, whose `--branch` help text is stale).
-
----
-
-## 8. Migration checklist
+## 7. Migration checklist
 
 - [ ] Node runtime upgraded to **`>=22`** (§4.1) — the only hard requirement.
 - [ ] Reinstall the plugin from npm (`@contentstack/cli-cm-export-to-csv`, now sourced from `cli-plugins`) (§4.2).
@@ -145,7 +133,7 @@ No doc-accuracy defects found for the v2 README of this command (unlike `cm:stac
 
 ---
 
-## 9. Agent rules: 1.x → 2.x command translation
+## 8. Agent rules: 1.x → 2.x command translation
 
 For `cm:export-to-csv`, translation is the identity function.
 

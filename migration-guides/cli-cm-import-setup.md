@@ -40,12 +40,7 @@ No flags were removed or renamed other than the `-B` short char.
 | `csdx cm:import-setup -k <key> -d ./content` | `csdx cm:stacks:import-setup -k <key> -d ./content` |
 | `csdx cm:stacks:import-setup -a <alias> -B development` | `csdx cm:stacks:import-setup -a <alias> --branch development` |
 
-## 5. Doc-site
-
-- **No official doc page exists** for this command (in v1 or v2). It should be documented (or explicitly noted as an internal helper for import) before GA.
-- Check the v2 README "See code" link — like other plugins it likely points at the wrong repo/branch (`contentstack/cli` or `main`).
-
-## 6. Agent rules
+## 5. Agent rules
 
 1. `cm:import-setup` → `cm:stacks:import-setup`.
 2. `-B` → `--branch`.

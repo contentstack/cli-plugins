@@ -149,15 +149,3 @@ Input: `csdx cm:migration --filePath ./m.js --api-key blt123 -B dev -A --multi`
 Output: `csdx cm:stacks:migration --file-path ./m.js --stack-api-key blt123 --branch dev --multiple`
 Warnings: dropped `-A` (auth via active login session or `--alias`); `-B`→`--branch`, `--filePath`→`--file-path`, `--api-key`→`--stack-api-key`, `--multi`→`--multiple`.
 
----
-
-## 9. README / doc-site accuracy notes
-
-Checked `packages/contentstack-migration/README.md` on `origin/v2-dev`:
-
-- **Wrong "See code" link.** The v2 README (documenting `2.0.0-beta.15`) ends with
-  `_See code: [src/commands/cm/stacks/migration.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-migration/src/commands/cm/stacks/migration.ts)_`.
-  It points at the **`main` branch**, whose migration.ts is the **v1-line code** (`1.12.4`), not the `2.0.0-beta.x` source the README documents. The link should target the v2 branch/tag. (The v1 README, by contrast, links into the `contentstack/cli` repo — `github.com/contentstack/cli/blob/main/…` — reflecting the pre-`cli-plugins` home.)
-- **Auto-generated FLAGS block is otherwise accurate.** It lists only the canonical flags (`-a/--alias`, `-k/--stack-api-key`, `--branch`, `--config`, `--config-file`, `--file-path`, `--multiple`) — correctly excluding the hidden legacy flags, and correctly showing `-k`.
-- **Node/version banner** shows `@contentstack/cli-migration/2.0.0-beta.15 … node-v22.21.1`, consistent with `engines.node >=22.0.0`.
-- No stale flag descriptions or removed-flag references were found in the README body.
