@@ -49,6 +49,8 @@ const auditMsg = {
   FIELD_RULE_TARGET_ABSENT: `The target field '{target_field}' is not present in the schema of the content-type {ctUid}`,
   FIELD_RULE_CONDITION_SCAN_MESSAGE: `Completed Scanning of Field Rule '{num}' condition of Content-type '{ctUid}'`,
   FIELD_RULE_TARGET_SCAN_MESSAGE: `Completed Scanning of Field Rule '{num}' target of Content-type '{ctUid}'`,
+  SCAN_ASSET_QUARANTINE_MSG: `Asset with UID '{uid}' has a non-clean scan status ('{status}') and will be excluded from import.`,
+  ENTRY_ASSET_REF_WARN_MSG: `Entry '{uid}' field '{field}' references asset '{asset_uid}' with scan status '{status}'; it will be removed on fix.`,
 };
 
 const auditFixMsg = {
@@ -63,6 +65,8 @@ const auditFixMsg = {
   ENTRY_SELECT_FIELD_FIX: `Adding the value '{value}' in the select field of entry UID '{uid}'...`,
   ASSET_FIX: `Fixed publish detials for Asset with UID '{uid}'`,
   FIELD_RULE_FIX_MESSAGE: `Fixed Field Rule '{num}' target of Content-type '{ctUid}`,
+  ASSET_SCAN_STATUS_FIX: `Removed asset with UID '{uid}' (scan status: '{status}') from assets.json.`,
+  ENTRY_ASSET_REF_FIX: `Removed reference to asset '{asset_uid}' from entry '{uid}' field '{field}'.`,
 };
 
 const messages: typeof errors &
