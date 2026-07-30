@@ -19,6 +19,7 @@ The migration impact on clone is almost entirely **inherited** from the export a
 - **Progress bars + summary** output (clone is now a progress-supported module).
 - **Flat content directory** (no per-branch subfolder) — directly visible in clone's internal export/import wiring.
 - Inherited export/import semantics: **default branch scope = `main`**, no `schema.json`, no `export-info.json` / `contentVersion`.
+- Inherited import constraint handling + the **unique-fields known issue** (duplicate entries on a non-`title` unique field) — see [import guide §4.7](cli-cm-import.md).
 
 Two commonly-repeated claims are **false** and are debunked with citations below (§4.3): interactive prompts and auto audit-fix are **not new in the beta** — both already shipped in v1.59.0.
 

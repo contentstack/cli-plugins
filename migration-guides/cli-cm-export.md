@@ -4,7 +4,7 @@
 > Package: `@contentstack/cli-cm-export`  ·  v1 line: `1.x` (e.g. `1.25.2`)  ·  v2 line: `2.x` (e.g. `2.0.0-beta.x`)
 > Status: verified against code — v1 = `contentstack/cli @ v1.59.0`, v2 = `contentstack/cli-plugins @ v2-dev`.
 
-This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#8-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
+This guide is written to be read by **both a human and an LLM/agent**. If you feed this file to an agent along with a 1.x command, the [Command Translation Rules](#9-agent-rules-1x--2x-command-translation) section is enough to emit the correct 2.x command.
 
 ---
 
@@ -160,11 +160,24 @@ Exported `stack.json` also now **strips** `SYS_ACL`, `user_uids`, `owner_uid`, `
 
 ---
 
-> **README / doc-site accuracy issues** for this command are tracked separately in [`doc-accuracy-cli-cm-export.md`](doc-accuracy-cli-cm-export.md) (internal fix-list — the v2 README is stale in several places).
+## 8. v2 README / doc-site accuracy issues (fix before GA)
+
+The v2 plugin `README.md` is the bare **auto-generated `oclif readme`** output and is **inaccurate** in several places. These must be corrected (the fix is in the command's flag descriptions / examples, since the README is regenerated from them):
+
+| Location | Problem | Correct value |
+|---|---|---|
+| `--branch` help text | Says *"by default the content will be exported from all the branches"* | 2.x default is **`main` only** (§4.1) |
+| `--module` help list | Lists `…, taxonomies, and studio` | Real enum has **`composable-studio`** (not "studio"), plus `stack`, `publishing-rules`, `personalize` — 17 modules total (§3) |
+| `--module` description | *"export all the modules **to** the stack"* | should read **"from the stack"** |
+| "See code" source link | Points to `github.com/contentstack/cli/blob/main/packages/contentstack-export/…` | Export plugin now lives in **`contentstack/cli-plugins`** — link is wrong/broken |
+| Config-file usage | Not documented | 2.x README omits the entire config-file section the 1.x docs have (§5) |
+| Node/output-mode | Not documented | README doesn't mention `>=22` or the progress-manager default (§4.5) |
+
+**Doc-site note:** the official 1.x page and the v2-beta page both carry the stale *"exports from all branches"* default and the `stacks` module-name error. Both should be corrected to match code.
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 9. Agent rules: 1.x → 2.x command translation
 
 An agent given a 1.x `cm:export`/`cm:stacks:export` command should apply these rules in order and output the 2.x equivalent:
 

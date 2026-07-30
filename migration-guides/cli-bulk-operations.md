@@ -24,6 +24,7 @@
 | Env / locale flags | mixed singular (`--environment`, `--locale`) & plural | consistent plural (`--environments`, `--locales`) |
 | Retry | `--retry-failed` (boolean) | `--retry-failed <path>` (path to prior run dir) |
 | Revert | `cm:stacks:publish-revert` command | `--revert <path>` flag |
+| Output mode | plain, line-by-line `[timestamp] INFO:` logs | **progress-bar UI + end-of-run summary** by default (console logs suppressed) |
 | Node.js | `>=14` | `>=22` |
 
 ---
@@ -102,7 +103,27 @@ Own flags: `--operation delete|move`, `--space-uid`, `--org-uid`, `--workspace`,
 
 ---
 
-## 5. Worked examples
+## 5. Output mode: progress bars + summary (new in 2.x)
+
+v1 bulk commands streamed plain, line-by-line `[timestamp] INFO:` logs. In v2, every `cm:stacks:bulk-*` command shows a **progress-bar UI + an end-of-run summary** instead, and the timestamped console logs are **suppressed by default**. The summary includes a per-command **Module Details** row (`ENTRY` / `ASSET` / `TAXONOMY`).
+
+**What the summary counts mean**
+- **SINGLE mode** (`--publish-mode single`): real per-item success/failed counts.
+- **BULK mode** (default): items are submitted as **async jobs**, so the counts reflect **submission** — items in batches that failed to submit are counted as failed; the rest as successfully submitted. The **actual publish outcome** is tracked at the printed **status URL** (Publish Queue), not in this summary.
+
+**Impact / fix for scripts & CI**
+- Anything **parsing bulk-command stdout** sees different output (progress UI + summary, not `INFO:` lines) — with **no error raised**. Update log-scraping accordingly.
+- To restore raw console logs (e.g. for CI/debugging):
+  ```bash
+  csdx config:set:log --show-console-logs
+  ```
+  This sets `log.showConsoleLogs = true`; bulk commands then print the timestamped logs as before. (Note the persisted config key is `log.showConsoleLogs` in 2.x.)
+
+> Setup/auth errors during a run surface via the error handler / log file rather than as inline console output (a consequence of suppressing console logs) — same behavior as export/import.
+
+---
+
+## 6. Worked examples
 
 | 1.x | 2.x |
 |---|---|
@@ -115,7 +136,7 @@ Own flags: `--operation delete|move`, `--space-uid`, `--org-uid`, `--workspace`,
 
 ---
 
-## 6. Migration checklist
+## 7. Migration checklist
 
 - [ ] Node runtime `>=22`.
 - [ ] Every old command id replaced per §2 (grep scripts/CI for `cm:entries:publish`, `cm:assets:`, `cm:bulk-publish`, `cm:stacks:publish`, `cm:stacks:unpublish`).
@@ -125,18 +146,19 @@ Own flags: `--operation delete|move`, `--space-uid`, `--org-uid`, `--workspace`,
 - [ ] `--delivery-token`, `--entry-uid` removed from unpublish/variant scripts.
 - [ ] `--retry-failed` now takes a path; `publish-revert` → `--revert <path>`.
 - [ ] `publish-configure` (config generator) and `publish-clear-logs` have no equivalent — remove those steps.
+- [ ] CI/scripts that parse bulk-command stdout updated for the progress-UI + summary output; run `config:set:log --show-console-logs` where raw logs are still needed (§5).
 - [ ] Confirm `--api-version` decision before finalizing scripts.
 
 ---
 
-## 7. Doc-site accuracy issues (fix before GA)
+## 8. Doc-site accuracy issues (fix before GA)
 
 - The **v1 doc page** (`bulk-publish-and-unpublish-content`) documents commands whose package (`contentstack-bulk-publish`) is **empty/removed** in v2 — mark it 1.x-only or redirect.
 - The **v2 doc page** (`bulk-operations-in-cli`) covers only `bulk-entries` + `bulk-assets`. **Missing: `cm:stacks:bulk-am-assets` and `cm:stacks:bulk-taxonomies`** — both need documenting. No beta page exists.
 
 ---
 
-## 8. Agent rules: 1.x → 2.x command translation
+## 9. Agent rules: 1.x → 2.x command translation
 
 1. **Identify the old command** and map to a v2 command + `--operation` per §2.
 2. **Set `--operation`:** `publish` for any `*:publish*`, `unpublish` for any `*:unpublish`.

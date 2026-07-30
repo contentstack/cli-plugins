@@ -101,6 +101,16 @@ New in 2.x:
 ### 4.6 `cm:import` alias removed
 - Only `cm:stacks:import` resolves in 2.x. `csdx cm:import …` → "command not found."
 
+### 4.7 Content-type constraints are relaxed during import + how existing entries are matched
+Behavior worth knowing when migrating (applies to both 1.x and 2.x):
+- **Temporary constraint suppression.** During import, content types are created with **`mandatory` suppressed** on non-`title` fields, so entries can be created in an initial pass before references / RTE embedded entries are resolved in a follow-up update. The original schema is restored afterward (visible as the `CT Preparation` → … → `CT Restoration` steps in the entries phase). `title` is never suppressed.
+- **Existing-entry matching is by `title` only.** With `--replace-existing`, an entry is updated in place only when the platform rejects the create with a uniqueness conflict on **`title`/`uid`** (errorCode 119); the existing entry is then found via a query on **`title` + `locale`** and updated. Custom unique fields (e.g. a `slug`/`from`) are **not** used for matching.
+
+> ⚠️ **Known issue (unique fields) — fix in progress, not yet in `v2-dev`.** Historically the suppression also disabled **`unique`** (not just `mandatory`) during import. Because uniqueness was off in that window, importing data whose values collide on a non-`title` unique field could **create duplicate entries** instead of the platform rejecting them — and the duplicates persist even after the schema is restored to `unique: true`. This reproduces on a content type that has **both a non-title unique field and entries**.
+> - **Fix (pending):** import keeps `unique` **enforced** (only `mandatory` is suppressed), so duplicates on a unique field are rejected during import.
+> - **Caveat after the fix:** since matching is `title`-based, an incoming entry with a *new title* but a unique-field value that collides with a *different* existing entry will now **fail with a uniqueness error** rather than be silently duplicated (or auto-updated). Reconcile those entries before re-importing.
+> - Track the exact GA/hotfix status before relying on this in a migration.
+
 ---
 
 ## 5. Config-file migration (`--config <file>`)
@@ -139,6 +149,7 @@ Most 1.x import config keys carry over. Key changes:
 - [ ] CI parsing import stdout runs `config:set:log --show-console-logs` (§4.4).
 - [ ] Config JSON cleaned: drop `contentVersion`, `onlyTSModules`; rename `asset-management`→`cs-assets` if used (§5).
 - [ ] Auth switched off auth-token to management token / api-key.
+- [ ] For content types with a non-`title` unique field: de-duplicate source data on that field before re-importing, and confirm the unique-fields fix status (§4.7).
 
 ---
 
