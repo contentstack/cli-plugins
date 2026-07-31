@@ -13,4 +13,6 @@ fileignoreconfig:
   checksum: 529431473623cf6bbefb35bc898be2a60dcb453e0c9273ecb97923de658769b3
 - filename: packages/contentstack-seed/src/commands/cm/stacks/seed.ts
   checksum: 9a3fd45a57c6ebf63d6c154657f2ebf799befbbacb9a255944c2d89ae89b22ed
+- filename: packages/contentstack-seed/test/commands/cm/stacks/seed.test.ts
+  checksum: b54f572a614e5d80f7fa27a51e679147cb537fd76ac922eed981d1156a261e50
 version: '1.0'

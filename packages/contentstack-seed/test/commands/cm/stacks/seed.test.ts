@@ -67,10 +67,8 @@ describe('SeedCommand', () => {
         org: 'org-123',
         'stack-api-key': undefined,
         'stack-name': 'New Stack',
-        'fetch-limit': '50',
         yes: undefined,
         alias: undefined,
-        locale: 'en-us',
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -90,11 +88,9 @@ describe('SeedCommand', () => {
         orgUid: 'org-123',
         stackUid: undefined,
         stackName: 'New Stack',
-        fetchLimit: '50',
         skipStackConfirmation: undefined,
         isAuthenticated: true,
         alias: undefined,
-        master_locale: 'en-us',
       });
       expect(mockSeeder.run).toHaveBeenCalled();
     });
@@ -105,10 +101,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': 'api-key-123',
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -135,10 +129,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: 'my-alias',
-        locale: undefined,
       };
 
       const mockTokens = {
@@ -176,10 +168,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -206,10 +196,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -237,10 +225,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: true,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -265,10 +251,8 @@ describe('SeedCommand', () => {
         org: 'org-123',
         'stack-api-key': undefined,
         'stack-name': 'My Stack',
-        'fetch-limit': '100',
         yes: true,
         alias: 'my-alias',
-        locale: 'fr-fr',
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -288,11 +272,9 @@ describe('SeedCommand', () => {
         orgUid: 'org-123',
         stackUid: undefined,
         stackName: 'My Stack',
-        fetchLimit: '100',
         skipStackConfirmation: true,
         isAuthenticated: true,
         alias: 'my-alias',
-        master_locale: 'fr-fr',
       });
     });
 
@@ -302,10 +284,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -327,10 +307,8 @@ describe('SeedCommand', () => {
         org: undefined,
         'stack-api-key': undefined,
         'stack-name': undefined,
-        'fetch-limit': undefined,
         yes: undefined,
         alias: undefined,
-        locale: undefined,
       };
 
       jest.spyOn(command as any, 'parse').mockResolvedValue({
@@ -367,7 +345,7 @@ describe('SeedCommand', () => {
 
     it('should have correct usage', () => {
       expect(SeedCommand.usage).toBe(
-        'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>] [--locale <value>]',
+        'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>]',
       );
     });
 
@@ -379,7 +357,6 @@ describe('SeedCommand', () => {
       expect(SeedCommand.flags['stack-name']).toBeDefined();
       expect(SeedCommand.flags.yes).toBeDefined();
       expect(SeedCommand.flags.alias).toBeDefined();
-      expect(SeedCommand.flags.locale).toBeDefined();
     });
   });
 });

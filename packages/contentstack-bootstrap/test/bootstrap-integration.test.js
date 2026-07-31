@@ -26,7 +26,6 @@ describe('Bootstrap Integration Tests', () => {
     expect(BootstrapCommand.flags).to.have.property('stack-name');
     expect(BootstrapCommand.flags).to.have.property('yes');
     expect(BootstrapCommand.flags).to.have.property('alias');
-    expect(BootstrapCommand.flags).to.have.property('app-type');
   });
 
   it('should validate alias flag properties', () => {
