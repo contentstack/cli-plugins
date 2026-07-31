@@ -152,7 +152,7 @@ describe('Bootstrapping an app', () => {
         'app-name': 'kickstart-next',
         org: 'org-uid',
         'stack-name': 'test-bootstrap-cmd',
-        'app-type': 'kickstart-next',
+
         yes: true,
       };
       return Promise.resolve(responses[question.name] || {});
@@ -169,16 +169,6 @@ describe('Bootstrapping an app', () => {
   afterEach(() => {
     sandbox.restore();
     delete process.env.CONTENTSTACK_AUTH_TOKEN;
-  });
-
-  it('should handle invalid app type gracefully', async () => {
-    try {
-      await runCommand(['cm:bootstrap', '--app-type', 'invalidtype']);
-    } catch (error) {
-      expect(error).to.exist;
-      expect(error?.oclif?.exit).to.equal(1);
-      expect(error.message).to.contain('Invalid app type provided invalidtype');
-    }
   });
 
   it('should bootstrap a Contentstack app with the correct flags', async () => {
@@ -351,7 +341,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: testAlias,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -428,7 +418,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -485,7 +475,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -542,7 +532,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -598,7 +588,6 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': 'sampleapp',
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -613,11 +602,11 @@ describe('Bootstrapping an app', () => {
       command.cmaHost = mock.region.cma;
 
       await command.run();
-      // Verify that appType is set correctly
+      // Verify that appType is hardcoded to 'starterapp'
       expect(bootstrapOptions).to.not.be.null;
-      expect(bootstrapOptions.appType).to.equal('sampleapp');
-      // Verify that inquireApp was called with sampleApps (config.default in compiled CJS)
-      expect(interactive.inquireApp.calledWith(config.default.sampleApps)).to.be.true;
+      expect(bootstrapOptions.appType).to.equal('starterapp');
+      // Verify that inquireApp was called with starterApps
+      expect(interactive.inquireApp.calledWith(config.default.starterApps)).to.be.true;
     });
 
     it('should handle app-name flag correctly', async () => {
@@ -655,7 +644,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': 'kickstart-next',
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
