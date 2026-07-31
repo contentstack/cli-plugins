@@ -4,6 +4,7 @@ import { isAuthenticated, configHandler, cliux } from '@contentstack/cli-utiliti
 
 // Mock dependencies
 jest.mock('../../../../src/seed/index');
+jest.mock('@contentstack/cli-cm-import', () => ({ __esModule: true, default: { run: jest.fn() } }));
 jest.mock('@contentstack/cli-utilities', () => {
   const { Flags, Command } = require('@oclif/core');
   return {
