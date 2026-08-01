@@ -37,6 +37,10 @@ export default class Assets extends BaseClass {
   protected missingEnvLocales: Record<string, any> = {};
   public moduleName: keyof typeof auditConfig.moduleConfig;
   private fixOverwriteConfirmed: boolean | null = null;
+  /** API key of the exported stack; null when `stack/stack.json` is missing or unreadable. */
+  private sourceStackApiKey: string | null = null;
+  /** Keeps the unknown-source-stack warning to one per run. */
+  private unverifiablePdWarned = false;
   private resolvedBasePaths: Array<{ path: string; spaceId: string | null }> = [];
   /** Map space dir name → the per-space multibar row label, or empty when single-space. */
   private spaceProcessNames: Map<string, string> = new Map();
@@ -186,6 +190,32 @@ export default class Assets extends BaseClass {
     this.environments = existsSync(environmentPath) ? keys(JSON.parse(readFileSync(environmentPath, 'utf8'))) : [];
     log.debug(`Total environments loaded: ${this.environments.length}`, this.config.auditContext);
     log.debug(`Environment names: ${this.environments.join(', ')}`, this.config.auditContext);
+
+    this.sourceStackApiKey = this.resolveSourceStackApiKey();
+    log.debug(
+      this.sourceStackApiKey
+        ? `Source stack API key resolved from ${this.stackJsonPath()}`
+        : `Source stack API key not resolved from ${this.stackJsonPath()}`,
+      this.config.auditContext,
+    );
+  }
+
+  private stackJsonPath(): string {
+    return join(this.config.basePath, 'stack', 'stack.json');
+  }
+
+  /** Reads the exported stack's API key, used to scope Asset Management publish details to this stack. */
+  private resolveSourceStackApiKey(): string | null {
+    const stackJsonPath = this.stackJsonPath();
+    if (!existsSync(stackJsonPath)) return null;
+
+    try {
+      const stackData = JSON.parse(readFileSync(stackJsonPath, 'utf8'));
+      return stackData?.api_key || stackData?.stackHeaders?.api_key || null;
+    } catch (error) {
+      log.debug(`Could not read ${stackJsonPath}: ${error}`, this.config.auditContext);
+      return null;
+    }
   }
 
   /**
@@ -298,11 +328,16 @@ export default class Assets extends BaseClass {
       let indexer = fsUtility.indexFileContent;
       log.debug(`Found ${Object.keys(indexer).length} asset files to process`, this.config.auditContext);
 
+      let skippedCrossStack = 0;
+
       for (const fileIndex in indexer) {
         log.debug(`Processing asset file: ${indexer[fileIndex]}`, this.config.auditContext);
         const assets = (await fsUtility.readChunkFiles.next()) as Record<string, EntryStruct>;
         this.assets = assets;
         log.debug(`Loaded ${Object.keys(assets).length} assets from file`, this.config.auditContext);
+
+        // Fix mode only prompts for and rewrites chunks that actually changed.
+        let chunkChanged = false;
 
         for (const assetUid in assets) {
           log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
@@ -311,17 +346,36 @@ export default class Assets extends BaseClass {
             log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
             cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
             this.assets[assetUid].publish_details = [];
+            chunkChanged = true;
           }
 
           const publishDetails = this.assets[assetUid]?.publish_details;
           log.debug(`Asset ${assetUid} has ${publishDetails?.length || 0} publish details`, this.config.auditContext);
 
           if (Array.isArray(this.assets[assetUid].publish_details)) {
+            const originalPublishDetailsCount = this.assets[assetUid].publish_details.length;
+
             this.assets[assetUid].publish_details = this.assets[assetUid].publish_details.filter((pd: any) => {
               log.debug(
                 `Checking publish detail: locale=${pd?.locale}, environment=${pd?.environment}`,
                 this.config.auditContext,
               );
+
+              // An Asset Management asset is shared across stacks and carries publish details for each stack
+              // it was published into, tagged with that stack's api_key. Only this export's stack can be
+              // validated here; entries belonging to other stacks (or unattributable ones, when the source
+              // stack api_key is unknown) are left untouched.
+              if (pd?.api_key && pd.api_key !== this.sourceStackApiKey) {
+                if (!this.sourceStackApiKey && !this.unverifiablePdWarned) {
+                  this.unverifiablePdWarned = true;
+                  log.warn(
+                    $t(auditMsg.ASSET_PD_SOURCE_STACK_UNKNOWN, { path: this.stackJsonPath() }),
+                    this.config.auditContext,
+                  );
+                }
+                skippedCrossStack++;
+                return true;
+              }
 
               if (this.locales?.includes(pd?.locale) && this.environments?.includes(pd?.environment)) {
                 log.debug(
@@ -334,10 +388,17 @@ export default class Assets extends BaseClass {
                   `Publish detail invalid for asset ${assetUid}: locale=${pd.locale}, environment=${pd.environment}`,
                   this.config.auditContext,
                 );
-                cliux.print(
-                  $t(auditMsg.SCAN_ASSET_WARN_MSG, { uid: assetUid, locale: pd.locale, environment: pd.environment }),
-                  { color: 'yellow' },
-                );
+                const localeMissing = !this.locales?.includes(pd?.locale);
+                const environmentMissing = !this.environments?.includes(pd?.environment);
+                const warnMsg =
+                  localeMissing && environmentMissing
+                    ? auditMsg.SCAN_ASSET_ENV_AND_LOCALE_MISSING
+                    : localeMissing
+                    ? auditMsg.SCAN_ASSET_LOCALE_MISSING
+                    : auditMsg.SCAN_ASSET_ENV_MISSING;
+                cliux.print($t(warnMsg, { uid: assetUid, locale: pd.locale, environment: pd.environment }), {
+                  color: 'yellow',
+                });
                 if (!Object.keys(this.missingEnvLocales).includes(assetUid)) {
                   log.debug(`Creating new missing reference entry for asset ${assetUid}`, this.config.auditContext);
                   this.missingEnvLocales[assetUid] = [
@@ -363,6 +424,10 @@ export default class Assets extends BaseClass {
                 return false;
               }
             });
+
+            if (this.assets[assetUid].publish_details.length !== originalPublishDetailsCount) {
+              chunkChanged = true;
+            }
           }
 
           log.info($t(auditMsg.SCAN_ASSET_SUCCESS_MSG, { uid: assetUid }), this.config.auditContext);
@@ -384,9 +449,21 @@ export default class Assets extends BaseClass {
           }
         }
 
-        if (this.fix) {
+        if (this.fix && chunkChanged) {
           await this.writeFixContent(`${spacePath}/${indexer[fileIndex]}`, this.assets);
+        } else if (this.fix) {
+          log.debug(
+            `No changes for ${indexer[fileIndex]} - skipping write and fix confirmation`,
+            this.config.auditContext,
+          );
         }
+      }
+
+      if (skippedCrossStack) {
+        log.debug(
+          `Skipped ${skippedCrossStack} publish detail(s) of other stacks in ${spaceId ?? spacePath}`,
+          this.config.auditContext,
+        );
       }
 
       // Per-space row finished — close it so the multibar shows ✓ Complete
