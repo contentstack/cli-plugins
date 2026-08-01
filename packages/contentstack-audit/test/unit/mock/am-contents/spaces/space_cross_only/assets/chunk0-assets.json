@@ -1,0 +1,19 @@
+{
+  "am_asset_other_stacks_only_a": {
+    "uid": "am_asset_other_stacks_only_a",
+    "title": "Published only into other stacks, unknown env and locale here",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_other_dev", "api_key": "blt_other_stack_one" },
+      { "locale": "de-de", "environment": "env_other_prod", "api_key": "blt_other_stack_two" }
+    ]
+  },
+  "am_asset_other_stacks_only_b": {
+    "uid": "am_asset_other_stacks_only_b",
+    "title": "Published only into other stacks, multiple environments",
+    "publish_details": [
+      { "locale": "fr-fr", "environment": "env_other_dev", "api_key": "blt_other_stack_one" },
+      { "locale": "fr-fr", "environment": "env_other_stage", "api_key": "blt_other_stack_one" },
+      { "locale": "ja-jp", "environment": "env_other_prod", "api_key": "blt_other_stack_two" }
+    ]
+  }
+}

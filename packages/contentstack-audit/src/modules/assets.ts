@@ -460,7 +460,7 @@ export default class Assets extends BaseClass {
       }
 
       if (skippedCrossStack) {
-        log.debug(
+        log.info(
           `Skipped ${skippedCrossStack} publish detail(s) of other stacks in ${spaceId ?? spacePath}`,
           this.config.auditContext,
         );
