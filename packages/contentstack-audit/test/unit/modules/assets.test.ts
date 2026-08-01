@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { expect } from 'chai';
 import fancy from 'fancy-test';
 import Sinon from 'sinon';
+import isEmpty from 'lodash/isEmpty';
 import { cliux } from '@contentstack/cli-utilities';
 import config from '../../../src/config';
 import { $t, auditMsg } from '../../../src/messages';
@@ -510,6 +511,85 @@ describe('Assets module', () => {
         const legacyInstance = new Assets(constructorParam);
         expect((legacyInstance as any).resolveSourceStackApiKey()).to.be.null;
       });
+
+    describe('export whose assets are published only into other stacks (DX-9739)', () => {
+      const crossOnlyPaths = [
+        { path: resolve(amContentsPath, 'spaces', 'space_cross_only', 'assets'), spaceId: 'space_cross_only' },
+      ];
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should report nothing, so audit reports no asset issues', async () => {
+          const instance = new Assets(amParam());
+          await instance.prerequisiteData();
+          (instance as any).resolvedBasePaths = crossOnlyPaths;
+          const printStub = Sinon.stub(cliux, 'print');
+          await instance.lookForReference();
+
+          // `hasFix` in audit-base-command is an OR of `!isEmpty(...)` across the module results, and
+          // an empty assets result is what keeps cm:stacks:import from raising the fix confirmation.
+          expect(isEmpty((instance as any).missingEnvLocales)).to.be.true;
+          expect(printStub.called).to.be.false;
+          printStub.restore();
+        });
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should not prompt or write anything in fix mode', async () => {
+          const instance = new Assets(amParam({ fix: true }));
+          await instance.prerequisiteData();
+          (instance as any).resolvedBasePaths = crossOnlyPaths;
+          const confirmStub = Sinon.stub(cliux, 'confirm').resolves(true);
+          const writeStub = Sinon.stub(fs, 'writeFileSync');
+          await instance.lookForReference();
+
+          expect(confirmStub.called).to.be.false;
+          expect(writeStub.called).to.be.false;
+          expect(isEmpty((instance as any).missingEnvLocales)).to.be.true;
+          confirmStub.restore();
+          writeStub.restore();
+        });
+    });
+
+    describe('export without stack/stack.json', () => {
+      const noStackPath = resolve(__dirname, '..', 'mock', 'am-contents-no-stack');
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should audit only legacy publish details and warn once', async () => {
+          const warnStub = Sinon.stub(mockLogger, 'warn');
+          const instance = new Assets(amParam({ config: { basePath: noStackPath } }));
+          await instance.prerequisiteData();
+          expect((instance as any).sourceStackApiKey).to.be.null;
+          await instance.lookForReference();
+
+          const missing = (instance as any).missingEnvLocales;
+          expect(Object.keys(missing)).to.eql(['am_asset_legacy_pd']);
+          expect(missing.am_asset_legacy_pd).to.have.lengthOf(1);
+          expect(missing.am_asset_legacy_pd[0]).to.include({ publish_environment: 'env_own_missing' });
+          expect(warnStub.callCount).to.equal(1);
+          expect(warnStub.firstCall.args[0]).to.include('Source stack API key not found');
+          warnStub.restore();
+        });
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should leave api_key tagged publish details untouched in fix mode', async () => {
+          Sinon.stub(mockLogger, 'warn');
+          const instance = new Assets(
+            amParam({ fix: true, config: { basePath: noStackPath, flags: { yes: true } as any } }),
+          );
+          await instance.prerequisiteData();
+          const writeStub = Sinon.stub(fs, 'writeFileSync');
+          await instance.lookForReference();
+
+          const written = JSON.parse(writeStub.firstCall.args[1] as string);
+          // Both tagged entries survive even though neither is valid for this export's env/locale set
+          expect(written.am_asset_tagged.publish_details).to.have.lengthOf(2);
+          expect(written.am_asset_legacy_pd.publish_details.map((pd: any) => pd.environment)).to.eql(['env_own_dev']);
+          writeStub.restore();
+        });
+    });
   });
 
   describe('integration-style run with real FsUtility', () => {
