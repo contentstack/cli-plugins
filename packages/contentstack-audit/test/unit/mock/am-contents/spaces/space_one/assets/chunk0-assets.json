@@ -1,0 +1,37 @@
+{
+  "am_asset_cross_only": {
+    "uid": "am_asset_cross_only",
+    "title": "Published only into other stacks",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_other_dev", "api_key": "blt_other_stack_one" },
+      { "locale": "fr-fr", "environment": "env_other_prod", "api_key": "blt_other_stack_two" }
+    ]
+  },
+  "am_asset_mixed": {
+    "uid": "am_asset_mixed",
+    "title": "Own stack plus other stacks",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_own_dev", "api_key": "blt_own_stack" },
+      { "locale": "en-us", "environment": "env_other_dev", "api_key": "blt_other_stack_one" },
+      { "locale": "en-us", "environment": "env_own_missing", "api_key": "blt_own_stack" }
+    ]
+  },
+  "am_asset_bad_locale": {
+    "uid": "am_asset_bad_locale",
+    "title": "Own stack with unknown locale",
+    "publish_details": [{ "locale": "de-de", "environment": "env_own_prod", "api_key": "blt_own_stack" }]
+  },
+  "am_asset_bad_both": {
+    "uid": "am_asset_bad_both",
+    "title": "Own stack with unknown locale and environment",
+    "publish_details": [{ "locale": "de-de", "environment": "env_own_missing", "api_key": "blt_own_stack" }]
+  },
+  "am_asset_legacy_pd": {
+    "uid": "am_asset_legacy_pd",
+    "title": "Legacy publish details without api_key",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_own_dev" },
+      { "locale": "en-us", "environment": "env_own_missing" }
+    ]
+  }
+}
