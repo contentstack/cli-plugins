@@ -51,6 +51,10 @@ export default class SeedCommand extends Command {
       char: 'a',
       description: 'Alias of the management token',
     }),
+    locale: flags.string({
+      hidden: true,
+      description: 'Master locale for stack creation',
+    }),
   };
 
   async run() {
@@ -75,6 +79,7 @@ export default class SeedCommand extends Command {
         skipStackConfirmation: seedFlags.yes,
         isAuthenticated: isAuthenticated(),
         alias: managementTokenAlias,
+        master_locale: seedFlags.locale,
       };
 
       const listOfTokens = configHandler.get('tokens');
