@@ -26,12 +26,6 @@ class ModuleImporter {
       const stackDetails: Record<string, unknown> = await this.stackAPIClient.fetch();
       this.importConfig.stackName = stackDetails.name as string;
       this.importConfig.org_uid = stackDetails.org_uid as string;
-
-      const assetScanningEnabled = await this.detectAssetScanning(this.importConfig.org_uid);
-      if (assetScanningEnabled) {
-        this.importConfig.assetScanningEnabled = true;
-        this.importConfig.skipAssetsPublish = true;
-      }
     }
 
     await this.resolveImportPath();

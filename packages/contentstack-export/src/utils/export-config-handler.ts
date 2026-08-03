@@ -37,11 +37,8 @@ const setupConfig = async (exportCmdFlags: any, context?: any): Promise<ExportCo
     if (legacyCsAssetsConfig) {
       externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
       delete externalConfig.modules['asset-management'];
-      log.warn(
-        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
-      );
+      log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
     }
-
 
     config = merge.recursive(config, externalConfig);
   }
@@ -60,10 +57,9 @@ const setupConfig = async (exportCmdFlags: any, context?: any): Promise<ExportCo
   config.exportDir = path.resolve(config.exportDir);
 
   if (isDirectoryNonEmpty(config.exportDir)) {
-    cliux.print(
-      '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
-      { color: 'yellow' },
-    );
+    cliux.print('\nThe export directory is not empty. Existing files in this folder may be overwritten.', {
+      color: 'yellow',
+    });
   }
 
   const managementTokenAlias = exportCmdFlags['management-token-alias'] || exportCmdFlags['alias'];

@@ -394,7 +394,7 @@ importers:
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@contentstack/delivery-sdk':
         specifier: ^5.2.0
-        version: 5.5.0
+        version: 5.5.1
       '@contentstack/management':
         specifier: ^1.30.2
         version: 1.31.1
@@ -2396,11 +2396,11 @@ packages:
   '@contentstack/cli-utilities@2.0.0-beta.12':
     resolution: {integrity: sha512-tE8NZNBpvDjLfU6EcYZd3DFpzBnCJUOcGRM/IH16QM3VWGYGuSaUoXmPVExh7Sm1eriA+IG9cQL0YCZDRCfdOg==}
 
-  '@contentstack/core@1.4.1':
-    resolution: {integrity: sha512-QfLa8WUwquWSwvF8EltLyzQTkeNE2I9b9PBkPe21w0d5PnHOagxFzDNCYN4VO/zuJ52sNtKLFIFUcvLsOPk9ww==}
+  '@contentstack/core@1.5.0':
+    resolution: {integrity: sha512-GTNjPYqi49EFpdGp+6UGdY55OoM48Rc7UyCUTYPdzcmrvYlmiL0JKqyozShEVaqrDMdaNBQZu8PRvRA7TpDVNA==}
 
-  '@contentstack/delivery-sdk@5.5.0':
-    resolution: {integrity: sha512-X6inqsDh0Bcz6YO3QhN+H7TPiZ9PNx31DsVOWP+w4T5ohPqM2EYh53rbl6gOXQG9JJ9ihpDzdoQRcM4ld2Vglw==}
+  '@contentstack/delivery-sdk@5.5.1':
+    resolution: {integrity: sha512-ZGsv0ibgaeV32uhu86+CdgNIDtXYQxqgL+0EXphyIs0KH0VK7KxCvGjgvrTV2ZVHcwLLUbKlNH8vIHgML/mj6w==}
     engines: {node: '>=18'}
 
   '@contentstack/json-rte-serializer@2.1.0':
@@ -9958,7 +9958,7 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/core@1.4.1':
+  '@contentstack/core@1.5.0':
     dependencies:
       axios: 1.19.0(debug@4.4.3)
       axios-mock-adapter: 2.1.0(axios@1.19.0)
@@ -9969,9 +9969,9 @@ snapshots:
       - debug
       - supports-color
 
-  '@contentstack/delivery-sdk@5.5.0':
+  '@contentstack/delivery-sdk@5.5.1':
     dependencies:
-      '@contentstack/core': 1.4.1
+      '@contentstack/core': 1.5.0
       '@contentstack/utils': 1.9.1
       axios: 1.19.0(debug@4.4.3)
       humps: 2.0.1
@@ -10036,7 +10036,7 @@ snapshots:
 
   '@contentstack/types-generator@3.10.2(graphql@16.14.2)':
     dependencies:
-      '@contentstack/delivery-sdk': 5.5.0
+      '@contentstack/delivery-sdk': 5.5.1
       '@gql2ts/from-schema': 2.0.0-4(graphql@16.14.2)
       async: 3.2.6
       axios: 1.18.0

@@ -8,7 +8,7 @@ import uniq from 'lodash/uniq';
 import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
 import { resolve as pResolve, join } from 'node:path';
-import { FsUtility, log, handleAndLogError, generateUid } from '@contentstack/cli-utilities';
+import { FsUtility, log, handleAndLogError, generateUid, FeatureStatus } from '@contentstack/cli-utilities';
 import { ImportSpaces, type SpaceMapping } from '@contentstack/cli-asset-management';
 import { PATH_CONSTANTS } from '../../constants';
 
@@ -39,11 +39,13 @@ export default class ImportAssets extends BaseClass {
   private assetsUrlMap: Record<string, unknown> = {};
   private assetsFolderMap: Record<string, unknown> = {};
   private rootFolder: { uid: string; name: string; parent_uid: string; created_at: string };
+  private planStatus: Record<string, FeatureStatus> = {};
 
   constructor({ importConfig, stackAPIClient }: ModuleClassParams) {
     super({ importConfig, stackAPIClient });
     this.importConfig.context.module = MODULE_CONTEXTS.ASSETS;
     this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.ASSETS];
+    this.planStatus = this.importConfig.planStatus || {};
 
     this.assetsPath = join(this.importConfig.backupDir, PATH_CONSTANTS.CONTENT_DIRS.ASSETS);
     this.mapperDirPath = join(this.importConfig.backupDir, PATH_CONSTANTS.MAPPER, PATH_CONSTANTS.MAPPER_MODULES.ASSETS);
@@ -66,6 +68,10 @@ export default class ImportAssets extends BaseClass {
     try {
       log.debug('Starting assets import process...', this.importConfig.context);
 
+      if (this.planStatus['assetsScan']?.is_part_of_plan) {
+        log.info('Assets Scanning is enabled in this stack', this.importConfig.context);
+        log.warn('Assets publishing will be skipped', this.importConfig.context);
+      }
       // CS Assets: csAssetsEnabled is set in the config handler when spaces/ + am_v2 are detected.
       if (this.importConfig.csAssetsEnabled) {
         if (!this.importConfig.csAssetsUrl) {
@@ -203,10 +209,13 @@ export default class ImportAssets extends BaseClass {
       log.success('Assets imported successfully!', this.importConfig.context);
 
       if (this.importConfig.assetScanningEnabled) {
-        log.info('   Asset Scanning is enabled for this stack.', this.importConfig.context);
-        log.info('   Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
-        log.info('   Once scanning is done, publish your assets using:', this.importConfig.context);
-        log.info('   csdx cm:stacks:bulk-assets --data-dir ./content --stack-api-key <key> --operation publish', this.importConfig.context);
+        log.info('Asset Scanning is enabled for this stack.', this.importConfig.context);
+        log.info('Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
+        log.info('Once scanning is done, publish your assets using:', this.importConfig.context);
+        log.info(
+          'csdx cm:stacks:bulk-assets --data-dir ./content --stack-api-key <key> --operation publish',
+          this.importConfig.context,
+        );
       }
     } catch (error) {
       this.completeProgress(false, error?.message || 'Asset import failed');
