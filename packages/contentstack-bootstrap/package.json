@@ -1,29 +1,30 @@
 {
   "name": "@contentstack/cli-cm-bootstrap",
   "description": "Bootstrap contentstack apps",
-  "version": "2.0.0-beta.23",
+  "version": "2.0.0-beta.25",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test": "npm run build && npm run test:e2e",
-    "test:e2e": "nyc mocha \"test/**/*.test.js\" || exit 0",
-    "test:report": "nyc --reporter=lcov mocha \"test/**/*.test.js\""
+    "pretest": "pnpm compile",
+    "test": "mocha \"test/**/*.test.js\"",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
-    "@contentstack/cli-cm-seed": "~2.0.0-beta.23",
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
-    "@contentstack/cli-config": "~2.0.0-beta.12",
+    "@contentstack/cli-cm-seed": "~2.0.0-beta.25",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
+    "@contentstack/cli-config": "~2.0.0-beta.15",
     "@oclif/core": "^4.11.4",
     "inquirer": "12.11.1",
     "mkdirp": "^2.1.6",
-    "tar": "^7.5.20"
+    "tar": "^7.5.22"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.18",

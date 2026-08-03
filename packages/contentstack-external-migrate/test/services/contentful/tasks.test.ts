@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { mapTasks } from '../../../src/services/contentful/tasks';
 
 // Synthetic CF tasks grouped by entry (per the CF Tasks API shape).
@@ -19,18 +19,18 @@ describe('mapTasks', () => {
   const { mapped, skipped } = mapTasks(TASKS_BY_ENTRY, opts);
 
   it('groups one discussion per migrated entry with one comment per task', () => {
-    expect(mapped).toHaveLength(1);
-    expect(mapped[0]).toMatchObject({ cfEntryId: 'entryA', entryUid: 'blt_a', contentTypeUid: 'home_page' });
-    expect(mapped[0].messages).toHaveLength(2);
+    expect(mapped).to.have.lengthOf(1);
+    expect(mapped[0]).to.deep.include({ cfEntryId: 'entryA', entryUid: 'blt_a', contentTypeUid: 'home_page' });
+    expect(mapped[0].messages).to.have.lengthOf(2);
   });
 
   it('embeds the task body + assignee/status in the comment', () => {
-    expect(mapped[0].messages[0]).toContain('Review SEO');
-    expect(mapped[0].messages[0]).toContain('assignee: u1');
-    expect(mapped[0].messages[0]).toContain('status: active');
+    expect(mapped[0].messages[0]).to.include('Review SEO');
+    expect(mapped[0].messages[0]).to.include('assignee: u1');
+    expect(mapped[0].messages[0]).to.include('status: active');
   });
 
   it('skips tasks on un-migrated entries (counted, not lost)', () => {
-    expect(skipped).toBe(1); // notMigrated had 1 task
+    expect(skipped).to.equal(1); // notMigrated had 1 task
   });
 });

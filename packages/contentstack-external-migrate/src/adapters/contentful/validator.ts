@@ -26,8 +26,7 @@ function contentfulValidator(data: string): boolean {
       }
       return true;
     });
-  } catch (error) {
-    //console.error('Error:', error);
+  } catch {
     return false;
   }
 }

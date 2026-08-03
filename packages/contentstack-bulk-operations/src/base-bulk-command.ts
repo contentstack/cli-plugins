@@ -1,6 +1,17 @@
-import chalk from 'chalk';
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, getLogPath, handleAndLogError, FlagInput } from '@contentstack/cli-utilities';
+import {
+  flags,
+  log,
+  createLogContext,
+  getLogPath,
+  handleAndLogError,
+  FlagInput,
+  getChalk,
+  loadChalk,
+  configHandler,
+  CLIProgressManager,
+  clearProgressModuleSetting,
+} from '@contentstack/cli-utilities';
 
 import config from './config';
 import messages, { $t } from './messages';
@@ -33,6 +44,7 @@ import {
   generateBulkPublishStatusUrl,
   validateBranch,
   validateEnvironments,
+  aggregateBatchResults,
 } from './utils';
 import {
   OperationType,
@@ -136,10 +148,26 @@ export abstract class BaseBulkCommand extends Command {
   protected parsedFlags: any;
 
   /**
+   * Hook for subclasses to bypass the bulk-publish pipeline (stack setup, queue,
+   * rate limiter) when an operation uses a different execution path entirely.
+   * The subclass is then responsible for its own initialization after super.init().
+   */
+  protected shouldSkipBulkPipeline(): boolean {
+    return false;
+  }
+
+  /**
    * Initialize common components
    */
   protected async init(): Promise<void> {
     await super.init();
+
+    // Load chalk (ESM) up-front. The progress-module flag is set in buildConfig()
+    // (config layer, mirrors export-config-handler) before the first log call.
+    await loadChalk();
+    if (this.shouldSkipBulkPipeline()) {
+      return;
+    }
 
     let { flags } = await this.parse(this.constructor as typeof BaseBulkCommand);
 
@@ -220,6 +248,9 @@ export abstract class BaseBulkCommand extends Command {
     await this.initializeComponents();
 
     await this.handleRevertOrRetry(mergedFlags);
+    // This early exit bypasses finally(); print the run summary and clear the progress-module
+    // flag here so it doesn't leak into the persisted config / later commands.
+    this.finalizeProgressSummary();
     process.exit(0);
   }
 
@@ -275,6 +306,13 @@ export abstract class BaseBulkCommand extends Command {
    * Build operation configuration
    */
   protected async buildConfiguration(flags: any): Promise<void> {
+    // Enable the progress-bar UI + suppress the timestamped console logs for the whole command.
+    // Set here (command lifecycle, runs before the first log call) rather than in the pure
+    // buildConfig() util so it isn't triggered by direct/unit-test callers of buildConfig.
+    // Cleared on every exit path: finally() on normal runs, and finalizeProgressSummary() before
+    // the validation exit(1) below and the revert/retry exit(0).
+    configHandler.set('log.progressSupportedModule', 'bulk-operations');
+
     this.bulkOperationConfig = buildConfig(flags);
 
     // buildConfig splits comma-separated oclif `multiple` values; mirror onto flags so
@@ -287,6 +325,9 @@ export abstract class BaseBulkCommand extends Command {
 
     const validation = validateFlags(this.bulkOperationConfig);
     if (!validation.valid) {
+      // The progress-module flag was set above; this early exit bypasses finally(), so clear it
+      // here to avoid leaking the setting into the persisted config / later commands.
+      this.finalizeProgressSummary();
       process.exit(1);
     }
 
@@ -372,20 +413,91 @@ export abstract class BaseBulkCommand extends Command {
     this.logger.debug($t(messages.EXECUTING_OPERATION, { count: items.length }), this.loggerContext);
     const startTime = Date.now();
 
+    // Initialize the run-level summary + header once (progress-manager UX, same as import).
+    this.beginOperationSummary(items.length);
+
+    let result: BulkOperationResult;
     try {
       logOperationInfo(items, this.logger);
 
       const publishMode = this.bulkOperationConfig.publishMode || PublishMode.BULK;
       this.logger.debug(`Using ${publishMode.toUpperCase()} mode for operation`, this.loggerContext);
 
-      if (publishMode === PublishMode.SINGLE) {
-        return await this.executeSingleMode(items, startTime);
-      }
-
-      return await this.executeBulkMode(items, startTime);
+      result =
+        publishMode === PublishMode.SINGLE
+          ? await this.executeSingleMode(items, startTime)
+          : await this.executeBulkMode(items, startTime);
     } catch (error: any) {
-      return handleOperationError(error, items, startTime);
+      result = handleOperationError(error, items, startTime);
     }
+
+    this.recordModuleSummary(result, items.length);
+    return result;
+  }
+
+  /**
+   * Initialize the run-level summary + header once. The label includes the branch, which
+   * defaults to 'main' from the --branch flag, so it normally reads e.g. "BULK PUBLISH-main" —
+   * the same "<OP>-<branch>" title shape export/import produce (SummaryManager uses the passed
+   * operationName verbatim). The branch is dropped from the label only in the edge case where
+   * it is unset. Shared with bulk-taxonomies via inheritance.
+   */
+  protected beginOperationSummary(itemCount: number): void {
+    const operationLabel = (this.bulkOperationConfig?.operation || 'operation').toString().toUpperCase();
+    const branchName = this.bulkOperationConfig?.branch || '';
+    CLIProgressManager.initializeGlobalSummary(
+      branchName ? `BULK ${operationLabel}-${branchName}` : `BULK ${operationLabel}`,
+      branchName,
+      $t(messages.EXECUTING_OPERATION, { count: itemCount })
+    );
+  }
+
+  /**
+   * Record a per-module row in the summary so the final summary shows Module Details for this
+   * command (entry/asset/taxonomy).
+   *
+   * SINGLE mode processes items individually and returns real success/failed counts, so those
+   * are used directly. BULK mode submits async jobs — buildBulkModeResult reports success/failed
+   * as 0 because the publish runs server-side — so we count submission-level failures from
+   * batchResults (recorded as status:'failed') and treat the remaining submitted items as
+   * success. The printed status URL remains the source of truth for the real publish outcome.
+   */
+  protected recordModuleSummary(result: BulkOperationResult, submittedCount: number): void {
+    const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
+    const publishMode = this.bulkOperationConfig?.publishMode || PublishMode.BULK;
+    const total = result?.total || submittedCount || 0;
+
+    let success: number;
+    let failed: number;
+    if (publishMode === PublishMode.SINGLE) {
+      failed = result?.failed || 0;
+      success = typeof result?.success === 'number' ? result.success : Math.max(total - failed, 0);
+    } else {
+      // BULK: derive failures from batch submissions (result.failed is always 0 here).
+      failed = aggregateBatchResults(this.batchResults).totalFailed;
+      success = Math.max(total - failed, 0);
+    }
+
+    // Clamp so counts never over/under-report relative to total.
+    failed = Math.min(Math.max(failed, 0), total);
+    success = Math.min(Math.max(success, 0), total - failed);
+
+    const progress = CLIProgressManager.createSimple(this.resourceType, total, showConsoleLogs);
+    for (let i = 0; i < success; i++) progress.tick(true);
+    for (let i = 0; i < failed; i++) progress.tick(false);
+    progress.complete(failed === 0);
+  }
+
+  /**
+   * Print the run-level summary once and clear progress state. Idempotent: subclasses call
+   * finally() explicitly AND oclif calls it again, so clearing the summary after printing makes
+   * the second invocation a no-op. Also clears the progress-module flag so it never leaks into
+   * a later command in the same process (mirrors export/import/clone).
+   */
+  protected finalizeProgressSummary(): void {
+    CLIProgressManager.printGlobalSummary();
+    CLIProgressManager.clearGlobalSummary();
+    clearProgressModuleSetting();
   }
 
   /**
@@ -451,6 +563,7 @@ export abstract class BaseBulkCommand extends Command {
    * Called at the end of run() method in subclasses
    */
   protected printOperationSummary(result: BulkOperationResult): void {
+    const chalk = getChalk();
     const publishMode = this.bulkOperationConfig.publishMode || PublishMode.BULK;
 
     console.log('');
@@ -562,6 +675,7 @@ export abstract class BaseBulkCommand extends Command {
   abstract run(): Promise<void>;
 
   protected async finally(_error: Error | undefined): Promise<void> {
+    this.finalizeProgressSummary();
     await this.cleanup();
   }
 }

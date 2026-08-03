@@ -270,21 +270,27 @@ export class BulkOperationService {
     batchEnvironments?: string[],
     batchLocales?: string[]
   ): any {
-    const assets = items.map((item) => ({
-      uid: item.uid,
-      version: item.version,
-    }));
+    // One item per (uid, locale) reaches here, but the bulk payload keys assets by uid
+    // and lists locales separately — dedupe so a multi-locale asset is sent once.
+    const seen = new Set<string>();
+    const assets = items.reduce<Array<{ uid: string; version: number | undefined }>>((acc, item) => {
+      if (!seen.has(item.uid)) {
+        seen.add(item.uid);
+        acc.push({ uid: item.uid, version: item.version });
+      }
+      return acc;
+    }, []);
 
     const environments = batchEnvironments?.length
       ? batchEnvironments
       : items[0]?.publish_details?.map((pd) => pd.environment) || [];
-    const locales = batchLocales?.length ? batchLocales : items[0]?.publish_details?.map((pd) => pd.locale) || [];
+    const locales = batchLocales?.length ? batchLocales : Array.from(new Set(items.map((item) => item.locale)));
 
     if (!environments.length) {
       throw new Error('No environments for bulk publish. Ensure assets have publish_details with environment data.');
     }
     if (!locales.length) {
-      throw new Error('No locales for bulk publish. Ensure assets have publish_details with locale data.');
+      throw new Error('No locales for bulk publish. Ensure assets have a locale field.');
     }
 
     return {

@@ -351,44 +351,29 @@ const mockData = {
   verboseRes: {
     listOfAddedFields: [
       {
-        path: 'new_field',
-        displayName: 'New Field',
-        uid: 'new_field',
-        field: 'text',
-      },
-      {
-        path: 'description',
-        displayName: 'Description',
-        uid: 'description',
-        field: 'rich_text_editor',
+        displayName: undefined,
+        field: undefined,
+        path: 'url1',
+        uid: undefined,
       },
     ],
     listOfDeletedFields: [
       {
-        path: 'single_line_fieldbox33',
         displayName: 'Single Line fieldbox33',
-        uid: 'single_line_fieldbox33',
         field: 'compactfield',
-      },
-      {
-        path: 'old_field',
-        displayName: 'Old Field',
-        uid: 'old_field',
-        field: 'text',
+        path: 'schema[3]',
+        uid: 'single_line_fieldbox33',
       },
     ],
     listOfModifiedFields: [
       {
-        path: 'title',
-        displayName: 'Name',
+        changeDetails: 'Changed from "gf4" to "gf1"',
+        displayName: 'Display Name',
+        field: 'changed',
+        newValue: 'gf1',
+        oldValue: 'gf4',
+        path: '',
         uid: 'title',
-        field: 'metadata',
-      },
-      {
-        path: 'content',
-        displayName: 'Content',
-        uid: 'content',
-        field: 'rich_text_editor',
       },
     ],
   },
@@ -787,74 +772,174 @@ const compareBranchNoSchema = {
 
 const baseAndCompareChanges = {
   baseAndCompareHavingSchema: {
-    modified: {
-      social: {
-        path: 'social',
-        uid: 'social',
-        displayName: 'Social',
-        fieldType: 'group',
-      },
-      'social.social_share.link': {
-        path: 'social.social_share.link',
-        uid: 'link',
-        displayName: 'Link',
-        fieldType: 'link',
-      },
-    },
     added: {
       'social.social_share.link1': {
-        path: 'social.social_share.link1',
-        uid: 'link1',
         displayName: 'Link1',
         fieldType: 'link',
+        newValue: {
+          data_type: 'link',
+          display_name: 'Link1',
+          uid: 'link1',
+          field_metadata: {
+            description: '',
+            default_value: '',
+            isTitle: true,
+          },
+          multiple: false,
+          mandatory: false,
+          unique: false,
+          non_localizable: false,
+          indexed: false,
+          inbuilt_model: false,
+        },
+        oldValue: undefined,
+        path: 'social.social_share.link1',
+        uid: 'link1',
       },
     },
     deleted: {
       'social.social_share.icon': {
-        path: 'social.social_share.icon',
-        uid: 'icon',
         displayName: 'Icon',
         fieldType: 'file',
+        path: 'social.social_share.icon',
+        uid: 'icon',
+      },
+    },
+    modified: {
+      social: {
+        changeCount: 1,
+        displayName: 'Social',
+        fieldType: 'group',
+        path: 'social',
+        propertyChanges: [
+          {
+            changeType: 'deleted',
+            newValue: undefined,
+            oldValue: true,
+            property: 'indexed',
+          },
+        ],
+        uid: 'social',
+      },
+      'social.social_share.link': {
+        changeCount: 1,
+        displayName: 'Link',
+        fieldType: 'link',
+        path: 'social.social_share.link',
+        propertyChanges: [
+          {
+            changeType: 'modified',
+            newValue: true,
+            oldValue: false,
+            property: 'unique',
+          },
+        ],
+        uid: 'link',
       },
     },
   },
   baseHavingSchema: {
-    modified: {
-      social: {
-        path: 'social',
-        uid: 'social',
-        displayName: 'Social',
-        fieldType: 'group',
-      },
-    },
     added: {},
     deleted: {
       'social.social_share': {
-        path: 'social.social_share',
-        uid: 'social_share',
         displayName: 'Social Share',
         fieldType: 'group',
+        path: 'social.social_share',
+        uid: 'social_share',
+      },
+    },
+    modified: {
+      social: {
+        changeCount: 1,
+        displayName: 'Social',
+        fieldType: 'group',
+        path: 'social',
+        propertyChanges: [
+          {
+            changeType: 'deleted',
+            newValue: undefined,
+            oldValue: true,
+            property: 'indexed',
+          },
+        ],
+        uid: 'social',
       },
     },
   },
   compareHavingSchema: {
-    modified: {
-      social: {
-        path: 'social',
-        uid: 'social',
-        displayName: 'Social',
-        fieldType: 'group',
-      },
-    },
     added: {
       'social.social_share': {
-        path: 'social.social_share',
-        uid: 'social_share',
         displayName: 'Social Share',
         fieldType: 'group',
+        newValue: {
+          data_type: 'group',
+          display_name: 'Social Share',
+          field_metadata: {},
+          schema: [
+            {
+              data_type: 'link',
+              display_name: 'Link',
+              uid: 'link',
+              field_metadata: {
+                description: '',
+                default_value: '',
+                isTitle: true,
+              },
+              multiple: false,
+              mandatory: false,
+              unique: true,
+              non_localizable: false,
+              indexed: false,
+              inbuilt_model: false,
+            },
+            {
+              data_type: 'link',
+              display_name: 'Link1',
+              uid: 'link1',
+              field_metadata: {
+                description: '',
+                default_value: '',
+                isTitle: true,
+              },
+              multiple: false,
+              mandatory: false,
+              unique: false,
+              non_localizable: false,
+              indexed: false,
+              inbuilt_model: false,
+            },
+          ],
+          uid: 'social_share',
+          multiple: true,
+          mandatory: false,
+          unique: false,
+          non_localizable: false,
+          indexed: false,
+          inbuilt_model: false,
+        },
+        oldValue: undefined,
+        path: 'social.social_share',
+        uid: 'social_share',
       },
     },
     deleted: {},
+    modified: {
+      social: {
+        changeCount: 1,
+        displayName: 'Social',
+        fieldType: 'group',
+        path: 'social',
+        propertyChanges: [
+          {
+            changeType: 'deleted',
+            newValue: undefined,
+            oldValue: true,
+            property: 'indexed',
+          },
+        ],
+        uid: 'social',
+      },
+    },
   },
   modifiedFieldRes: {
     listOfAddedFields: [

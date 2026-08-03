@@ -374,6 +374,7 @@ export default abstract class BaseClass {
       case 'publish-assets':
         return this.stack
           .asset(uid)
+          .addHeader('api_version', '3.2')
           .publish(pick(apiData, ['publishDetails']) as PublishConfig)
           .then(onSuccess)
           .catch(onReject);
@@ -494,9 +495,10 @@ export default abstract class BaseClass {
         return this.stack
           .contentType(additionalInfo.cTUid)
           .entry(apiData.entryUid)
+          .addHeader('api_version', '3.2')
           .publish({
             publishDetails: { environments: apiData.environments, locales: apiData.locales },
-            locale: apiData.locales[0],
+            locale: additionalInfo.locale,
           })
           .then(onSuccess)
           .catch(onReject);

@@ -2,15 +2,19 @@ import { cliux, configHandler, isAuthenticated } from '@contentstack/cli-utiliti
 import { OperationType, FilterType } from '../interfaces';
 import { messages } from './index';
 
-async function promptForOperation(): Promise<string> {
+const DEFAULT_OPERATION_CHOICES = [
+  { name: 'Publish', value: OperationType.PUBLISH },
+  { name: 'Unpublish', value: OperationType.UNPUBLISH },
+];
+
+export async function promptForOperation(
+  choices: Array<{ name: string; value: string }> = DEFAULT_OPERATION_CHOICES
+): Promise<string> {
   return cliux.inquire<string>({
     type: 'list',
     name: 'operation',
     message: messages.SELECT_OPERATION,
-    choices: [
-      { name: 'Publish', value: OperationType.PUBLISH },
-      { name: 'Unpublish', value: OperationType.UNPUBLISH },
-    ],
+    choices,
   });
 }
 
@@ -240,9 +244,10 @@ async function runInteractivePrompts(prompts: Array<() => Promise<void>>): Promi
 }
 
 /**
- * Fills in missing flags for the bulk-am-assets command by prompting the user.
+ * Fills in missing flags for CS Assets delete/move operations by prompting the user.
  * Handles CS Assets-specific required flags including operation-conditional ones
  * (locale for delete, target-folder-uid for move).
+ * The operation itself is always resolved by the command's init() before this runs.
  * Throws in non-TTY environments when required flags are missing.
  */
 export async function fillMissingCsAssetsFlags(flags: any): Promise<any> {
@@ -250,15 +255,13 @@ export async function fillMissingCsAssetsFlags(flags: any): Promise<any> {
 
   const needsLocale = f.operation === 'delete' && !f.locale;
   const needsFolderUid = f.operation === 'move' && !f['target-folder-uid'];
-  const needsPrompt =
-    !f.operation || !f['space-uid'] || !f['org-uid'] || !f['asset-uids-file'] || needsLocale || needsFolderUid;
+  const needsPrompt = !f['space-uid'] || !f['org-uid'] || !f['asset-uids-file'] || needsLocale || needsFolderUid;
 
   if (!needsPrompt) return f;
 
   // Fail fast in non-interactive environments (CI/CD) rather than hanging on stdin
   if (!process.stdin.isTTY) {
     const missing = [
-      !f.operation && '--operation',
       !f['space-uid'] && '--space-uid',
       !f['org-uid'] && '--org-uid',
       !f['asset-uids-file'] && '--asset-uids-file',
@@ -271,19 +274,6 @@ export async function fillMissingCsAssetsFlags(flags: any): Promise<any> {
   }
 
   await runInteractivePrompts([
-    async () => {
-      if (!f.operation) {
-        f.operation = await cliux.inquire<string>({
-          type: 'list',
-          name: 'operation',
-          message: messages.CS_ASSETS_SELECT_OPERATION,
-          choices: [
-            { name: 'Delete (CS Assets bulk delete)', value: 'delete' },
-            { name: 'Move (CS Assets bulk move)', value: 'move' },
-          ],
-        });
-      }
-    },
     async () => {
       if (!f['space-uid']) {
         f['space-uid'] = await cliux.inquire<string>({

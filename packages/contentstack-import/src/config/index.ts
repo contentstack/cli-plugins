@@ -177,7 +177,7 @@ const config: DefaultConfig = {
     },
     'global-fields': {
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads individual {uid}.json files
       validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
       limit: 100,
     },

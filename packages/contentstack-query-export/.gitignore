@@ -15,6 +15,7 @@ coverage
 _backup_*
 contents/
 logs/
+test-export/assets/
 oclif.manifest.json
 talisman_output.log
 snyk_output.log
