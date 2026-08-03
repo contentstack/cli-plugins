@@ -20,11 +20,12 @@ import {
   handleAndLogError,
   messageHandler,
   CLIProgressManager,
+  FEATURE,
 } from '@contentstack/cli-utilities';
 import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
-import { ModuleClassParams } from '../../types';
+import { ModuleClassParams, GlobalSummary } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
 import { ExportSpaces, type AssetExportCounts } from '@contentstack/cli-asset-management';
 import {
@@ -57,24 +58,10 @@ export default class ExportAssets extends BaseClass {
     };
   }
 
-  /**
-   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
-   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
-   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
-   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
-   */
-  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
-    type SummaryModule = { successCount: number; failureCount: number };
-    type GlobalSummary = {
-      getModules(): Map<string, SummaryModule>;
-      registerModule(name: string, totalItems?: number): void;
-      startModule(name: string): void;
-      completeModule(name: string, success?: boolean): void;
-    };
-    // globalSummary is runtime-accessible but typed private; reach it via a structural cast.
+  // globalSummary is runtime-accessible but typed private; feature-detect the shape and return null
+  // so callers degrade instead of throwing if a future cli-utilities version changes it.
+  private getGlobalSummary(): GlobalSummary | null {
     const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummary | null }).globalSummary;
-    // We reach into cli-utilities' summary internals, so feature-detect the shape and DEGRADE
-    // (skip the count overrides) instead of throwing if a future version changes it.
     if (
       !gs ||
       typeof gs.getModules !== 'function' ||
@@ -82,6 +69,20 @@ export default class ExportAssets extends BaseClass {
       typeof gs.startModule !== 'function' ||
       typeof gs.completeModule !== 'function'
     ) {
+      return null;
+    }
+    return gs;
+  }
+
+  /**
+   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
+   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
+   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
+   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
+   */
+  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
       log.debug('Global summary shape unavailable; skipping CS Assets summary count overrides', this.exportConfig.context);
       return;
     }
@@ -91,7 +92,9 @@ export default class ExportAssets extends BaseClass {
       const assetsModule = gs.getModules().get(this.currentModuleName.toUpperCase());
       if (assetsModule) {
         assetsModule.successCount = counts.assets;
-        assetsModule.failureCount = 0;
+        // Metadata records lost to permanently-failed page fetches + failed binary downloads —
+        // recoverable via re-export/query-export, so they surface as failures instead of aborting.
+        assetsModule.failureCount = counts.failedAssets ?? 0;
       }
 
       const extraRows: Array<[string, number]> = [
@@ -114,7 +117,42 @@ export default class ExportAssets extends BaseClass {
     }
   }
 
+  // Records the skip in the final summary via the failure channel, which is the only per-module
+  // slot carrying a message. createNestedProgress is intentionally not used: it would render an
+  // empty "ASSETS:" live section.
+  private markAssetsSkippedInSummary(reason: string): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
+      log.debug('Global summary shape unavailable; skipping ASSETS skip row', this.exportConfig.context);
+      return;
+    }
+
+    try {
+      const name = this.currentModuleName.toUpperCase();
+      gs.registerModule(name);
+      gs.startModule(name);
+      const module = gs.getModules().get(name);
+      if (module) {
+        module.failures.push({ item: reason, error: reason });
+        module.status = 'failed';
+        module.endTime = Date.now();
+      }
+    } catch (e) {
+      log.debug(`Failed to mark ASSETS as skipped in summary: ${e}`, this.exportConfig.context);
+    }
+  }
+
   async start(): Promise<void> {
+    const csAssetsInPlan = this.exportConfig.planStatus?.[FEATURE.ASSET_MANAGEMENT]?.is_part_of_plan;
+    if (csAssetsInPlan && this.exportConfig.management_token) {
+      const warning =
+        'Skipping Contentstack Assets export: management token authentication is not supported by the Assets APIs. ' +
+        'Entry-to-asset references will NOT resolve in the exported content. ' +
+        'Re-run the export with a logged-in session (auth token or OAuth) to export Contentstack Assets.';
+      this.markAssetsSkippedInSummary(warning);
+      return;
+    }
+
     const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
 
     if (linkedWorkspaces.length > 0) {

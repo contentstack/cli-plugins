@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import type { SpawnSyncReturns } from 'child_process';
 import {
   formatContentfulCliInvocation,
@@ -16,30 +16,30 @@ function mockSpawnSync(status: number): typeof import('child_process').spawnSync
       pid: 1,
       output: [],
       signal: null,
-    }) as SpawnSyncReturns<string>) as typeof import('child_process').spawnSync;
+    }) as SpawnSyncReturns<string>) as unknown as typeof import('child_process').spawnSync;
 }
 
 describe('contentful CLI resolution', () => {
   it('uses global contentful when --version succeeds', () => {
     const sync = mockSpawnSync(0);
-    expect(isGlobalContentfulCliAvailable(sync)).toBe(true);
+    expect(isGlobalContentfulCliAvailable(sync)).to.equal(true);
     const inv = resolveContentfulCli(sync);
-    expect(inv).toEqual({ command: 'contentful', prefixArgs: [] });
-    expect([inv.command, ...inv.prefixArgs, 'space', 'export'].join(' ')).toBe(
+    expect(inv).to.deep.equal({ command: 'contentful', prefixArgs: [] });
+    expect([inv.command, ...inv.prefixArgs, 'space', 'export'].join(' ')).to.equal(
       'contentful space export',
     );
   });
 
   it('falls back to npx contentful-cli when global is missing', () => {
     const sync = mockSpawnSync(1);
-    expect(isGlobalContentfulCliAvailable(sync)).toBe(false);
-    expect(resolveContentfulCli(sync)).toEqual({
+    expect(isGlobalContentfulCliAvailable(sync)).to.equal(false);
+    expect(resolveContentfulCli(sync)).to.deep.equal({
       command: 'npx',
       prefixArgs: ['-y', 'contentful-cli'],
     });
     // formatContentfulCliInvocation uses live PATH; test resolved shape only
     const inv = resolveContentfulCli(sync);
-    expect([inv.command, ...inv.prefixArgs, 'space', 'export'].join(' ')).toBe(
+    expect([inv.command, ...inv.prefixArgs, 'space', 'export'].join(' ')).to.equal(
       'npx -y contentful-cli space export',
     );
   });
@@ -54,7 +54,7 @@ describe('redactContentfulCliArgs', () => {
         '--management-token',
         'cfpats-secret',
       ]),
-    ).toEqual(['space', 'export', '--management-token', '***']);
+    ).to.deep.equal(['space', 'export', '--management-token', '***']);
     expect(
       formatContentfulCliInvocation([
         'space',
@@ -62,6 +62,6 @@ describe('redactContentfulCliArgs', () => {
         '--management-token',
         'cfpats-secret',
       ]),
-    ).not.toContain('cfpats-secret');
+    ).to.not.include('cfpats-secret');
   });
 });

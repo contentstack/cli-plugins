@@ -1,4 +1,51 @@
 import { createWriteStream } from 'node:fs';
+import { authHandler, authenticationHandler, configHandler } from '@contentstack/cli-utilities';
+
+export interface SecuredAssetAuth {
+  /** OAuth: header to attach to the download fetch (value is already "Bearer <token>"). */
+  headers?: Record<string, string>;
+  /** Basic auth: token to append as ?authtoken= (existing behavior). */
+  authtoken?: string;
+}
+
+/**
+ * Terminal auth failure for secured asset downloads: the server kept rejecting the token even
+ * after a forced refresh. Download loops throw this to abort the whole phase instead of failing
+ * every remaining asset individually.
+ */
+export class SecuredAssetAuthError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(
+      `Secured asset download authentication failed (HTTP ${status}) even after refreshing credentials. ` +
+        'Please log in again (csdx auth:login) and re-run the export.',
+    );
+    this.name = 'SecuredAssetAuthError';
+    this.status = status;
+  }
+}
+
+/**
+ * Resolve auth for secured asset binary downloads.
+ * OAuth → Authorization: Bearer header (getAuthDetails handles proactive expiry refresh).
+ * Basic → authtoken query param (existing behavior).
+ *
+ * Pass `forceRefresh` after a 401: the server rejected a token that is still inside its local
+ * expiry window (revoked/invalidated), so force a refresh — concurrent callers are deduped by
+ * authHandler's in-flight refresh promise. No-op for basic auth, which cannot be refreshed.
+ */
+export async function getSecuredAssetAuth(forceRefresh = false): Promise<SecuredAssetAuth> {
+  if (forceRefresh && authenticationHandler.isOauthEnabled) {
+    await authHandler.compareOAuthExpiry(true);
+  }
+  await authenticationHandler.getAuthDetails();
+  if (authenticationHandler.isOauthEnabled) {
+    return { headers: { authorization: authenticationHandler.accessToken } };
+  }
+  const authtoken = configHandler.get('authtoken');
+  return authtoken ? { authtoken } : {};
+}
 
 export function getArrayFromResponse(data: unknown, arrayKey: string): unknown[] {
   if (Array.isArray(data)) return data;

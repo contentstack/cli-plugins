@@ -6,6 +6,7 @@ import { cliux } from '@contentstack/cli-utilities';
 import { mockData } from '../../../mock/data';
 import * as mergeHelper from '../../../../../src/utils/merge-helper';
 import { MergeHandler } from '../../../../../src/branch/index';
+import { stubAuthenticatedEnv } from '../../../helpers/stub-auth';
 
 describe('Merge Command', () => {
   let successMessageStub;
@@ -17,6 +18,7 @@ describe('Merge Command', () => {
   });
 
   it('Merge branch changes with all flags, should be successful', async function () {
+    const configStub = stubAuthenticatedEnv();
     const mergeInputStub = stub(mergeHelper, 'setupMergeInputs').resolves(mockData.mergeData.flags);
     const displayBranchStatusStub = stub(mergeHelper, 'displayBranchStatus').resolves(
       mockData.mergeData.branchCompareData,
@@ -34,6 +36,7 @@ describe('Merge Command', () => {
     mergeInputStub.restore();
     displayBranchStatusStub.restore();
     mergeHandlerStub.restore();
+    configStub.restore();
   });
 });
 

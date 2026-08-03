@@ -1,11 +1,11 @@
 {
   "name": "@contentstack/cli-migration",
-  "version": "2.0.0-beta.15",
+  "version": "2.0.0-beta.17",
   "author": "@contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
     "@oclif/core": "^4.11.4",
     "async": "^3.2.6",
     "callsites": "^3.1.0",
@@ -64,10 +64,10 @@
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "pretest": "tsc -p test",
     "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo"
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "csdxConfig": {
     "shortCommandName": {

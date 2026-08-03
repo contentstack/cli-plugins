@@ -1381,9 +1381,15 @@ export default class EntriesImport extends BaseClass {
       });
 
       if (chunk) {
-        const apiContent = values(chunk as Record<string, any>[]).filter(
-          (content) => content?.publish_details?.length > 0,
-        );
+        const apiContent = values(chunk as Record<string, any>[])
+          .filter((content) => content?.publish_details?.length > 0)
+          .flatMap((content) =>
+            content.publish_details.map((pubDetail: any) => ({
+              ...content,
+              locale: pubDetail.locale,
+              publish_details: [pubDetail],
+            })),
+          );
 
         log.debug(`Processing ${apiContent.length} publishable entries in chunk ${index}`, this.importConfig.context);
 
