@@ -144,7 +144,7 @@ export default class ImportCommand extends Command {
     let importConfig: ImportConfig;
     try {
       const { flags } = await this.parse(ImportCommand);
-      importConfig = await setupImportConfig(flags);
+      importConfig = await setupImportConfig(flags, this.context);
       // Prepare the context object
       createLogContext(
         this.context?.info?.command || 'cm:stacks:import',
@@ -182,7 +182,10 @@ export default class ImportCommand extends Command {
       if (importConfig.assetScanningEnabled) {
         cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
         cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
-        cliux.print(`  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey} --operation publish`, { color: 'cyan' });
+        cliux.print(
+          `  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey} --operation publish`,
+          { color: 'cyan' },
+        );
       }
       this.logSuccessAndBackupMessages(backupDir, importConfig);
       // Clear progress module setting now that import is complete

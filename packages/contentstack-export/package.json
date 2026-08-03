@@ -91,9 +91,7 @@
     "shortCommandName": {
       "cm:stacks:export": "EXPRT"
     },
-    "planProtectedFeatures": [
-      "amAssets"
-    ]
+    "planProtectedFeatures": ["assetsScan", "amAssets"]
   },
   "repository": {
     "type": "git",
