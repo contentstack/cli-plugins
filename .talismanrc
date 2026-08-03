@@ -1,19 +1,4 @@
 fileignoreconfig:
-
 - filename: pnpm-lock.yaml
-  checksum: c3bcd614567a430c43ef8c3aa5a4ea2e006486137ba8397d58f01de89b858a1e
-- filename: packages/contentstack-seed/tests/importer.test.ts
-  checksum: cf452b6bc7d3cfcef493ee64e1f5a4e97ac841292ff8ba3515375fc4e8ed049c
-- filename: packages/contentstack-variants/test/unit/import/variant-entries.test.ts
-  checksum: 6aca150cf9656d27acb1811f478d298668ec28f610b2d4820a6d5115612d52c0
-- filename: packages/contentstack-export/src/config/index.ts
-  checksum: 6fa4bba2174bbf33f5611098f49a02bf2fc789f59634e99be58de7e370f5fcd3
-- filename: packages/contentstack-branches/test/unit/helpers/stub-auth.ts
-  checksum: 8cafd5994d3ec13ba9af74c80b330bfd14721ea4e0359b456598964a6c2913ce
-- filename: packages/contentstack-seed/tests/contentstack.test.ts
-  checksum: 04196568bf29f4693e968079867e87d96219b022bfee0f4697dce1b9bc161ac3
-- filename: packages/contentstack-export/src/utils/export-config-handler.ts
-  checksum: 362c1042a70958b52e73a7a3096152cf0259c55095c8b2c6f308b8f5fb90614e
-- filename: packages/contentstack-import/src/utils/import-config-handler.ts
-  checksum: f310186b5ea1fc756bd200dbe01967bc07e5490dc5ed17018f0ca4b35f0fd86f
-  version: '1.0'
+  checksum: 423213f918d2052ec37ad421d23057e159c8633d200bfa688d34bbcb73a19285
+version: '1.0'
