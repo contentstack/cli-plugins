@@ -58,8 +58,11 @@ export default class Entries {
   protected missingTitleFields: Record<string, any> = {};
   protected missingEnvLocale: Record<string, any> = {};
   protected missingMultipleField: Record<string, any> = {};
+  protected missingAssetRefs: Record<string, any> = {};
   public environments: string[] = [];
   public entryMetaData: Record<string, any>[] = [];
+  public assetMetaData: Record<string, { uid: string; filename?: string; _asset_scan_status?: string }> = {};
+  public assetsDataAvailable = false;
   public moduleName: keyof typeof auditConfig.moduleConfig = 'entries';
 
   constructor({ fix, config, moduleName, ctSchema, gfSchema }: ModuleConstructorParam & CtConstructorParam) {
@@ -154,6 +157,10 @@ export default class Entries {
     await this.prepareEntryMetaData();
     log.debug(`Entry metadata prepared: ${this.entryMetaData.length} entries found`, this.config.auditContext);
 
+    log.debug('Preparing asset metadata', this.config.auditContext);
+    await this.prepareAssetMetaData();
+    log.debug(`Asset metadata prepared: ${Object.keys(this.assetMetaData).length} assets found`, this.config.auditContext);
+
     log.debug('Fixing prerequisite data', this.config.auditContext);
     await this.fixPrerequisiteData();
     log.debug('Prerequisite data fix completed', this.config.auditContext);
@@ -198,6 +205,10 @@ export default class Entries {
             if (!this.missingMandatoryFields[this.currentUid]) {
               this.missingMandatoryFields[this.currentUid] = [];
             }
+
+            if (!this.missingAssetRefs[this.currentUid]) {
+              this.missingAssetRefs[this.currentUid] = [];
+            }
             if (this.fix) {
               log.debug(`Removing missing keys from entry ${uid}`, this.config.auditContext);
               this.removeMissingKeysOnEntry(ctSchema.schema as ContentTypeSchemaType[], this.entries[entryUid]);
@@ -229,6 +240,14 @@ export default class Entries {
             if (this.missingMandatoryFields[this.currentUid]?.length) {
               log.debug(`Found ${this.missingMandatoryFields[this.currentUid].length} missing mandatory fields for entry ${uid}`, this.config.auditContext);
               this.missingMandatoryFields[this.currentUid].forEach((entry: any) => {
+                entry.ct = ctSchema.uid;
+                entry.locale = code;
+              });
+            }
+
+            if (this.missingAssetRefs[this.currentUid]?.length) {
+              log.debug(`Found ${this.missingAssetRefs[this.currentUid].length} missing/quarantined asset references for entry ${uid}`, this.config.auditContext);
+              this.missingAssetRefs[this.currentUid].forEach((entry: any) => {
                 entry.ct = ctSchema.uid;
                 entry.locale = code;
               });
@@ -343,6 +362,7 @@ export default class Entries {
       missingTitleFields: this.missingTitleFields,
       missingEnvLocale: this.missingEnvLocale,
       missingMultipleFields: this.missingMultipleField,
+      missingAssetRefs: this.missingAssetRefs,
     };
     
     log.debug(`Entries audit completed. Found issues:`, this.config.auditContext);
@@ -388,8 +408,17 @@ export default class Entries {
         removedMandatoryFields++;
       }
     }
-    
-    log.debug(`Cleanup completed: removed ${removedRefs} empty refs, ${removedSelectFields} empty select fields, ${removedMandatoryFields} empty mandatory fields`, this.config.auditContext);
+
+    let removedAssetRefs = 0;
+    for (let propName in this.missingAssetRefs) {
+      if (!this.missingAssetRefs[propName].length) {
+        log.debug(`Removing empty missing asset references for entry: ${propName}`, this.config.auditContext);
+        delete this.missingAssetRefs[propName];
+        removedAssetRefs++;
+      }
+    }
+
+    log.debug(`Cleanup completed: removed ${removedRefs} empty refs, ${removedSelectFields} empty select fields, ${removedMandatoryFields} empty mandatory fields, ${removedAssetRefs} empty asset refs`, this.config.auditContext);
   }
 
   /**
@@ -623,6 +652,16 @@ export default class Entries {
             child as GroupFieldDataType,
             entry[uid] as EntryGroupFieldDataType[],
           );
+          break;
+        case 'file':
+          log.debug(`Validating file/asset field: ${display_name}`, this.config.auditContext);
+          const assetRefResults = this.validateFileField(
+            [...tree, { uid: child.uid, name: child.display_name, field: uid }],
+            child,
+            entry[uid],
+          );
+          this.missingAssetRefs[this.currentUid].push(...assetRefResults);
+          log.debug(`Found ${assetRefResults.length} quarantined/missing asset references in field: ${display_name}`, this.config.auditContext);
           break;
         case 'text':
         case 'number':
@@ -889,6 +928,59 @@ export default class Entries {
   }
 
   /**
+   * Returns true when the given asset uid should be treated as unusable — either it doesn't
+   * exist in the exported assets.json at all, or it exists but its scan status is present and
+   * not 'clean' (e.g. 'pending'/'quarantined'). Returns false (never flag) when asset metadata
+   * wasn't available at all, since we can't validate what we don't have data for.
+   */
+  isAssetBad(uid?: string): boolean {
+    if (!this.assetsDataAvailable || !uid) return false;
+    const assetRecord = this.assetMetaData[uid];
+    if (!assetRecord) return true;
+    const scanStatus = assetRecord._asset_scan_status;
+    return Boolean(scanStatus) && scanStatus !== 'clean';
+  }
+
+  /**
+   * The function `validateFileField` checks a `data_type: 'file'` (asset reference) field's
+   * value(s) against the asset metadata index and returns an issue when any referenced asset is
+   * missing or has a non-clean scan status.
+   */
+  validateFileField(
+    tree: Record<string, unknown>[],
+    fieldStructure: { uid: string; data_type: string; display_name: string; mandatory?: boolean },
+    field: any,
+  ): EntryRefErrorReturnType[] {
+    log.debug(`Validating file/asset field: ${fieldStructure.display_name}`, this.config.auditContext);
+
+    const values = Array.isArray(field) ? field : field ? [field] : [];
+    const missingRefs = values
+      .filter((ref: any) => this.isAssetBad(ref?.uid))
+      .map((ref: any) => ({ asset_uid: ref?.uid, filename: ref?.filename }));
+
+    if (isEmpty(missingRefs)) {
+      log.debug('File/asset field validation completed: no issues found', this.config.auditContext);
+      return [];
+    }
+
+    return [
+      {
+        tree,
+        missingRefs,
+        uid: this.currentUid,
+        name: this.currentTitle,
+        data_type: fieldStructure.data_type,
+        display_name: fieldStructure.display_name,
+        mandatory: fieldStructure.mandatory,
+        treeStr: tree
+          .map(({ name }) => name)
+          .filter((val) => val)
+          .join(' ➜ '),
+      } as unknown as EntryRefErrorReturnType,
+    ];
+  }
+
+  /**
    * The function `validateReferenceValues` checks if the references in a given field exist in the
    * provided tree and returns any missing references.
    * @param {Record<string, unknown>[]} tree - An array of objects representing the tree structure of
@@ -1124,6 +1216,14 @@ export default class Entries {
             field as GroupFieldDataType,
             entry[uid] as EntryGroupFieldDataType[],
           ) as EntryGroupFieldDataType;
+          break;
+        case 'file':
+          log.debug(`Fixing file/asset field: ${uid}`);
+          this.fixFileFieldReferences(
+            [...tree, { uid: field.uid, name: field.display_name, data_type: field.data_type }],
+            field,
+            entry,
+          );
           break;
         case 'text':
         case 'number':
@@ -1575,6 +1675,65 @@ export default class Entries {
   }
 
   /**
+   * The function `fixFileFieldReferences` strips references to missing/quarantined/pending-scan
+   * assets from a `data_type: 'file'` field. A single-object value with a bad asset uid is deleted
+   * from the entry entirely; a `multiple: true` array value has its bad entries filtered out, and
+   * the key itself is deleted if the array becomes empty as a result.
+   */
+  fixFileFieldReferences(
+    tree: Record<string, unknown>[],
+    field: { uid: string; data_type: string; display_name: string; mandatory?: boolean },
+    entry: Record<string, any>,
+  ) {
+    log.debug(`Fixing file/asset field: ${field.display_name}`);
+    const { uid, display_name, data_type, mandatory } = field;
+    const value = entry[uid];
+
+    if (value == null) {
+      return entry;
+    }
+
+    const missingRefs: Record<string, any>[] = [];
+
+    if (Array.isArray(value)) {
+      entry[uid] = value.filter((ref: any) => {
+        if (this.isAssetBad(ref?.uid)) {
+          missingRefs.push({ asset_uid: ref?.uid, filename: ref?.filename });
+          return false;
+        }
+        return true;
+      });
+      if (!entry[uid].length) {
+        delete entry[uid];
+      }
+    } else if (this.isAssetBad(value?.uid)) {
+      missingRefs.push({ asset_uid: value?.uid, filename: value?.filename });
+      delete entry[uid];
+    }
+
+    if (!isEmpty(missingRefs)) {
+      log.debug(`Recording asset reference fix for entry: ${this.currentUid}`);
+      this.missingAssetRefs[this.currentUid].push({
+        tree,
+        data_type,
+        missingRefs,
+        display_name,
+        mandatory,
+        fixStatus: 'Fixed',
+        uid: this.currentUid,
+        name: this.currentTitle,
+        treeStr: tree
+          .map(({ name }) => name)
+          .filter((val) => val)
+          .join(' ➜ '),
+      });
+    }
+
+    log.debug(`File/asset fix completed for: ${field.display_name}`);
+    return entry;
+  }
+
+  /**
    * The function `fixGroupField` takes in a tree, a field, and an entry, and if the field has a
    * schema, it runs a fix on the schema and returns the updated entry, otherwise it returns the
    * original entry.
@@ -1990,5 +2149,46 @@ export default class Entries {
     
     log.debug(`Entry metadata preparation completed: ${this.entryMetaData.length} entries processed`, this.config.auditContext);
     log.debug(`Missing title fields found: ${Object.keys(this.missingTitleFields).length}`, this.config.auditContext);
+  }
+
+  /**
+   * Builds an index of asset uid -> { uid, filename, _asset_scan_status } from the exported
+   * assets/assets.json, mirroring the FsUtility chunk-read pattern used in the Assets module
+   * (src/modules/assets.ts). If the assets data isn't present in this export at all,
+   * `assetsDataAvailable` stays false and `isAssetBad()` never flags anything — absence of data
+   * must not be treated as every file-field reference being broken.
+   */
+  async prepareAssetMetaData() {
+    log.debug('Starting asset metadata preparation', this.config.auditContext);
+
+    const assetsBasePath = resolve(
+      sanitizePath(this.config.basePath),
+      sanitizePath(this.config.moduleConfig.assets.dirName),
+    );
+    const assetsIndexPath = join(assetsBasePath, this.config.moduleConfig.assets.fileName);
+
+    if (!existsSync(assetsIndexPath)) {
+      log.debug(`No assets data found at: ${assetsIndexPath}`, this.config.auditContext);
+      this.assetsDataAvailable = false;
+      return;
+    }
+
+    this.assetsDataAvailable = true;
+    const fsUtility = new FsUtility({ basePath: assetsBasePath, indexFileName: 'assets.json' });
+    const indexer = fsUtility.indexFileContent;
+    log.debug(`Found ${Object.keys(indexer).length} asset files to process`, this.config.auditContext);
+
+    for (const _ in indexer) {
+      const assets = (await fsUtility.readChunkFiles.next()) as Record<string, any>;
+      for (const assetUid in assets) {
+        this.assetMetaData[assetUid] = {
+          uid: assetUid,
+          filename: assets[assetUid]?.filename,
+          _asset_scan_status: assets[assetUid]?._asset_scan_status,
+        };
+      }
+    }
+
+    log.debug(`Asset metadata preparation completed: ${Object.keys(this.assetMetaData).length} assets processed`, this.config.auditContext);
   }
 }
