@@ -4,7 +4,6 @@ import Bootstrap, { BootstrapOptions, SeedParams } from '../../bootstrap';
 import {
   inquireCloneDirectory,
   inquireApp,
-  inquireAppType,
   inquireLivePreviewSupport,
   inquireRunDevServer,
 } from '../../bootstrap/interactive';
@@ -39,12 +38,6 @@ export default class BootstrapCommand extends Command {
         'Directory to setup the project. If directory name has a space then provide the path as a string or escap the space using back slash eg: "../../test space" or ../../test\\ space',
       multiple: false,
       required: false,
-    }),
-    'app-type': flags.string({
-      description: 'Sample or Starter app',
-      multiple: false,
-      required: false,
-      hidden: true,
     }),
     'stack-api-key': flags.string({
       char: 'k',
@@ -98,23 +91,13 @@ export default class BootstrapCommand extends Command {
       });
 
       // inquire user inputs
-      let appType =
-        (bootstrapCommandFlags.appType as string) || (bootstrapCommandFlags['app-type'] as string) || 'starterapp';
-      if (!appType) {
-        appType = await inquireAppType();
-      }
+      const appType = 'starterapp';
 
       const selectedAppName =
         (bootstrapCommandFlags.appName as string) || (bootstrapCommandFlags['app-name'] as string);
       let selectedApp;
       if (!selectedAppName) {
-        if (appType === 'sampleapp') {
-          selectedApp = await inquireApp(config.sampleApps);
-        } else if (appType === 'starterapp') {
-          selectedApp = await inquireApp(config.starterApps);
-        } else {
-          this.error('Invalid app type provided: ' + appType, { exit: 1 });
-        }
+        selectedApp = await inquireApp(config.starterApps);
       }
 
       if (!selectedAppName && !selectedApp) {
