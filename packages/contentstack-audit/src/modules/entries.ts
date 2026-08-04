@@ -929,16 +929,17 @@ export default class Entries {
 
   /**
    * Returns true when the given asset uid should be treated as unusable — either it doesn't
-   * exist in the exported assets.json at all, or it exists but its scan status is present and
-   * not 'clean' (e.g. 'pending'/'quarantined'). Returns false (never flag) when asset metadata
+   * exist in the exported assets.json at all, or it exists but its scan status is one of
+   * config.moduleConfig.assets.blockingScanStatuses (e.g. 'pending'/'quarantined'). Any other
+   * status — including 'clean', 'not_scanned' (org has asset scanning disabled), or the field
+   * being absent — is not a blocking condition. Returns false (never flag) when asset metadata
    * wasn't available at all, since we can't validate what we don't have data for.
    */
   isAssetBad(uid?: string): boolean {
     if (!this.assetsDataAvailable || !uid) return false;
     const assetRecord = this.assetMetaData[uid];
     if (!assetRecord) return true;
-    const scanStatus = assetRecord._asset_scan_status;
-    return Boolean(scanStatus) && scanStatus !== 'clean';
+    return this.config.moduleConfig.assets.blockingScanStatuses.includes(assetRecord._asset_scan_status ?? '');
   }
 
   /**

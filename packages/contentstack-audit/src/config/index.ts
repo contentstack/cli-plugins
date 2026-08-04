@@ -55,6 +55,9 @@ const config = {
       name: 'assets',
       dirName: 'assets',
       fileName: 'assets.json',
+      // Asset scan statuses that must block import/reference; any other value (including
+      // 'not_scanned', 'clean', or the field being absent) is treated as safe.
+      blockingScanStatuses: ['pending', 'quarantined'],
     },
     environments: {
       name: 'environments',

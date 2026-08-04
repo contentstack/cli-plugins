@@ -48,6 +48,7 @@ describe('Assets module', () => {
         });
         expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-clean-asset');
         expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-no-status-asset');
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-not-scanned-asset');
       });
 
     fancy
@@ -69,6 +70,7 @@ describe('Assets module', () => {
         expect(writtenContent).to.not.have.property('blt-quarantined-asset');
         expect(writtenContent).to.have.property('blt-clean-asset');
         expect(writtenContent).to.have.property('blt-no-status-asset');
+        expect(writtenContent).to.have.property('blt-not-scanned-asset');
       });
   });
 });

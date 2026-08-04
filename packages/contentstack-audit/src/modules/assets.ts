@@ -187,7 +187,7 @@ export default class Assets {
         log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
 
         const scanStatus = this.assets[assetUid]?._asset_scan_status;
-        if (scanStatus && scanStatus !== 'clean') {
+        if (this.config.moduleConfig.assets.blockingScanStatuses.includes(scanStatus)) {
           log.debug(`Asset ${assetUid} has a non-clean scan status: ${scanStatus}`, this.config.auditContext);
           cliux.print($t(auditMsg.SCAN_ASSET_QUARANTINE_MSG, { uid: assetUid, status: scanStatus }), {
             color: 'yellow',

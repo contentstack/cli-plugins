@@ -29,5 +29,13 @@
     "url": "https://images.contentstack.io/v3/assets/blt/blt-no-status-asset/no-status.png",
     "_version": 1,
     "publish_details": []
+  },
+  "blt-not-scanned-asset": {
+    "uid": "blt-not-scanned-asset",
+    "filename": "not-scanned.png",
+    "url": "https://images.contentstack.io/v3/assets/blt/blt-not-scanned-asset/not-scanned.png",
+    "_version": 1,
+    "_asset_scan_status": "not_scanned",
+    "publish_details": []
   }
 }
