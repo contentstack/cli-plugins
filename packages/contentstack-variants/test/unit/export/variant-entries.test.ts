@@ -1,6 +1,6 @@
-import { expect } from '@oclif/test';
 import { FsUtility } from '@contentstack/cli-utilities';
-import { fancy } from '@contentstack/cli-dev-dependencies';
+import { test as fancyBase, spy, expect } from '@contentstack/cli-dev-dependencies';
+const fancy = fancyBase.register('spy', spy);
 
 import exportConf from '../mock/export-config.json';
 import { Export, ExportConfig, VariantHttpClient, VariantsOption } from '../../../src';
@@ -16,6 +16,7 @@ describe('Variant Entries Export', () => {
 
   const test = fancy
     .stdout({ print: process.env.PRINT === 'true' || false })
+    .stub(VariantHttpClient.prototype, 'init', async () => {})
     .stub(FsUtility.prototype, 'completeFile', () => {})
     .stub(FsUtility.prototype, 'writeIntoFile', () => {})
     .stub(FsUtility.prototype, 'createFolderIfNotExist', () => {});
