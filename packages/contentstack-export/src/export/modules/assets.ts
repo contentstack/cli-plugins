@@ -337,7 +337,7 @@ export default class ExportAssets extends BaseClass {
     listOfAssets = uniqBy(listOfAssets, 'url');
     log.debug(`Total unique assets to download: ${listOfAssets.length}`, this.exportConfig.context);
 
-    const isNotClean = (asset: any) => asset._asset_scan_status && asset._asset_scan_status !== 'clean';
+    const isNotClean = (asset: any) => this.assetConfig.blockingScanStatuses.includes(asset._asset_scan_status);
     const skippedAssets = filter(listOfAssets, isNotClean);
     listOfAssets = filter(listOfAssets, (asset: any) => !isNotClean(asset));
 

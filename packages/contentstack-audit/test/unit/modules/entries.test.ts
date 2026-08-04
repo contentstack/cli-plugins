@@ -1557,6 +1557,10 @@ describe('Entries module', () => {
           uid: 'blt-pending-asset',
           _asset_scan_status: 'pending',
         });
+        expect(ctInstance.assetMetaData['blt-not-scanned-asset']).to.deep.include({
+          uid: 'blt-not-scanned-asset',
+          _asset_scan_status: 'not_scanned',
+        });
       });
 
     fancy
@@ -1611,6 +1615,17 @@ describe('Entries module', () => {
       expect(ctInstance.isAssetBad('blt-clean')).to.be.false;
       expect(ctInstance.isAssetBad('blt-legacy')).to.be.false;
     });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns false when the asset scan status is not_scanned (org has asset scanning disabled)', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {
+          'blt-not-scanned': { uid: 'blt-not-scanned', _asset_scan_status: 'not_scanned' },
+        };
+        expect(ctInstance.isAssetBad('blt-not-scanned')).to.be.false;
+      });
   });
 
   describe('validateFileField method', () => {
