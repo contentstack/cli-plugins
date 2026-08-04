@@ -93,7 +93,7 @@ export default class ImportAssets extends BaseClass {
         log.info('Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
         log.info('Once scanning is done, publish your assets using:', this.importConfig.context);
         log.info(
-          `csdx cm:assets:publish --data-dir ${this.importConfig.backupDir} --stack-api-key [STACK API KEY]`,
+          `csdx cm:assets:publish --backup-dir ${this.importConfig.backupDir} --stack-api-key [STACK API KEY]`,
           this.importConfig.context,
         );
       }
