@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-audit",
-  "version": "1.19.5",
+  "version": "1.20.0",
   "description": "Contentstack audit plugin",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli",
@@ -18,8 +18,8 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.4",
-    "@contentstack/cli-utilities": "~1.18.5",
+    "@contentstack/cli-command": "~1.8.5",
+    "@contentstack/cli-utilities": "~1.19.0",
     "@oclif/core": "^4.11.4",
     "chalk": "^4.1.2",
     "fast-csv": "^4.3.6",
@@ -59,9 +59,8 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
     "compile": "tsc -b tsconfig.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",

@@ -1,11 +1,25 @@
-import { describe, it } from 'mocha';
+import { describe, it, afterEach } from 'mocha';
 import { expect } from 'chai';
-import { stub } from 'sinon';
+import { stub, restore } from 'sinon';
 import BranchCreateCommand from '../../../../../src/commands/cm/branches/create';
 import { createBranchMockData } from '../../../mock/data';
 import { interactive } from '../../../../../src/utils';
+import * as createBranchUtil from '../../../../../src/utils/create-branch';
+import { stubAuthenticatedEnv } from '../../../helpers/stub-auth';
+
+// The command checks isAuthenticated() and resolves the region/host before calling
+// createBranch; stub an authenticated env and createBranch so the prompt paths can
+// be exercised without a real login or network call.
+function stubForRun() {
+  stubAuthenticatedEnv();
+  stub(createBranchUtil, 'createBranch').resolves();
+}
 
 describe('Create branch', () => {
+  afterEach(() => {
+    restore();
+  });
+
   it('Create branch with all flags, should be successful', async function () {
     const stub1 = stub(BranchCreateCommand.prototype, 'run').resolves(createBranchMockData.flags);
     const args = [
@@ -18,22 +32,17 @@ describe('Create branch', () => {
     ];
     await BranchCreateCommand.run(args);
     expect(stub1.calledOnce).to.be.true;
-    stub1.restore();
   });
 
   it('Should prompt when api key is not passed', async () => {
+    stubForRun();
     const askStackAPIKey = stub(interactive, 'askStackAPIKey').resolves(createBranchMockData.flags.apiKey);
-    await BranchCreateCommand.run([
-      '--source',
-      createBranchMockData.flags.source,
-      '--uid',
-      createBranchMockData.flags.uid,
-    ]);
+    await BranchCreateCommand.run(['--source', createBranchMockData.flags.source, '--uid', createBranchMockData.flags.uid]);
     expect(askStackAPIKey.calledOnce).to.be.true;
-    askStackAPIKey.restore();
   });
 
   it('Should prompt when source branch is not passed', async () => {
+    stubForRun();
     const askSourceBranch = stub(interactive, 'askSourceBranch').resolves(createBranchMockData.flags.source);
     await BranchCreateCommand.run([
       '--stack-api-key',
@@ -42,10 +51,10 @@ describe('Create branch', () => {
       createBranchMockData.flags.uid,
     ]);
     expect(askSourceBranch.calledOnce).to.be.true;
-    askSourceBranch.restore();
   });
 
   it('Should prompt when new branch uid is not passed', async () => {
+    stubForRun();
     const askBranchUid = stub(interactive, 'askBranchUid').resolves(createBranchMockData.flags.uid);
     await BranchCreateCommand.run([
       '--stack-api-key',
@@ -54,6 +63,5 @@ describe('Create branch', () => {
       createBranchMockData.flags.source,
     ]);
     expect(askBranchUid.calledOnce).to.be.true;
-    askBranchUid.restore();
   });
 });
