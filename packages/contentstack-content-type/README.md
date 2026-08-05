@@ -28,7 +28,7 @@ The Content Type's Display Name, UID, Last Modified Date, and Version number is 
     * The ouput format can be either `svg` or `dot`. 
     * The diagram's orientation can be changed, using the `-d landscape|portrait` flag.
     * [GraphViz](https://graphviz.org/) is the layout engine. You can export the generated DOT Language source, using the `-t dot` flag.
-    * ![Diagram Output](https://github.com/contentstack/contentstack-cli-content-type/blob/main/screenshots/starter-app.svg)
+    * ![Diagram Output](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-content-type/screenshots/starter-app.svg)
 
 ## How to install this plugin
 
@@ -67,7 +67,7 @@ Display recent changes to a Content Type
 
 ```
 USAGE
-  $ csdx content-type:audit --content-type <value> [-k <value> |  | -a <value>]
+  $ csdx content-type:audit --content-type <value> [-k <value> | -a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
@@ -91,7 +91,7 @@ Compare two Content Type versions
 
 ```
 USAGE
-  $ csdx content-type:compare --content-type <value> [-k <value> | ] [-a <value>] [--left <value> --right <value>]
+  $ csdx content-type:compare --content-type <value> [-k <value> | -a <value>] [--left <value> --right <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
@@ -141,7 +141,7 @@ Display Content Type details
 
 ```
 USAGE
-  $ csdx content-type:details --content-type <value> [-k <value> | ] [-a <value>] [--path]
+  $ csdx content-type:details --content-type <value> [-k <value> | -a <value>] [--path]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
@@ -168,8 +168,7 @@ Create a visual diagram of a Stack's Content Types
 
 ```
 USAGE
-  $ csdx content-type:diagram --output <value> --direction portrait|landscape --type svg|dot [-k <value> |  | -a
-  <value>]
+  $ csdx content-type:diagram --output <value> --direction portrait|landscape --type svg|dot [-k <value> | -a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
@@ -201,7 +200,7 @@ List all Content Types in a Stack
 
 ```
 USAGE
-  $ csdx content-type:list [-k <value> |  | -a <value>] [--order title|modified]
+  $ csdx content-type:list [-k <value> | -a <value>] [--order title|modified]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token

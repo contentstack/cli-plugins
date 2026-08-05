@@ -17,7 +17,7 @@ export default class CompareCommand extends Command {
     'stack-api-key': flags.string({
       char: 'k',
       description: 'Stack API Key',
-      exclusive: ['token-alias']
+      exclusive: ['alias']
     }),
 
 

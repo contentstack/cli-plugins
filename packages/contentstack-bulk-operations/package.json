@@ -20,7 +20,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@contentstack/cli-asset-management": "1.0.0",
+    "@contentstack/cli-asset-management": "~1.0.0",
     "@contentstack/cli-command": "~2.0.0",
     "@contentstack/cli-utilities": "~2.0.0",
     "@contentstack/delivery-sdk": "^5.2.0",
@@ -73,7 +73,8 @@
       "bulk": {
         "description": "Perform bulk operations on Contentstack"
       }
-    }
+    },
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-bulk-operations/<%- commandPath %>"
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
