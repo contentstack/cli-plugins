@@ -8,12 +8,11 @@ describe('seed-stacks', () => {
     'kickstart-stack-seed',
     'kickstart-veda-seed',
     'compass-starter-stack',
-    'stack-starter-app',
   ];
 
-  it('exports a catalog of four stacks', () => {
+  it('exports a catalog of three stacks', () => {
     expect(Array.isArray(OFFICIAL_SEED_STACKS)).toBe(true);
-    expect(OFFICIAL_SEED_STACKS).toHaveLength(4);
+    expect(OFFICIAL_SEED_STACKS).toHaveLength(3);
   });
 
   it('has exact repo slugs under contentstack', () => {
@@ -35,7 +34,7 @@ describe('seed-stacks', () => {
 
   it('has no duplicate repo slugs', () => {
     const repos = OFFICIAL_SEED_STACKS.map((s) => s.repo);
-    expect(new Set(repos).size).toBe(4);
+    expect(new Set(repos).size).toBe(3);
   });
 
   it('has stable display names', () => {
@@ -43,7 +42,6 @@ describe('seed-stacks', () => {
       'Kickstart stack seed',
       'Kickstart Veda',
       'Compass starter stack',
-      'Starter app',
     ]);
   });
 });
