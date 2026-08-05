@@ -1,17 +1,17 @@
 {
   "name": "@contentstack/cli-cm-migrate-rte",
   "description": "Contentstack CLI plugin to migrate HTML RTE to JSON RTE",
-  "version": "2.0.0-beta.10",
+  "version": "2.0.0",
   "author": "contentstack",
   "bugs": {
     "url": "https://github.com/contentstack/cli-plugins/issues"
   },
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0-beta.11",
-    "@contentstack/cli-utilities": "~2.0.0-beta.12",
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
     "@contentstack/json-rte-serializer": "~2.1.0",
-    "@oclif/core": "^4.11.4",
-    "@oclif/plugin-help": "^6.2.49",
+    "@oclif/core": "^4.11.14",
+    "@oclif/plugin-help": "^6.2.53",
     "chalk": "^5.6.2",
     "collapse-whitespace": "^1.1.7",
     "jsdom": "^23.2.0",
@@ -20,14 +20,14 @@
     "omit-deep-lodash": "^1.1.7"
   },
   "devDependencies": {
-    "@oclif/test": "^4.1.18",
+    "@oclif/test": "^4.1.20",
     "chai": "^4.5.0",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.164",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "mocha": "^10.8.2",
     "nock": "^13.5.6",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.8",
+    "oclif": "^4.23.27",
     "querystring": "^0.2.1",
     "sinon": "^21.1.2",
     "husky": "^9.1.7"

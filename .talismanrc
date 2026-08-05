@@ -15,4 +15,10 @@ fileignoreconfig:
   checksum: 9a3fd45a57c6ebf63d6c154657f2ebf799befbbacb9a255944c2d89ae89b22ed
 - filename: packages/contentstack-seed/test/commands/cm/stacks/seed.test.ts
   checksum: b54f572a614e5d80f7fa27a51e679147cb537fd76ac922eed981d1156a261e50
+- filename: packages/contentstack-migration/README.md
+  checksum: 042b8f6b0c81838d7cf8296f3a3379b41ec9a6ab77f9f53190b8155dacf1f34a
+- filename: packages/contentstack-seed/README.md
+  checksum: e6388605a4ef3daa116692e4425dcbf6fc35dc7763f8f38d8b9657dbd80ded62
+- filename: packages/contentstack-content-type/README.md
+  checksum: 76f77f9228a5389576fd91f3a4d0f85cf8d9642fe43c597eb39e6181101654b3
 version: '1.0'
