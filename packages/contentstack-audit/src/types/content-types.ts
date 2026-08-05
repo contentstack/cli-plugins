@@ -162,6 +162,8 @@ enum OutputColumn {
   'publish_locale' = 'publish_locale',
   'publish_environment' = 'publish_environment',
   'asset_uid' = 'asset_uid',
+  'scan_status' = 'scan_status',
+  'mandatory' = 'mandatory',
   'selectedValue' = 'selectedValue',
   'fixStatus' = 'fixStatus',
   'Content_type_uid' = 'ct_uid',

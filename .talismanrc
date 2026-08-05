@@ -1,4 +1,5 @@
 fileignoreconfig:
+
 - filename: pnpm-lock.yaml
   checksum: e189b3ff17c005329a25e849555543e0cbdc5ea326d087e78b0a867b8978b308
-version: '1.0'
+  version: '1.0'

@@ -7,6 +7,8 @@ import {
   cliux,
   sanitizePath,
   log,
+  isFeatureEnabled,
+  FeatureCtx,
 } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, fileExistsSync } from './file-helper';
@@ -14,7 +16,7 @@ import { askContentDir, askAPIKey } from './interactive';
 import login from './login-handler';
 import { ImportConfig } from '../types';
 
-const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
+const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportConfig> => {
   let config: ImportConfig = merge({}, defaultConfig);
   // Track authentication method
   let authenticationMethod = 'unknown';
@@ -138,6 +140,33 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Import configuration setup completed.', { ...config });
+
+  // Deferred plan check — credentials now available after setupImportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) context.planStatus[featureUid] = status;
+        log.debug(`[import] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[import] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
+    }
+  }
+
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
+    if (config.planStatus['assetsScan']?.is_part_of_plan) {
+      config.assetScanningEnabled = true;
+      config.skipAssetsPublish = true;
+    }
+  }
 
   return config;
 };

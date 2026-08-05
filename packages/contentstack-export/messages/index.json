@@ -10,6 +10,8 @@
   "ASSET_QUERY_FAILED": "Failed to query asset data from the API",
   "ASSET_VERSIONED_QUERY_FAILED": "Failed to query versioned asset data from the API",
   "ASSET_COUNT_QUERY_FAILED": "Failed to retrieve total asset count",
+  "ASSET_SCAN_SKIPPED": "Skipping download of asset '%s' (UID: %s) — scan status: %s",
+  "ASSET_SCAN_SKIP_SUMMARY": "%s asset(s) skipped due to a non-clean scan status (pending/quarantined). Re-run the export once scanning completes to download them.",
 
   "CONTENT_TYPE_EXPORT_COMPLETE": "Content types exported successfully",
   "CONTENT_TYPE_NO_TYPES": "No content types found",
