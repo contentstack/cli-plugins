@@ -20,10 +20,6 @@ export default class Audit extends AuditBaseCommand {
     'report-path': Flags.string({
       description: auditMsg.REPORT_PATH,
     }),
-    'reference-only': Flags.boolean({
-      hidden: true,
-      description: auditMsg.REFERENCE_ONLY,
-    }),
     modules: Flags.string({
       multiple: true,
       options: config.modules,
