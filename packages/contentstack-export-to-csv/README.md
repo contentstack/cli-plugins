@@ -19,7 +19,7 @@ $ npm install -g @contentstack/cli-cm-export-to-csv
 $ csdx COMMAND
 running command...
 $ csdx (-v|--version|version)
-@contentstack/cli-cm-export-to-csv/2.0.0-beta.9 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-export-to-csv/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

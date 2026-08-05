@@ -8,7 +8,7 @@ and rectify them.
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
 [![Downloads/week](https://img.shields.io/npm/dw/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
-[![License](https://img.shields.io/npm/l/cli-cm-regex-validate.svg)](https://github.com/contentstack/cli-cm-regex-validate/blob/master/package.json)
+[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-regex-validate.svg)](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/package.json)
 
 <!-- toc -->
 * [Regex Validation CLI Plugin](#regex-validation-cli-plugin)
