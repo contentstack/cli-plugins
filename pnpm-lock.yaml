@@ -731,18 +731,6 @@ importers:
       '@contentstack/cli-utilities':
         specifier: ^1.19.0
         version: 1.19.0(@types/node@22.20.1)
-      '@types/diff2html':
-        specifier: ^3.0.3
-        version: 3.0.3
-      '@types/hogan.js':
-        specifier: ^3.0.5
-        version: 3.0.5
-      '@types/table':
-        specifier: ^6.3.2
-        version: 6.3.2
-      '@types/tmp':
-        specifier: ^0.2.6
-        version: 0.2.6
       axios:
         specifier: ^1.18.1
         version: 1.19.0(debug@4.4.3)
@@ -777,12 +765,21 @@ importers:
       '@oclif/plugin-help':
         specifier: ^6.2.49
         version: 6.2.56
+      '@types/diff2html':
+        specifier: ^3.0.3
+        version: 3.0.3
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
       '@types/node':
         specifier: ^22.19.19
         version: 22.20.1
+      '@types/table':
+        specifier: ^6.3.2
+        version: 6.3.2
+      '@types/tmp':
+        specifier: ^0.2.6
+        version: 0.2.6
       eslint:
         specifier: ^10.5.0
         version: 10.8.0
@@ -3464,9 +3461,6 @@ packages:
 
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
-
-  '@types/hogan.js@3.0.5':
-    resolution: {integrity: sha512-/uRaY3HGPWyLqOyhgvW9Aa43BNnLZrNeQxl2p8wqId4UHMfPKolSB+U7BlZyO1ng7MkLnyEAItsBzCG0SDhqrA==}
 
   '@types/http-cache-semantics@4.2.0':
     resolution: {integrity: sha512-L3LgimLHXtGkWikKnsPg0/VFx9OGZaC+eN1u4r+OB1XRqH3meBIAVC2zr1WdMH+RHmnRkqliQAOHNJ/E0j/e0Q==}
@@ -12387,8 +12381,6 @@ snapshots:
   '@types/graceful-fs@4.1.9':
     dependencies:
       '@types/node': 20.19.43
-
-  '@types/hogan.js@3.0.5': {}
 
   '@types/http-cache-semantics@4.2.0': {}
 
