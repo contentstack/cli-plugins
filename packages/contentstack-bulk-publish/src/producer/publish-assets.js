@@ -257,16 +257,16 @@ async function processPendingAssets(pendingItems, stack, bulkPublish, environmen
  * subset). The single in-memory floor is the asset uid-mapping file itself (same
  * as import's publish()); for very large stacks raise Node's --max-old-space-size.
  */
-async function getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulkPublishLimit) {
-  const assetsPath = path.join(dataDir, 'assets');
+async function getAssetsFromBackup(stack, backupDir, bulkPublish, apiVersion, bulkPublishLimit) {
+  const assetsPath = path.join(backupDir, 'assets');
   const assetsIndexPath = path.join(assetsPath, 'assets.json');
-  const assetUidMapperPath = path.join(dataDir, 'mapper', 'assets', 'uid-mapping.json');
-  const envUidMapperPath = path.join(dataDir, 'mapper', 'environments', 'uid-mapping.json');
-  const environmentsPath = path.join(dataDir, 'environments', 'environments.json');
+  const assetUidMapperPath = path.join(backupDir, 'mapper', 'assets', 'uid-mapping.json');
+  const envUidMapperPath = path.join(backupDir, 'mapper', 'environments', 'uid-mapping.json');
+  const environmentsPath = path.join(backupDir, 'environments', 'environments.json');
 
   // A backup with no assets is a legitimate outcome of a successful import that
   // had 0 assets (assets.json is never produced) — exit cleanly, not as a crash.
-  // A genuinely wrong --data-dir surfaces via the uid-mapping/environments guards below.
+  // A genuinely wrong --backup-dir surfaces via the uid-mapping/environments guards below.
   if (!existsSync(assetsPath) || !existsSync(assetsIndexPath)) {
     console.log(chalk.yellow('No assets found in backup — nothing to publish.'));
     return;
@@ -458,7 +458,7 @@ function setConfig(conf, bp) {
   scanSummary = { clean: 0, quarantined: 0, inQueue: 0, noStatus: 0 };
 }
 
-async function start({ retryFailed, bulkPublish, environments, folderUid, locales, apiVersion, dataDir }, stack, config) {
+async function start({ retryFailed, bulkPublish, environments, folderUid, locales, apiVersion, backupDir }, stack, config) {
   process.on('beforeExit', async () => {
     // Print the scan summary here (not inline after enqueueing):
     printScanSummary(scanSummary);
@@ -499,12 +499,12 @@ async function start({ retryFailed, bulkPublish, environments, folderUid, locale
     } else {
       await retryFailedLogs(retryFailed, { assetQueue: queue }, 'publish');
     }
-  } else if (dataDir) {
+  } else if (backupDir) {
     // Post-import flow: publish each imported asset only to its original
     // environments/locales (from backup publish_details), scan-gated.
     setConfig(config, bulkPublish);
     const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);
-    await getAssetsFromBackup(stack, dataDir, bulkPublish, apiVersion, bulkPublishLimit);
+    await getAssetsFromBackup(stack, backupDir, bulkPublish, apiVersion, bulkPublishLimit);
   } else if (folderUid) {
     setConfig(config, bulkPublish);
     const bulkPublishLimit = fetchBulkPublishLimit(stack?.org_uid);

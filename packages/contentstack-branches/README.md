@@ -1,7 +1,7 @@
 # @contentstack/cli-cm-branches
 
 It is Contentstack’s CLI plugin to compare and merge content.
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-branches)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-branches](#contentstackcli-cm-branches)
@@ -9,24 +9,10 @@ It is Contentstack’s CLI plugin to compare and merge content.
 * [Commands](#commands)
 <!-- tocstop -->
 
-For switching to EU region update the hosts at config/default.js
+To switch regions, use:
 
-```js
-{
-  host:'https://eu-api.contentstack.com/v3',
-  cdn: 'https://eu-cdn.contentstack.com/v3',
- ...
-}
-```
-
-For switching to AZURE-NA region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-na-api.contentstack.com/v3',
-  cdn: 'https://azure-na-cdn.contentstack.com/v3',
- ...
-}
+```sh-session
+$ csdx config:set:region [EU | AZURE-NA | AZURE-EU]
 ```
 
 # Usage
@@ -37,7 +23,7 @@ $ npm install -g @contentstack/cli-cm-branches
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-branches/1.8.2 darwin-arm64 node-v24.14.0
+@contentstack/cli-cm-branches/1.8.3 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

@@ -66,7 +66,7 @@ function displayAssetsDetails(sanitizedData, action, mapping) {
         console.log(
           chalk.green(
             `Asset UID: '${asset.uid}'${pd.version ? `, Version: '${pd.version}'` : ''}${
-              asset.locale ? `, Locale: '${asset.locale}'` : ''
+              asset.locale ? `, Locale: '${asset.locale}'` : ''}
             }, Environment: ${pd.environment}`,
           ),
         );

@@ -95,12 +95,12 @@ const config: DefaultConfig = {
     globalfields: {
       dirName: 'global_fields',
       fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
     },
     'global-fields': {
       dirName: 'global_fields',
       fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
     },
     assets: {
       dirName: 'assets',
@@ -118,6 +118,9 @@ const config: DefaultConfig = {
       displayExecutionTime: false,
       enableDownloadStatus: false,
       includeVersionedAssets: false,
+      // Asset scan statuses that must block download; any other value (including 'not_scanned',
+      // 'clean', or the field being absent) is treated as safe to download.
+      blockingScanStatuses: ['pending', 'quarantined'],
     },
     content_types: {
       dirName: 'content_types',

@@ -85,7 +85,7 @@ export default class VariantEntries extends VariantAdapter<VariantHttpClient<Imp
 
     log.debug(`Checking for variant entry data file: ${filePath}`, this.config.context);
     if (!existsSync(filePath)) {
-      log.warn(`Variant entry data file not found at path: ${filePath}`, this.config.context);
+      log.debug(`No variant entries to import (data-for-variant-entry.json not found at: ${filePath})`, this.config.context);
       return;
     }
 

@@ -173,6 +173,7 @@ describe('Export Config Handler', () => {
     it('should support alias flag as alternative to management-token-alias', async () => {
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         token: 'test-token',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'test-key'
       });
       
@@ -195,6 +196,7 @@ describe('Export Config Handler', () => {
       // Provide username and password via external config file
       readFileStub.resolves({
         username: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'test-password'
       });
       

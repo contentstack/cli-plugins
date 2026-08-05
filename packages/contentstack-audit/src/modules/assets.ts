@@ -27,6 +27,7 @@ export default class Assets {
   public environments: string[] = [];
   protected schema: ContentTypeStruct[] = [];
   protected missingEnvLocales: Record<string, any> = {};
+  public missingScanStatusAssets: Record<string, any> = {};
   public moduleName: keyof typeof auditConfig.moduleConfig;
 
   constructor({ fix, config, moduleName }: ModuleConstructorParam & CtConstructorParam) {
@@ -184,7 +185,24 @@ export default class Assets {
       
       for (const assetUid in assets) {
         log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
-        
+
+        const scanStatus = this.assets[assetUid]?._asset_scan_status;
+        if (this.config.moduleConfig.assets.blockingScanStatuses.includes(scanStatus)) {
+          log.debug(`Asset ${assetUid} has a non-clean scan status: ${scanStatus}`, this.config.auditContext);
+          cliux.print($t(auditMsg.SCAN_ASSET_QUARANTINE_MSG, { uid: assetUid, status: scanStatus }), {
+            color: 'yellow',
+          });
+          this.missingScanStatusAssets[assetUid] = [
+            { asset_uid: assetUid, filename: this.assets[assetUid].filename, scan_status: scanStatus },
+          ];
+
+          if (this.fix) {
+            log.info($t(auditFixMsg.ASSET_SCAN_STATUS_FIX, { uid: assetUid, status: scanStatus }), this.config.auditContext);
+            delete this.assets[assetUid];
+            continue;
+          }
+        }
+
         if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
           log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);
           cliux.print($t(auditMsg.ASSET_NOT_EXIST, { uid: assetUid }), { color: 'red' });
@@ -226,15 +244,19 @@ export default class Assets {
         
         const remainingPublishDetails = this.assets[assetUid].publish_details?.length || 0;
         log.debug(`Asset ${assetUid} now has ${remainingPublishDetails} valid publish details`, this.config.auditContext);
-        
+
         if (this.fix) {
           log.debug(`Fixing asset ${assetUid}`, this.config.auditContext);
           log.info($t(auditFixMsg.ASSET_FIX, { uid: assetUid }), this.config.auditContext);
-          await this.writeFixContent(`${basePath}/${indexer[fileIndex]}`, this.assets);
         }
       }
+
+      if (this.fix) {
+        log.debug(`Writing fixed assets chunk to: ${basePath}/${indexer[fileIndex]}`, this.config.auditContext);
+        await this.writeFixContent(`${basePath}/${indexer[fileIndex]}`, this.assets);
+      }
     }
-    
+
     log.debug(`Asset reference validation completed. Processed ${Object.keys(this.missingEnvLocales).length} assets with issues`, this.config.auditContext);
   }
 }

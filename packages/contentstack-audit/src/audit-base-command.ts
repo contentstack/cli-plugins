@@ -94,6 +94,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       missingFieldRules,
       missingMultipleFields,
       missingRefsInComposableStudio,
+      missingScanStatusAssets,
+      missingAssetRefsInEntries,
     } = await this.scanAndFix();
 
     if (this.flags['show-console-output']) {
@@ -125,6 +127,12 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
         { module: 'Entries Changed Multiple Fields', missingRefs: missingMultipleFields },
       ]);
       this.showOutputOnScreenWorkflowsAndExtension([{ module: 'Studio', missingRefs: missingRefsInComposableStudio }]);
+      this.showOutputOnScreenWorkflowsAndExtension([
+        { module: 'Assets Scan Status', missingRefs: missingScanStatusAssets },
+      ]);
+      this.showOutputOnScreenWorkflowsAndExtension([
+        { module: 'Entries Asset Field', missingRefs: missingAssetRefsInEntries },
+      ]);
     }
     this.showOutputOnScreenWorkflowsAndExtension([{ module: 'Summary', missingRefs: this.summaryDataToPrint }]);
 
@@ -141,7 +149,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       !isEmpty(missingEnvLocalesInEntries) ||
       !isEmpty(missingFieldRules) ||
       !isEmpty(missingMultipleFields) ||
-      !isEmpty(missingRefsInComposableStudio)
+      !isEmpty(missingRefsInComposableStudio) ||
+      !isEmpty(missingScanStatusAssets) ||
+      !isEmpty(missingAssetRefsInEntries)
     ) {
       if (this.currentCommand === 'cm:stacks:audit') {
         log.warn(this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath }), this.auditContext);
@@ -176,7 +186,9 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       !isEmpty(missingEnvLocalesInAssets) ||
       !isEmpty(missingEnvLocalesInEntries) ||
       !isEmpty(missingFieldRules) ||
-      !isEmpty(missingRefsInComposableStudio)
+      !isEmpty(missingRefsInComposableStudio) ||
+      !isEmpty(missingScanStatusAssets) ||
+      !isEmpty(missingAssetRefsInEntries)
     );
   }
 
@@ -207,6 +219,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
         missingTitleFields?: Record<string, any>;
         missingEnvLocale?: Record<string, any>;
         missingMultipleFields?: Record<string, any>;
+        missingAssetRefs?: Record<string, any>;
       } = {},
       missingMandatoryFields,
       missingTitleFields,
@@ -215,6 +228,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       missingEnvLocalesInEntries,
       missingFieldRules,
       missingMultipleFields,
+      missingAssetRefsInEntries,
+      missingScanStatusAssets,
       missingRefsInComposableStudio;
 
     const constructorParam: ModuleConstructorParam & CtConstructorParam = {
@@ -246,16 +261,21 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       constructorParam['moduleName'] = module;
 
       switch (module) {
-        case 'assets':
+        case 'assets': {
           log.info('Executing assets audit', this.auditContext);
-          missingEnvLocalesInAssets = await new Assets(cloneDeep(constructorParam)).run();
+          const assetsModule = new Assets(cloneDeep(constructorParam));
+          missingEnvLocalesInAssets = await assetsModule.run();
+          missingScanStatusAssets = assetsModule.missingScanStatusAssets ?? {};
           await this.prepareReport(module, missingEnvLocalesInAssets);
+          await this.prepareReport('asset-scan-status', missingScanStatusAssets);
           this.getAffectedData('assets', dataModuleWise['assets'], missingEnvLocalesInAssets);
+          this.getAffectedData('asset-scan-status', dataModuleWise['assets'], missingScanStatusAssets);
           log.success(
-            `Assets audit completed. Found ${Object.keys(missingEnvLocalesInAssets || {}).length} issues`,
+            `Assets audit completed. Found ${Object.keys(missingEnvLocalesInAssets || {}).length} issues, ${Object.keys(missingScanStatusAssets).length} non-clean scan status assets`,
             this.auditContext,
           );
           break;
+        }
         case 'content-types':
           log.info('Executing content-types audit', this.auditContext);
           missingCtRefs = await new ContentType(cloneDeep(constructorParam)).run();
@@ -285,6 +305,7 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
           missingTitleFields = missingEntry.missingTitleFields ?? {};
           missingEnvLocalesInEntries = missingEntry.missingEnvLocale ?? {};
           missingMultipleFields = missingEntry.missingMultipleFields ?? {};
+          missingAssetRefsInEntries = missingEntry.missingAssetRefs ?? {};
           await this.prepareReport(module, missingEntryRefs);
 
           await this.prepareReport(`Entries_Select_field`, missingSelectFeild);
@@ -296,6 +317,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
           await this.prepareReport('Entry_Missing_Locale_and_Env_in_Publish_Details', missingEnvLocalesInEntries);
 
           await this.prepareReport('Entry_Multiple_Fields', missingMultipleFields);
+
+          await this.prepareReport('Entries_Asset_field', missingAssetRefsInEntries);
           this.getAffectedData('entries', dataModuleWise['entries'], missingEntry);
           log.success(
             `Entries audit completed. Found ${Object.keys(missingEntryRefs || {}).length} reference issues`,
@@ -340,20 +363,37 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
           );
 
           break;
-        case 'field-rules':
+        case 'field-rules': {
           log.info('Executing field-rules audit', this.auditContext);
-          // NOTE: We are using the fixed content-type for validation of field rules
+          // NOTE: We are using the fixed content-type/global-field for validation of field rules.
           const data = this.getCtAndGfSchema();
           constructorParam.ctSchema = data.ctSchema;
           constructorParam.gfSchema = data.gfSchema;
-          missingFieldRules = await new FieldRule(cloneDeep(constructorParam)).run();
+
+          // Field rules live on both content types and global fields. FieldRule.run() picks its
+          // schema from moduleName, so invoke it once per schema (overriding moduleName per
+          // instance) and merge the results. Merged object is keyed by schema uid; a content type
+          // and global field sharing a uid would collide, which is not expected in practice.
+          const ctFieldRules = await new FieldRule(
+            cloneDeep({ ...constructorParam, moduleName: 'content-types' }),
+          ).run();
+          let gfFieldRules: Record<string, any> = {};
+          if (data.gfSchema?.length) {
+            gfFieldRules = await new FieldRule(
+              cloneDeep({ ...constructorParam, moduleName: 'global-fields' }),
+            ).run();
+          }
+          missingFieldRules = { ...ctFieldRules, ...gfFieldRules };
+
           await this.prepareReport(module, missingFieldRules);
-          this.getAffectedData('field-rules', dataModuleWise['content-types'], missingFieldRules);
+          const total = (data.ctSchema?.length || 0) + (data.gfSchema?.length || 0);
+          this.getAffectedData('field-rules', { Total: total }, missingFieldRules);
           log.success(
             `Field-rules audit completed. Found ${Object.keys(missingFieldRules || {}).length} issues`,
             this.auditContext,
           );
           break;
+        }
         case 'composable-studio':
           log.info('Executing composable-studio audit', this.auditContext);
           missingRefsInComposableStudio = await new ComposableStudio(cloneDeep(constructorParam)).run();
@@ -404,6 +444,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       missingFieldRules,
       missingMultipleFields,
       missingRefsInComposableStudio,
+      missingScanStatusAssets,
+      missingAssetRefsInEntries,
     };
   }
 
@@ -595,7 +637,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       | keyof typeof config.moduleConfig
       | keyof typeof config.ReportTitleForEntries
       | 'field-rules'
-      | 'Summary',
+      | 'Summary'
+      | 'asset-scan-status',
     listOfMissingRefs: Record<string, any>,
   ): Promise<void> {
     log.debug(`Preparing report for module: ${moduleName}`, this.auditContext);
@@ -639,7 +682,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       | keyof typeof config.moduleConfig
       | keyof typeof config.ReportTitleForEntries
       | 'field-rules'
-      | 'Summary',
+      | 'Summary'
+      | 'asset-scan-status',
     listOfMissingRefs: Record<string, any>,
   ): Promise<void> {
     if (Object.keys(config.moduleConfig).includes(moduleName) || config.feild_level_modules.includes(moduleName)) {
