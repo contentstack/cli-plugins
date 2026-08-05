@@ -19,7 +19,7 @@
   "author": "antony.raj@contentstack.com",
   "license": "MIT",
   "devDependencies": {
-"@oclif/test": "^4.1.18",
+    "@oclif/test": "^4.1.18",
     "@types/node": "^20.19.39",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
