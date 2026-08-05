@@ -12,12 +12,12 @@ Source lives in the [contentstack/cli-plugins](https://github.com/contentstack/c
 Requires **Contentstack CLI 2.x beta**:
 
 ```shell
-$ csdx plugins:install contentstack-cli-tsgen@beta
+$ csdx plugins:install contentstack-cli-tsgen
 ```
 
 ## Migration
 
-- **Monorepo / v2 CLI:** See [TSGEN-MIGRATION.md](../../TSGEN-MIGRATION.md) and package [MIGRATION.md](./MIGRATION.md) for `5.0.0-beta.0`.
+- **Monorepo / v2 CLI:** See [TSGEN-MIGRATION.md](../../TSGEN-MIGRATION.md) and package [MIGRATION.md](./MIGRATION.md) for `5.0.0`.
 - **Older plugin versions:** Refer to [MIGRATION.md](./MIGRATION.md) for v3→v4 and earlier schema changes.
 
 ## How to use this plugin
