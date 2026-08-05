@@ -18,7 +18,7 @@ $ npm install -g @contentstack/cli-cm-bulk-publish
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-bulk-publish/1.12.1 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-bulk-publish/1.13.0 darwin-arm64 node-v24.18.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -29,11 +29,11 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`](#csdx-cmassetspublish--a-value---retry-failed-value--e-value---folder-uid-value---bulk-publish-value--c-value--y---locales-value---branch-value---delivery-token-value---source-env-value)
+* [`csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--backup-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`](#csdx-cmassetspublish--a-value---retry-failed-value--e-value---folder-uid-value---backup-dir-value---bulk-publish-value--c-value--y---locales-value---branch-value---delivery-token-value---source-env-value)
 * [`csdx cm:assets:unpublish`](#csdx-cmassetsunpublish)
 * [`csdx cm:bulk-publish`](#csdx-cmbulk-publish)
 * [`csdx cm:entries:update-and-publish [-a <value>] [--retry-failed <value>] [--bulk-publish <value>] [--content-types <value>] [-t <value>] [-e <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>]`](#csdx-cmentriesupdate-and-publish--a-value---retry-failed-value---bulk-publish-value---content-types-value--t-value--e-value--c-value--y---locales-value---branch-value)
-* [`csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`](#csdx-cmassetspublish--a-value---retry-failed-value--e-value---folder-uid-value---bulk-publish-value--c-value--y---locales-value---branch-value---delivery-token-value---source-env-value)
+* [`csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--backup-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`](#csdx-cmassetspublish--a-value---retry-failed-value--e-value---folder-uid-value---backup-dir-value---bulk-publish-value--c-value--y---locales-value---branch-value---delivery-token-value---source-env-value)
 * [`csdx cm:bulk-publish:clear`](#csdx-cmbulk-publishclear)
 * [`csdx cm:bulk-publish:configure`](#csdx-cmbulk-publishconfigure)
 * [`csdx cm:bulk-publish:cross-publish [-a <value>] [--retry-failed <value>] [--bulk-publish <value>] [--content-type <value>] [--locales <value>] [--source-env <value>] [--environments <value>] [--delivery-token <value>] [-c <value>] [-y] [--branch <value>] [--onlyAssets] [--onlyEntries] [--include-variants]`](#csdx-cmbulk-publishcross-publish--a-value---retry-failed-value---bulk-publish-value---content-type-value---locales-value---source-env-value---environments-value---delivery-token-value--c-value--y---branch-value---onlyassets---onlyentries---include-variants)
@@ -55,14 +55,15 @@ USAGE
 * [`csdx cm:stacks:publish-revert`](#csdx-cmstackspublish-revert)
 * [`csdx csdx cm:stacks:unpublish [-a <value>] [-e <value>] [-c <value>] [-y] [--locale <value>] [--branch <value>] [--retry-failed <value>] [--bulk-unpublish <value>] [--content-type <value>] [--delivery-token <value>] [--only-assets] [--only-entries]`](#csdx-csdx-cmstacksunpublish--a-value--e-value--c-value--y---locale-value---branch-value---retry-failed-value---bulk-unpublish-value---content-type-value---delivery-token-value---only-assets---only-entries)
 
-## `csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`
+## `csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--backup-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`
 
 Publish assets to the specified environments
 
 ```
 USAGE
-  $ csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish
-    <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]
+  $ csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--backup-dir
+    <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token
+    <value>] [--source-env <value>]
 
 FLAGS
   -B, --branch=<value>           [default: main] The name of the branch where you want to perform the bulk publish
@@ -80,6 +81,10 @@ FLAGS
                                  locales, specify the codes separated by spaces.
   -y, --yes                      Set it to true to process the command with the current configuration.
       --api-version=<value>      API version to be used. Values [Default: 3, Nested Reference Publishing: 3.2].
+      --backup-dir=<value>       (optional) Path to the import backup directory. When set, each imported asset is
+                                 published only to the environments and locales it was published to in the source stack
+                                 (read from the backup’s publish details and asset UID mapping), with asset-scan gating
+                                 applied. Intended for the post-import publish flow.
       --bulk-publish=<value>     [default: true] Set this flag to use Contentstack’s Bulk Publish APIs. It is true, by
                                  default.
       --delivery-token=<value>   The delivery token of the source environment.
@@ -139,6 +144,12 @@ EXAMPLES
   Using --stack-api-key flag
 
   $ csdx cm:assets:publish --environments [ENVIRONMENT 1] [ENVIRONMENT 2] --locales [LOCALE] --stack-api-key [STACK API KEY]
+
+
+
+  Using --backup-dir flag (publish imported assets to their original environments after asset scanning)
+
+  $ csdx cm:assets:publish --backup-dir [PATH TO IMPORT BACKUP DIR] --stack-api-key [STACK API KEY]
 ```
 
 _See code: [src/commands/cm/assets/publish.js](https://github.com/contentstack/cli/blob/main/packages/contentstack-bulk-publish/src/commands/cm/assets/publish.js)_
@@ -311,15 +322,15 @@ EXAMPLES
   $ csdx cm:entries:update-and-publish --content-types [CONTENT TYPE 1] [CONTENT TYPE 2] -e [ENVIRONMENT 1] [ENVIRONMENT 2] --locales [LOCALE 1] [LOCALE 2] --stack-api-key [STACK API KEY]
 ```
 
-## `csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`
+## `csdx cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>] [--backup-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>] [--source-env <value>]`
 
 Publish assets to the specified environments
 
 ```
 USAGE
   $ csdx cm:bulk-publish:assets cm:assets:publish [-a <value>] [--retry-failed <value>] [-e <value>] [--folder-uid <value>]
-    [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>] [--delivery-token <value>]
-    [--source-env <value>]
+    [--backup-dir <value>] [--bulk-publish <value>] [-c <value>] [-y] [--locales <value>] [--branch <value>]
+    [--delivery-token <value>] [--source-env <value>]
 
 FLAGS
   -B, --branch=<value>           [default: main] The name of the branch where you want to perform the bulk publish
@@ -337,6 +348,10 @@ FLAGS
                                  locales, specify the codes separated by spaces.
   -y, --yes                      Set it to true to process the command with the current configuration.
       --api-version=<value>      API version to be used. Values [Default: 3, Nested Reference Publishing: 3.2].
+      --backup-dir=<value>       (optional) Path to the import backup directory. When set, each imported asset is
+                                 published only to the environments and locales it was published to in the source stack
+                                 (read from the backup’s publish details and asset UID mapping), with asset-scan gating
+                                 applied. Intended for the post-import publish flow.
       --bulk-publish=<value>     [default: true] Set this flag to use Contentstack’s Bulk Publish APIs. It is true, by
                                  default.
       --delivery-token=<value>   The delivery token of the source environment.
@@ -396,6 +411,12 @@ EXAMPLES
   Using --stack-api-key flag
 
   $ csdx cm:assets:publish --environments [ENVIRONMENT 1] [ENVIRONMENT 2] --locales [LOCALE] --stack-api-key [STACK API KEY]
+
+
+
+  Using --backup-dir flag (publish imported assets to their original environments after asset scanning)
+
+  $ csdx cm:assets:publish --backup-dir [PATH TO IMPORT BACKUP DIR] --stack-api-key [STACK API KEY]
 ```
 
 ## `csdx cm:bulk-publish:clear`
