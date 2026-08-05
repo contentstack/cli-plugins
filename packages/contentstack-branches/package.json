@@ -1,13 +1,13 @@
 {
   "name": "@contentstack/cli-cm-branches",
   "description": "Contentstack CLI plugin to do branches operations",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.4",
+    "@contentstack/cli-command": "~1.8.5",
+    "@contentstack/cli-utilities": "~1.19.0",
     "@oclif/core": "^4.11.4",
-    "@contentstack/cli-utilities": "~1.18.5",
     "chalk": "^4.1.2",
     "just-diff": "^6.0.2",
     "lodash": "^4.18.1"
@@ -35,8 +35,7 @@
     "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "posttest": "npm run lint",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
     "test:integration": "mocha --forbid-only \"test/integration/*.test.ts\"",
     "test:unit": "mocha --forbid-only \"test/unit/**/*.test.ts\" --exit || exit 0",
