@@ -118,6 +118,9 @@ const config: DefaultConfig = {
       displayExecutionTime: false,
       enableDownloadStatus: false,
       includeVersionedAssets: false,
+      // Asset scan statuses that must block download; any other value (including 'not_scanned',
+      // 'clean', or the field being absent) is treated as safe to download.
+      blockingScanStatuses: ['pending', 'quarantined'],
     },
     content_types: {
       dirName: 'content_types',

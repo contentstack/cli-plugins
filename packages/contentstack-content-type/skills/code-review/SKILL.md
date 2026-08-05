@@ -11,7 +11,7 @@ description: >-
 ## When to use
 
 - Reviewing a PR or diff before merge.
-- Auditing dependency upgrades (axios, diff2html, git-diff, node-graphviz, tmp, cli-ux).
+- Auditing dependency upgrades (axios, diff2html, diff, node-graphviz, tmp, cli-ux).
 - Changes touching compare HTML, temp files, diagram output, or `src/core/contentstack/`.
 
 ## Instructions
@@ -24,7 +24,7 @@ Use **Critical** / **Important** / **Suggestion** when leaving feedback.
 
 - **Secrets**: Never approve logging of tokens, `authtoken` / `authorization` values, or raw management tokens.
 - **Compare / diagram**: Changes to [src/core/content-type/compare.ts](../../src/core/content-type/compare.ts) or [diagram.ts](../../src/core/content-type/diagram.ts) deserve extra scrutiny (temp files, browser open, paths, binary dependency).
-- **Dependencies**: axios, diff2html, git-diff, node-graphviz, tmp, cli-ux—review changelog and supply-chain for version bumps.
+- **Dependencies**: axios, diff2html, diff, node-graphviz, tmp, cli-ux—review changelog and supply-chain for version bumps.
 - **Quality**: TypeScript and **eslint-config-oclif-typescript** ([.eslintrc](../../.eslintrc)); behavioral changes should include or update **Jest** tests where appropriate.
 
 ### Security and privacy
@@ -57,7 +57,7 @@ Use **Critical** / **Important** / **Suggestion** when leaving feedback.
 | Severity | Item |
 |----------|------|
 | Important | **axios**: security advisories; upgrade notes. |
-| Important | **diff2html**, **git-diff**, **tmp**, **cli-ux**: behavior changes affecting compare UX. |
+| Important | **diff2html**, **diff**, **tmp**, **cli-ux**: behavior changes affecting compare UX. |
 | Important | **node-graphviz**: compatibility with supported Node and system Graphviz. |
 | Suggestion | **moment** (if touched): prefer minimal churn; note maintenance status of dependencies. |
 
