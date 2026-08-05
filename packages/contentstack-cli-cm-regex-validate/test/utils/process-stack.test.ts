@@ -1,111 +1,80 @@
-import {cli} from 'cli-ux'
-import processStack from '../../src/utils/process-stack'
-import generateOutput from '../../src/utils/generate-output'
+import { ux } from '@contentstack/cli-utilities'
+import { expect } from 'chai'
+import sinon from 'sinon'
+import proxyquire from 'proxyquire'
 const validDocument = require('../data/validDocument.json')
 const regexMessages = require('../../messages/index.json').validateRegex
 
-jest.mock('../../src/utils/generate-output.ts')
-
-/* @ts-ignore */
-cli = ({
-  debug: jest.fn(),
-  error: jest.fn(),
-  action: {
-    start: jest.fn(),
-    stop: jest.fn(),
-  }})
-
 describe('Process Stack', () => {
+  let generateOutputStub: sinon.SinonStub
+  let processStack: (flags: any, stack: any, startTime: number) => Promise<void>
+
   beforeEach(() => {
-    jest.restoreAllMocks()
+    sinon.stub(ux.action, 'start')
+    sinon.stub(ux.action, 'stop')
+    generateOutputStub = sinon.stub().resolves()
+    processStack = proxyquire('../../src/utils/process-stack', {
+      './generate-output': { default: generateOutputStub, __esModule: true, '@noCallThru': true },
+    }).default
   })
 
-  test('Process Stack with Content Type & Global Field selected & valid Data', async () => {
+  afterEach(() => {
+    sinon.restore()
+  })
+
+  it('Process Stack with Content Type & Global Field selected & valid Data', async () => {
     const stack = {
       name: 'stack',
-      contentType: jest.fn().mockImplementation(() => {
-        return {
-          query: jest.fn().mockImplementation(() => {
-            return {
-              find: jest.fn().mockResolvedValue(Promise.resolve({items: [validDocument]})),
-            }
-          }),
-        }
+      contentType: sinon.stub().returns({
+        query: sinon.stub().returns({ find: sinon.stub().resolves({ items: [validDocument] }) }),
       }),
-      globalField: jest.fn().mockImplementation(() => {
-        return {
-          query: jest.fn().mockImplementation(() => {
-            return {
-              find: jest.fn().mockResolvedValue(Promise.resolve({items: [validDocument]})),
-            }
-          }),
-        }
+      globalField: sinon.stub().returns({
+        query: sinon.stub().returns({ find: sinon.stub().resolves({ items: [validDocument] }) }),
       }),
     }
     const startTime = Date.now()
-    await processStack({contentType: true}, stack, startTime)
-    await processStack({globalField: true}, stack, startTime)
-    expect(cli.action.stop).toHaveBeenCalled()
-    expect(cli.action.start).toHaveBeenCalled()
-    expect(cli.action.stop).toHaveBeenCalled()
-    expect(generateOutput).toHaveBeenCalled()
+    await processStack({ contentType: true }, stack, startTime)
+    await processStack({ globalField: true }, stack, startTime)
+    expect((ux.action.stop as sinon.SinonStub).called).to.equal(true)
+    expect((ux.action.start as sinon.SinonStub).called).to.equal(true)
+    expect(generateOutputStub.called).to.equal(true)
   })
 
-  test('Process Stack with Content Type selected & invalid Content Type Data', async () => {
-    const contentTypeData = {
-      title: 'Regex Fields',
-      uid: 'regex_fields',
-    }
+  it('Process Stack with Content Type selected & invalid Content Type Data', async () => {
+    const contentTypeData = { title: 'Regex Fields', uid: 'regex_fields' }
     const stack = {
       name: 'stack',
-      contentType: jest.fn().mockImplementation(() => {
-        return {
-          query: jest.fn().mockImplementation(() => {
-            return {
-              find: jest.fn().mockResolvedValue(Promise.resolve({items: [contentTypeData]})),
-            }
-          }),
-        }
+      contentType: sinon.stub().returns({
+        query: sinon.stub().returns({ find: sinon.stub().resolves({ items: [contentTypeData] }) }),
       }),
     }
     try {
       const startTime = Date.now()
-      await processStack({contentType: true}, stack, startTime)
-      expect(cli.action.stop).toHaveBeenCalled()
-      expect(cli.action.start).toHaveBeenCalled()
-      expect(cli.action.stop).toHaveBeenCalled()
-      expect(generateOutput).not.toHaveBeenCalled()
-    } catch (error:any) {
-      expect(error.message).toBe(regexMessages.errors.stack.contentTypes)
+      await processStack({ contentType: true }, stack, startTime)
+      expect((ux.action.stop as sinon.SinonStub).called).to.equal(true)
+      expect((ux.action.start as sinon.SinonStub).called).to.equal(true)
+      expect(generateOutputStub.called).to.equal(false)
+    } catch (error: any) {
+      expect(error.message).to.equal(regexMessages.errors.stack.contentTypes)
     }
   })
 
-  test('Process Stack with Global Field selected & Invalid Global Field Data', async () => {
-    const globalFieldData = {
-      title: 'Regex Fields',
-      uid: 'regex_fields',
-    }
+  it('Process Stack with Global Field selected & Invalid Global Field Data', async () => {
+    const globalFieldData = { title: 'Regex Fields', uid: 'regex_fields' }
     const stack = {
       name: 'stack',
-      globalField: jest.fn().mockImplementation(() => {
-        return {
-          query: jest.fn().mockImplementation(() => {
-            return {
-              find: jest.fn().mockResolvedValue(Promise.resolve({items: [globalFieldData]})),
-            }
-          }),
-        }
+      globalField: sinon.stub().returns({
+        query: sinon.stub().returns({ find: sinon.stub().resolves({ items: [globalFieldData] }) }),
       }),
     }
     try {
       const startTime = Date.now()
-      await processStack({globalField: true}, stack, startTime)
-      expect(cli.action.stop).toHaveBeenCalled()
-      expect(cli.action.start).toHaveBeenCalled()
-      expect(cli.action.stop).toHaveBeenCalled()
-      expect(generateOutput).not.toHaveBeenCalled()
-    } catch (error:any) {
-      expect(error.message).toBe(regexMessages.errors.stack.globalFields)
+      await processStack({ globalField: true }, stack, startTime)
+      expect((ux.action.stop as sinon.SinonStub).called).to.equal(true)
+      expect((ux.action.start as sinon.SinonStub).called).to.equal(true)
+      expect(generateOutputStub.called).to.equal(false)
+    } catch (error: any) {
+      expect(error.message).to.equal(regexMessages.errors.stack.globalFields)
     }
   })
 })

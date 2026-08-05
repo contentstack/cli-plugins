@@ -1,3 +1,9 @@
+> **Source of truth:** [cli-plugins monorepo](https://github.com/contentstack/cli-plugins) — `packages/contentstack-apps-cli`  
+> Migrated from [contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli). See [APPS-CLI-MIGRATION.md](../../APPS-CLI-MIGRATION.md).
+
+<!-- Insert Nodejs CI here -->
+<!-- Insert Apps CLI version here -->
+
 # @contentstack/apps-cli
 
 Contentstack lets you develop apps in your organization using the Developer Hub portal. With the Apps CLI plugin, Contentstack CLI allows you to perform the CRUD operations on your app in Developer Hub and then use the app in your organization or stack by installing or uninstalling your app as required.
@@ -10,15 +16,15 @@ $ csdx plugins:install @contentstack/apps-cli
 
 ## How to use this plugin
 
-This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/developers/cli/authenticate-with-the-cli/).
+This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/headless-cms/cli-authentication).
 
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/apps-cli
 $ csdx COMMAND
 running command...
-$ csdx (--version)
-@contentstack/apps-cli/1.6.1 darwin-arm64 node-v22.21.1
+$ csdx (--version|-v)
+@contentstack/apps-cli/2.0.0-beta.2 darwin-arm64 node-v18.20.2
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -130,7 +136,7 @@ EXAMPLES
 
   $ csdx app:delete --app-uid <value>
 
-  $ csdx app:delete --app-uid <value> --org <value>
+  $ csdx app:delete --app-uid <value> --org <value> -d ./boilerplate
 ```
 
 _See code: [src/commands/app/delete.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-apps-cli/src/commands/app/delete.ts)_
@@ -145,7 +151,7 @@ USAGE
     [--app-url <value>] [--launch-project existing|new] [-c <value>]
 
 FLAGS
-  -c, --config=<value>           [optional] Please enter the path of the config file.
+  -c, --config=<value>           Path to the optional config file.
       --app-uid=<value>          Provide the app UID of an existing app.
       --app-url=<value>          Please enter the URL of the app you want to deploy.
       --hosting-type=<option>    Choose a valid Hosting Type.
@@ -291,7 +297,7 @@ USAGE
   $ csdx app:update [--org <value>] [--app-manifest <value>]
 
 FLAGS
-  --app-manifest=<value>  Path to the app manifest.json file.
+  --app-manifest=<value>  Path to the app manifest.json file:
   --org=<value>           Provide the organization UID to fetch the app details for the operation.
 
 DESCRIPTION

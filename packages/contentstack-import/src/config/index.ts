@@ -107,6 +107,38 @@ const config: DefaultConfig = {
       folderValidKeys: ['name', 'parent_uid'],
       validKeys: ['title', 'parent_uid', 'description', 'tags'],
     },
+    'cs-assets': {
+      dirName: 'spaces',
+      fieldsDir: 'fields',
+      assetTypesDir: 'asset_types',
+      fieldsFileName: 'fields.json',
+      assetTypesFileName: 'asset-types.json',
+      foldersFileName: 'folders.json',
+      assetsFileName: 'assets.json',
+      fieldsImportInvalidKeys: [
+        'created_at',
+        'created_by',
+        'updated_at',
+        'updated_by',
+        'asset_types_count',
+      ],
+      assetTypesImportInvalidKeys: [
+        'created_at',
+        'created_by',
+        'updated_at',
+        'updated_by',
+        'category',
+        'preview_image_url',
+        'category_detail',
+      ],
+      mapperRootDir: 'mapper',
+      mapperAssetsModuleDir: 'assets',
+      mapperUidFileName: 'uid-mapping.json',
+      mapperUrlFileName: 'url-mapping.json',
+      mapperSpaceUidFileName: 'space-uid-mapping.json',
+      uploadAssetsConcurrency: 2,
+      importFoldersConcurrency: 1,
+    },
     'assets-old': {
       dirName: 'assets',
       fileName: 'assets.json',
@@ -145,7 +177,7 @@ const config: DefaultConfig = {
     },
     'global-fields': {
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads individual {uid}.json files
       validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
       limit: 100,
     },
@@ -449,7 +481,6 @@ const config: DefaultConfig = {
   getEncryptionKeyMaxRetry: 3,
   // useBackedupDir: '',
   // backupConcurrency: 10,
-  onlyTSModules: ['taxonomies', 'personalize', 'variant-entries', 'stack'],
   auditConfig: {
     noLog: false, // Skip logs printing on terminal
     skipConfirm: true, // Skip confirmation if any
@@ -460,6 +491,7 @@ const config: DefaultConfig = {
   //'taxonomies', 'environments', 'marketplace_apps', workflows, custom-roles --> Add this incase need to extend to the other global modules
   globalModules: ['webhooks'],
   entriesPublish: true,
+  skipTaxonomyPublish: true,
 };
 export const PUBLISHING_RULES_APPROVERS_SKIP_MSG =
   'Skipping import of publish rule approver(s) (roles/users); reconfigure approvers on the target stack.';

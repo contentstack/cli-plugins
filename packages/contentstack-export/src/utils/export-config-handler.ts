@@ -1,14 +1,26 @@
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated,cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import {
+  configHandler,
+  isAuthenticated,
+  cliux,
+  sanitizePath,
+  log,
+  isFeatureEnabled,
+  FeatureCtx,
+} from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
-import { readFile } from './file-helper';
+import { readFile, isDirectoryNonEmpty } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
 import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
+const setupConfig = async (exportCmdFlags: any, context?: any): Promise<ExportConfig> => {
+  // Set progress supported module FIRST, before any log calls
+  // This ensures the logger respects the showConsoleLogs setting correctly
+  configHandler.set('log.progressSupportedModule', 'export');
+
   let config = merge({}, defaultConfig);
 
   // Track authentication method
@@ -20,10 +32,21 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   if (exportCmdFlags['config']) {
     log.debug('Loading external configuration file...', { configFile: exportCmdFlags['config'] });
     const externalConfig = await readFile(exportCmdFlags['config']);
+
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn(
+        'Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".',
+      );
+    }
+
+
     config = merge.recursive(config, externalConfig);
   }
   config.exportDir = sanitizePath(
-    exportCmdFlags['data'] || exportCmdFlags['data-dir'] || config.data || (await askExportDir()),
+    exportCmdFlags['data'] || exportCmdFlags['data-dir'] || config.exportDir || (await askExportDir()),
   );
 
   const pattern = /[*$%#<>{}!&?]/g;
@@ -36,8 +59,12 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   config.exportDir = config.exportDir.replace(/['"]/g, '');
   config.exportDir = path.resolve(config.exportDir);
 
-  //Note to support the old key
-  config.data = config.exportDir;
+  if (isDirectoryNonEmpty(config.exportDir)) {
+    cliux.print(
+      '\nThe export directory is not empty. Existing files in this folder may be overwritten.',
+      { color: 'yellow' },
+    );
+  }
 
   const managementTokenAlias = exportCmdFlags['management-token-alias'] || exportCmdFlags['alias'];
 
@@ -80,16 +107,13 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
       }
 
       config.apiKey =
-        exportCmdFlags['stack-uid'] || exportCmdFlags['stack-api-key'] || config.source_stack || (await askAPIKey());
-      if (typeof config.apiKey !== 'string') {
-        log.debug('Invalid API key received!', { apiKey: config.apiKey });
-        throw new Error('Invalid API key received');
+        exportCmdFlags['stack-uid'] || exportCmdFlags['stack-api-key'] || config.apiKey || (await askAPIKey());
+      if (typeof config.apiKey !== 'string' || !config.apiKey || !config.apiKey.trim()) {
+        log.debug('Invalid or empty API key received!', { apiKey: config.apiKey });
+        throw new Error('Invalid or empty API key received. Please provide a valid stack API key.');
       }
     }
   }
-
-  // Note support old config
-  config.source_stack = config.apiKey;
 
   config.forceStopMarketplaceAppsPrompt = exportCmdFlags.yes;
   config.auth_token = configHandler.get('authtoken'); // TBD handle auth token in httpClient & sdk
@@ -97,7 +121,7 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
   if (exportCmdFlags['branch-alias']) {
     config.branchAlias = exportCmdFlags['branch-alias'];
-  } 
+  }
   if (exportCmdFlags['branch']) {
     config.branchName = exportCmdFlags['branch'];
   }
@@ -132,10 +156,35 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
       throw new Error(`Invalid query format: ${error.message}`);
     }
   }
-
-    // Add authentication details to config for context tracking
+  // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Export configuration setup completed.', { ...config });
+
+  // Deferred plan check — credentials now available after setupExportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) {
+          context.planStatus[featureUid] = status;
+        }
+
+        log.debug(`[export] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[export] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
+    }
+  }
+
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
+  }
 
   return config;
 };

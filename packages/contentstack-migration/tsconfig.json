@@ -14,22 +14,13 @@
     "inlineSources": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
-    "lib": [
-      "ES2019",
-      "es2020.promise"
-    ],
+    "lib": ["ES2019", "es2020.promise"],
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "composite": true
   },
-  "include": [
-    "src/**/*",
-    "types/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "lib"
-  ],
+  "include": ["src/**/*", "types/*"],
+  "exclude": ["node_modules", "lib"],
   "ts-node": {
     "transpileOnly": false,
     "files": true,

@@ -2,8 +2,9 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { stub, restore, SinonStub } from 'sinon';
+import { stub, restore, SinonStub, createSandbox } from 'sinon';
 import * as utilities from '@contentstack/cli-utilities';
+import * as cliAm from '@contentstack/cli-asset-management';
 import setupConfig from '../../src/utils/import-config-handler';
 import * as interactive from '../../src/utils/interactive';
 
@@ -121,16 +122,23 @@ describe('Import Config Handler', () => {
     const config = await setupConfig(flags);
 
     expect(config.branchName).to.equal('development');
+    expect(config.branchDir).to.equal(path.resolve(contentDir));
   });
 
-  it('should set default content version to 1', async () => {
-    const flags = {
+  it('should set branchDir to contentDir when branch or branch-alias is provided', async () => {
+    const flagsWithBranch = {
       'data-dir': contentDir,
+      branch: 'dev',
     };
+    const configBranch = await setupConfig(flagsWithBranch);
+    expect(configBranch.branchDir).to.equal(path.resolve(contentDir));
 
-    const config = await setupConfig(flags);
-
-    expect(config.contentVersion).to.equal(1);
+    const flagsWithAlias = {
+      'data-dir': contentDir,
+      'branch-alias': 'my-alias',
+    };
+    const configAlias = await setupConfig(flagsWithAlias);
+    expect(configAlias.branchDir).to.equal(path.resolve(contentDir));
   });
 
   it('should ask for modules when none are provided', async () => {
@@ -142,5 +150,30 @@ describe('Import Config Handler', () => {
 
     expect(askSelectedModulesStub.calledOnce).to.be.true;
     expect(config.selectedModules).to.deep.equal(['entries']);
+  });
+
+  it('should merge Asset Management export flags from detectAssetManagementExportFromContentDir into config', async () => {
+    const sandbox = createSandbox();
+    const detectFake = sandbox.fake.returns({
+      assetManagementEnabled: true,
+      source_stack: 'branch-source-key',
+      assetManagementUrl: 'https://am.example.com',
+    });
+    sandbox.replaceGetter(cliAm, 'detectAssetManagementExportFromContentDir', () => detectFake);
+
+    try {
+      const config = await setupConfig({
+        'data-dir': contentDir,
+        'stack-api-key': 'target-key',
+        module: ['assets'],
+      });
+
+      expect(detectFake.calledOnce).to.be.true;
+      expect(config.csAssetsEnabled).to.equal(true);
+      expect(config.csAssetsUrl).to.equal('https://am.example.com');
+      expect(config.source_stack).to.equal('branch-source-key');
+    } finally {
+      sandbox.restore();
+    }
   });
 });

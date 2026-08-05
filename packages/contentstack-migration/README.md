@@ -5,7 +5,7 @@ The Contentstack CLI’s “Migration” plugin allows developers to automate th
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/@contentstack/cli-migration.svg)](https://npmjs.org/package/@contentstack/cli-migration)
 [![Downloads/week](https://img.shields.io/npm/dw/@contentstack/cli-migration.svg)](https://npmjs.org/package/@contentstack/cli-migration)
-[![License](https://img.shields.io/npm/l/@contentstack/cli-migration.svg)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli-migration.svg)](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-migration/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-migration](#contentstackcli-migration)
@@ -21,7 +21,7 @@ $ npm install -g @contentstack/cli-migration
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-migration/1.12.4 darwin-arm64 node-v22.21.1
+@contentstack/cli-migration/2.0.0-beta.16 darwin-arm64 node-v24.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -45,12 +45,12 @@ USAGE
     [--config-file <value>] [--config <value>] [--multiple]
 
 FLAGS
-  -B, --branch=<value>         Use this flag to add the branch name where you want to perform the migration. (target
-                               branch name)
   -a, --alias=<value>          Use this flag to add the management token alias. You must use either the --alias flag or
                                the --stack-api-key flag.
   -k, --stack-api-key=<value>  Use this flag to add the API key of your stack. You must use either the --stack-api-key
                                flag or the --alias flag.
+      --branch=<value>         Use this flag to add the branch name where you want to perform the migration. (target
+                               branch name)
       --config=<value>...      [optional] Inline configuration, <key1>:<value1>. Passing an external configuration makes
                                the script re-usable.
       --config-file=<value>    [optional] Path of the JSON configuration file.
@@ -75,7 +75,7 @@ EXAMPLES
 
   $ csdx cm:migration --multiple --file-path <migration/scripts/dir/path> 
 
-  $ csdx cm:migration --alias --file-path <migration/script/file/path> -k <api-key>
+  $ csdx cm:migration --alias <management-token-alias> --file-path <migration/script/file/path>
 ```
 
 ## `csdx cm:stacks:migration [-k <value>] [-a <value>] [--file-path <value>] [--branch <value>] [--config-file <value>] [--config <value>] [--multiple]`
@@ -88,12 +88,12 @@ USAGE
     [--config <value>] [--multiple]
 
 FLAGS
-  -B, --branch=<value>         Use this flag to add the branch name where you want to perform the migration. (target
-                               branch name)
   -a, --alias=<value>          Use this flag to add the management token alias. You must use either the --alias flag or
                                the --stack-api-key flag.
   -k, --stack-api-key=<value>  Use this flag to add the API key of your stack. You must use either the --stack-api-key
                                flag or the --alias flag.
+      --branch=<value>         Use this flag to add the branch name where you want to perform the migration. (target
+                               branch name)
       --config=<value>...      [optional] Inline configuration, <key1>:<value1>. Passing an external configuration makes
                                the script re-usable.
       --config-file=<value>    [optional] Path of the JSON configuration file.
@@ -118,8 +118,14 @@ EXAMPLES
 
   $ csdx cm:migration --multiple --file-path <migration/scripts/dir/path> 
 
-  $ csdx cm:migration --alias --file-path <migration/script/file/path> -k <api-key>
+  $ csdx cm:migration --alias <management-token-alias> --file-path <migration/script/file/path>
 ```
 
-_See code: [src/commands/cm/stacks/migration.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-migration/src/commands/cm/stacks/migration.ts)_
+_See code: [src/commands/cm/stacks/migration.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-migration/src/commands/cm/stacks/migration.ts)_
 <!-- commandsstop -->
+
+### Points to remember
+
+- Currently, you can pass a custom schema to the createField method to migrate group fields.
+- You can migrate global fields by creating an SDK instance and adding it to content types using the createField method.
+- Currently, you can migrate entries by creating an SDK instance to create/update/delete entries for your content type.

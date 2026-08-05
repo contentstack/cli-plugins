@@ -1,5 +1,4 @@
-import { cliux } from '@contentstack/cli-utilities';
-import chalk from 'chalk';
+import { cliux, getChalk } from '@contentstack/cli-utilities';
 import forEach from 'lodash/forEach';
 import os from 'os';
 import path from 'path';
@@ -179,7 +178,7 @@ export default class MergeHandler {
     const strategyName = this.mergeSettings.strategy;
 
     if (allEmpty) {
-      cliux.print(chalk.red(`No items selected according to the '${strategyName}' strategy.`));
+      cliux.print(getChalk().red(`No items selected according to the '${strategyName}' strategy.`));
       process.exit(1);
     }
 
@@ -187,7 +186,7 @@ export default class MergeHandler {
       if (exists && empty) {
         const readable = type === 'contentType' ? 'Content Types' : 'Global fields';
         cliux.print('\n');
-        cliux.print(chalk.yellow(`Note: No ${readable} selected according to the '${strategyName}' strategy.`));
+        cliux.print(getChalk().yellow(`Note: No ${readable} selected according to the '${strategyName}' strategy.`));
       }
     }
 

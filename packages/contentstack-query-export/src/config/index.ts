@@ -1,7 +1,7 @@
 import { DefaultConfig } from '../types';
 
 const config: DefaultConfig = {
-  contentVersion: 1,
+  contentVersion: 2,
   host: 'https://api.contentstack.io/v3',
 
   // Query-based export module configuration

@@ -1,18 +1,18 @@
 {
   "name": "@contentstack/cli-cm-migrate-rte",
   "description": "Contentstack CLI plugin to migrate HTML RTE to JSON RTE",
-  "version": "1.7.3",
+  "version": "2.0.0-beta.10",
   "author": "contentstack",
   "bugs": {
     "url": "https://github.com/contentstack/cli-plugins/issues"
   },
   "dependencies": {
-    "@contentstack/cli-command": "1.8.5",
-    "@contentstack/cli-utilities": "1.19.0",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
     "@contentstack/json-rte-serializer": "~2.1.0",
-    "@oclif/core": "^4.12.0",
-    "@oclif/plugin-help": "^6.2.53",
-    "chalk": "^4.1.2",
+    "@oclif/core": "^4.11.4",
+    "@oclif/plugin-help": "^6.2.49",
+    "chalk": "^5.6.2",
     "collapse-whitespace": "^1.1.7",
     "jsdom": "^23.2.0",
     "jsonschema": "^1.5.0",
@@ -23,7 +23,7 @@
     "@oclif/test": "^4.1.18",
     "chai": "^4.5.0",
     "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.165",
+    "eslint-config-oclif": "^6.0.164",
     "mocha": "^10.8.2",
     "nock": "^13.5.6",
     "nyc": "^15.1.0",
@@ -59,6 +59,9 @@
   "oclif": {
     "commands": "./src/commands",
     "bin": "csdx",
+    "hooks": {
+      "init": "./src/hooks/init/load-chalk.js"
+    },
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-migrate-rte/<%- commandPath %>"
   },
   "repository": {

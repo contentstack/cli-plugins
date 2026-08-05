@@ -1,5 +1,4 @@
-import { cliux, managementSDKClient, messageHandler } from '@contentstack/cli-utilities';
-import chalk from 'chalk';
+import { cliux, managementSDKClient, messageHandler, getChalk } from '@contentstack/cli-utilities';
 import { diff } from 'just-diff';
 import camelCase from 'lodash/camelCase';
 import find from 'lodash/find';
@@ -106,10 +105,10 @@ function handleErrorMsg(err, spinner) {
 
   if (err?.errorMessage) {
     cliux.print(`Error: ${err.errorMessage}`, { color: 'red' });
-  }else if(err?.message){
+  } else if (err?.message) {
     cliux.print(`Error: ${err.message}`, { color: 'red' });
   } else {
-    console.log(err)
+    console.log(err);
     cliux.print(`Error: ${messageHandler.parse('CLI_BRANCH_API_FAILED')}`, { color: 'red' });
   }
   process.exit(1);
@@ -196,19 +195,19 @@ function printCompactTextView(branchTextRes: BranchCompactTextRes): void {
     cliux.print(' ');
     forEach(branchTextRes.added, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
 
     forEach(branchTextRes.modified, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.blue(`± '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().blue(`± '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
 
     forEach(branchTextRes.deleted, (diff: BranchDiffRes) => {
       if (diff.merge_strategy !== 'ignore') {
-        cliux.print(chalk.red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
+        cliux.print(getChalk().red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
       }
     });
   }
@@ -252,7 +251,7 @@ async function parseVerbose(branchesDiffData: any[], payload: BranchDiffPayload)
   };
 
   verboseRes.csvData = generateCSVDataFromVerbose(verboseRes);
-  
+
   return verboseRes;
 }
 
@@ -314,28 +313,28 @@ async function baseAndCompareBranchDiff(params: {
   if (baseBranchFieldExists && compareBranchFieldExists) {
     await prepareModifiedDiff(params);
   } else if (baseBranchFieldExists && !compareBranchFieldExists) {
-    let displayName= baseBranchFieldExists?.display_name;
+    let displayName = baseBranchFieldExists?.display_name;
     let path = baseBranchFieldExists?.path || baseBranchFieldExists?.uid;
     let field = baseBranchFieldExists?.data_type;
-    if(baseBranchFieldExists.path === 'description'){
+    if (baseBranchFieldExists.path === 'description') {
       displayName = 'Description';
       path = baseBranchFieldExists?.path;
-      field = 'metadata'
+      field = 'metadata';
     }
     params.listOfDeletedFields.push({
-      displayName:displayName,
+      displayName: displayName,
       field: field,
       path: path,
       uid: baseBranchFieldExists?.uid,
     });
   } else if (!baseBranchFieldExists && compareBranchFieldExists) {
-    let displayName= compareBranchFieldExists?.display_name;
+    let displayName = compareBranchFieldExists?.display_name;
     let path = compareBranchFieldExists?.path || compareBranchFieldExists?.uid;
     let field = compareBranchFieldExists?.data_type;
-    if(compareBranchFieldExists.path === 'description'){
+    if (compareBranchFieldExists.path === 'description') {
       displayName = 'Description';
       path = compareBranchFieldExists?.path;
-      field = 'metadata'
+      field = 'metadata';
     }
     params.listOfAddedFields.push({
       displayName: displayName,
@@ -392,41 +391,41 @@ async function prepareModifiedDiff(params: {
   } else {
     const fieldDisplayName = getFieldDisplayName(compareBranchFieldExists);
 
-      const { added, deleted, modified } = await deepDiff(baseBranchFieldExists, compareBranchFieldExists);
-      for (const field of Object.values(added)) {
-        if (field) {
-          params.listOfAddedFields.push({
-            displayName: getFieldDisplayName(field),
+    const { added, deleted, modified } = await deepDiff(baseBranchFieldExists, compareBranchFieldExists);
+    for (const field of Object.values(added)) {
+      if (field) {
+        params.listOfAddedFields.push({
+          displayName: getFieldDisplayName(field),
           field: field['fieldType'] || field['data_type'] || 'field',
-            path: field['path'],
+          path: field['path'],
           uid: field['uid'],
-          });
-        }
+        });
       }
+    }
 
-      for (const field of Object.values(deleted)) {
-        if (field) {
-          params.listOfDeletedFields.push({
-            displayName: getFieldDisplayName(field),
+    for (const field of Object.values(deleted)) {
+      if (field) {
+        params.listOfDeletedFields.push({
+          displayName: getFieldDisplayName(field),
           field: field['fieldType'] || field['data_type'] || 'field',
-            path: field['path'],
+          path: field['path'],
           uid: field['uid'],
-          });
-        }
+        });
       }
+    }
 
-      for (const field of Object.values(modified)) {
-        if (field) {
-          params.listOfModifiedFields.push({
-            changeCount: field['changeCount'],
+    for (const field of Object.values(modified)) {
+      if (field) {
+        params.listOfModifiedFields.push({
+          changeCount: field['changeCount'],
           displayName: field['displayName'] || field['display_name'] || fieldDisplayName,
           field: `${field['fieldType'] || field['data_type'] || compareBranchFieldExists?.data_type || 'field'} field`,
           path: field['path'],
           propertyChanges: field['propertyChanges'],
           uid: field['uid'] || compareBranchFieldExists?.uid,
-          });
-        }
+        });
       }
+    }
   }
 }
 
@@ -442,16 +441,16 @@ function printVerboseTextView(branchTextRes: BranchDiffVerboseRes): void {
   if (branchTextRes.modified?.length || branchTextRes.added?.length || branchTextRes.deleted?.length) {
     cliux.print(' ');
     forEach(branchTextRes.added, (diff: BranchDiffRes) => {
-      cliux.print(chalk.green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
+      cliux.print(getChalk().green(`+ '${diff.title}' ${startCase(camelCase(diff.type))}`));
     });
 
     forEach(branchTextRes.modified, (diff: BranchModifiedDetails) => {
-      cliux.print(chalk.blue(`± '${diff.moduleDetails.title}' ${startCase(camelCase(diff.moduleDetails.type))}`));
+      cliux.print(getChalk().blue(`± '${diff.moduleDetails.title}' ${startCase(camelCase(diff.moduleDetails.type))}`));
       printModifiedFields(diff.modifiedFields);
     });
 
     forEach(branchTextRes.deleted, (diff: BranchDiffRes) => {
-      cliux.print(chalk.red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
+      cliux.print(getChalk().red(`- '${diff.title}' ${startCase(camelCase(diff.type))}`));
     });
   }
 }
@@ -465,18 +464,18 @@ function printModifiedFields(modfiedFields: ModifiedFieldsInput): void {
   if (modfiedFields.modified?.length || modfiedFields.added?.length || modfiedFields.deleted?.length) {
     forEach(modfiedFields.modified, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field}` : 'field';
-      const fieldDetail = diff.path ? `(${diff.path}) ${field}`: `${field}`;
-      cliux.print(`   ${chalk.blue(`± "${diff.displayName}" ${fieldDetail}`)}`);
+      const fieldDetail = diff.path ? `(${diff.path}) ${field}` : `${field}`;
+      cliux.print(`   ${getChalk().blue(`± "${diff.displayName}" ${fieldDetail}`)}`);
     });
 
     forEach(modfiedFields.added, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field} field` : 'field';
-      cliux.print(`   ${chalk.green(`+ "${diff.displayName}" (${diff.path}) ${field}`)}`);
+      cliux.print(`   ${getChalk().green(`+ "${diff.displayName}" (${diff.path}) ${field}`)}`);
     });
 
     forEach(modfiedFields.deleted, (diff: ModifiedFieldsType) => {
       const field: string = diff.field ? `${diff.field} field` : 'field';
-      cliux.print(`   ${chalk.red(`- "${diff.displayName}" (${diff.path}) ${field}`)}`);
+      cliux.print(`   ${getChalk().red(`- "${diff.displayName}" (${diff.path}) ${field}`)}`);
     });
   }
 }
@@ -613,7 +612,7 @@ function prepareModifiedField(params: {
             oldValue = contextValue;
           }
         }
-        
+
         return {
           changeType: diff.op === 'add' ? 'added' : diff.op === 'remove' ? 'deleted' : 'modified',
           newValue: newValue,

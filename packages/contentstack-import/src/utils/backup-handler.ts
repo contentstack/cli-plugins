@@ -2,7 +2,7 @@ import * as path from 'path';
 import { copy } from 'fs-extra';
 import { cliux, sanitizePath, log } from '@contentstack/cli-utilities';
 
-import { fileHelper, trace } from './index';
+import { fileHelper } from './index';
 import { ImportConfig } from '../types';
 
 export default async function backupHandler(importConfig: ImportConfig): Promise<string> {
@@ -13,9 +13,9 @@ export default async function backupHandler(importConfig: ImportConfig): Promise
     return importConfig.useBackedupDir;
   }
 
-  const sourceDir = importConfig.branchDir || importConfig.contentDir;
+  const sourceDir = importConfig.contentDir;
   log.debug(
-    `Using source directory for backup: ${sourceDir} (branchDir: ${importConfig.branchDir}, contentDir: ${importConfig.contentDir})`,
+    `Using source directory for backup: ${sourceDir}, contentDir: ${importConfig.contentDir})`,
   );
 
   let backupDirPath: string;
@@ -59,7 +59,6 @@ export default async function backupHandler(importConfig: ImportConfig): Promise
     return new Promise((resolve, reject) => {
       return copy(sourceDir, backupDirPath, (error: any) => {
         if (error) {
-          trace(error, 'error', true);
           return reject(error);
         }
         

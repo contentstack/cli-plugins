@@ -7,6 +7,8 @@ type ManagementStack = ReturnType<ContentstackClient['stack']>;
 export enum OperationType {
   PUBLISH = 'publish',
   UNPUBLISH = 'unpublish',
+  DELETE = 'delete',
+  MOVE = 'move',
 }
 
 export enum PublishMode {
@@ -18,6 +20,7 @@ export enum ResourceType {
   ENTRY = 'entry',
   ASSET = 'asset',
   TAXONOMY = 'taxonomy',
+  CS_ASSETS = 'cs-assets',
 }
 
 export enum FilterType {
@@ -62,7 +65,6 @@ export interface BulkOperationConfig {
 
   // API configuration
   publishMode?: PublishMode;
-  apiVersion?: string;
 
   // Filtering and selection
   branch?: string;
@@ -195,6 +197,14 @@ export interface CommandFlags {
   // Asset-specific flags
   'folder-uid'?: string;
 
+  /** CS Assets bulk delete/move */
+  'space-uid'?: string;
+  'org-uid'?: string;
+  workspace?: string;
+  locale?: string;
+  'asset-uids-file'?: string;
+  'target-folder-uid'?: string;
+
   // Target environments and locales
   environments?: string[];
   locales?: string[];
@@ -204,7 +214,6 @@ export interface CommandFlags {
   'source-alias'?: string;
 
   // API configuration
-  'api-version'?: string;
   'publish-mode'?: string;
 
   // Retry, reliability, and operations log
@@ -244,6 +253,38 @@ export interface AssetPublishData {
   locale: string;
   version?: number;
   publish_details?: PublishDetails[];
+}
+
+/** One row for CS Assets bulk-delete payload `{ uid, locale }[]`. */
+export interface CsAssetsBulkDeleteItem {
+  uid: string;
+  locale: string;
+}
+
+/** Normalized outcome from CS Assets bulk delete/move calls (CLI layer). */
+export interface CsAssetsBulkOperationResult {
+  success: boolean;
+  notice?: string;
+  jobId?: string;
+  error?: string;
+  /** Aggregate across the ≤100-item batches a single delete/move is split into. */
+  jobIds?: string[];
+  batchesTotal?: number;
+  batchesSucceeded?: number;
+  batchesFailed?: number;
+  failures?: { batchIndex: number; count: number; error: string; uids: string[] }[];
+}
+
+/** Typed flags for CS Assets delete/move operations (cm:stacks:bulk-assets). */
+export interface CsAssetsFlags {
+  operation: string;
+  'space-uid': string;
+  'org-uid': string;
+  workspace: string;
+  'asset-uids-file': string;
+  locale?: string;
+  'target-folder-uid'?: string;
+  yes: boolean;
 }
 
 export interface BulkJobResult {

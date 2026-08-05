@@ -1,4 +1,5 @@
 import map from 'lodash/map';
+import { cliux, getChalk } from '@contentstack/cli-utilities';
 import chunk from 'lodash/chunk';
 import first from 'lodash/first';
 import merge from 'lodash/merge';
@@ -18,11 +19,24 @@ import {
   log,
   handleAndLogError,
   messageHandler,
+  CLIProgressManager,
+  FEATURE,
 } from '@contentstack/cli-utilities';
+import { PATH_CONSTANTS } from '../../constants';
 
 import config from '../../config';
-import { ModuleClassParams } from '../../types';
+import { ModuleClassParams, GlobalSummary } from '../../types';
 import BaseClass, { CustomPromiseHandler, CustomPromiseHandlerInput } from './base-class';
+import { ExportSpaces, type AssetExportCounts } from '@contentstack/cli-asset-management';
+import {
+  getExportBasePath,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  PROCESS_STATUS,
+  MODULE_NAMES,
+  getOrgUid,
+} from '../../utils';
+import { handle } from '@oclif/core';
 
 export default class ExportAssets extends BaseClass {
   private assetsRootPath: string;
@@ -32,7 +46,8 @@ export default class ExportAssets extends BaseClass {
 
   constructor({ exportConfig, stackAPIClient }: ModuleClassParams) {
     super({ exportConfig, stackAPIClient });
-    this.exportConfig.context.module = 'assets';
+    this.exportConfig.context.module = MODULE_CONTEXTS.ASSETS;
+    this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.ASSETS];
   }
 
   get commonQueryParam(): Record<string, unknown> {
@@ -43,33 +58,237 @@ export default class ExportAssets extends BaseClass {
     };
   }
 
-  async start(): Promise<void> {
-    this.assetsRootPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.assetConfig.dirName,
-    );
+  // globalSummary is runtime-accessible but typed private; feature-detect the shape and return null
+  // so callers degrade instead of throwing if a future cli-utilities version changes it.
+  private getGlobalSummary(): GlobalSummary | null {
+    const gs = (CLIProgressManager as unknown as { globalSummary?: GlobalSummary | null }).globalSummary;
+    if (
+      !gs ||
+      typeof gs.getModules !== 'function' ||
+      typeof gs.registerModule !== 'function' ||
+      typeof gs.startModule !== 'function' ||
+      typeof gs.completeModule !== 'function'
+    ) {
+      return null;
+    }
+    return gs;
+  }
 
+  /**
+   * Bug 3 — push real CS Assets entity counts into the final EXPORT summary: override the ASSETS
+   * module to count downloaded binaries only, and add dedicated ASSET TYPES / FIELDS / FOLDERS rows.
+   * Drives the global summary directly (no cli-utilities change); the live multibar is unaffected.
+   * The ASSETS strategy is set to Default so applyStrategyCorrections does not overwrite these.
+   */
+  private applyAssetSummaryCounts(counts: AssetExportCounts): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
+      log.debug('Global summary shape unavailable; skipping CS Assets summary count overrides', this.exportConfig.context);
+      return;
+    }
+
+    try {
+      // createNested() registers the module under an upper-cased name, so match that when overriding.
+      const assetsModule = gs.getModules().get(this.currentModuleName.toUpperCase());
+      if (assetsModule) {
+        assetsModule.successCount = counts.assets;
+        // Metadata records lost to permanently-failed page fetches + failed binary downloads —
+        // recoverable via re-export/query-export, so they surface as failures instead of aborting.
+        assetsModule.failureCount = counts.failedAssets ?? 0;
+      }
+
+      const extraRows: Array<[string, number]> = [
+        ['ASSET TYPES', counts.assetTypes],
+        ['FIELDS', counts.fields],
+        ['FOLDERS', counts.folders],
+      ];
+      for (const [name, n] of extraRows) {
+        gs.registerModule(name, n);
+        gs.startModule(name);
+        const m = gs.getModules().get(name);
+        if (m) {
+          m.successCount = n;
+          m.failureCount = 0;
+        }
+        gs.completeModule(name, true);
+      }
+    } catch (e) {
+      log.debug(`Failed to apply CS Assets summary counts: ${e}`, this.exportConfig.context);
+    }
+  }
+
+  // Records the skip in the final summary via the failure channel, which is the only per-module
+  // slot carrying a message. createNestedProgress is intentionally not used: it would render an
+  // empty "ASSETS:" live section.
+  private markAssetsSkippedInSummary(reason: string): void {
+    const gs = this.getGlobalSummary();
+    if (!gs) {
+      log.debug('Global summary shape unavailable; skipping ASSETS skip row', this.exportConfig.context);
+      return;
+    }
+
+    try {
+      const name = this.currentModuleName.toUpperCase();
+      gs.registerModule(name);
+      gs.startModule(name);
+      const module = gs.getModules().get(name);
+      if (module) {
+        module.failures.push({ item: reason, error: reason });
+        module.status = 'failed';
+        module.endTime = Date.now();
+      }
+    } catch (e) {
+      log.debug(`Failed to mark ASSETS as skipped in summary: ${e}`, this.exportConfig.context);
+    }
+  }
+
+  async start(): Promise<void> {
+    const csAssetsInPlan = this.exportConfig.planStatus?.[FEATURE.ASSET_MANAGEMENT]?.is_part_of_plan;
+    if (csAssetsInPlan && this.exportConfig.management_token) {
+      const warning =
+        'Skipping Contentstack Assets export: management token authentication is not supported by the Assets APIs. ' +
+        'Entry-to-asset references will NOT resolve in the exported content. ' +
+        'Re-run the export with a logged-in session (auth token or OAuth) to export Contentstack Assets.';
+      this.markAssetsSkippedInSummary(warning);
+      return;
+    }
+
+    const linkedWorkspaces = this.exportConfig.linkedWorkspaces ?? [];
+
+    if (linkedWorkspaces.length > 0) {
+      const csAssetsUrl = this.exportConfig.region?.csAssetsUrl;
+      if (!csAssetsUrl) {
+        handleAndLogError(
+          new Error(
+            'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          ),
+          {
+            ...this.exportConfig.context,
+            message:
+              'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          },
+        );
+        this.completeProgressWithMessage({
+          moduleName: 'Contentstack Assets',
+          customWarningMessage:
+            'Contentstack Assets export was skipped: csAssetsUrl is not configured. CS Assets assets will not be exported.',
+          context: this.exportConfig.context,
+        });
+        cliux.print(
+          'Contentstack Assets URL is required for CS Assets export. Ensure your region is configured with csAssetsUrl.',
+          { color: 'yellow' },
+        );
+        return;
+      }
+      log.debug(
+        `Exporting with CS Assets: ${csAssetsUrl} (linked_workspaces from exportConfig)`,
+        this.exportConfig.context,
+      );
+      this.exportConfig.org_uid = this.exportConfig.org_uid || (await getOrgUid(this.exportConfig));
+      const progress = this.createNestedProgress(this.currentModuleName);
+      try {
+        const legacyModuleConfig = (this.exportConfig.modules as Record<string, any>)['asset-management'];
+        const csAssetsModuleConfig = this.exportConfig.modules['cs-assets'] || legacyModuleConfig;
+        if (!this.exportConfig.modules['cs-assets'] && legacyModuleConfig) {
+          log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+        }
+        const exporter = new ExportSpaces({
+          linkedWorkspaces,
+          exportDir: this.exportConfig.exportDir,
+          branchName: this.exportConfig.branchName || 'main',
+          csAssetsUrl,
+          org_uid: this.exportConfig.org_uid ?? '',
+          apiKey: this.exportConfig.apiKey,
+          context: this.exportConfig.context as unknown as Record<string, unknown>,
+          securedAssets: this.exportConfig.securedAssets,
+          chunkFileSizeMb: csAssetsModuleConfig?.chunkFileSizeMb,
+          apiConcurrency: csAssetsModuleConfig?.apiConcurrency,
+          downloadAssetsConcurrency: csAssetsModuleConfig?.downloadAssetsConcurrency,
+          pageSize: csAssetsModuleConfig?.pageSize,
+          fetchConcurrency: csAssetsModuleConfig?.fetchConcurrency,
+        });
+        exporter.setParentProgressManager(progress);
+        const counts = await exporter.start();
+        // Surface real entity counts in the final summary: ASSETS = downloaded binaries, plus
+        // dedicated ASSET TYPES / FIELDS / FOLDERS rows. Live multibar is untouched.
+        this.applyAssetSummaryCounts(counts);
+        this.completeProgressWithMessage();
+      } catch (error) {
+        this.completeProgress(false, (error as Error)?.message ?? 'Contentstack Assets export failed');
+        throw error;
+      }
+      return;
+    }
+
+    log.debug('Using legacy asset export (no linked_workspaces in exportConfig)', this.exportConfig.context);
+
+    this.assetsRootPath = pResolve(
+      this.exportConfig.exportDir,
+      (this.assetsRootPath = pResolve(getExportBasePath(this.exportConfig), this.assetConfig.dirName)),
+    );
     log.debug(`Assets root path resolved to: ${this.assetsRootPath}`, this.exportConfig.context);
     log.debug('Fetching assets and folders count...', this.exportConfig.context);
     // NOTE step 1: Get assets and it's folder count in parallel
-    const [assetsCount, assetsFolderCount] = await Promise.all([this.getAssetsCount(), this.getAssetsCount(true)]);
+    const [assetsCount, assetsFolderCount] = await this.withLoadingSpinner(
+      `${getChalk().bold('ASSETS')}: Analyzing stack content...`,
+      () => Promise.all([this.getAssetsCount(), this.getAssetsCount(true)]),
+    );
 
-    log.debug('Fetching assets and folders data...', this.exportConfig.context);
-    // NOTE step 2: Get assets and it's folder data in parallel
-    await Promise.all([this.getAssetsFolders(assetsFolderCount), this.getAssets(assetsCount)]);
+    // Create nested progress manager
+    const progress = this.createNestedProgress(this.currentModuleName);
 
-    // NOTE step 3: Get versioned assets
-    if (!isEmpty(this.versionedAssets) && this.assetConfig.includeVersionedAssets) {
-      log.debug('Fetching versioned assets metadata...', this.exportConfig.context);
-      await this.getVersionedAssets();
+    // Add sub-processes
+    if (typeof assetsFolderCount === 'number' && assetsFolderCount > 0) {
+      progress.addProcess(PROCESS_NAMES.ASSET_FOLDERS, assetsFolderCount);
+    }
+    if (typeof assetsCount === 'number' && assetsCount > 0) {
+      progress.addProcess(PROCESS_NAMES.ASSET_METADATA, assetsCount);
+      progress.addProcess(PROCESS_NAMES.ASSET_DOWNLOADS, assetsCount);
     }
 
-    log.debug('Starting download of all assets...', this.exportConfig.context);
-    // NOTE step 4: Download all assets
-    await this.downloadAssets();
+    try {
+      // Process asset folders
+      if (typeof assetsFolderCount === 'number' && assetsFolderCount > 0) {
+        progress
+          .startProcess(PROCESS_NAMES.ASSET_FOLDERS)
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FETCHING, PROCESS_NAMES.ASSET_FOLDERS);
+        await this.getAssetsFolders(assetsFolderCount);
+        progress.completeProcess(PROCESS_NAMES.ASSET_FOLDERS, true);
+      }
 
-    log.success(messageHandler.parse('ASSET_EXPORT_COMPLETE'), this.exportConfig.context);
+      // Process asset metadata
+      if (typeof assetsCount === 'number' && assetsCount > 0) {
+        progress
+          .startProcess(PROCESS_NAMES.ASSET_METADATA)
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING, PROCESS_NAMES.ASSET_METADATA);
+        await this.getAssets(assetsCount);
+        progress.completeProcess(PROCESS_NAMES.ASSET_METADATA, true);
+      }
+
+      // Get versioned assets
+      if (!isEmpty(this.versionedAssets) && this.assetConfig.includeVersionedAssets) {
+        log.debug('Fetching versioned assets metadata...', this.exportConfig.context);
+        progress.updateStatus(
+          PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FETCHING_VERSION,
+          PROCESS_NAMES.ASSET_METADATA,
+        );
+        await this.getVersionedAssets();
+      }
+
+      // Download all assets
+      if (typeof assetsCount === 'number' && assetsCount > 0) {
+        progress
+          .startProcess(PROCESS_NAMES.ASSET_DOWNLOADS)
+          .updateStatus(PROCESS_STATUS[PROCESS_NAMES.ASSET_DOWNLOADS].DOWNLOADING, PROCESS_NAMES.ASSET_DOWNLOADS);
+        log.debug('Starting download of all assets...', this.exportConfig.context);
+        await this.downloadAssets();
+        progress.completeProcess(PROCESS_NAMES.ASSET_DOWNLOADS, true);
+      }
+
+      this.completeProgressWithMessage();
+    } catch (error) {
+      this.completeProgress(false, error?.message || 'Asset export failed');
+    }
   }
 
   /**
@@ -89,10 +308,21 @@ export default class ExportAssets extends BaseClass {
 
     const onSuccess = ({ response: { items } }: any) => {
       log.debug(`Fetched ${items?.length || 0} asset folders`, this.exportConfig.context);
-      if (!isEmpty(items)) this.assetsFolder.push(...items);
+      if (!isEmpty(items)) {
+        this.assetsFolder.push(...items);
+        items.forEach((folder: any) => {
+          this.progressManager?.tick(true, `folder: ${folder.name || folder.uid}`, null, PROCESS_NAMES.ASSET_FOLDERS);
+        });
+      }
     };
 
     const onReject = ({ error }: any) => {
+      this.progressManager?.tick(
+        false,
+        'asset folder',
+        error?.message || PROCESS_STATUS[PROCESS_NAMES.ASSET_FOLDERS].FAILED,
+        PROCESS_NAMES.ASSET_FOLDERS,
+      );
       handleAndLogError(error, { ...this.exportConfig.context });
     };
 
@@ -155,6 +385,12 @@ export default class ExportAssets extends BaseClass {
     }
 
     const onReject = ({ error }: any) => {
+      this.progressManager?.tick(
+        false,
+        'asset',
+        error?.message || PROCESS_STATUS[PROCESS_NAMES.ASSET_METADATA].FAILED,
+        PROCESS_NAMES.ASSET_METADATA,
+      );
       handleAndLogError(error, { ...this.exportConfig.context }, messageHandler.parse('ASSET_QUERY_FAILED'));
     };
 
@@ -165,7 +401,7 @@ export default class ExportAssets extends BaseClass {
         fs = new FsUtility({
           metaHandler,
           moduleName: 'assets',
-          indexFileName: 'assets.json',
+          indexFileName: this.assetConfig.fileName,
           basePath: this.assetsRootPath,
           chunkFileSize: this.assetConfig.chunkFileSize,
           metaPickKeys: merge(['uid', 'url', 'filename', 'parent_uid'], this.assetConfig.assetsMetaKeys),
@@ -174,6 +410,10 @@ export default class ExportAssets extends BaseClass {
       if (!isEmpty(items)) {
         log.debug(`Writing ${items.length} assets into file`, this.exportConfig.context);
         fs?.writeIntoFile(items, { mapKeyVal: true });
+        // Track progress for each asset with process name
+        items.forEach((asset: any) => {
+          this.progressManager?.tick(true, `asset: ${asset.filename || asset.uid}`, null, PROCESS_NAMES.ASSET_METADATA);
+        });
       }
     };
 
@@ -240,7 +480,7 @@ export default class ExportAssets extends BaseClass {
       if (!fs && !isEmpty(response)) {
         fs = new FsUtility({
           moduleName: 'assets',
-          indexFileName: 'versioned-assets.json',
+          indexFileName: PATH_CONSTANTS.FILES.VERSIONED_ASSETS,
           chunkFileSize: this.assetConfig.chunkFileSize,
           basePath: pResolve(this.assetsRootPath, 'versions'),
           metaPickKeys: merge(['uid', 'url', 'filename', '_version', 'parent_uid'], this.assetConfig.assetsMetaKeys),
@@ -371,12 +611,23 @@ export default class ExportAssets extends BaseClass {
       } else {
         data.pipe(assetWriterStream);
       }
-
+      this.progressManager?.tick(
+        true,
+        `Downloaded asset: ${asset.filename || asset.uid}`,
+        null,
+        PROCESS_NAMES.ASSET_DOWNLOADS,
+      );
       log.success(messageHandler.parse('ASSET_DOWNLOAD_SUCCESS', asset.filename, asset.uid), this.exportConfig.context);
     };
 
     const onReject = ({ error, additionalInfo }: any) => {
       const { asset } = additionalInfo;
+      this.progressManager?.tick(
+        false,
+        `Failed to download asset: ${asset.filename || asset.uid}`,
+        null,
+        PROCESS_NAMES.ASSET_DOWNLOADS,
+      );
       handleAndLogError(
         error,
         { ...this.exportConfig.context, uid: asset.uid, filename: asset.filename },

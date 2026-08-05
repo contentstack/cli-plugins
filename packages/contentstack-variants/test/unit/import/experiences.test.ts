@@ -1,251 +1,283 @@
-import { expect } from 'chai';
 import sinon from 'sinon';
-import cloneDeep from 'lodash/cloneDeep';
-import { FsUtility } from '@contentstack/cli-utilities';
-
-import importConf from '../mock/import-config.json';
+import { expect } from 'chai';
+import * as fs from 'fs';
 import { Import, ImportConfig } from '../../../src';
+import { fsUtil } from '../../../src/utils';
 
-/** Predictable new UID returned for each experience name by createExperience stub */
-const NAME_TO_NEW_UID: Record<string, string> = {
-  'AB Test No Audiences': 'new-uid-empty',
-  'Experience Lytics Only': 'new-uid-lytics',
-  'Valid Experience': 'new-uid-valid',
-  'Mixed Audiences Experience': 'new-uid-mixed',
-  'No Versions File Experience': 'new-uid-no-versions',
-};
+const makeImportConfig = (branchName?: string): ImportConfig =>
+  ({
+    modules: {
+      personalize: {
+        project_id: 'TEST-PROJECT-001',
+        baseURL: { na: 'https://personalize.na-api.contentstack.com' },
+        dirName: 'personalize',
+        importData: true,
+        audiences: { dirName: 'audiences' },
+        events: { dirName: 'events' },
+        experiences: {
+          dirName: 'experiences',
+          fileName: 'experiences.json',
+          thresholdTimer: 1000,
+          checkIntervalDuration: 100,
+        },
+      },
+    },
+    region: { name: 'na', cma: 'https://api.contentstack.io' },
+    apiKey: 'TEST-STACK-API-KEY',
+    contentDir: '/tmp/test-content',
+    backupDir: '/tmp/test-backup',
+    context: {},
+    ...(branchName ? { branchName } : {}),
+  } as unknown as ImportConfig);
 
-function buildConfig(): ImportConfig {
-  const config = cloneDeep(importConf) as unknown as ImportConfig;
-  (config.modules as any).personalize = {
-    ...(config.modules as any).personalization,
-    dirName: 'personalize',
-    project_id: 'PROJ-TEST',
-    importData: true,
-    baseURL: { 'AWS-NA': 'https://personalization.na-api.contentstack.com' },
-  };
-  (config as any).region = { name: 'AWS-NA', cma: 'https://api.contentstack.io' };
-  config.context = (config as any).context || {};
-  return config;
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function makeExperience(uid: string, latestVersion = 1) {
+  return { uid, latestVersion, name: `Experience ${uid}` };
 }
 
-describe('Experiences Import', () => {
-  let sandbox: sinon.SinonSandbox;
+function makeVersion(status: string, audiences: string[] = ['aud-001']) {
+  return {
+    uid: `ver-${status.toLowerCase()}`,
+    status,
+    variants: [{ __type: 'SegmentedVariant', audiences }],
+  };
+}
+
+// ─── importExperienceVersions ─────────────────────────────────────────────────
+
+describe('ImportExperiences — importExperienceVersions (DX-9469 fix)', () => {
+  let instance: any;
+  let tmpDir: string;
 
   beforeEach(() => {
-    sandbox = sinon.createSandbox();
-    sandbox.stub(Import.Experiences.prototype, 'init').resolves();
-    sandbox.stub(FsUtility.prototype, 'writeFile').returns(undefined as any);
-    sandbox.stub(FsUtility.prototype, 'makeDirectory').resolves(undefined);
+    instance = new Import.Experiences(makeImportConfig());
+    instance.audiencesUid = { 'aud-001': 'aud-new-001' };
+    instance.eventsUid = {};
+    tmpDir = fs.mkdtempSync(require('os').tmpdir() + '/exp-test-');
+    fs.mkdirSync(require('path').join(tmpDir, 'versions'), { recursive: true });
+    instance.experiencesDirPath = tmpDir;
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // importExperienceVersions — unit tests (direct method call)
-  // ──────────────────────────────────────────────────────────────────────────
-  describe('importExperienceVersions', () => {
-    let updateVersionStub: sinon.SinonStub;
-    let createVersionStub: sinon.SinonStub;
+  function writeVersionFile(uid: string, versions: any[]) {
+    fs.writeFileSync(
+      require('path').join(tmpDir, 'versions', `${uid}.json`),
+      JSON.stringify(versions),
+    );
+  }
 
-    beforeEach(() => {
-      updateVersionStub = sandbox.stub(Import.Experiences.prototype, 'updateExperienceVersion').resolves();
-      createVersionStub = sandbox.stub(Import.Experiences.prototype, 'createExperienceVersion').resolves();
-    });
-
-    it('returns false when no versions file exists on disk', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-nofile', latestVersion: 'ver-nofile' } as any,
-        'exp-no-versions-file',
-      );
-      expect(result).to.equal(false);
-      expect(updateVersionStub.callCount).to.equal(0);
-      expect(createVersionStub.callCount).to.equal(0);
-    });
-
-    it('returns false when version has variants: [] (experience had no audiences)', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-empty', latestVersion: 'ver-empty-latest' } as any,
-        'exp-empty-audiences',
-      );
-      expect(result).to.equal(false);
-      expect(updateVersionStub.callCount).to.equal(0);
-    });
-
-    it('returns false when all Lytics audiences are stripped by lookUpAudiences', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-lytics', latestVersion: 'ver-lytics-latest' } as any,
-        'exp-lytics-only',
-      );
-      expect(result).to.equal(false);
-      expect(updateVersionStub.callCount).to.equal(0);
-    });
-
-    it('returns true when version has a valid mapped CS audience', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-valid', latestVersion: 'ver-valid-latest' } as any,
-        'exp-valid',
-      );
-      expect(result).to.equal(true);
-    });
-
-    it('calls updateExperienceVersion for ACTIVE status version', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.importExperienceVersions(
-        { uid: 'new-uid-valid', latestVersion: 'ver-valid-latest' } as any,
-        'exp-valid',
-      );
-      expect(updateVersionStub.callCount).to.equal(1);
-      expect(updateVersionStub.firstCall.args[0]).to.equal('new-uid-valid');
-      expect(updateVersionStub.firstCall.args[2].status).to.equal('ACTIVE');
-      expect(createVersionStub.callCount).to.equal(0);
-    });
-
-    it('returns true when mixed CS+Lytics variant — CS audience survives, Lytics stripped', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-mixed', latestVersion: 'ver-mixed-latest' } as any,
-        'exp-mixed',
-      );
-      expect(result).to.equal(true);
-    });
-
-    it('calls updateExperienceVersion for DRAFT when no ACTIVE version exists', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-draft-only', latestVersion: 'ver-draft-only-latest' } as any,
-        'exp-draft-only',
-      );
-      expect(result).to.equal(true);
-      expect(updateVersionStub.callCount).to.equal(1);
-      expect(updateVersionStub.firstCall.args[2].status).to.equal('DRAFT');
-      expect(createVersionStub.callCount).to.equal(0);
-    });
-
-    it('calls updateExperienceVersion for ACTIVE then createExperienceVersion for DRAFT when both exist', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      const result = await instance.importExperienceVersions(
-        { uid: 'new-uid-active-and-draft', latestVersion: 'ver-ad-latest' } as any,
-        'exp-active-and-draft',
-      );
-      expect(result).to.equal(true);
-      expect(updateVersionStub.callCount).to.equal(1);
-      expect(updateVersionStub.firstCall.args[2].status).to.equal('ACTIVE');
-      expect(createVersionStub.callCount).to.equal(1);
-      expect(createVersionStub.firstCall.args[1].status).to.equal('DRAFT');
-    });
-
-    it('does not call any version API when all variants stripped after audience mapping', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.importExperienceVersions(
-        { uid: 'new-uid-lytics', latestVersion: 'ver-lytics-latest' } as any,
-        'exp-lytics-only',
-      );
-      expect(updateVersionStub.callCount).to.equal(0);
-      expect(createVersionStub.callCount).to.equal(0);
-    });
+  it('returns false (not undefined) when versions file does not exist', async () => {
+    // no file written → path does not exist
+    const result = await instance.importExperienceVersions(makeExperience('exp-001'), 'exp-no-file');
+    expect(result).to.equal(false);
   });
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // import() — integration tests across all 5 mock experiences
-  // ──────────────────────────────────────────────────────────────────────────
-  describe('import()', () => {
-    let capturedPendingList: string[];
-    let attachCTsStub: sinon.SinonStub;
-    let createExperienceStub: sinon.SinonStub;
+  it('returns false when all versions have Lytics-only audiences (versionMap all-undefined)', async () => {
+    const lyticsVersion = {
+      uid: 'ver-active',
+      status: 'ACTIVE',
+      variants: [{ __type: 'SegmentedVariant', lyticsAudiences: ['lytics-123'], audiences: [] }],
+    };
+    writeVersionFile('exp-002', [lyticsVersion]);
+    const handleStub = sinon.stub(instance, 'handleVersionUpdateOrCreate').resolves();
 
-    beforeEach(() => {
-      capturedPendingList = [];
+    const result = await instance.importExperienceVersions(makeExperience('exp-002'), 'exp-002');
 
-      createExperienceStub = sandbox.stub(Import.Experiences.prototype, 'createExperience')
-        .callsFake(async function (payload: any) {
-          const uid = NAME_TO_NEW_UID[payload.name] ?? `new-uid-${payload.name}`;
-          return { uid, latestVersion: `ver-${uid}-latest` };
-        } as any);
+    expect(result).to.equal(false);
+    expect(handleStub.called).to.be.false;
+  });
 
-      sandbox.stub(Import.Experiences.prototype, 'updateExperienceVersion').resolves();
-      sandbox.stub(Import.Experiences.prototype, 'createExperienceVersion').resolves();
+  it('returns false when all versions have unmapped CS audiences (variants stripped to empty)', async () => {
+    writeVersionFile('exp-003', [makeVersion('ACTIVE', ['aud-unmapped'])]);
+    const handleStub = sinon.stub(instance, 'handleVersionUpdateOrCreate').resolves();
 
-      sandbox.stub(Import.Experiences.prototype, 'validateVariantGroupAndVariantsCreated')
-        .callsFake(async function (this: any) {
-          capturedPendingList = [...this.pendingVariantAndVariantGrpForExperience];
-          return true;
-        });
+    const result = await instance.importExperienceVersions(makeExperience('exp-003'), 'exp-003');
 
-      attachCTsStub = sandbox.stub(Import.Experiences.prototype, 'attachCTsInExperience').resolves();
-      sandbox.stub(Import.Experiences.prototype, 'createVariantIdMapper').resolves();
+    expect(result).to.equal(false);
+    expect(handleStub.called).to.be.false;
+  });
+
+  it('returns true when at least one valid version exists and calls handleVersionUpdateOrCreate', async () => {
+    writeVersionFile('exp-004', [makeVersion('ACTIVE')]);
+    const handleStub = sinon.stub(instance, 'handleVersionUpdateOrCreate').resolves();
+
+    const result = await instance.importExperienceVersions(makeExperience('exp-004'), 'exp-004');
+
+    expect(result).to.equal(true);
+    expect(handleStub.calledOnce).to.be.true;
+  });
+
+  it('returns true when only DRAFT version is valid (ACTIVE missing)', async () => {
+    writeVersionFile('exp-005', [makeVersion('DRAFT')]);
+    const handleStub = sinon.stub(instance, 'handleVersionUpdateOrCreate').resolves();
+
+    const result = await instance.importExperienceVersions(makeExperience('exp-005'), 'exp-005');
+
+    expect(result).to.equal(true);
+    expect(handleStub.calledOnce).to.be.true;
+  });
+});
+
+// ─── import() — Set-based pending list (DX-9469 fix) ─────────────────────────
+
+describe('ImportExperiences — pending list only includes experiences with variants', () => {
+  let instance: any;
+
+  afterEach(() => sinon.restore());
+
+  it('empty experiences list → pendingVariantAndVariantGrpForExperience stays empty', async () => {
+    instance = new Import.Experiences(makeImportConfig());
+    sinon.stub(instance, 'analyzeExperiences' as any).resolves([false, 0]);
+
+    await instance.import();
+
+    expect(instance.pendingVariantAndVariantGrpForExperience).to.deep.equal([]);
+  });
+
+  it('experience with no valid versions is NOT added to pending list', async () => {
+    instance = new Import.Experiences(makeImportConfig());
+    sinon.stub(instance, 'analyzeExperiences' as any).resolves([true, 1]);
+    sinon.stub(instance, 'init' as any).resolves();
+    sinon.stub(fsUtil, 'makeDirectory').resolves();
+    instance.experiences = [makeExperience('old-exp-a')];
+    sinon.stub(instance, 'createExperience' as any).resolves(makeExperience('new-exp-a'));
+    // importExperienceVersions returns false → UID must NOT enter the Set
+    sinon.stub(instance, 'importExperienceVersions' as any).resolves(false);
+    sinon.stub(instance, 'validateVariantGroupAndVariantsCreated').resolves(true);
+    sinon.stub(instance, 'attachCTsInExperience').resolves();
+    sinon.stub(instance, 'createVariantIdMapper').resolves();
+    sinon.stub(fsUtil, 'writeFile').returns(undefined);
+    sinon.stub(instance, 'updateProgress' as any).returns(undefined);
+    sinon.stub(instance, 'createSimpleProgress' as any).returns({ tick: () => {}, complete: () => {} });
+    sinon.stub(instance, 'completeProgress' as any).returns(undefined);
+
+    await instance.import();
+
+    expect(instance.pendingVariantAndVariantGrpForExperience).to.deep.equal([]);
+  });
+
+  it('experience with valid versions IS added to pending list', async () => {
+    instance = new Import.Experiences(makeImportConfig());
+    sinon.stub(instance, 'analyzeExperiences' as any).resolves([true, 1]);
+    sinon.stub(instance, 'init' as any).resolves();
+    sinon.stub(fsUtil, 'makeDirectory').resolves();
+    instance.experiences = [makeExperience('old-exp-b')];
+    sinon.stub(instance, 'createExperience' as any).resolves(makeExperience('new-exp-b'));
+    // importExperienceVersions returns true → UID MUST enter the Set
+    sinon.stub(instance, 'importExperienceVersions' as any).resolves(true);
+    sinon.stub(instance, 'validateVariantGroupAndVariantsCreated').resolves(true);
+    sinon.stub(instance, 'attachCTsInExperience').resolves();
+    sinon.stub(instance, 'createVariantIdMapper').resolves();
+    sinon.stub(fsUtil, 'writeFile').returns(undefined);
+    sinon.stub(instance, 'updateProgress' as any).returns(undefined);
+    sinon.stub(instance, 'createSimpleProgress' as any).returns({ tick: () => {}, complete: () => {} });
+    sinon.stub(instance, 'completeProgress' as any).returns(undefined);
+
+    await instance.import();
+
+    expect(instance.pendingVariantAndVariantGrpForExperience).to.deep.equal(['new-exp-b']);
+  });
+});
+
+// ─── validateVariantGroupAndVariantsCreated — empty pending list ──────────────
+
+describe('ImportExperiences — validateVariantGroupAndVariantsCreated with empty pending list', () => {
+  afterEach(() => sinon.restore());
+
+  it('resolves true immediately when pendingVariantAndVariantGrpForExperience is empty', async () => {
+    const instance = new Import.Experiences(makeImportConfig());
+    instance.pendingVariantAndVariantGrpForExperience = [];
+    const getExpStub = sinon.stub(instance, 'getExperience' as any).resolves({});
+
+    const result = await instance.validateVariantGroupAndVariantsCreated();
+
+    expect(result).to.equal(true);
+    expect(getExpStub.called).to.be.false;
+  });
+});
+
+// ─── attachCTsInExperience — null guard (DX-9469 fix) ────────────────────────
+
+describe('ImportExperiences — attachCTsInExperience null guard', () => {
+  afterEach(() => sinon.restore());
+
+  it('skips CT attachment gracefully when getVariantGroup returns no variantGroup', async () => {
+    const instance = new Import.Experiences(makeImportConfig());
+    instance.experiencesUidMapper = { 'old-exp': 'new-exp' };
+    sinon.stub(fsUtil, 'readFile')
+      .onFirstCall().returns(['ct-uid-1'])
+      .onSecondCall().returns({ 'old-exp': [{ uid: 'ct-uid-1', status: 'linked' }] });
+    // getVariantGroup returns empty variant_groups → variantGroup is undefined
+    sinon.stub(instance, 'getVariantGroup' as any).resolves({ variant_groups: [] });
+    const updateStub = sinon.stub(instance, 'updateVariantGroup' as any).resolves();
+
+    await instance.attachCTsInExperience();
+
+    // Must not throw; updateVariantGroup must NOT be called since variantGroup is missing
+    expect(updateStub.called).to.be.false;
+  });
+
+  it('attaches CTs normally when variantGroup exists', async () => {
+    const instance = new Import.Experiences(makeImportConfig());
+    instance.experiencesUidMapper = { 'old-exp': 'new-exp' };
+    sinon.stub(fsUtil, 'readFile')
+      .onFirstCall().returns(['ct-uid-1'])
+      .onSecondCall().returns({ 'old-exp': [{ uid: 'ct-uid-1', status: 'linked' }] });
+    const fakeGroup = { uid: 'vg-001', content_types: [] };
+    sinon.stub(instance, 'getVariantGroup' as any).resolves({ variant_groups: [fakeGroup] });
+    const updateStub = sinon.stub(instance, 'updateVariantGroup' as any).resolves();
+
+    await instance.attachCTsInExperience();
+
+    expect(updateStub.calledOnce).to.be.true;
+    expect(fakeGroup.content_types).to.deep.equal([{ uid: 'ct-uid-1', status: 'linked' }]);
+  });
+});
+
+// ─── branch header (pre-existing) ────────────────────────────────────────────
+
+describe('ImportExperiences — branch header', () => {
+  describe('constructor (cmaConfig headers)', () => {
+    it('includes branch header in cmaConfig.headers when branchName is set', () => {
+      const instance = new Import.Experiences(makeImportConfig('feature-branch'));
+      expect((instance as any).adapterConfig.cmaConfig.headers.branch).to.equal('feature-branch');
     });
 
-    it('pendingVariantAndVariantGrpForExperience contains only experiences with valid variants', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(capturedPendingList).to.include('new-uid-valid');
-      expect(capturedPendingList).to.include('new-uid-mixed');
+    it('does NOT include branch header in cmaConfig.headers when branchName is absent', () => {
+      const instance = new Import.Experiences(makeImportConfig());
+      expect((instance as any).adapterConfig.cmaConfig.headers.branch).to.be.undefined;
     });
 
-    it('pendingVariantAndVariantGrpForExperience excludes experiences with no valid variants', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(capturedPendingList).to.not.include('new-uid-empty');
-      expect(capturedPendingList).to.not.include('new-uid-lytics');
-      expect(capturedPendingList).to.not.include('new-uid-no-versions');
+    it('always includes api_key in cmaConfig.headers regardless of branchName', () => {
+      const instance = new Import.Experiences(makeImportConfig('staging'));
+      expect((instance as any).adapterConfig.cmaConfig.headers.api_key).to.equal('TEST-STACK-API-KEY');
     });
 
-    it('pendingVariantAndVariantGrpForExperience has exactly 2 entries (valid + mixed)', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(capturedPendingList).to.have.length(2);
+    it('sets correct cmaConfig baseURL from region', () => {
+      const instance = new Import.Experiences(makeImportConfig('dev'));
+      expect((instance as any).adapterConfig.cmaConfig.baseURL).to.equal('https://api.contentstack.io/v3');
     });
 
-    it('calls attachCTsInExperience when validateVariantGroupAndVariantsCreated returns true', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(attachCTsStub.callCount).to.equal(1);
+    it('branch header value matches branchName exactly', () => {
+      const instance = new Import.Experiences(makeImportConfig('eu-branch-2025'));
+      expect((instance as any).adapterConfig.cmaConfig.headers.branch).to.equal('eu-branch-2025');
     });
 
-    it('does NOT call attachCTsInExperience when validateVariantGroupAndVariantsCreated returns false', async () => {
-      // Override validate stub to return false (simulates backend timeout)
-      (Import.Experiences.prototype.validateVariantGroupAndVariantsCreated as sinon.SinonStub)
-        .callsFake(async function (this: any) {
-          capturedPendingList = [...this.pendingVariantAndVariantGrpForExperience];
-          return false;
-        });
-
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(attachCTsStub.callCount).to.equal(0);
+    it('cmaConfig.headers has only api_key when branchName is not set', () => {
+      const instance = new Import.Experiences(makeImportConfig());
+      const headers = (instance as any).adapterConfig.cmaConfig.headers;
+      expect(Object.keys(headers)).to.deep.equal(['api_key']);
     });
 
-    it('when all experiences produce no valid variants, pending list is empty and attachCTsInExperience is still called', async () => {
-      // Override importExperienceVersions to always return false for all experiences
-      sandbox.stub(Import.Experiences.prototype, 'importExperienceVersions').resolves(false);
-
-      // Reset validate stub: empty pending list → real impl returns true immediately
-      // but validate is already stubbed to capture and return true, so it still works
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      expect(capturedPendingList).to.have.length(0);
-      expect(attachCTsStub.callCount).to.equal(1);
-    });
-
-    it('calls createExperience for every experience in experiences.json', async () => {
-      const instance = new Import.Experiences(buildConfig());
-      await instance.import();
-
-      // 5 experiences in mock: empty, lytics, valid, mixed, no-versions-file
-      expect(createExperienceStub.callCount).to.equal(5);
+    it('cmaConfig.headers has api_key and branch when branchName is set', () => {
+      const instance = new Import.Experiences(makeImportConfig('main'));
+      const headers = (instance as any).adapterConfig.cmaConfig.headers;
+      expect(headers).to.deep.equal({ api_key: 'TEST-STACK-API-KEY', branch: 'main' });
     });
   });
 });

@@ -4,7 +4,6 @@ import {
   FlagInput,
   managementSDKClient,
   cliux,
-  printFlagDeprecation,
 } from "@contentstack/cli-utilities";
 import buildOutput from "../../core/content-type/details";
 import { getStack, getContentType } from "../../utils";
@@ -19,12 +18,6 @@ export default class DetailsCommand extends Command {
   ];
 
   static flags: any = {
-    stack: flags.string({
-      char: "s",
-      description: "Stack UID",
-      exclusive: ["token-alias"],
-      parse: printFlagDeprecation(["-s", "--stack"], ["-k", "--stack-api-key"]),
-    }),
 
     "stack-api-key": flags.string({
       char: "k",
@@ -32,11 +25,6 @@ export default class DetailsCommand extends Command {
       exclusive: ["token-alias"],
     }),
 
-    "token-alias": flags.string({
-      char: "a",
-      description: "Management token alias",
-      parse: printFlagDeprecation(["--token-alias"], ["-a", "--alias"]),
-    }),
 
     alias: flags.string({
       char: "a",
@@ -44,18 +32,14 @@ export default class DetailsCommand extends Command {
     }),
 
     "content-type": flags.string({
-      char: "c",
       description: "Content Type UID",
       required: true,
-      parse: printFlagDeprecation(["-c"], ["--content-type"]),
     }),
 
     path: flags.boolean({
-      char: "p",
       description: "show path column",
       default: true,
       allowNo: true,
-      parse: printFlagDeprecation(["-p"], ["--path"]),
     }),
   };
 

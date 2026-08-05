@@ -35,7 +35,15 @@ import {
   buildBulkModeResult,
   handleOperationError,
 } from './command-helpers';
-import { fillMissingFlags } from './interactive';
+import { fillMissingFlags, fillMissingCsAssetsFlags, promptForOperation } from './interactive';
+import { runCsAssetsOperation } from './cs-assets-runner';
+import {
+  validateOperationFlagMatrix,
+  enforceOperationFlagMatrix,
+  getOperationFromArgv,
+  OperationFlagMatrixError,
+  RETRY_REVERT_CONTEXT,
+} from './operation-flag-matrix';
 import {
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,
@@ -45,6 +53,12 @@ import {
 } from './constants';
 import { generateBulkPublishStatusUrl } from './bulk-publish-url-generator';
 import { validateBranch, validateEnvironments } from './validators';
+import {
+  loadAssetUidsFromFile,
+  loadBulkDeleteItemsFromFile,
+  validateAndBuildBulkDeleteItems,
+  LoadAssetUidsError,
+} from './asset-uids-from-file';
 import {
   compareFieldValues,
   compareNonLocalizedFields,
@@ -92,6 +106,14 @@ export {
   buildBulkModeResult,
   handleOperationError,
   fillMissingFlags,
+  fillMissingCsAssetsFlags,
+  promptForOperation,
+  runCsAssetsOperation,
+  validateOperationFlagMatrix,
+  enforceOperationFlagMatrix,
+  getOperationFromArgv,
+  OperationFlagMatrixError,
+  RETRY_REVERT_CONTEXT,
   fetchTaxonomyList,
   RATE_LIMITER_CONSTANTS,
   RETRY_STRATEGY_CONSTANTS,
@@ -107,4 +129,8 @@ export {
   hasNonLocalizedFields,
   checkNonLocalizedFieldChanges,
   identifyNonLocalizedFields,
+  loadAssetUidsFromFile,
+  loadBulkDeleteItemsFromFile,
+  validateAndBuildBulkDeleteItems,
+  LoadAssetUidsError,
 };

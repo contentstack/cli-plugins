@@ -200,6 +200,8 @@ const assetServiceMsg = {
  * Bulk assets command messages
  */
 const bulkAssetsMsg = {
+  BULK_ASSETS_OPERATION:
+    'Operation to perform: `publish`/`unpublish` (CMS, requires stack API key or alias) or `delete`/`move` (CS Assets, requires OAuth/Token and --space-uid/--org-uid)',
   FETCHING: 'Fetching assets...',
   FOUND_ASSETS: 'Found {count} assets ({locale})',
   FETCH_FOR_LOCALES: 'Fetch assets for {count} locales',
@@ -210,6 +212,69 @@ const bulkAssetsMsg = {
   CROSS_PUBLISHING: 'Cross-publishing from {sourceEnv} to {targetEnvs}',
   SYNCED_ASSETS: 'Synced {count} assets from {sourceEnv}',
   ASSETS_READY_FOR_CROSS_PUBLISH: '{count} assets ready for cross-publish',
+};
+
+/**
+ * CS Assets bulk delete/move messages
+ */
+const csAssetsBulkMsg = {
+  CS_ASSETS_URL_NOT_CONFIGURED:
+    'CS Assets operations require csAssetsUrl in your region settings. Ensure your region is configured correctly.',
+  SPACE_UID_REQUIRED: '--space-uid is required for CS Assets operations',
+  ORG_UID_REQUIRED: '--org-uid is required for CS Assets operations (organization_uid header)',
+  TARGET_FOLDER_REQUIRED: '--target-folder-uid is required for bulk move',
+  CS_ASSETS_LOCALE_REQUIRED: '--locale is required for bulk delete (CS Assets deletes per asset and locale)',
+  CS_ASSETS_ASSET_UIDS_FILE_REQUIRED: '--asset-uids-file is required (path to JSON `{ "uids": string[] }`)',
+  CS_ASSETS_ASSET_UIDS_FILE_READ_FAILED: 'Failed to read asset UIDs file "{path}": {detail}',
+  CS_ASSETS_ASSET_UIDS_FILE_INVALID: 'Invalid asset UIDs file "{path}": {detail}',
+  CS_ASSETS_DELETING_ASSETS: 'Deleting {count} asset/locale pair(s) from space {spaceUid}...',
+  CS_ASSETS_MOVING_ASSETS: 'Moving {count} asset(s) to folder {targetFolderUid}...',
+  CS_ASSETS_DELETE_SUBMITTED: 'Bulk delete job submitted. Job ID: {jobId}',
+  CS_ASSETS_MOVE_SUBMITTED: 'Bulk move initiated successfully.',
+  CS_ASSETS_OPERATION_NOTICE: '{notice}',
+  CS_ASSETS_OPERATION_FLAG: 'Operation: delete (CS Assets bulk delete) or move (CS Assets bulk move)',
+  CS_ASSETS_SPACE_UID_FLAG: 'CS Assets space UID',
+  CS_ASSETS_ORG_UID_FLAG: 'Organization UID for CS Assets API (organization_uid header)',
+  CS_ASSETS_WORKSPACE_FLAG: 'CS Assets workspace query parameter (default: main)',
+  CS_ASSETS_ASSET_UIDS_FILE_FLAG:
+    'Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string array, no trimming; large lists: see docs for NODE_OPTIONS)',
+  CS_ASSETS_LOCALE_FLAG:
+    'Locale code for bulk delete only (single locale per run). Not applicable for move — move always relocates all locale variants of an asset.',
+  CS_ASSETS_LOCALE_NOT_ALLOWED_FOR_MOVE:
+    '--locale is not applicable for the move operation. Move always relocates all locale variants of an asset. Remove --locale and try again.',
+  CS_ASSETS_TARGET_FOLDER_FLAG:
+    'Destination CS Assets folder UID for bulk move. Use "root" to move assets to the root folder.',
+  CS_ASSETS_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
+  CS_ASSETS_CONFIRM_SUMMARY: 'Proceed with CS Assets {operation} on {count} item(s)?',
+  CS_ASSETS_DELETE_SUCCESS: 'CS Assets bulk delete job submitted successfully!',
+  CS_ASSETS_DELETE_JOBS_SUBMITTED:
+    '{count} bulk delete job(s) submitted. Deletion runs asynchronously — this confirms submission, not completion. Verify at the status URL below:',
+  CS_ASSETS_DELETE_JOB_ID: 'Job ID: {jobId}',
+  CS_ASSETS_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
+  CS_ASSETS_MOVE_SUCCESS: 'CS Assets bulk move completed successfully!',
+  CS_ASSETS_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
+  CS_ASSETS_OPERATION_FAILED: 'CS Assets {operation} failed.',
+  CS_ASSETS_BATCH_SUMMARY: 'Dispatched in {batchesTotal} batch(es) of up to 100 — {batchesSucceeded} succeeded.',
+  CS_ASSETS_PARTIAL_FAILURE:
+    'CS Assets {operation} partially failed: {batchesFailed} of {batchesTotal} batch(es) failed.',
+  CS_ASSETS_FAILED_BATCH: 'Batch {batchIndex} ({count} item(s)) failed: {error}',
+  CS_ASSETS_FAILED_UIDS_WRITTEN:
+    'Uids whose {operation} request did not confirm success written to: {path} (these requests failed to return success — the server may or may not have applied them).',
+  CS_ASSETS_RETRY_HINT:
+    'Re-run just these with: --operation {operation} --asset-uids-file {path} (plus the same --space-uid/--org-uid, and --locale for delete). Safe to re-run — the operation is idempotent, so assets already applied are a no-op.',
+
+  // Merged-command flag matrix validation
+  FLAG_NOT_ALLOWED_FOR_OPERATION: '{flag} is not valid for operation "{operation}".{hint}',
+  FLAG_NOT_ALLOWED_WITH_RETRY_REVERT: '{flag} cannot be combined with --retry-failed/--revert.',
+  CS_ASSETS_AUTH_REQUIRED:
+    'The {operation} operation requires OAuth login or an auth token. Run "csdx login" and try again.',
+
+  // Interactive prompts
+  CS_ASSETS_ENTER_SPACE_UID: 'Enter CS Assets space UID:',
+  CS_ASSETS_ENTER_ORG_UID: 'Enter organization UID:',
+  CS_ASSETS_ENTER_ASSET_UIDS_FILE: 'Enter path to asset UIDs JSON file (e.g. ./assets.json):',
+  CS_ASSETS_ENTER_LOCALE: 'Enter locale code for bulk delete (e.g. en-us):',
+  CS_ASSETS_ENTER_TARGET_FOLDER: 'Enter target folder UID for bulk move (use "root" to move to the root folder):',
 };
 
 /**
@@ -356,10 +421,6 @@ const flagDescriptions = {
     '(optional) Revert publish operations from a log folder. Specify the folder path containing success logs. Works similar to retry-failed.',
   BULK_OPERATION_FOLDER:
     '(optional) Folder path to store operation logs. Creates separate files for success and failed operations. Default: bulk-operation',
-  API_VERSION:
-    'Specifies the Content Management API version used for publishing. Use version `3.2` when publishing entries with nested references, otherwise, use the default version 3.2',
-  TAXONOMY_API_VERSION:
-    'Content Management API version for taxonomy publish (default: `3.2`; required for the `items` + locales/environments body on POST /v3/taxonomies/publish).',
   TAXONOMY_ITEMS:
     'Comma-separated taxonomy UIDs to include in the job. If omitted, all taxonomies in the stack (current branch) are included. Example: products_tax,brands_tax',
 };
@@ -369,7 +430,8 @@ const flagDescriptions = {
  */
 const commandInfo = {
   BULK_ENTRIES_DESCRIPTION: 'Bulk operations for entries (publish/unpublish/cross-publish)',
-  BULK_ASSETS_DESCRIPTION: 'Bulk operations for assets (publish/unpublish/cross-publish)',
+  BULK_ASSETS_DESCRIPTION:
+    'Bulk operations for assets: publish/unpublish/cross-publish (CMS) and delete/move (CS Assets). Delete/move load asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
   BULK_TAXONOMIES_DESCRIPTION:
     'Publish taxonomies to environments and locales (CMA POST /v3/taxonomies/publish; initiates a publish job)',
 };
@@ -387,7 +449,8 @@ const messages: typeof errors &
   typeof summaryMsg &
   typeof interactiveMsg &
   typeof flagDescriptions &
-  typeof commandInfo = {
+  typeof commandInfo &
+  typeof csAssetsBulkMsg = {
   ...errors,
   ...commonMsg,
   ...entryServiceMsg,
@@ -399,6 +462,7 @@ const messages: typeof errors &
   ...interactiveMsg,
   ...flagDescriptions,
   ...commandInfo,
+  ...csAssetsBulkMsg,
 };
 
 /**

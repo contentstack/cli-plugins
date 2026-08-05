@@ -30,13 +30,13 @@ const safeRegex = (document: any, invalidRegex: any, tableData: any, type: strin
           newPath = ''
         } else {
           const regexObject = {
+            'Field Path': newPath,
+            'Field Title': field.display_name,
+            'Field UID': field.uid,
+            'Invalid Regex': field.format,
             Module: type,
             Title: document.title,
             UID: document.uid,
-            'Field Title': field.display_name,
-            'Field UID': field.uid,
-            'Field Path': newPath,
-            'Invalid Regex': field.format,
           }
           invalidRegex.push(regexObject)
           newPath = ''

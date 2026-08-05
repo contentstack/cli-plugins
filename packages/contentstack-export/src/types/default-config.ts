@@ -5,7 +5,6 @@ interface AnyProperty {
 }
 
 export default interface DefaultConfig {
-  contentVersion: number;
   versioning: boolean;
   host: string;
   cdn?: string;
@@ -104,6 +103,19 @@ export default interface DefaultConfig {
       includeVersionedAssets: boolean;
       dependencies?: Modules[];
     };
+    'cs-assets': {
+      /** Passed to FsUtility chunkFileSize (MB) when writing chunked export JSON. */
+      chunkFileSizeMb: number;
+      /** Shared export concurrency fallback used by CS Assets export. */
+      apiConcurrency: number;
+      /** Parallel downloads per AM workspace export. */
+      downloadAssetsConcurrency: number;
+      /** Items per page for paginated GET requests (assets, folders, spaces). */
+      pageSize: number;
+      /** Parallel page fetches for paginated GET requests. */
+      fetchConcurrency: number;
+      dependencies?: Modules[];
+    };
     content_types: {
       dirName: string;
       fileName: string;
@@ -155,6 +167,7 @@ export default interface DefaultConfig {
     stack: {
       dirName: string;
       fileName: string;
+      invalidKeys: string[];
       dependencies?: Modules[];
     };
     dependency: {
@@ -228,5 +241,4 @@ export default interface DefaultConfig {
   writeConcurrency: number;
   developerHubBaseUrl: string;
   marketplaceAppEncryptionKey: string;
-  onlyTSModules: string[];
 }

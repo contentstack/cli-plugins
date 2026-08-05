@@ -1,7 +1,14 @@
 import * as path from 'path';
 import { QueryExportConfig } from '../types';
-import { ContentstackClient, sanitizePath, log, handleAndLogError } from '@contentstack/cli-utilities';
-import { readContentTypesFromExportDir } from './read-content-type-schemas';
+import { fsUtil } from './index';
+import {
+  ContentstackClient,
+  sanitizePath,
+  log,
+  formatError,
+  handleAndLogError,
+  readContentTypeSchemas,
+} from '@contentstack/cli-utilities';
 
 export class ContentTypeDependenciesHandler {
   private exportQueryConfig: QueryExportConfig;
@@ -34,10 +41,9 @@ export class ContentTypeDependenciesHandler {
     } else {
       const contentTypesFilePath = path.join(
         sanitizePath(this.exportQueryConfig.exportDir),
-        sanitizePath(this.exportQueryConfig.branchName || ''),
         'content_types',
       );
-      allSchemas = readContentTypesFromExportDir(contentTypesFilePath);
+      allSchemas = readContentTypeSchemas(contentTypesFilePath);
     }
 
     if (allSchemas.length === 0) {

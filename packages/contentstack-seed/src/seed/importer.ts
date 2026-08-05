@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as process from 'process';
 import * as path from 'path';
 import ImportCommand from '@contentstack/cli-cm-import';
 import { pathValidator, sanitizePath } from '@contentstack/cli-utilities';
@@ -29,6 +28,5 @@ export async function run(options: ImporterOptions) {
     ? ['-k', options.api_key, '-d', importPath, '--alias', options.alias!]
     : ['-k', options.api_key, '-d', importPath];
 
-  process.chdir(options.tmpPath);
   await ImportCommand.run(args.concat('--skip-audit'));
 }

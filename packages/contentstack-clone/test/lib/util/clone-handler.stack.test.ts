@@ -21,11 +21,6 @@ describe('CloneHandler - Stack', () => {
       const configHandler = require('@contentstack/cli-utilities').configHandler;
       configHandlerGetStub = sandbox.stub(configHandler, 'get').returns(undefined);
       
-      // Stub inquirer.ui.BottomBar to prevent hanging in displayBackOptionMessage
-      sandbox.stub(inquirer.ui, 'BottomBar').returns({
-        updateBottomBar: sandbox.stub(),
-      } as any);
-      
       const config: CloneConfig = {
         cloneContext: {
           command: 'test',
@@ -43,6 +38,7 @@ describe('CloneHandler - Stack', () => {
         stack: sandbox.stub(),
       };
       handler.setClient(mockClient);
+      sandbox.stub(handler, 'displayBackOptionMessage');
     });
 
     afterEach(() => {
@@ -84,7 +80,6 @@ describe('CloneHandler - Stack', () => {
         });
       });
       const inquirerStub = sandbox.stub(inquirer, 'prompt').resolves({ stack: 'TestStack' });
-      const displayBackOptionMessageStub = sandbox.stub(handler, 'displayBackOptionMessage');
 
       const result = await handler.handleStackSelection({ 
         org: { Organization: 'TestOrg' },
@@ -95,7 +90,7 @@ describe('CloneHandler - Stack', () => {
       expect((handler as any).config.sourceStackName).to.equal('TestStack');
       expect((handler as any).config.source_stack).to.equal('test-stack-key');
       expect((handler as any).master_locale).to.equal('en-us');
-      expect(displayBackOptionMessageStub.calledOnce).to.be.true;
+      expect((handler.displayBackOptionMessage as sinon.SinonStub).calledOnce).to.be.true;
       expect(getStackStub.calledOnce).to.be.true;
       
       getStackStub.restore();
@@ -113,7 +108,6 @@ describe('CloneHandler - Stack', () => {
         });
       });
       const inquirerStub = sandbox.stub(inquirer, 'prompt').resolves({ stack: 'TestStack' });
-      const displayBackOptionMessageStub = sandbox.stub(handler, 'displayBackOptionMessage');
 
       const result = await handler.handleStackSelection({ 
         org: { Organization: 'TestOrg' },
@@ -123,7 +117,7 @@ describe('CloneHandler - Stack', () => {
       expect(result).to.have.property('stack', 'TestStack');
       expect((handler as any).config.target_stack).to.equal('test-stack-key');
       expect((handler as any).config.destinationStackName).to.equal('TestStack');
-      expect(displayBackOptionMessageStub.calledOnce).to.be.true;
+      expect((handler.displayBackOptionMessage as sinon.SinonStub).calledOnce).to.be.true;
       expect(getStackStub.calledOnce).to.be.true;
       
       getStackStub.restore();

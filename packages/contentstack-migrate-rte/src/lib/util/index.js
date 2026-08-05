@@ -1,6 +1,5 @@
 const { Command } = require('@contentstack/cli-command');
 const command = new Command();
-const chalk = require('chalk');
 const {
   isEmpty,
   find,
@@ -26,6 +25,7 @@ const {
   isAuthenticated,
   doesBranchExist,
   pathValidator,
+  getChalk,
 } = require('@contentstack/cli-utilities');
 const packageValue = require('../../../package.json');
 const isBlank = (variable) => {
@@ -185,6 +185,7 @@ function checkConfig(config) {
   return res.valid;
 }
 function prettyPrint(data) {
+  const chalk = getChalk();
   console.log(chalk.yellow('Configuration to be used for executing this command:'));
   console.log(chalk.grey(JSON.stringify(data, null, 2)));
   console.log('\n');
@@ -325,6 +326,7 @@ async function updateSingleEntry(entry, contentType, config) {
   await handleEntryUpdate(entry, config, 0);
 }
 async function handleEntryUpdate(entry, config, retry = 0) {
+  const chalk = getChalk();
   try {
     await entry.update({ locale: entry.locale });
     config.entriesCount += 1;

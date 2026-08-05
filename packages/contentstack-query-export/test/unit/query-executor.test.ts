@@ -3,6 +3,7 @@ import * as sinon from 'sinon';
 import { QueryExporter } from '../../src/core/query-executor';
 import { QueryParser } from '../../src/utils/query-parser';
 import { ModuleExporter } from '../../src/core/module-exporter';
+import { CsAssetsQueryExporter } from '@contentstack/cli-asset-management';
 import * as logger from '../../src/utils/logger';
 import {
   ReferencedContentTypesHandler,
@@ -10,7 +11,7 @@ import {
   AssetReferenceHandler,
   fsUtil,
 } from '../../src/utils';
-import * as readCtSchemas from '../../src/utils/read-content-type-schemas';
+import * as contentTypeUtils from '@contentstack/cli-utilities/lib/content-type-utils';
 
 describe('QueryExporter', () => {
   let sandbox: sinon.SinonSandbox;
@@ -23,7 +24,11 @@ describe('QueryExporter', () => {
 
     // Mock management client
     mockManagementClient = {
-      stack: sandbox.stub().returns({}),
+      stack: sandbox.stub().returns({
+        branch: sandbox.stub().returns({
+          fetch: sandbox.stub().resolves({ settings: { am_v2: { linked_workspaces: [] } } }),
+        }),
+      }),
     };
 
     // Mock export configuration
@@ -74,6 +79,7 @@ describe('QueryExporter', () => {
   describe('execute', () => {
     let queryParserStub: sinon.SinonStub;
     let exportGeneralModulesStub: sinon.SinonStub;
+    let fetchLinkedWorkspacesStub: sinon.SinonStub;
     let exportQueriedModuleStub: sinon.SinonStub;
     let expandSchemaClosureStub: sinon.SinonStub;
     let exportContentModulesStub: sinon.SinonStub;
@@ -83,6 +89,7 @@ describe('QueryExporter', () => {
         modules: { entries: { content_type_uid: 'test_page' } },
       });
       exportGeneralModulesStub = sandbox.stub(queryExporter as any, 'exportGeneralModules').resolves();
+      fetchLinkedWorkspacesStub = sandbox.stub(queryExporter as any, 'fetchLinkedWorkspaces').resolves();
       exportQueriedModuleStub = sandbox.stub(queryExporter as any, 'exportQueriedModule').resolves();
       expandSchemaClosureStub = sandbox.stub(queryExporter as any, 'expandSchemaClosure').resolves();
       exportContentModulesStub = sandbox.stub(queryExporter as any, 'exportContentModules').resolves();
@@ -104,6 +111,7 @@ describe('QueryExporter', () => {
       sinon.assert.callOrder(
         queryParserStub,
         exportGeneralModulesStub,
+        fetchLinkedWorkspacesStub,
         exportQueriedModuleStub,
         expandSchemaClosureStub,
         exportContentModulesStub,
@@ -235,8 +243,7 @@ describe('QueryExporter', () => {
 
   describe('expandSchemaClosure', () => {
     let moduleExporterStub: sinon.SinonStub;
-    let readContentTypesFromExportDirStub: sinon.SinonStub;
-    let readGlobalFieldSchemasFromDirStub: sinon.SinonStub;
+    let readContentTypeSchemasStub: sinon.SinonStub;
     let referencedHandlerStub: any;
     let dependenciesHandlerStub: any;
 
@@ -251,9 +258,10 @@ describe('QueryExporter', () => {
     beforeEach(() => {
       moduleExporterStub = sandbox.stub((queryExporter as any).moduleExporter, 'exportModule').resolves();
 
-      // Default: CTs from schema.json reader, GFs empty.
-      readContentTypesFromExportDirStub = sandbox.stub(readCtSchemas, 'readContentTypesFromExportDir').returns(mockCTs);
-      readGlobalFieldSchemasFromDirStub = sandbox.stub(readCtSchemas, 'readGlobalFieldSchemasFromDir').returns([]);
+      // Default: CT path returns mockCTs, GF path returns empty.
+      readContentTypeSchemasStub = sandbox
+        .stub(contentTypeUtils, 'readContentTypeSchemas')
+        .callsFake((dirPath: string) => (dirPath.includes('global_fields') ? [] : mockCTs));
 
       referencedHandlerStub = { extractReferencedContentTypes: sandbox.stub().resolves([]) };
       sandbox
@@ -278,7 +286,9 @@ describe('QueryExporter', () => {
 
     it('should pass combined CT and GF schemas to extractReferencedContentTypes', async () => {
       const mockGFs = [{ uid: 'seo_gf', schema: [] as any[] }];
-      readGlobalFieldSchemasFromDirStub.returns(mockGFs);
+      readContentTypeSchemasStub.callsFake((dirPath: string) =>
+        dirPath.includes('global_fields') ? mockGFs : mockCTs,
+      );
 
       await (queryExporter as any).expandSchemaClosure();
 
@@ -289,7 +299,9 @@ describe('QueryExporter', () => {
 
     it('should pass combined CT and GF schemas to extractDependencies', async () => {
       const mockGFs = [{ uid: 'seo_gf', schema: [] as any[] }];
-      readGlobalFieldSchemasFromDirStub.returns(mockGFs);
+      readContentTypeSchemasStub.callsFake((dirPath: string) =>
+        dirPath.includes('global_fields') ? mockGFs : mockCTs,
+      );
 
       await (queryExporter as any).expandSchemaClosure();
 
@@ -329,10 +341,12 @@ describe('QueryExporter', () => {
       // Iter 2: GF A is now on disk; its schema exposes a reference to CT B.
       const gfADoc = [{ uid: 'gf_a', schema: [] as any[] }];
 
-      readGlobalFieldSchemasFromDirStub.callsFake(() =>
-        dependenciesHandlerStub.extractDependencies.callCount > 0 ? gfADoc : [],
-      );
-      readContentTypesFromExportDirStub.returns(mockCTs);
+      readContentTypeSchemasStub.callsFake((dirPath: string) => {
+        if (dirPath.includes('global_fields')) {
+          return dependenciesHandlerStub.extractDependencies.callCount > 1 ? gfADoc : [];
+        }
+        return mockCTs;
+      });
 
       dependenciesHandlerStub.extractDependencies
         .onFirstCall()
@@ -563,9 +577,11 @@ describe('QueryExporter', () => {
   describe('exportReferencedAssets', () => {
     let moduleExporterStub: sinon.SinonStub;
     let assetHandlerStub: any;
+    let csAssetsExporterStub: sinon.SinonStub;
 
     beforeEach(() => {
       moduleExporterStub = sandbox.stub((queryExporter as any).moduleExporter, 'exportModule').resolves();
+      csAssetsExporterStub = sandbox.stub(CsAssetsQueryExporter.prototype, 'export').resolves();
 
       // Mock AssetReferenceHandler
       assetHandlerStub = {
@@ -576,13 +592,37 @@ describe('QueryExporter', () => {
         .callsFake(assetHandlerStub.extractReferencedAssets);
     });
 
-    it('should export referenced assets when found', async () => {
+    it('should export referenced assets when found (stack assets path)', async () => {
+      mockConfig.linkedWorkspaces = [];
+      mockConfig.csAssetsUrl = undefined;
+      queryExporter = new QueryExporter(mockManagementClient, mockConfig);
+      const legacyModuleExporterStub = sandbox
+        .stub((queryExporter as any).moduleExporter, 'exportModule')
+        .resolves();
+
       await (queryExporter as any).exportReferencedAssets();
 
-      expect(moduleExporterStub.calledOnce).to.be.true;
-      const exportCall = moduleExporterStub.getCall(0);
+      expect(legacyModuleExporterStub.calledOnce).to.be.true;
+      expect(csAssetsExporterStub.called).to.be.false;
+      const exportCall = legacyModuleExporterStub.getCall(0);
       expect(exportCall.args[0]).to.equal('assets');
       expect(exportCall.args[1].query.modules.assets.uid.$in).to.deep.equal(['asset_1', 'asset_2', 'asset_3']);
+    });
+
+    it('should use CsAssetsQueryExporter when linked workspaces and csAssetsUrl are set', async () => {
+      mockConfig.linkedWorkspaces = [{ uid: 'main', space_uid: 'space-1', is_default: true }];
+      mockConfig.csAssetsUrl = 'https://am.example.com';
+      mockConfig.org_uid = 'org-1';
+      queryExporter = new QueryExporter(mockManagementClient, mockConfig);
+      const csAssetsModuleExporterStub = sandbox
+        .stub((queryExporter as any).moduleExporter, 'exportModule')
+        .resolves();
+
+      await (queryExporter as any).exportReferencedAssets();
+
+      expect(csAssetsExporterStub.calledOnce).to.be.true;
+      expect(csAssetsExporterStub.firstCall.args[0]).to.deep.equal(['asset_1', 'asset_2', 'asset_3']);
+      expect(csAssetsModuleExporterStub.called).to.be.false;
     });
 
     it('should skip export when no assets found', async () => {

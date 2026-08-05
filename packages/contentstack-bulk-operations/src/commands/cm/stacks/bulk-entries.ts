@@ -1,4 +1,4 @@
-import { flags, FlagInput, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, handleAndLogError, FlagInput } from '@contentstack/cli-utilities';
 
 import { BaseBulkCommand } from '../../../base-bulk-command';
 import { ResourceType, FilterType } from '../../../interfaces';
@@ -64,11 +64,6 @@ export default class BulkEntries extends BaseBulkCommand {
     'include-variants': flags.boolean({
       description: messages.INCLUDE_VARIANTS,
       default: false,
-    }),
-
-    'api-version': flags.string({
-      description: messages.API_VERSION,
-      default: '3.2',
     }),
   };
 

@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import map from 'lodash/map';
 import omitBy from 'lodash/omitBy';
 import isEmpty from 'lodash/isEmpty';
@@ -14,7 +14,6 @@ import {
   handleAndLogError
 } from '@contentstack/cli-utilities';
 
-import { trace } from '../utils/log';
 import { ImportConfig, Installation } from '../types';
 import { formatError } from '../utils';
 import { getAppName, askAppName, selectConfiguration } from '../utils/interactive';
@@ -33,10 +32,10 @@ export const getAllStackSpecificApps = async (
   const collection = await appSdk
     .marketplace(config.org_uid)
     .installation()
-    .fetchAll({ target_uids: config.target_stack, skip })
+    .fetchAll({ target_uids: config.apiKey, skip })
     .catch((error) => {
-      handleAndLogError(error)
-      trace(error, 'error', true);
+      handleAndLogError(error);
+      log.error(error, config?.context);
     });
 
   if (collection) {
@@ -76,11 +75,11 @@ export const getOrgUid = async (config: ImportConfig): Promise<string> => {
   
   const tempAPIClient = await managementSDKClient({ host: config.host });
   const tempStackData = await tempAPIClient
-    .stack({ api_key: config.target_stack })
+    .stack({ api_key: config.apiKey })
     .fetch()
     .catch((error: any) => {
       handleAndLogError(error);
-      trace(error, 'error', true);
+      log.error(error, config?.context);
     });
 
   const orgUid = tempStackData?.org_uid || '';
@@ -94,7 +93,7 @@ export const getConfirmationToCreateApps = async (privateApps: any, config: Impo
   if (!config.forceStopMarketplaceAppsPrompt) {
     if (
       !(await cliux.confirm(
-        chalk.yellow(
+        getChalk().yellow(
           `WARNING!!! The listed apps are private apps that are not available in the destination stack: \n\n${map(
             privateApps,
             ({ manifest: { name } }, index) => `${String(index + 1)}) ${name}`,
@@ -106,7 +105,7 @@ export const getConfirmationToCreateApps = async (privateApps: any, config: Impo
       
       if (
         await cliux.confirm(
-          chalk.yellow(
+          getChalk().yellow(
             `\nWARNING!!! Canceling the app re-creation may break the content type and entry import. Would you like to proceed without re-create the private app? (y/n)`,
           ),
         )
@@ -116,7 +115,7 @@ export const getConfirmationToCreateApps = async (privateApps: any, config: Impo
       } else {
         if (
           await cliux.confirm(
-            chalk.yellow('\nWould you like to re-create the private app and then proceed with the installation? (y/n)'),
+            getChalk().yellow('\nWould you like to re-create the private app and then proceed with the installation? (y/n)'),
           )
         ) {
           log.info('User confirmed to create private apps');
@@ -157,15 +156,14 @@ export const makeRedirectUrlCall = async (response: any, appName: string, config
       .get(response.redirect_url)
       .then(async ({ response }: any) => {
         if (includes([501, 403], response.status)) {
-          log.error(`OAuth API call failed for ${appName}: ${response.statusText}`);
-          trace(response, 'error', true);
+          log.error(`OAuth API call failed for ${appName}: ${response.statusText}`, config?.context);
           await confirmToCloseProcess(response.data, config);
         } else {
           log.success(`OAuth API call completed successfully for app: ${appName}`);
         }
       })
       .catch((error) => {
-        trace(error, 'error', true);
+        log.error(error, config?.context);
 
         if (includes([501, 403], error.status)) {
           handleAndLogError(error);
@@ -182,7 +180,7 @@ export const confirmToCloseProcess = async (installation: any, config: ImportCon
   if (!config.forceStopMarketplaceAppsPrompt) {
     if (
       !(await cliux.confirm(
-        chalk.yellow(
+        getChalk().yellow(
           'WARNING!!! The above error may have an impact if the failed app is referenced in entries/content type. Would you like to proceed? (y/n)',
         ),
       ))

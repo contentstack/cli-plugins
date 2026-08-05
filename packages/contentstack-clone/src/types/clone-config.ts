@@ -31,7 +31,8 @@ export interface CloneConfig {
   forceStopMarketplaceAppsPrompt?: boolean;
   
   // Data and modules
-  data?: string;
+  /** Export root directory for import (same path as export `-d`; not a branch-named subdirectory) */
+  contentDir?: string;
   modules?: string[];
   filteredModules?: string[];
   

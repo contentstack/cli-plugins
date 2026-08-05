@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-external-migrate",
-  "version": "1.0.0-alpha.6",
+  "version": "2.0.0-beta.4",
   "description": "Migrate from external source to Contentstack",
   "author": "Contentstack",
   "license": "MIT",
@@ -12,20 +12,21 @@
   ],
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json && node scripts/copy-assets.js",
     "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "vitest run",
-    "test:integration": "jest --testPathPattern=tests/integration",
-    "version": "oclif readme && git add README.md"
+    "pretest": "tsc -p test",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.0",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
     "@contentstack/json-rte-serializer": "~2.1.0",
-    "@contentstack/marketplace-sdk": "~1.5.3",
+    "@contentstack/marketplace-sdk": "~1.5.2",
     "@oclif/core": "^4.8.0",
     "axios": "^1.18.1",
     "chalk": "^4.1.2",
@@ -37,17 +38,24 @@
   },
   "devDependencies": {
     "@oclif/test": "^3.0.0",
+    "@types/chai": "^4.3.20",
     "@types/jsdom": "^21.1.7",
     "@types/lodash": "^4.17.0",
     "@types/mkdirp": "^1.0.2",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.12.12",
+    "@types/sinon": "^21.0.0",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "chai": "^4.5.0",
     "eslint": "^10.5.0",
+    "mocha": "^10.8.2",
+    "nyc": "^15.1.0",
     "oclif": "^4.8.0",
-    "typescript": "^5.3.3",
-    "vitest": "^4.1.9"
+    "sinon": "^21.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "oclif": {
     "commands": "./lib/commands",

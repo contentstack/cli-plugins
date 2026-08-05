@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { FsUtility, getDirectories } from '@contentstack/cli-utilities';
+import { ExportSpaces } from '@contentstack/cli-asset-management';
 import ExportAssets from '../../../../src/export/modules/assets';
 import { ExportConfig } from '../../../../src/types';
 import { mockData, assetsMetaData } from '../../mock/assets';
@@ -22,7 +23,6 @@ describe('ExportAssets', () => {
     };
 
     mockExportConfig = {
-      contentVersion: 1,
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
@@ -71,7 +71,6 @@ describe('ExportAssets', () => {
       writeConcurrency: 5,
       developerHubBaseUrl: '',
       marketplaceAppEncryptionKey: '',
-      onlyTSModules: [],
       modules: {
         types: ['assets'],
         locales: {
@@ -143,6 +142,13 @@ describe('ExportAssets', () => {
           enableDownloadStatus: false,
           includeVersionedAssets: false,
         },
+        'cs-assets': {
+          chunkFileSizeMb: 1,
+          apiConcurrency: 5,
+          downloadAssetsConcurrency: 5,
+          pageSize: 100,
+          fetchConcurrency: 5,
+        },
         content_types: {
           dirName: 'content_types',
           fileName: 'content_types.json',
@@ -181,6 +187,7 @@ describe('ExportAssets', () => {
         stack: {
           dirName: 'stack',
           fileName: 'stack.json',
+          invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid'],
         },
         dependency: {
           entries: [],
@@ -286,6 +293,32 @@ describe('ExportAssets', () => {
       downloadAssetsStub = sinon.stub(exportAssets, 'downloadAssets');
       getVersionedAssetsStub = sinon.stub(exportAssets, 'getVersionedAssets');
 
+      // Stub getAssetsCount to return different values based on argument
+      getAssetsCountStub.callsFake((isFolder?: boolean) => {
+        return Promise.resolve(isFolder ? 5 : 10);
+      });
+
+      // Ensure stubs return resolved promises
+      getAssetsFoldersStub.resolves();
+      getAssetsStub.resolves();
+      downloadAssetsStub.resolves();
+      getVersionedAssetsStub.resolves();
+
+      // Stub progress manager methods to avoid issues
+      sinon.stub(exportAssets as any, 'createNestedProgress').returns({
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns({
+          updateStatus: sinon.stub(),
+        }),
+        updateStatus: sinon.stub(),
+        completeProcess: sinon.stub(),
+        tick: sinon.stub(),
+      } as any);
+      sinon.stub(exportAssets as any, 'withLoadingSpinner').callsFake(async (...args: unknown[]) => {
+        const fn = args[1] as () => Promise<unknown>;
+        return await fn();
+      });
+      sinon.stub(exportAssets as any, 'completeProgress');
       getAssetsCountStub.withArgs(false).resolves(10).withArgs(true).resolves(5);
     });
 
@@ -306,6 +339,31 @@ describe('ExportAssets', () => {
       expect(getAssetsFoldersStub.calledOnce).to.be.true;
       expect(getAssetsStub.calledOnce).to.be.true;
       expect(downloadAssetsStub.calledOnce).to.be.true;
+    });
+
+    it('should forward AM export concurrency options to ExportSpaces', async () => {
+      mockExportConfig.linkedWorkspaces = [{ uid: 'ws-1', space_uid: 'am-space-1', is_default: true }];
+      mockExportConfig.region.csAssetsUrl = 'https://am.example.com';
+      mockExportConfig.org_uid = 'org-from-config';
+      mockExportConfig.modules['cs-assets'].chunkFileSizeMb = 2;
+      mockExportConfig.modules['cs-assets'].apiConcurrency = 7;
+      mockExportConfig.modules['cs-assets'].downloadAssetsConcurrency = 3;
+
+      const progressManager = { addProcess: sinon.stub(), startProcess: sinon.stub(), updateStatus: sinon.stub() };
+      ((exportAssets as any).createNestedProgress as sinon.SinonStub).returns(progressManager as any);
+      sinon.stub(exportAssets as any, 'completeProgressWithMessage');
+      const setParentStub = sinon.stub(ExportSpaces.prototype, 'setParentProgressManager');
+      const startStub = sinon.stub(ExportSpaces.prototype, 'start').resolves();
+
+      await exportAssets.start();
+
+      expect(setParentStub.calledOnceWith(progressManager as any)).to.be.true;
+      expect(startStub.calledOnce).to.be.true;
+      const forwardedOptions = (startStub.thisValues[0] as any).options;
+      expect(forwardedOptions.chunkFileSizeMb).to.equal(2);
+      expect(forwardedOptions.apiConcurrency).to.equal(7);
+      expect(forwardedOptions.downloadAssetsConcurrency).to.equal(3);
+      expect(forwardedOptions.org_uid).to.equal('org-from-config');
     });
 
     it('should export versioned assets when enabled', async () => {

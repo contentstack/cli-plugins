@@ -1,18 +1,19 @@
 {
   "name": "@contentstack/cli-cm-import",
   "description": "Contentstack CLI plugin to import content into stack",
-  "version": "1.34.0",
+  "version": "2.0.0-beta.25",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-audit": "~1.20.0",
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.0",
-    "@contentstack/cli-variants": "~1.6.1",
+    "@contentstack/cli-audit": "~2.0.0-beta.16",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
+    "@contentstack/cli-variants": "~2.0.0-beta.20",
+    "@contentstack/cli-asset-management": "~1.0.0-beta.8",
     "@oclif/core": "^4.11.4",
     "big-json": "^3.2.0",
     "bluebird": "^3.7.2",
-    "chalk": "^4.1.2",
+    "chalk": "^5.6.2",
     "debug": "^4.4.3",
     "fs-extra": "^11.3.3",
     "lodash": "^4.18.1",
@@ -41,19 +42,15 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\" --exit",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "eslint src/**/*.ts --fix",
-    "test:integration": "mocha --forbid-only \"test/run.test.js\" --integration-test --timeout 60000",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --forbid-only \"test/**/*.test.ts\" --exit"
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -75,17 +72,22 @@
   "license": "MIT",
   "oclif": {
     "commands": "./lib/commands",
+    "hooks": {
+      "init": [
+        "./lib/hooks/init/load-chalk"
+      ]
+    },
     "bin": "csdx",
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-import/<%- commandPath %>"
   },
   "csdxConfig": {
-    "expiredCommands": {
-      "cm:import": "csdx cm:stacks:import"
-    },
     "shortCommandName": {
-      "cm:stacks:import": "IMPRT",
-      "cm:import": "O-IMPRT"
+      "cm:stacks:import": "IMPRT"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-import"
+  }
 }

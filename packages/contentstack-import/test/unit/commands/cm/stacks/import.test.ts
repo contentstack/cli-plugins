@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { fancy } from 'fancy-test';
 import sinon from 'sinon';
-import { managementSDKClient, configHandler, log, handleAndLogError, getLogPath, createLogContext } from '@contentstack/cli-utilities';
+import { managementSDKClient, configHandler, log, handleAndLogError, getLogPath } from '@contentstack/cli-utilities';
 import ImportCommand from '../../../../../src/commands/cm/stacks/import';
 import { ModuleImporter } from '../../../../../src/import';
 import { ImportConfig } from '../../../../../src/types';
@@ -24,22 +24,22 @@ describe('ImportCommand', () => {
     mockContext = {
       info: { command: 'cm:stacks:import' },
       sessionId: 'test-session-123',
-      cliVersion: '1.0.0'
+      cliVersion: '1.0.0',
     };
 
     mockFlags = {
       'stack-api-key': 'test',
       'data-dir': '/test/data',
-      'alias': 'test-alias',
-      'module': 'entries',
+      alias: 'test-alias',
+      module: 'entries',
       'backup-dir': '/test/backup',
-      'branch': 'main',
+      branch: 'main',
       'import-webhook-status': 'disable',
-      'yes': false,
+      yes: false,
       'skip-audit': false,
       'exclude-global-modules': false,
       'skip-assets-publish': false,
-      'skip-entries-publish': false
+      'skip-entries-publish': false,
     };
 
     mockImportConfig = {
@@ -47,7 +47,6 @@ describe('ImportCommand', () => {
       apiKey: 'test',
       contentDir: '/test/data',
       data: '/test/data',
-      contentVersion: 1,
       region: 'us' as any,
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
@@ -73,17 +72,17 @@ describe('ImportCommand', () => {
       auth_token: 'auth-token',
       selectedModules: ['entries'],
       skipAudit: false,
-      'exclude-global-modules': false
+      'exclude-global-modules': false,
     } as any;
 
     mockManagementClient = {
       stack: sinon.stub().returns({
-        fetch: sinon.stub().resolves({ name: 'Test Stack', org_uid: 'org-123' })
-      })
+        fetch: sinon.stub().resolves({ name: 'Test Stack', org_uid: 'org-123' }),
+      }),
     };
 
     mockModuleImporter = {
-      start: sinon.stub().resolves({ noSuccessMsg: false })
+      start: sinon.stub().resolves({ noSuccessMsg: false }),
     };
 
     command = new ImportCommand(mockContext, {} as any);
@@ -91,27 +90,27 @@ describe('ImportCommand', () => {
     Object.defineProperty(command, 'context', {
       value: mockContext,
       writable: true,
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(command, 'cmaHost', {
       value: 'https://api.contentstack.io',
       writable: true,
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(command, 'region', {
       value: 'us',
       writable: true,
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(command, 'developerHubUrl', {
       value: 'https://developer-hub.com',
       writable: true,
-      configurable: true
+      configurable: true,
     });
     Object.defineProperty(command, 'personalizeUrl', {
       value: 'https://personalize.com',
       writable: true,
-      configurable: true
+      configurable: true,
     });
   });
 
@@ -132,8 +131,7 @@ describe('ImportCommand', () => {
     });
 
     it('should have correct aliases', () => {
-      expect(ImportCommand.aliases).to.be.an('array');
-      expect(ImportCommand.aliases).to.include('cm:import');
+      expect(ImportCommand.aliases).to.be.an('array').that.is.empty;
     });
 
     it('should have correct usage', () => {
@@ -145,7 +143,7 @@ describe('ImportCommand', () => {
   describe('Flags Configuration', () => {
     it('should have all required flags defined', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags).to.have.property('stack-api-key');
       expect(flags).to.have.property('data-dir');
       expect(flags).to.have.property('alias');
@@ -163,20 +161,18 @@ describe('ImportCommand', () => {
 
     it('should have correct flag properties', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['stack-api-key']).to.have.property('char', 'k');
       expect(flags['data-dir']).to.have.property('char', 'd');
       expect(flags['alias']).to.have.property('char', 'a');
       expect(flags['config']).to.have.property('char', 'c');
-      expect(flags['module']).to.have.property('char', 'm');
-      expect(flags['backup-dir']).to.have.property('char', 'b');
-      expect(flags['branch']).to.have.property('char', 'B');
       expect(flags['yes']).to.have.property('char', 'y');
+      // Note: 'module', 'backup-dir', and 'branch' no longer have char shortcuts
     });
 
     it('should have correct default values', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['import-webhook-status']).to.have.property('default', 'disable');
       expect(flags['skip-existing']).to.have.property('default', false);
       expect(flags['exclude-global-modules']).to.have.property('default', false);
@@ -186,7 +182,7 @@ describe('ImportCommand', () => {
 
     it('should have correct exclusive flags', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['branch']).to.have.property('exclusive');
       expect(flags['branch-alias']).to.have.property('exclusive');
       expect(flags['branch'].exclusive).to.include('branch-alias');
@@ -195,35 +191,69 @@ describe('ImportCommand', () => {
 
     it('should have correct webhook status options', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['import-webhook-status']).to.have.property('options');
       expect((flags['import-webhook-status'] as any).options).to.include('disable');
       expect((flags['import-webhook-status'] as any).options).to.include('current');
     });
+
+    it('should have options defined on the module flag', () => {
+      const flags = ImportCommand.flags;
+
+      expect(flags['module']).to.have.property('options');
+      expect((flags['module'] as any).options).to.be.an('array').that.is.not.empty;
+    });
+
+    it('should accept all valid module names', () => {
+      const validModules = [
+        'stack',
+        'assets',
+        'locales',
+        'environments',
+        'extensions',
+        'webhooks',
+        'global-fields',
+        'entries',
+        'content-types',
+        'custom-roles',
+        'workflows',
+        'publishing-rules',
+        'labels',
+        'marketplace-apps',
+        'taxonomies',
+        'personalize',
+        'variant-entries',
+        'composable-studio',
+      ];
+      const moduleOptions = (ImportCommand.flags['module'] as any).options as string[];
+
+      for (const mod of validModules) {
+        expect(moduleOptions).to.include(mod, `module flag options should include '${mod}'`);
+      }
+    });
+
+    it('should not accept invalid module names', () => {
+      const moduleOptions = (ImportCommand.flags['module'] as any).options as string[];
+
+      expect(moduleOptions).to.not.include('invalid-module');
+      expect(moduleOptions).to.not.include('foo');
+      expect(moduleOptions).to.not.include('');
+    });
   });
 
-  describe('createLogContext', () => {
+  describe('createImportContext', () => {
     let configHandlerStub: sinon.SinonStub;
-    let configHandlerSetStub: sinon.SinonStub;
 
     beforeEach(() => {
       configHandlerStub = sinon.stub(configHandler, 'get');
-      configHandlerSetStub = sinon.stub(configHandler, 'set');
-      configHandlerStub.withArgs('clientId').returns('user-123');
+      configHandlerStub.withArgs('userUid').returns('user-123');
       configHandlerStub.withArgs('email').returns('test@example.com');
-      configHandlerStub.withArgs('sessionId').returns('test-session-123');
       configHandlerStub.withArgs('oauthOrgUid').returns('org-123');
-      configHandlerStub.withArgs('authorisationType').returns('BASIC');
-    });
-
-    afterEach(() => {
-      configHandlerStub.restore();
-      configHandlerSetStub.restore();
     });
 
     it('should create context with all required properties', () => {
-      const context = createLogContext('cm:stacks:import', 'test', 'Basic Auth');
-      
+      const context = command['createImportContext']('test', 'Basic Auth');
+
       expect(context).to.have.property('command', 'cm:stacks:import');
       expect(context).to.have.property('module', '');
       expect(context).to.have.property('userId', 'user-123');
@@ -232,36 +262,35 @@ describe('ImportCommand', () => {
       expect(context).to.have.property('apiKey', 'test');
       expect(context).to.have.property('orgId', 'org-123');
       expect(context).to.have.property('authenticationMethod', 'Basic Auth');
-      expect(configHandlerSetStub.calledWith('apiKey', 'test')).to.be.true;
     });
 
     it('should use default authentication method when not provided', () => {
-      const context = createLogContext('cm:stacks:import', 'test');
-      
+      const context = command['createImportContext']('test');
+
       expect(context.authenticationMethod).to.equal('Basic Auth');
     });
 
     it('should handle missing config values', () => {
       configHandlerStub.reset();
       configHandlerStub.returns(undefined);
-      
-      const context = createLogContext('cm:stacks:import', 'test', 'Management Token');
-      
+
+      const context = command['createImportContext']('test', 'Management Token');
+
       expect(context.userId).to.equal('');
       expect(context.email).to.equal('');
       expect(context.orgId).to.equal('');
       expect(context.authenticationMethod).to.equal('Management Token');
     });
 
-    it('should use provided command', () => {
-      const context = createLogContext('cm:stacks:import', 'test');
-      
+    it('should use context command when available', () => {
+      const context = command['createImportContext']('test');
+
       expect(context.command).to.equal('cm:stacks:import');
     });
 
     it('should handle empty apiKey', () => {
-      const context = createLogContext('cm:stacks:import', '');
-      
+      const context = command['createImportContext']('');
+
       expect(context.apiKey).to.equal('');
     });
   });
@@ -280,32 +309,32 @@ describe('ImportCommand', () => {
       setupImportConfigStub = sinon.stub(setupImportConfigModule, 'setupImportConfig').resolves(mockImportConfig);
       managementSDKClientStub = sinon.stub().resolves(mockManagementClient);
       ModuleImporterStub = sinon.stub().returns(mockModuleImporter);
-      
+
       // Mock the interactive functions
       sinon.stub(interactiveModule, 'askContentDir').resolves('/test/content');
       sinon.stub(interactiveModule, 'askAPIKey').resolves('test');
-      
+
       // Mock log methods by replacing them on the log object
       logSuccessStub = sinon.stub().callsFake(() => {});
       logInfoStub = sinon.stub().callsFake(() => {});
       (log as any).success = logSuccessStub;
       (log as any).info = logInfoStub;
-      
+
       getLogPathStub = sinon.stub().returns('/test/logs');
       handleAndLogErrorStub = sinon.stub();
     });
 
     it('should successfully run import with all steps', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
-      
+
       await command.run();
-      
+
       expect(parseStub.calledOnce).to.be.true;
     });
 
     it('should set import config properties correctly', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -313,7 +342,7 @@ describe('ImportCommand', () => {
     it('should log success message when import completes', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       mockImportConfig.stackName = 'Test Stack';
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -321,7 +350,7 @@ describe('ImportCommand', () => {
     it('should log success message without stack name', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       delete mockImportConfig.stackName;
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -329,7 +358,7 @@ describe('ImportCommand', () => {
     it('should skip success message when noSuccessMsg is true', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       mockModuleImporter.start.resolves({ noSuccessMsg: true });
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -338,7 +367,7 @@ describe('ImportCommand', () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       const error = new Error('Test error');
       setupImportConfigStub.rejects(error);
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -348,7 +377,7 @@ describe('ImportCommand', () => {
       const error = new Error('Test error');
       setupImportConfigStub.rejects(error);
       (command as any).importConfig = { backupDir: '/test/backup' };
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -356,7 +385,7 @@ describe('ImportCommand', () => {
     it('should not set personalize URL when not available', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       (command as any).personalizeUrl = undefined;
-      
+
       await command.run();
 
       expect(parseStub.calledOnce).to.be.true;
@@ -365,9 +394,9 @@ describe('ImportCommand', () => {
     it('should not set developer hub URL when not available', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       (command as any).developerHubUrl = undefined;
-      
+
       await command.run();
-      
+
       expect(mockImportConfig.developerHubBaseUrl).to.be.undefined;
     });
   });
@@ -385,15 +414,15 @@ describe('ImportCommand', () => {
       setupImportConfigStub = sinon.stub(setupImportConfigModule, 'setupImportConfig').resolves(mockImportConfig);
       managementSDKClientStub = sinon.stub().resolves(mockManagementClient);
       ModuleImporterStub = sinon.stub().returns(mockModuleImporter);
-      
+
       sinon.stub(interactiveModule, 'askContentDir').resolves('/test/content');
       sinon.stub(interactiveModule, 'askAPIKey').resolves('test');
-      
+
       logSuccessStub = sinon.stub().callsFake(() => {});
       logInfoStub = sinon.stub().callsFake(() => {});
       (log as any).success = logSuccessStub;
       (log as any).info = logInfoStub;
-      
+
       getLogPathStub = sinon.stub().returns('/test/logs');
       handleAndLogErrorStub = sinon.stub();
     });
@@ -401,7 +430,7 @@ describe('ImportCommand', () => {
     it('should handle parse errors', async () => {
       const parseError = new Error('Parse error');
       const parseStub = sinon.stub(command, 'parse' as any).rejects(parseError);
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -410,7 +439,7 @@ describe('ImportCommand', () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       const setupError = new Error('Setup error');
       setupImportConfigStub.rejects(setupError);
-      
+
       await command.run();
       expect(parseStub.calledOnce).to.be.true;
     });
@@ -419,7 +448,7 @@ describe('ImportCommand', () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       const clientError = new Error('Client error');
       managementSDKClientStub.rejects(clientError);
-      
+
       await command.run();
 
       expect(parseStub.calledOnce).to.be.true;
@@ -429,7 +458,7 @@ describe('ImportCommand', () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       const importError = new Error('Import error');
       mockModuleImporter.start.rejects(importError);
-      
+
       await command.run();
 
       expect(parseStub.calledOnce).to.be.true;
@@ -438,26 +467,26 @@ describe('ImportCommand', () => {
     it('should handle missing context properties', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       (command as any).context = undefined;
-      
+
       await command.run();
-      
+
       expect(parseStub.calledOnce).to.be.true;
     });
 
     it('should handle empty flags', async () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: {} });
-      
+
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Test timeout')), 1000);
       });
-      
+
       try {
         await Promise.race([command.run(), timeoutPromise]);
       } catch (error) {
         // Expected to fail due to missing required flags
       }
-      
+
       expect(parseStub.calledOnce).to.be.true;
     });
 
@@ -465,10 +494,10 @@ describe('ImportCommand', () => {
       const parseStub = sinon.stub(command, 'parse' as any).resolves({ flags: mockFlags });
       const error = new Error('Test error');
       setupImportConfigStub.rejects(error);
-      
+
       // Don't set importConfig
       (command as any).importConfig = undefined;
-      
+
       await command.run();
 
       expect(parseStub.calledOnce).to.be.true;
@@ -476,19 +505,9 @@ describe('ImportCommand', () => {
   });
 
   describe('Flag Validation and Parsing', () => {
-    it('should handle deprecated flags correctly', () => {
-      const flags = ImportCommand.flags;
-      
-      expect(flags['stack-uid']).to.have.property('hidden', true);
-      expect(flags['data']).to.have.property('hidden', true);
-      expect(flags['management-token-alias']).to.have.property('hidden', true);
-      expect(flags['auth-token']).to.have.property('hidden', true);
-      expect(flags['skip-app-recreation']).to.have.property('parse');
-    });
-
     it('should have correct flag descriptions', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['stack-api-key'].description).to.include('API Key of the target stack');
       expect(flags['data-dir'].description).to.include('path or the location');
       expect(flags['alias'].description).to.include('management token');
@@ -498,7 +517,7 @@ describe('ImportCommand', () => {
 
     it('should have correct required flags', () => {
       const flags = ImportCommand.flags;
-      
+
       expect(flags['stack-api-key'].required).to.be.undefined; // Not explicitly required
       expect(flags['data-dir'].required).to.be.undefined;
       expect(flags['alias'].required).to.be.undefined;
@@ -514,44 +533,36 @@ describe('ImportCommand', () => {
       configHandlerStub = sinon.stub(configHandler, 'get');
     });
 
-    afterEach(() => {
-      configHandlerStub.restore();
-    });
+    it('should handle undefined context', () => {
+      (command as any).context = undefined;
 
-    it('should handle command string directly', () => {
-      configHandlerStub.returns(undefined);
-      
-      const context = createLogContext('cm:stacks:import', 'test');
-      
+      const context = command['createImportContext']('test');
+
       expect(context.command).to.equal('cm:stacks:import');
     });
 
-    it('should use command string when provided', () => {
-      configHandlerStub.withArgs('clientId').returns('user-123');
-      configHandlerStub.withArgs('email').returns('test@example.com');
-      configHandlerStub.withArgs('sessionId').returns('test-session');
-      configHandlerStub.withArgs('oauthOrgUid').returns('org-123');
-      configHandlerStub.withArgs('authorisationType').returns('BASIC');
-      
-      const context = createLogContext('cm:stacks:import', 'test');
-      
+    it('should handle context without info', () => {
+      (command as any).context = { sessionId: 'test-session' };
+
+      const context = command['createImportContext']('test');
+
       expect(context.command).to.equal('cm:stacks:import');
-      expect(context.sessionId).to.equal('test-session');
     });
 
-    it('should handle missing sessionId from configHandler', () => {
-      configHandlerStub.returns(undefined);
-      
-      const context = createLogContext('cm:stacks:import', 'test');
-      
-      expect(context.sessionId).to.equal('');
+    it('should handle context without sessionId', () => {
+      (command as any).context = { info: { command: 'test' } };
+
+      const context = command['createImportContext']('test');
+
+      expect(context.sessionId).to.be.undefined;
     });
 
-    it('should handle configHandler returning undefined values', () => {
+    it('should handle configHandler throwing errors', () => {
+      configHandlerStub.reset();
       configHandlerStub.returns(undefined);
-      
-      const context = createLogContext('cm:stacks:import', 'test');
-      
+
+      const context = command['createImportContext']('test');
+
       expect(context.userId).to.equal('');
       expect(context.email).to.equal('');
       expect(context.orgId).to.equal('');

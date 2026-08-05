@@ -16,16 +16,15 @@ describe('ExportGlobalFields', () => {
           find: sinon.stub().resolves({
             items: [
               { uid: 'gf-1', title: 'Global Field 1', validKey: 'value1' },
-              { uid: 'gf-2', title: 'Global Field 2', validKey: 'value2', invalidKey: 'remove' }
+              { uid: 'gf-2', title: 'Global Field 2', validKey: 'value2', invalidKey: 'remove' },
             ],
-            count: 2
-          })
-        })
-      })
+            count: 2,
+          }),
+        }),
+      }),
     };
 
     mockExportConfig = {
-      contentVersion: 1,
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
@@ -41,7 +40,7 @@ describe('ExportGlobalFields', () => {
         sessionId: 'session-123',
         apiKey: 'test-api-key',
         orgId: 'org-123',
-        authenticationMethod: 'Basic Auth'
+        authenticationMethod: 'Basic Auth',
       },
       cliLogsPath: '/test/logs',
       forceStopMarketplaceAppsPrompt: false,
@@ -50,7 +49,7 @@ describe('ExportGlobalFields', () => {
         name: 'us',
         cma: 'https://api.contentstack.io',
         cda: 'https://cdn.contentstack.io',
-        uiHost: 'https://app.contentstack.com'
+        uiHost: 'https://app.contentstack.com',
       },
       skipStackSettings: false,
       skipDependencies: false,
@@ -62,7 +61,6 @@ describe('ExportGlobalFields', () => {
       writeConcurrency: 5,
       developerHubBaseUrl: '',
       marketplaceAppEncryptionKey: '',
-      onlyTSModules: [],
       modules: {
         types: ['global-fields'],
         'global-fields': {
@@ -71,15 +69,15 @@ describe('ExportGlobalFields', () => {
           validKeys: ['uid', 'title', 'validKey'],
           fetchConcurrency: 5,
           writeConcurrency: 5,
-          limit: 100
-        }
-      }
+          limit: 100,
+        },
+      },
     } as any;
 
     exportGlobalFields = new ExportGlobalFields({
       exportConfig: mockExportConfig,
       stackAPIClient: mockStackClient,
-      moduleName: 'global-fields'
+      moduleName: 'global-fields',
     });
 
     // Stub FsUtility methods
@@ -110,13 +108,13 @@ describe('ExportGlobalFields', () => {
       expect(exportGlobalFields.qs).to.deep.include({
         include_count: true,
         asc: 'updated_at',
-        include_global_field_schema: true
+        include_global_field_schema: true,
       });
     });
 
-    it('should initialize empty globalFields array', () => {
-      expect(exportGlobalFields.globalFields).to.be.an('array');
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+    it('should initialize global fields dir path', () => {
+      expect(exportGlobalFields.globalFieldsDirPath).to.be.a('string');
+      expect(exportGlobalFields.globalFieldsDirPath).to.include('global_fields');
     });
 
     it('should set correct directory path', () => {
@@ -128,26 +126,26 @@ describe('ExportGlobalFields', () => {
     it('should fetch and process global fields correctly', async () => {
       const globalFields = [
         { uid: 'gf-1', title: 'Field 1', validKey: 'value1', invalidKey: 'remove' },
-        { uid: 'gf-2', title: 'Field 2', validKey: 'value2', invalidKey: 'remove' }
+        { uid: 'gf-2', title: 'Field 2', validKey: 'value2', invalidKey: 'remove' },
       ];
 
       mockStackClient.globalField.returns({
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: globalFields,
-            count: 2
-          })
-        })
+            count: 2,
+          }),
+        }),
       });
 
       await exportGlobalFields.getGlobalFields();
 
-      // Verify global fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(2);
-      // Verify invalid keys were removed
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[0].title).to.equal('Field 1');
+      // Verify each global field written to its own per-uid file (not globalfields.json)
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(2);
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should call getGlobalFields recursively when more fields exist', async () => {
@@ -159,30 +157,31 @@ describe('ExportGlobalFields', () => {
             if (callCount === 1) {
               return Promise.resolve({
                 items: new Array(100).fill({ uid: 'test', title: 'Test', validKey: 'value' }),
-                count: 150
+                count: 150,
               });
             } else {
               return Promise.resolve({
                 items: new Array(50).fill({ uid: 'test2', title: 'Test2', validKey: 'value' }),
-                count: 150
+                count: 150,
               });
             }
-          })
-        })
+          }),
+        }),
       });
 
       await exportGlobalFields.getGlobalFields();
 
-      // Verify multiple calls were made
+      // Verify multiple calls were made and each item written as per-uid file
       expect(callCount).to.be.greaterThan(1);
-      expect(exportGlobalFields.globalFields.length).to.equal(150);
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(150);
     });
 
     it('should handle API errors gracefully', async () => {
       mockStackClient.globalField.returns({
         query: sinon.stub().returns({
-          find: sinon.stub().rejects(new Error('API Error'))
-        })
+          find: sinon.stub().rejects(new Error('API Error')),
+        }),
       });
 
       try {
@@ -198,16 +197,16 @@ describe('ExportGlobalFields', () => {
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: [],
-            count: 0
-          })
-        })
+            count: 0,
+          }),
+        }),
       });
 
-      const initialCount = exportGlobalFields.globalFields.length;
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       await exportGlobalFields.getGlobalFields();
 
-      // Verify no new global fields were added
-      expect(exportGlobalFields.globalFields.length).to.equal(initialCount);
+      // No items → writeFile never called
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should handle empty items array', async () => {
@@ -215,16 +214,16 @@ describe('ExportGlobalFields', () => {
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: null,
-            count: 0
-          })
-        })
+            count: 0,
+          }),
+        }),
       });
 
-      const initialCount = exportGlobalFields.globalFields.length;
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
       await exportGlobalFields.getGlobalFields();
 
-      // Verify no processing occurred with null items
-      expect(exportGlobalFields.globalFields.length).to.equal(initialCount);
+      // Null items → writeFile never called
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should update query params with skip value', async () => {
@@ -232,11 +231,11 @@ describe('ExportGlobalFields', () => {
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: [{ uid: 'gf-1', title: 'Test', validKey: 'value' }],
-            count: 1
-          })
-        })
+            count: 1,
+          }),
+        }),
       });
-      
+
       await exportGlobalFields.getGlobalFields(50);
 
       // Verify skip was set in query
@@ -248,27 +247,30 @@ describe('ExportGlobalFields', () => {
     it('should sanitize global field attributes and remove invalid keys', () => {
       const globalFields = [
         { uid: 'gf-1', title: 'Field 1', validKey: 'value1', invalidKey: 'remove' },
-        { uid: 'gf-2', title: 'Field 2', validKey: 'value2', invalidKey: 'remove' }
+        { uid: 'gf-2', title: 'Field 2', validKey: 'value2', invalidKey: 'remove' },
       ];
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      // Verify invalid keys were removed
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[0].title).to.equal('Field 1');
-      expect(exportGlobalFields.globalFields[0].validKey).to.equal('value1');
+      // sanitizeAttribs modifies the array elements in-place
+      expect(globalFields[0].invalidKey).to.be.undefined;
+      expect(globalFields[0].uid).to.equal('gf-1');
+      expect(globalFields[0].title).to.equal('Field 1');
+      expect(globalFields[0].validKey).to.equal('value1');
+      // Each field written to its own per-uid file (never to globalfields.json)
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should handle global fields without required keys', () => {
-      const globalFields = [
-        { uid: 'gf-1', invalidKey: 'remove' }
-      ];
+      const globalFields = [{ uid: 'gf-1', invalidKey: 'remove' }];
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      expect(exportGlobalFields.globalFields[0]).to.exist;
-      expect(exportGlobalFields.globalFields[0].invalidKey).to.be.undefined;
+      expect(globalFields[0]).to.exist;
+      expect(globalFields[0].invalidKey).to.be.undefined;
     });
 
     it('should handle empty global fields array', () => {
@@ -276,25 +278,25 @@ describe('ExportGlobalFields', () => {
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+      expect(globalFields.length).to.equal(0);
     });
 
     it('should keep only valid keys from validKeys config', () => {
       const globalFields = [
-        { 
-          uid: 'gf-1', 
-          title: 'Field 1', 
+        {
+          uid: 'gf-1',
+          title: 'Field 1',
           validKey: 'value1',
           keyToRemove1: 'remove',
           keyToRemove2: 'remove',
-          keyToRemove3: 'remove'
-        }
+          keyToRemove3: 'remove',
+        },
       ];
 
       exportGlobalFields.sanitizeAttribs(globalFields);
 
-      const processedField = exportGlobalFields.globalFields[0];
-      
+      const processedField = globalFields[0];
+
       // Should only keep uid, title, validKey
       expect(processedField.keyToRemove1).to.be.undefined;
       expect(processedField.keyToRemove2).to.be.undefined;
@@ -302,6 +304,10 @@ describe('ExportGlobalFields', () => {
       expect(processedField.uid).to.equal('gf-1');
       expect(processedField.title).to.equal('Field 1');
       expect(processedField.validKey).to.equal('value1');
+      // Written to per-uid file path
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
   });
 
@@ -312,54 +318,50 @@ describe('ExportGlobalFields', () => {
 
       const globalFields = [
         { uid: 'gf-1', title: 'Field 1', validKey: 'value1' },
-        { uid: 'gf-2', title: 'Field 2', validKey: 'value2' }
+        { uid: 'gf-2', title: 'Field 2', validKey: 'value2' },
       ];
 
       mockStackClient.globalField.returns({
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: globalFields,
-            count: 2
-          })
-        })
+            count: 2,
+          }),
+        }),
       });
 
       await exportGlobalFields.start();
 
-      // Verify global fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(2);
-      expect(exportGlobalFields.globalFields[0].uid).to.equal('gf-1');
-      expect(exportGlobalFields.globalFields[1].uid).to.equal('gf-2');
-      // Verify file was written
-      expect(writeFileStub.called).to.be.true;
+      // Verify each field written to its own per-uid file (not globalfields.json)
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-2\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
       expect(makeDirectoryStub.called).to.be.true;
     });
 
-    it('should handle empty global fields and still write file', async () => {
+    it('should return early when no global fields found', async () => {
       const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
 
       mockStackClient.globalField.returns({
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: [],
-            count: 0
-          })
-        })
+            count: 0,
+          }),
+        }),
       });
 
-      exportGlobalFields.globalFields = [];
       await exportGlobalFields.start();
 
-      // Verify writeFile was called even with empty array
-      expect(writeFileStub.called).to.be.true;
-      expect(exportGlobalFields.globalFields.length).to.equal(0);
+      // start() exits early on count=0 — no per-uid files written
+      expect(writeFileStub.called).to.be.false;
     });
 
     it('should handle errors during export without throwing', async () => {
       mockStackClient.globalField.returns({
         query: sinon.stub().returns({
-          find: sinon.stub().rejects(new Error('Export failed'))
-        })
+          find: sinon.stub().rejects(new Error('Export failed')),
+        }),
       });
 
       // Should complete without throwing
@@ -368,30 +370,45 @@ describe('ExportGlobalFields', () => {
 
     it('should process multiple batches of global fields', async () => {
       let callCount = 0;
-      mockStackClient.globalField.returns({
+      const globalFieldMock = {
         query: sinon.stub().returns({
           find: sinon.stub().callsFake(() => {
             callCount++;
+            // First call is in withLoadingSpinner with limit: 1 to get count
             if (callCount === 1) {
               return Promise.resolve({
-                items: new Array(100).fill({ uid: 'gf-' + callCount, title: 'Test', validKey: 'value' }),
-                count: 150
+                items: [],
+                count: 150,
+              });
+            } else if (callCount === 2) {
+              // Second call fetches first batch
+              return Promise.resolve({
+                items: new Array(100)
+                  .fill(null)
+                  .map((_, i) => ({ uid: `gf-${i + 1}`, title: 'Test', validKey: 'value' })),
+                count: 150,
               });
             } else {
+              // Third call fetches remaining batch
               return Promise.resolve({
-                items: new Array(50).fill({ uid: 'gf-' + callCount, title: 'Test', validKey: 'value' }),
-                count: 150
+                items: new Array(50)
+                  .fill(null)
+                  .map((_, i) => ({ uid: `gf-${i + 101}`, title: 'Test', validKey: 'value' })),
+                count: 150,
               });
             }
-          })
-        })
-      });
+          }),
+        }),
+      };
+      mockStackClient.globalField.returns(globalFieldMock);
 
       await exportGlobalFields.start();
 
-      // Verify all fields were processed
-      expect(exportGlobalFields.globalFields.length).to.equal(150);
+      // Verify all fields processed — one writeFile call per item, no globalfields.json
+      const writeFileStub = FsUtility.prototype.writeFile as sinon.SinonStub;
+      expect(writeFileStub.callCount).to.equal(150);
       expect(callCount).to.be.greaterThan(1);
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
 
     it('should call makeDirectory and writeFile with correct paths', async () => {
@@ -402,17 +419,17 @@ describe('ExportGlobalFields', () => {
         query: sinon.stub().returns({
           find: sinon.stub().resolves({
             items: [{ uid: 'gf-1', title: 'Test', validKey: 'value' }],
-            count: 1
-          })
-        })
+            count: 1,
+          }),
+        }),
       });
 
       await exportGlobalFields.start();
 
-      // Verify directories and files were created
+      // Verify directory created and per-uid file written (not globalfields.json)
       expect(makeDirectoryStub.called).to.be.true;
-      expect(writeFileStub.called).to.be.true;
+      expect(writeFileStub.calledWith(sinon.match(/gf-1\.json/))).to.be.true;
+      expect(writeFileStub.neverCalledWith(sinon.match(/globalfields\.json/))).to.be.true;
     });
   });
 });
-

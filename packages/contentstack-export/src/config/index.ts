@@ -1,7 +1,6 @@
 import { DefaultConfig } from '../types';
 
 const config: DefaultConfig = {
-  contentVersion: 2,
   versioning: false,
   host: 'https://api.contentstack.io/v3',
   developerHubUrls: {
@@ -119,6 +118,13 @@ const config: DefaultConfig = {
       enableDownloadStatus: false,
       includeVersionedAssets: false,
     },
+    'cs-assets': {
+      chunkFileSizeMb: 1,
+      apiConcurrency: 5,
+      downloadAssetsConcurrency: 5,
+      pageSize: 100,
+      fetchConcurrency: 5,
+    },
     content_types: {
       dirName: 'content_types',
       fileName: 'content_types.json',
@@ -208,6 +214,7 @@ const config: DefaultConfig = {
     stack: {
       dirName: 'stack',
       fileName: 'stack.json',
+      invalidKeys: ['SYS_ACL', 'user_uids', 'owner_uid', 'description', 'master_key'],
     },
     dependency: {
       entries: ['stack', 'locales', 'content-types'],
@@ -502,7 +509,6 @@ const config: DefaultConfig = {
   writeConcurrency: 5,
   developerHubBaseUrl: '',
   marketplaceAppEncryptionKey: 'nF2ejRQcTv',
-  onlyTSModules: ['taxonomies'],
 };
 
 export default config;

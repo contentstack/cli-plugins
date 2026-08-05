@@ -13,7 +13,7 @@ description: Jest testing patterns for cli-cm-regex-validate (mocks, fixtures, n
 
 ## Instructions
 
-- **Runner:** Jest + ts-jest (`jest.config.ts`). Use `npm test` as the single source of truth.
+- **Runner:** Jest + ts-jest (`jest.config.ts`). Use `pnpm test` as the single source of truth.
 - **Layout:** Tests in `test/utils/`; fixtures in `test/data/*.json`.
 - **Mocks:** `@contentstack/management`, `fs`, `cli-ux`, `@contentstack/cli-utilities` as appropriate; never hit a real stack in unit tests.
 
@@ -21,7 +21,7 @@ When using an agent or IDE that supports folder context, open [`skills/testing/`
 
 ## Patterns (Jest)
 
-This project uses **Jest** and **ts-jest**. **`npm test`** (Jest) is the canonical test command; CI runs `npm test` from `.github/workflows/unit-tests.yml`. The `mocha` script in `package.json` is **not** what CI runs—do not use `npm run mocha` as the project test entry point.
+This project uses **Jest** and **ts-jest**. **`pnpm test`** (Jest) is the canonical test command; CI runs `pnpm test` from `.github/workflows/unit-test.yml`. The `mocha` script in `package.json` is **not** what CI runs—do not use `npm run mocha` as the project test entry point.
 
 ### File layout
 
@@ -34,7 +34,7 @@ Mirror utility names where it helps (`connect-stack.test.ts` vs `connect-stack.t
 
 ### Commands
 
-- `npm test` — runs Jest with `jest.config.ts` (roots, `testMatch`, ts-jest transform, coverage).
+- `pnpm test` — runs Jest with `jest.config.ts` (roots, `testMatch`, ts-jest transform, coverage).
 
 ### Mocking
 
@@ -59,7 +59,7 @@ Mirror utility names where it helps (`connect-stack.test.ts` vs `connect-stack.t
 
 ### Note on `package.json`
 
-- This repo lists **`jest`** under **`dependencies`** in `package.json`. Run tests via **`npm test`** and describe the framework as Jest in documentation and for agents.
+- This repo lists **`jest`** under **`devDependencies`** in `package.json`. Run tests via **`pnpm test`** and describe the framework as Jest in documentation and for agents.
 
 ## References
 

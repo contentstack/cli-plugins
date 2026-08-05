@@ -2,17 +2,19 @@ import path from 'node:path';
 import { Command } from '@contentstack/cli-command';
 import {
   messageHandler,
-  printFlagDeprecation,
   managementSDKClient,
   flags,
   FlagInput,
   ContentstackClient,
   pathValidator,
   formatError,
+  CLIProgressManager,
   log,
   handleAndLogError,
   configHandler,
   createLogContext,
+  cliux,
+  loadChalk
 } from '@contentstack/cli-utilities';
 
 import { ImportConfig, Context } from '../../../types';
@@ -25,9 +27,7 @@ export default class ImportSetupCommand extends Command {
   );
 
   static examples: string[] = [
-    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --modules <module_name, module_name>`,
-    `csdx cm:stacks:import-setup -k <target_stack_api_key> -d <path/of/export/destination/dir> --modules <module_name, module_name>`,
-    `csdx cm:stacks:import-setup -k <target_stack_api_key> -d <path/of/export/destination/dir> --modules <module_name, module_name> -b <branch_name>`,
+    `csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --module <module_name, module_name> --branch <branch_name>`,
   ];
 
   static flags: FlagInput = {
@@ -50,54 +50,90 @@ export default class ImportSetupCommand extends Command {
       multiple: true,
     }),
     branch: flags.string({
-      char: 'B',
       description:
         "The name of the branch where you want to import your content. If you don't mention the branch name, then by default the content will be imported to the main branch.",
-      parse: printFlagDeprecation(['-B'], ['--branch']),
-      exclusive: ['branch-alias']
+      exclusive: ['branch-alias'],
     }),
     'branch-alias': flags.string({
       description:
-        "Specify the branch alias where you want to import your content. If not specified, the content is imported into the main branch by default.",
+        'Specify the branch alias where you want to import your content. If not specified, the content is imported into the main branch by default.',
       exclusive: ['branch'],
     }),
   };
 
-  static aliases: string[] = ['cm:import-setup'];
+  static aliases: string[] = [];
 
-  static usage: string = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]';
+  static usage = 'cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]';
 
   async run(): Promise<void> {
+    await loadChalk();
     try {
       const { flags } = await this.parse(ImportSetupCommand);
       let importSetupConfig = await setupImportConfig(flags);
       // Prepare the context object
-      createLogContext(
-        this.context?.info?.command || 'cm:stacks:import-setup',
+      const context = this.createImportSetupContext(
         importSetupConfig.apiKey,
-        configHandler.get('authenticationMethod')
+        (importSetupConfig as any).authenticationMethod,
       );
-      
-      importSetupConfig.context = { module: '' };
-      
+      importSetupConfig.context = { ...context };
+
       // Note setting host to create cma client
       importSetupConfig.host = this.cmaHost;
       importSetupConfig.region = this.region;
       importSetupConfig.developerHubBaseUrl = this.developerHubUrl;
+
+      if (flags.branch) {
+        CLIProgressManager.initializeGlobalSummary(
+          `IMPORT-SETUP-${flags.branch}`,
+          flags.branch,
+          `Setting up import for "${flags.branch}" branch...`,
+        );
+      } else {
+        CLIProgressManager.initializeGlobalSummary(`IMPORT-SETUP`, flags.branch, 'Setting up import...');
+      }
+
       const managementAPIClient: ContentstackClient = await managementSDKClient(importSetupConfig);
       const importSetup = new ImportSetup(importSetupConfig, managementAPIClient);
       await importSetup.start();
-      log.success(
-        `Backup folder and mapper files have been successfully created for the stack using the API key ${importSetupConfig.apiKey}.`,
-        importSetupConfig.context,
+
+      CLIProgressManager.printGlobalSummary();
+
+      const successMessage = messageHandler.parse('IMPORT_SETUP_SUCCESS', importSetupConfig.apiKey);
+      const backupPathMessage = messageHandler.parse(
+        'IMPORT_SETUP_BACKUP_PATH',
+        pathValidator(path.join(importSetupConfig.backupDir)),
       );
-      log.success(
-        `The backup folder has been created at '${pathValidator(path.join(importSetupConfig.backupDir))}'.`,
-        importSetupConfig.context,
-      );
+
+      log.success(successMessage, importSetupConfig.context);
+      log.success(backupPathMessage, importSetupConfig.context);
+
+      // log.success maps to the info level, which is suppressed on the console for
+      // progress-supported modules when showConsoleLogs is false. Print the backup
+      // folder path directly so it is always visible, regardless of that setting.
+      const showConsoleLogs = configHandler.get('log')?.showConsoleLogs ?? false;
+      if (!showConsoleLogs) {
+        cliux.print(successMessage);
+        cliux.print(backupPathMessage);
+      }
     } catch (error) {
+      CLIProgressManager.printGlobalSummary();
       handleAndLogError(error);
+      cliux.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
+
+  // Create import setup context object
+  private createImportSetupContext(apiKey: string, authenticationMethod?: string, module?: string): Context {
+    return {
+      command: this.context?.info?.command || 'cm:stacks:import-setup',
+      module: module || '',
+      userId: configHandler.get('userUid') || undefined,
+      email: configHandler.get('email') || undefined,
+      sessionId: this.context?.sessionId,
+      apiKey: apiKey || '',
+      orgId: configHandler.get('oauthOrgUid') || '',
+      authenticationMethod: authenticationMethod || 'Basic Auth',
+    };
+  }
 }
