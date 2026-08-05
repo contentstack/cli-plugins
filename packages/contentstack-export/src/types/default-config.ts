@@ -102,6 +102,7 @@ export default interface DefaultConfig {
       displayExecutionTime: boolean;
       enableDownloadStatus: boolean;
       includeVersionedAssets: boolean;
+      blockingScanStatuses: string[];
       dependencies?: Modules[];
     };
     content_types: {
