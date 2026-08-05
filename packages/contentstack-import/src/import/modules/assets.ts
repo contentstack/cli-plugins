@@ -4,7 +4,6 @@ import filter from 'lodash/filter';
 import unionBy from 'lodash/unionBy';
 import orderBy from 'lodash/orderBy';
 import isEmpty from 'lodash/isEmpty';
-import uniq from 'lodash/uniq';
 import { existsSync } from 'node:fs';
 import includes from 'lodash/includes';
 import { resolve as pResolve, join } from 'node:path';
@@ -302,6 +301,47 @@ export default class ImportAssets extends BaseClass {
   }
 
   /**
+   * Groups already-filtered `publish_details` into publish payloads that preserve the source
+   * env↔locale pairing. Entries are grouped by environment, then environments sharing an
+   * identical locale set are coalesced into one payload. Each returned group is a rectangle
+   * (its environments × its locales), so the CMA env×locale cross-product reproduces exactly
+   * the source pairs — never a phantom combination (the DX-9772 over-publish).
+   *
+   * A fully-rectangular input (every env published to the same locales) collapses to a single
+   * group, so behavior is unchanged for the common case; a ragged input fans out into one group
+   * per distinct locale set. Only environments present in `this.environments` are kept, so the
+   * env-name lookup is always safe — this preserves the DX-1656 invalid-environment guard.
+   */
+  private buildPublishGroups(
+    publishDetails: Record<string, any>[],
+  ): { environments: string[]; locales: string[] }[] {
+    const localesByEnv = new Map<string, Set<string>>();
+    for (const { environment, locale } of publishDetails || []) {
+      if (!locale || !this.environments?.hasOwnProperty(environment)) continue;
+      let set = localesByEnv.get(environment);
+      if (!set) {
+        set = new Set<string>();
+        localesByEnv.set(environment, set);
+      }
+      set.add(locale);
+    }
+
+    // Coalesce environments with an identical locale set into a single payload.
+    const groups = new Map<string, { environments: string[]; locales: string[] }>();
+    for (const [envUid, localeSet] of localesByEnv) {
+      const locales = [...localeSet].sort();
+      const signature = locales.join(' ');
+      const existing = groups.get(signature);
+      if (existing) {
+        existing.environments.push(this.environments[envUid].name);
+      } else {
+        groups.set(signature, { environments: [this.environments[envUid].name], locales });
+      }
+    }
+    return [...groups.values()];
+  }
+
+  /**
    * @method publish
    * @returns {Promise<void>} Promise<void>
    */
@@ -325,49 +365,31 @@ export default class ImportAssets extends BaseClass {
       handleAndLogError(error, { ...this.importConfig.context, uid, title });
     };
 
+    // apiData is a pre-expanded sub-item ({ uid, title, publishDetails }); one per env-locale-set
+    // group (see below). Pairing is already preserved, so this only resolves the destination UID.
     const serializeData = (apiOptions: ApiOptions) => {
-      const { apiData: asset } = apiOptions;
-      const publishDetails = filter(asset.publish_details, ({ environment }) => {
-        return this.environments?.hasOwnProperty(environment);
-      });
-
-      if (publishDetails.length) {
-        const environments = uniq(map(publishDetails, ({ environment }) => this.environments[environment].name));
-        const locales = uniq(map(publishDetails, 'locale'));
-
-        if (environments.length === 0 || locales.length === 0) {
-          log.debug(
-            `Skipping publish for asset ${asset.uid}: no valid environments/locales`,
-            this.importConfig.context,
-          );
-          apiOptions.entity = undefined;
-          return apiOptions;
-        }
-
-        asset.locales = locales;
-        asset.environments = environments;
-        apiOptions.apiData.publishDetails = { locales, environments };
-        log.debug(`Prepared publish details for asset ${asset.uid}`, this.importConfig.context);
-      }
-
-      apiOptions.uid = this.assetsUidMap[asset.uid] as string;
-
+      const { apiData } = apiOptions;
+      apiOptions.uid = this.assetsUidMap[apiData.uid] as string;
       if (!apiOptions.uid) {
-        log.debug(`Skipping publish for asset ${asset.uid}: no UID mapping found.`, this.importConfig.context);
+        log.debug(`Skipping publish for asset ${apiData.uid}: no UID mapping found.`, this.importConfig.context);
         apiOptions.entity = undefined;
       }
-
       return apiOptions;
     };
 
     for (const index in indexer) {
       log.debug(`Processing publish chunk ${index} of ${indexerCount}`, this.importConfig.context);
-      const apiContent = filter(
-        values(await fs.readChunkFiles.next()),
-        ({ publish_details }) => !isEmpty(publish_details),
+      // Expand each asset into one sub-item per env-locale-set group, so each makeConcurrentCall
+      // item is a single-rectangle publish (preserves env↔locale pairing).
+      const apiContent = values(await fs.readChunkFiles.next()).flatMap((asset: Record<string, any>) =>
+        this.buildPublishGroups(asset.publish_details).map((publishDetails) => ({
+          uid: asset.uid,
+          title: asset.title,
+          publishDetails,
+        })),
       );
 
-      log.debug(`Found ${apiContent.length} publishable assets in chunk`, this.importConfig.context);
+      log.debug(`Found ${apiContent.length} asset publish calls in chunk`, this.importConfig.context);
 
       await this.makeConcurrentCall({
         apiContent,
