@@ -142,6 +142,7 @@ describe('ExportAssets', () => {
           displayExecutionTime: false,
           enableDownloadStatus: false,
           includeVersionedAssets: false,
+          blockingScanStatuses: ['pending', 'quarantined'],
         },
         content_types: {
           dirName: 'content_types',
@@ -563,6 +564,46 @@ describe('ExportAssets', () => {
       await exportAssets.downloadAssets();
 
       expect(makeConcurrentCallStub.called).to.be.true;
+    });
+
+    it('should skip assets with a non-clean scan status and download the rest', async () => {
+      getPlainMetaStub.returns({
+        'file-1': [
+          { uid: 'clean-1', url: 'https://test.io/assets/clean-1.jpeg', filename: 'clean-1.jpeg', _asset_scan_status: 'clean' },
+          { uid: 'pending-1', url: 'https://test.io/assets/pending-1.zip', filename: 'pending-1.zip', _asset_scan_status: 'pending' },
+          { uid: 'quarantined-1', url: 'https://test.io/assets/quarantined-1.zip', filename: 'quarantined-1.zip', _asset_scan_status: 'quarantined' },
+        ],
+      });
+
+      await exportAssets.downloadAssets();
+
+      expect(makeConcurrentCallStub.called).to.be.true;
+      // Only the 'clean' asset should be handed off for download; pending/quarantined are skipped.
+      expect(makeConcurrentCallStub.firstCall.args[0].totalCount).to.equal(1);
+    });
+
+    it('should download assets with no scan status field (stacks without asset scanning enabled)', async () => {
+      getPlainMetaStub.returns({
+        'file-1': [{ uid: 'legacy-1', url: 'https://test.io/assets/legacy-1.jpeg', filename: 'legacy-1.jpeg' }],
+      });
+
+      await exportAssets.downloadAssets();
+
+      // Missing _asset_scan_status must not be treated as non-clean, or every export would break.
+      expect(makeConcurrentCallStub.firstCall.args[0].totalCount).to.equal(1);
+    });
+
+    it('should download assets with a not_scanned status (org has asset scanning disabled)', async () => {
+      getPlainMetaStub.returns({
+        'file-1': [
+          { uid: 'not-scanned-1', url: 'https://test.io/assets/not-scanned-1.jpeg', filename: 'not-scanned-1.jpeg', _asset_scan_status: 'not_scanned' },
+        ],
+      });
+
+      await exportAssets.downloadAssets();
+
+      // 'not_scanned' means scanning is off for the org, not that the asset is unsafe.
+      expect(makeConcurrentCallStub.firstCall.args[0].totalCount).to.equal(1);
     });
   });
 

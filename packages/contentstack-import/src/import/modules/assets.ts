@@ -52,11 +52,15 @@ export default class ImportAssets extends BaseClass {
    */
   async start(): Promise<void> {
     try {
-    // NOTE Step 1: Import folders and create uid mapping file
+      if (this.importConfig.assetScanningEnabled) {
+        log.info('Assets Scanning is enabled in this stack', this.importConfig.context);
+        log.warn('Assets publishing will be skipped', this.importConfig.context);
+      }
+      // NOTE Step 1: Import folders and create uid mapping file
       log.debug('Starting folder import process...', this.importConfig.context);
       await this.importFolders();
 
-    // NOTE Step 2: Import versioned assets and create it mapping files (uid, url)
+      // NOTE Step 2: Import versioned assets and create it mapping files (uid, url)
       if (this.assetConfig.includeVersionedAssets) {
         const versionsPath = `${this.assetsPath}/versions`;
         if (existsSync(versionsPath)) {
@@ -67,17 +71,31 @@ export default class ImportAssets extends BaseClass {
         }
       }
 
-    // NOTE Step 3: Import Assets and create it mapping files (uid, url)
+      // NOTE Step 3: Import Assets and create it mapping files (uid, url)
       log.debug('Starting assets import...', this.importConfig.context);
       await this.importAssets();
 
-    // NOTE Step 4: Publish assets
+      // NOTE Step 4: Publish assets
       if (!this.importConfig.skipAssetsPublish) {
         log.debug('Starting assets publishing...', this.importConfig.context);
         await this.publish();
       }
 
       log.success('Assets imported successfully!', this.importConfig.context);
+
+      // Only surface the "publish later" guidance when assets were actually
+      // imported. With 0 assets, assetsUidMap is empty and the backup has no
+      // assets to publish — printing the guidance would send the user to run
+      // cm:assets:publish against an empty backup.
+      if (this.importConfig.assetScanningEnabled && !isEmpty(this.assetsUidMap)) {
+        log.info('Asset Scanning is enabled for this stack.', this.importConfig.context);
+        log.info('Assets cannot be published immediately — scanning must complete first.', this.importConfig.context);
+        log.info('Once scanning is done, publish your assets using:', this.importConfig.context);
+        log.info(
+          `csdx cm:assets:publish --backup-dir ${this.importConfig.backupDir} --stack-api-key [STACK API KEY]`,
+          this.importConfig.context,
+        );
+      }
     } catch (error) {
       handleAndLogError(error, { ...this.importConfig.context });
     }
