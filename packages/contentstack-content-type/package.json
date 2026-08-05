@@ -6,7 +6,7 @@
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@contentstack/cli-command": "^1.8.5",
-    "@contentstack/cli-utilities": "^1.19.0",
+    "@contentstack/cli-utilities": "^1.19.1",
     "axios": "^1.18.1",
     "cli-ux": "^6.0.9",
     "diff": "^9.0.0",
