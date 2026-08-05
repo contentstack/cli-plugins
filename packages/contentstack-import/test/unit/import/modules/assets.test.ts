@@ -71,6 +71,7 @@ describe('ImportAssets', () => {
       forceStopMarketplaceAppsPrompt: false,
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       auth_token: 'auth-token',
       selectedModules: ['assets'],
       skipAudit: false,
@@ -650,65 +651,26 @@ describe('ImportAssets', () => {
       expect(makeConcurrentCallStub.called).to.be.true;
     });
 
-    it('should filter publish_details by valid environments', async () => {
-      importAssets['environments'] = { 'env-1': { name: 'production' } };
-
-      makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-invalid', locale: 'en-us' }
-            ]
-          }
-        });
-        
-        expect(result.apiData.environments).to.deep.equal(['production']);
-        expect(result.apiData.locales).to.deep.equal(['en-us']);
-      });
-
-      await (importAssets as any).publish();
-    });
-
-    it('should skip publish when no valid environments', async () => {
-      makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [
-              { environment: 'env-invalid', locale: 'en-us' }
-            ]
-          }
-        });
-        
-        expect(result.entity).to.be.undefined;
-      });
-
-      await (importAssets as any).publish();
-    });
-
     it('should skip publish when no UID mapping found', async () => {
       importAssets['assetsUidMap'] = {};
 
       makeConcurrentCallStub.callsFake(async (options: any) => {
         const serializeData = options.apiParams.serializeData;
+        // apiData is now a pre-grouped sub-item.
         const result = serializeData({
           apiData: {
             uid: 'asset-unknown',
-            publish_details: [{ environment: 'env-1', locale: 'en-us' }]
+            publishDetails: { environments: ['production'], locales: ['en-us'] }
           }
         });
-        
+
         expect(result.entity).to.be.undefined;
       });
 
       await (importAssets as any).publish();
     });
 
-    it('should set correct UID from mapping', async () => {
+    it('should set correct UID from mapping and preserve the grouped payload', async () => {
       importAssets['assetsUidMap'] = { 'asset-1': 'mapped-asset-1' };
 
       makeConcurrentCallStub.callsFake(async (options: any) => {
@@ -716,35 +678,118 @@ describe('ImportAssets', () => {
         const result = serializeData({
           apiData: {
             uid: 'asset-1',
-            publish_details: [{ environment: 'env-1', locale: 'en-us' }]
+            publishDetails: { environments: ['production'], locales: ['en-us'] }
           }
         });
-        
+
         expect(result.uid).to.equal('mapped-asset-1');
+        // serializeData no longer flattens — it leaves the pre-grouped payload untouched.
+        expect(result.apiData.publishDetails).to.deep.equal({ environments: ['production'], locales: ['en-us'] });
       });
 
       await (importAssets as any).publish();
     });
 
-    it('should extract unique locales from publish_details', async () => {
+    it('preserves env-locale pairing for a RAGGED asset (DX-9772) — no phantom pairs', async () => {
+      // production published only in en-us; preview published only in fr-fr.
+      importAssets['assetsUidMap'] = { 'asset-1': 'new-asset-1' };
+      importAssets['environments'] = { 'env-1': { name: 'production' }, 'env-2': { name: 'preview' } };
+      Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
+        get: sinon.stub().returns({
+          next: sinon.stub().resolves([
+            {
+              uid: 'asset-1',
+              title: 'ragged.jpg',
+              publish_details: [
+                { environment: 'env-1', locale: 'en-us' },
+                { environment: 'env-2', locale: 'fr-fr' }
+              ]
+            }
+          ])
+        }),
+        configurable: true
+      });
+
+      let apiContent: any[] = [];
       makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-1', locale: 'fr-fr' }
-            ]
-          }
-        });
-        
-        expect(result.apiData.locales).to.have.lengthOf(2);
-        expect(result.apiData.locales).to.include.members(['en-us', 'fr-fr']);
+        apiContent = options.apiContent;
       });
 
       await (importAssets as any).publish();
+
+      // Two separate publish calls, each a single-rectangle payload — never a cartesian.
+      expect(apiContent).to.have.lengthOf(2);
+      const payloads = apiContent.map((i) => i.publishDetails);
+      expect(payloads).to.deep.include.members([
+        { environments: ['production'], locales: ['en-us'] },
+        { environments: ['preview'], locales: ['fr-fr'] }
+      ]);
+      for (const p of payloads) {
+        const hasPhantom =
+          (p.environments.includes('production') && p.locales.includes('fr-fr')) ||
+          (p.environments.includes('preview') && p.locales.includes('en-us'));
+        expect(hasPhantom, `phantom pair in ${JSON.stringify(p)}`).to.be.false;
+      }
+    });
+  });
+
+  describe('buildPublishGroups() method', () => {
+    it('collapses a RECTANGULAR asset to a single publish call (behavior-preserving)', () => {
+      importAssets['environments'] = {
+        'e1': { name: 'production' },
+        'e2': { name: 'preview' },
+        'e3': { name: 'development' }
+      };
+      const pd = ['e1', 'e2', 'e3'].flatMap((environment) => [
+        { environment, locale: 'en-us' },
+        { environment, locale: 'fr-fr' }
+      ]);
+
+      const groups = (importAssets as any).buildPublishGroups(pd);
+
+      expect(groups).to.have.lengthOf(1);
+      expect(groups[0].locales).to.deep.equal(['en-us', 'fr-fr']);
+      expect(groups[0].environments).to.have.members(['production', 'preview', 'development']);
+    });
+
+    it('fans a RAGGED asset out into one group per distinct locale set (DX-9772)', () => {
+      importAssets['environments'] = { 'e1': { name: 'new' }, 'e2': { name: 'blt5795' } };
+      const pd = [
+        { environment: 'e2', locale: 'en-us' },
+        { environment: 'e1', locale: 'en-us' },
+        { environment: 'e1', locale: 'ar' }
+      ];
+
+      const groups = (importAssets as any).buildPublishGroups(pd);
+
+      expect(groups).to.have.lengthOf(2);
+      expect(groups).to.deep.include.members([
+        { environments: ['new'], locales: ['ar', 'en-us'] },
+        { environments: ['blt5795'], locales: ['en-us'] }
+      ]);
+      const blt5795 = groups.find((g: any) => g.environments.includes('blt5795'));
+      expect(blt5795.locales).to.not.include('ar');
+    });
+
+    it('handles a single env-locale pair (1×1) as one group', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      const groups = (importAssets as any).buildPublishGroups([{ environment: 'e1', locale: 'en-us' }]);
+      expect(groups).to.deep.equal([{ environments: ['production'], locales: ['en-us'] }]);
+    });
+
+    it('drops environments absent from the destination (preserves DX-1656 guard)', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      const groups = (importAssets as any).buildPublishGroups([
+        { environment: 'e1', locale: 'en-us' },
+        { environment: 'gone', locale: 'en-us' }
+      ]);
+      expect(groups).to.deep.equal([{ environments: ['production'], locales: ['en-us'] }]);
+    });
+
+    it('returns [] for empty publish_details', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      expect((importAssets as any).buildPublishGroups([])).to.deep.equal([]);
+      expect((importAssets as any).buildPublishGroups(undefined)).to.deep.equal([]);
     });
   });
 
