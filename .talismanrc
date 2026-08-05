@@ -1,6 +1,6 @@
 fileignoreconfig:
 - filename: pnpm-lock.yaml
-  checksum: 8566e316dd7026214e8863568c72dcf946ba10648ac5c076a7c55215b5ab3422
+  checksum: d999b6eddff71bc2c7e9449f0e93de6db38f9121f84fe74f43295a41644fb9d3
 - filename: packages/contentstack-export/src/utils/export-config-handler.ts
   checksum: 3ff8e8ea60f92311f8224bce457f7aaab026194de61e13eebdc6ca5a39f66bc9
 - filename: packages/contentstack-asset-management/src/utils/export-helpers.ts

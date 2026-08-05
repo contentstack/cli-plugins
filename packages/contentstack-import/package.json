@@ -34,6 +34,7 @@
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "eslint": "^10.6.0",
     "eslint-config-oclif": "^6.0.175",
+    "fancy-test": "^2.0.0",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.27",
