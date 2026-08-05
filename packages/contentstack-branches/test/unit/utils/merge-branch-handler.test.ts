@@ -166,21 +166,21 @@ describe('Merge helper', () => {
       const res = { queue: [{ merge_details: mockData.mergeFailedStatusRes.merge_details }] };
       getMergeQueueStatusStub.resolves(res);
       const result = await mergeHelper.fetchMergeStatus('',mockData.mergePayload).catch(err => err);
-      expect(result).to.be.equal(`merge uid: ${mockData.mergePayload.uid}`);
+      expect(result.message).to.be.equal(`merge uid: ${mockData.mergePayload.uid}`);
     });
 
     it('No status', async function () {
       const res = { queue: [{ merge_details: mockData.mergeNoStatusRes.merge_details }] };
       getMergeQueueStatusStub.resolves(res);
       const result = await mergeHelper.fetchMergeStatus('',mockData.mergePayload).catch(err => err);
-      expect(result).to.be.equal(`Invalid merge status found with merge ID ${mockData.mergePayload.uid}`);
+      expect(result.message).to.be.equal(`Invalid merge status found with merge ID ${mockData.mergePayload.uid}`);
     });
 
     it('Empty queue', async function () {
       const res = { queue: [] };
       getMergeQueueStatusStub.resolves(res);
       const result = await mergeHelper.fetchMergeStatus('',mockData.mergePayload).catch(err => err);
-      expect(result).to.be.equal(`No queue found with merge ID ${mockData.mergePayload.uid}`);
+      expect(result.message).to.be.equal(`No queue found with merge ID ${mockData.mergePayload.uid}`);
     });
   });
 });
@@ -290,13 +290,17 @@ describe('Merge Handler', () => {
     strategySubOptionStub,
     displayMergeSummaryStub,
     selectMergeExecutionStub,
-    restartMergeProcessStub;
+    restartMergeProcessStub,
+    processExitStub;
     beforeEach(function(){
       selectMergeStrategyStub = stub(interactive, 'selectMergeStrategy');
       strategySubOptionStub = stub(interactive, 'selectMergeStrategySubOptions');
       displayMergeSummaryStub = stub(MergeHandler.prototype, 'displayMergeSummary').resolves();
       selectMergeExecutionStub = stub(interactive, 'selectMergeExecution');
       restartMergeProcessStub = stub(MergeHandler.prototype, 'restartMergeProcess').resolves();
+      // collectMergeSettings() calls process.exit(1) on an empty selection; stub it
+      // so it can't terminate the mocha process mid-run.
+      processExitStub = stub(process, 'exit');
     })
     afterEach(function(){
       selectMergeStrategyStub.restore();
@@ -304,6 +308,7 @@ describe('Merge Handler', () => {
       displayMergeSummaryStub.restore();
       selectMergeExecutionStub.restore();
       restartMergeProcessStub.restore();
+      processExitStub.restore();
     })
 
     it('custom_preferences strategy, new strategySubOption', async() => {

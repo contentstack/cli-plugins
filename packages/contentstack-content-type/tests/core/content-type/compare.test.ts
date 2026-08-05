@@ -25,11 +25,8 @@ jest.mock('diff2html', () => ({
   html: jest.fn(() => '<div class="d2h">diff-html</div>'),
 }))
 
-jest.mock('git-diff', () =>
-  jest.fn(() => '@@ -1 +1 @@\n+changed')
-)
-
 import fs from 'fs'
+import * as Diff2html from 'diff2html'
 
 import buildOutput from '../../../src/core/content-type/compare'
 
@@ -52,5 +49,24 @@ describe('compare buildOutput', () => {
     expect(written).toContain('<!DOCTYPE html>')
     expect(written).toContain('diff-html')
     expect(written).toContain('diff2html')
+  })
+
+  it('feeds diff2html a unified patch with file headers and the changed lines', async () => {
+    await buildOutput('my-ct', prev, curr)
+
+    const patch = (Diff2html.parse as jest.Mock).mock.calls[0][0] as string
+    expect(patch).toContain(`--- ${prev.uid}\t${curr.updated_at}`)
+    expect(patch).toContain(`+++ ${curr.uid}\t${curr.updated_at}`)
+    expect(patch).toMatch(/^@@ .* @@$/m)
+    expect(patch).toContain('-  "updated_at": "2020-01-01"')
+    expect(patch).toContain('+  "updated_at": "2021-01-01"')
+  })
+
+  it('produces a patch with no hunks when both versions are identical', async () => {
+    await buildOutput('my-ct', prev, prev)
+
+    const patch = (Diff2html.parse as jest.Mock).mock.calls[0][0] as string
+    expect(patch).not.toContain('@@')
+    expect(patch).not.toContain('undefined')
   })
 })

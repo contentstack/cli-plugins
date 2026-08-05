@@ -95,12 +95,12 @@ const config: DefaultConfig = {
     globalfields: {
       dirName: 'global_fields',
       fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
     },
     'global-fields': {
       dirName: 'global_fields',
       fileName: 'globalfields.json',
-      validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
+      validKeys: ['title', 'uid', 'field_rules', 'schema', 'options', 'singleton', 'description'],
     },
     assets: {
       dirName: 'assets',

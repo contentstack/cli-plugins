@@ -1,8 +1,13 @@
 jest.mock('../src/seed/github/client');
 jest.mock('../src/seed/contentstack/client');
 jest.mock('../src/seed/interactive');
+// importer pulls in the heavy cli-cm-import command; the seeder tests never exercise it.
+jest.mock('../src/seed/importer', () => ({ run: jest.fn() }));
 jest.mock('tmp');
-jest.mock('@contentstack/cli-utilities');
+// Mock cli-utilities so its real (ESM-heavy) module never loads; index.ts only needs cliux.
+jest.mock('@contentstack/cli-utilities', () => ({
+  cliux: { print: jest.fn(), error: jest.fn(), loader: jest.fn() },
+}));
 jest.mock('inquirer');
 
 import GitHubClient from '../src/seed/github/client';
@@ -24,16 +29,12 @@ const options: ContentModelSeederOptions = {
   cdaHost: '',
   cmaHost: '',
   gitHubPath: '',
-};
-
-// @ts-ignore
-cli = {
-  debug: jest.fn(),
-  error: jest.fn(),
-  action: {
-    start: jest.fn(),
-    stop: jest.fn(),
-  },
+  orgUid: undefined,
+  stackUid: undefined,
+  stackName: undefined,
+  fetchLimit: undefined,
+  skipStackConfirmation: undefined,
+  isAuthenticated: false,
 };
 
 const mockParsePath = jest.fn().mockReturnValue({
@@ -45,7 +46,9 @@ GitHubClient.parsePath = mockParsePath;
 
 describe('ContentModelSeeder', () => {
   beforeEach(() => {
-    jest.restoreAllMocks();
+    // clear (not reset) so accumulated call counts don't leak between tests
+    // while keeping the module/prototype mock implementations in place.
+    jest.clearAllMocks();
   });
 
   test('should create temp folder and download release', async () => {
@@ -139,6 +142,7 @@ describe('ContentModelSeeder', () => {
   });
 
   test('should throw error when user does not have access to any organizations', async () => {
+    GitHubClient.prototype.makeGetApiCall = jest.fn().mockResolvedValue({ statusCode: 200 });
     ContentstackClient.prototype.getOrganizations = jest.fn().mockResolvedValue([]);
 
     try {
@@ -146,14 +150,14 @@ describe('ContentModelSeeder', () => {
       await seeder.getInput();
 
       throw new Error('Failed');
-    } catch (error) {
+    } catch (error: any) {
       expect(error.message).toMatch(/You do not have access/gi);
     }
   });
 
   test('should throw error when template folder does not exist in github', async () => {
     ContentstackClient.prototype.getOrganizations = jest.fn().mockResolvedValue([{ uid: org_uid }]);
-    GitHubClient.prototype.checkIfRepoExists = jest.fn().mockResolvedValue(false);
+    GitHubClient.prototype.makeGetApiCall = jest.fn().mockResolvedValue({ statusCode: 404 });
 
     const seeder = new ContentModelSeeder(options);
     await seeder.getInput();
@@ -161,7 +165,7 @@ describe('ContentModelSeeder', () => {
   });
 
   test('should prompt for input when organizations and github folder exists', async () => {
-    GitHubClient.prototype.checkIfRepoExists = jest.fn().mockResolvedValue(true);
+    GitHubClient.prototype.makeGetApiCall = jest.fn().mockResolvedValue({ statusCode: 200 });
     ContentstackClient.prototype.getOrganizations = jest.fn().mockResolvedValue([{ uid: org_uid }]);
     ContentstackClient.prototype.getStacks = jest.fn().mockResolvedValue([{ uid: api_key }]);
 
