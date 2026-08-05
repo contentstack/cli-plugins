@@ -22,7 +22,7 @@ export default class ListCommand extends Command {
     "stack-api-key": flags.string({
       char: "k",
       description: "Stack API Key",
-      exclusive: ["token-alias", "alias"],
+      exclusive: ["alias"],
     }),
 
 
