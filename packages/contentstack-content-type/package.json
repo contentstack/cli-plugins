@@ -7,10 +7,6 @@
   "dependencies": {
     "@contentstack/cli-command": "^1.8.5",
     "@contentstack/cli-utilities": "^1.19.0",
-    "@types/diff2html": "^3.0.3",
-    "@types/hogan.js": "^3.0.5",
-    "@types/table": "^6.3.2",
-    "@types/tmp": "^0.2.6",
     "axios": "^1.18.1",
     "cli-ux": "^6.0.9",
     "diff": "^9.0.0",
@@ -24,8 +20,11 @@
   },
   "devDependencies": {
     "@oclif/plugin-help": "^6.2.49",
+    "@types/diff2html": "^3.0.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.19.19",
+    "@types/table": "^6.3.2",
+    "@types/tmp": "^0.2.6",
     "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.162",
     "eslint-config-oclif-typescript": "^3.1.14",
