@@ -39,6 +39,15 @@ jobs:
           filename: .github/config/release.json
           prefix: release
 
+      # Asset Management
+      - name: Publishing asset-management (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-asset-management/package.json
+          access: public
+          tag: latest
+
       # Variants
       - name: Publishing variants (Production)
         uses: JS-DevTools/npm-publish@v3
@@ -125,14 +134,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bootstrap/package.json
-          tag: latest
-
-      # Bulk Publish
-      - name: Publishing bulk publish (Production)
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          package: ./packages/contentstack-bulk-publish/package.json
           tag: latest
 
       # Bulk Operations
