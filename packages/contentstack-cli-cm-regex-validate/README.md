@@ -6,9 +6,9 @@ Using the CLI “Regex Validation” plugin, you can find the invalid regexes wi
 and rectify them.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/cli-cm-regex-validate.svg)](https://npmjs.org/package/cli-cm-regex-validate)
-[![Downloads/week](https://img.shields.io/npm/dw/cli-cm-regex-validate.svg)](https://npmjs.org/package/cli-cm-regex-validate)
-[![License](https://img.shields.io/npm/l/cli-cm-regex-validate.svg)](https://github.com/contentstack/cli-cm-regex-validate/blob/master/package.json)
+[![Version](https://img.shields.io/npm/v/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
+[![Downloads/week](https://img.shields.io/npm/dw/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
+[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-regex-validate.svg)](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/package.json)
 
 <!-- toc -->
 * [Regex Validation CLI Plugin](#regex-validation-cli-plugin)
@@ -18,18 +18,18 @@ and rectify them.
 
 # Usage
 
-<!-- usage-no-overwrite -->
+<!-- usage -->
 
 #### Step 1:
 
 ```sh-session
 $ npm install -g @contentstack/cli
 
-$ csdx plugins:install https://github.com/contentstack/cli-cm-regex-validate/releases/download/v1.2.1/contentstack-cli-cm-regex-validate-1.2.1.tgz
+$ csdx plugins:install @contentstack/cli-cm-regex-validate
 
 $ csdx plugins
 running command...
-@contentstack/cli-cm-regex-validate/1.2.1 darwin-arm64 node-v20.8.0
+@contentstack/cli-cm-regex-validate/1.2.1 darwin-arm64 node-v22.21.1
 
 $ csdx --help [COMMAND]
 USAGE
@@ -41,7 +41,7 @@ USAGE
 
 [Set the region](https://www.contentstack.com/docs/developers/cli/configure-regions-in-the-cli#set-region)
 
-<!-- usagestop-overwrite -->
+<!-- usagestop -->
 
 #### Step 3:
 
@@ -87,5 +87,5 @@ EXAMPLES
   $ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g -f <path/to/the/directory>
 ```
 
-_See code: [src/commands/cm/stacks/validate-regex.ts](https://github.com/contentstack/cli-cm-regex-validate/blob/v1.2.6/src/commands/cm/stacks/validate-regex.ts)_
+_See code: [src/commands/cm/stacks/validate-regex.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/src/commands/cm/stacks/validate-regex.ts)_
 <!-- commandsstop -->

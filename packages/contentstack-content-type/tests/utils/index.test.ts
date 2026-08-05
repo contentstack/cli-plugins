@@ -86,12 +86,14 @@ describe('utils/index', () => {
     const sdk = stackFactory({})
     const stack = await getStack(sdk, 'api-key-1', spinner)
     expect(stack).toEqual({
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       api_key: 'api-key-1',
       master_locale: 'en-us',
       name: 'Stack',
       org_uid: 'org-1',
       uid: 'stack-uid'
     })
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
     expect(sdk.stack).toHaveBeenCalledWith({ api_key: 'api-key-1' })
   })
 

@@ -1,14 +1,14 @@
 {
   "name": "@contentstack/cli-cm-import",
   "description": "Contentstack CLI plugin to import content into stack",
-  "version": "1.33.3",
+  "version": "1.34.0",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-audit": "~1.19.4",
-    "@contentstack/cli-command": "~1.8.3",
-    "@contentstack/cli-utilities": "~1.18.4",
-    "@contentstack/cli-variants": "~1.5.1",
+    "@contentstack/cli-audit": "~1.20.0",
+    "@contentstack/cli-command": "~1.8.5",
+    "@contentstack/cli-utilities": "~1.19.0",
+    "@contentstack/cli-variants": "~1.6.1",
     "@oclif/core": "^4.11.4",
     "big-json": "^3.2.0",
     "bluebird": "^3.7.2",
@@ -31,7 +31,7 @@
     "@types/mocha": "^8.2.3",
     "@types/node": "^14.18.63",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "eslint-config-oclif": "^6.0.89",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
@@ -49,15 +49,14 @@
     "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "posttest": "npm run lint",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint \"src/**/*.ts\"",
     "format": "eslint src/**/*.ts --fix",
     "test:integration": "mocha --forbid-only \"test/run.test.js\" --integration-test --timeout 60000",
     "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "test:unit": "mocha --forbid-only \"test/**/*.test.ts\" --exit"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "/bin",

@@ -1,0 +1,67 @@
+[
+  {
+    "uid": "exp-empty-audiences",
+    "name": "AB Test No Audiences",
+    "__type": "AB_TEST",
+    "status": "DRAFT",
+    "description": "",
+    "referredAudiences": [],
+    "referredEvents": [],
+    "tags": [],
+    "variations": [],
+    "_cms": { "variantGroup": "vg-empty", "variants": {} },
+    "latestVersion": "ver-empty-latest"
+  },
+  {
+    "uid": "exp-lytics-only",
+    "name": "Experience Lytics Only",
+    "__type": "SEGMENTED",
+    "status": "DRAFT",
+    "description": "",
+    "referredAudiences": ["lytics-audience-001"],
+    "referredEvents": [],
+    "tags": [],
+    "variations": [],
+    "_cms": { "variantGroup": "vg-lytics", "variants": { "0": "old-variant-lytics" } },
+    "latestVersion": "ver-lytics-latest"
+  },
+  {
+    "uid": "exp-valid",
+    "name": "Valid Experience",
+    "__type": "SEGMENTED",
+    "status": "ACTIVE",
+    "description": "",
+    "referredAudiences": ["contentstack-audience-001"],
+    "referredEvents": [],
+    "tags": [],
+    "variations": [],
+    "_cms": { "variantGroup": "vg-valid", "variants": { "0": "old-variant-valid" } },
+    "latestVersion": "ver-valid-latest"
+  },
+  {
+    "uid": "exp-mixed",
+    "name": "Mixed Audiences Experience",
+    "__type": "SEGMENTED",
+    "status": "ACTIVE",
+    "description": "",
+    "referredAudiences": ["contentstack-audience-001", "lytics-audience-001"],
+    "referredEvents": [],
+    "tags": [],
+    "variations": [],
+    "_cms": { "variantGroup": "vg-mixed", "variants": { "0": "old-variant-mixed" } },
+    "latestVersion": "ver-mixed-latest"
+  },
+  {
+    "uid": "exp-no-versions-file",
+    "name": "No Versions File Experience",
+    "__type": "AB_TEST",
+    "status": "DRAFT",
+    "description": "",
+    "referredAudiences": [],
+    "referredEvents": [],
+    "tags": [],
+    "variations": [],
+    "_cms": { "variants": {} },
+    "latestVersion": "ver-nofile-latest"
+  }
+]
