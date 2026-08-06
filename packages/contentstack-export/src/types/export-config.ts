@@ -1,3 +1,4 @@
+import { FeatureStatus } from '@contentstack/cli-utilities';
 import { Context, Modules, Region } from '.';
 import DefaultConfig from './default-config';
 
@@ -36,6 +37,7 @@ export default interface ExportConfig extends DefaultConfig {
   skipStackSettings?: boolean;
   skipDependencies?: boolean;
   authenticationMethod?: string;
+  planStatus?: Record<string, FeatureStatus>;
 }
 
 type branch = {
