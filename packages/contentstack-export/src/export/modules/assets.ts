@@ -139,6 +139,7 @@ export default class ExportAssets extends BaseClass {
     const queryParam = {
       ...this.commonQueryParam,
       include_publish_details: true,
+      include_asset_scan_status: true,
       except: { BASE: this.assetConfig.invalidKeys },
     };
     this.applyQueryFilters(queryParam, 'assets');
@@ -172,7 +173,10 @@ export default class ExportAssets extends BaseClass {
           indexFileName: 'assets.json',
           basePath: this.assetsRootPath,
           chunkFileSize: this.assetConfig.chunkFileSize,
-          metaPickKeys: merge(['uid', 'url', 'filename', 'parent_uid'], this.assetConfig.assetsMetaKeys),
+          metaPickKeys: merge(
+            ['uid', 'url', 'filename', 'parent_uid', '_asset_scan_status'],
+            this.assetConfig.assetsMetaKeys,
+          ),
         });
       }
       if (!isEmpty(items)) {
@@ -208,6 +212,7 @@ export default class ExportAssets extends BaseClass {
     const queryParam = {
       ...this.commonQueryParam,
       include_publish_details: true,
+      include_asset_scan_status: true,
       except: { BASE: this.assetConfig.invalidKeys },
     };
 
@@ -247,7 +252,10 @@ export default class ExportAssets extends BaseClass {
           indexFileName: 'versioned-assets.json',
           chunkFileSize: this.assetConfig.chunkFileSize,
           basePath: pResolve(this.assetsRootPath, 'versions'),
-          metaPickKeys: merge(['uid', 'url', 'filename', '_version', 'parent_uid'], this.assetConfig.assetsMetaKeys),
+          metaPickKeys: merge(
+            ['uid', 'url', 'filename', '_version', 'parent_uid', '_asset_scan_status'],
+            this.assetConfig.assetsMetaKeys,
+          ),
         });
       }
       if (!isEmpty(response)) {
@@ -332,6 +340,19 @@ export default class ExportAssets extends BaseClass {
 
     listOfAssets = uniqBy(listOfAssets, 'url');
     log.debug(`Total unique assets to download: ${listOfAssets.length}`, this.exportConfig.context);
+
+    const isNotClean = (asset: any) => this.assetConfig.blockingScanStatuses.includes(asset._asset_scan_status);
+    const skippedAssets = filter(listOfAssets, isNotClean);
+    listOfAssets = filter(listOfAssets, (asset: any) => !isNotClean(asset));
+
+    if (!isEmpty(skippedAssets)) {
+      for (const asset of skippedAssets) {
+        log.warn(
+          messageHandler.parse('ASSET_SCAN_SKIPPED', asset.filename, asset.uid, asset._asset_scan_status),
+          this.exportConfig.context,
+        );
+      }
+    }
 
     const apiBatches: Array<any> = chunk(listOfAssets, this.assetConfig.downloadLimit);
     const downloadedAssetsDirs = await getDirectories(pResolve(this.assetsRootPath, 'files'));
@@ -418,6 +439,9 @@ export default class ExportAssets extends BaseClass {
       promisifyHandler,
     ).then(() => {
       log.success(messageHandler.parse('ASSET_DOWNLOAD_COMPLETE'), this.exportConfig.context);
+      if (!isEmpty(skippedAssets)) {
+        log.warn(messageHandler.parse('ASSET_SCAN_SKIP_SUMMARY', skippedAssets.length), this.exportConfig.context);
+      }
     });
   }
 }
