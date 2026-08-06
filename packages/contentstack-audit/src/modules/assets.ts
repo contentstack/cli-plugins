@@ -328,7 +328,7 @@ export default class Assets extends BaseClass {
       let indexer = fsUtility.indexFileContent;
       log.debug(`Found ${Object.keys(indexer).length} asset files to process`, this.config.auditContext);
 
-      let skippedCrossStack = 0;
+      let skippedTaggedPd = 0;
 
       for (const fileIndex in indexer) {
         log.debug(`Processing asset file: ${indexer[fileIndex]}`, this.config.auditContext);
@@ -373,7 +373,7 @@ export default class Assets extends BaseClass {
                     this.config.auditContext,
                   );
                 }
-                skippedCrossStack++;
+                skippedTaggedPd++;
                 return true;
               }
 
@@ -459,9 +459,11 @@ export default class Assets extends BaseClass {
         }
       }
 
-      if (skippedCrossStack) {
+      if (skippedTaggedPd) {
         log.info(
-          `Skipped ${skippedCrossStack} publish detail(s) of other stacks in ${spaceId ?? spacePath}`,
+          this.sourceStackApiKey
+            ? `Skipped ${skippedTaggedPd} publish detail(s) of other stacks in ${spaceId ?? spacePath}`
+            : `Skipped ${skippedTaggedPd} api_key tagged publish detail(s) in ${spaceId ?? spacePath}; source stack unknown`,
           this.config.auditContext,
         );
       }
