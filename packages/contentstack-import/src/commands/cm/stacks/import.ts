@@ -144,7 +144,7 @@ export default class ImportCommand extends Command {
     let importConfig: ImportConfig;
     try {
       const { flags } = await this.parse(ImportCommand);
-      importConfig = await setupImportConfig(flags);
+      importConfig = await setupImportConfig(flags, this.context);
       // Prepare the context object
       createLogContext(
         this.context?.info?.command || 'cm:stacks:import',
@@ -175,10 +175,25 @@ export default class ImportCommand extends Command {
       }
 
       const moduleImporter = new ModuleImporter(managementAPIClient, importConfig);
-      await moduleImporter.start();
+      const result = await moduleImporter.start();
       backupDir = importConfig.backupDir;
       //Note: Final summary is now handled by summary manager
       CLIProgressManager.printGlobalSummary();
+
+      // Closing reminder: only relevant when assets were actually part of this
+      // run and scanning is why they're unpublished — assetScanningEnabled is an
+      // org-plan flag and isn't scoped to which modules this run touched.
+      const assetsImported = importConfig.moduleName
+        ? importConfig.moduleName === 'assets'
+        : importConfig.modules?.types?.includes('assets');
+      if (!result?.noSuccessMsg && assetsImported && importConfig.assetScanningEnabled) {
+        cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
+        cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
+        cliux.print(
+          `  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey} --operation publish`,
+          { color: 'cyan' },
+        );
+      }
       this.logSuccessAndBackupMessages(backupDir, importConfig);
       // Clear progress module setting now that import is complete
       clearProgressModuleSetting();

@@ -163,20 +163,22 @@ enum OutputColumn {
   'publish_environment' = 'publish_environment',
   'asset_uid' = 'asset_uid',
   'space_id' = 'space_id',
+  'scan_status' = 'scan_status',
+  'mandatory' = 'mandatory',
   'selectedValue' = 'selectedValue',
   'fixStatus' = 'fixStatus',
   'Content_type_uid' = 'ct_uid',
   'action' = 'action',
   'field_uid' = 'field_uid',
   'multiple' = 'multiple',
-  Module="Module",
-  "Total"="Total",
-  "Passed"="Passed",
-  "Fixable"="Fixable",
-  "Non-Fixable"="Non-Fixable",
-  "Fixed" = "Fixed",
-  "Not-Fixed" = "Not-Fixed",
-  "Issues" = "issues",
+  Module = 'Module',
+  'Total' = 'Total',
+  'Passed' = 'Passed',
+  'Fixable' = 'Fixable',
+  'Non-Fixable' = 'Non-Fixable',
+  'Fixed' = 'Fixed',
+  'Not-Fixed' = 'Not-Fixed',
+  'Issues' = 'issues',
 }
 
 export {
@@ -202,13 +204,17 @@ export {
 
 type FieldRuleStruct = {
   match_type: string;
-  actions: Array<{
-    action: string;
-    target_field: string;
-  }> | undefined;
-  conditions: Array<{
-    value: string;
-    operand_field: string;
-    operator: string;
-  }> | undefined;
+  actions:
+    | Array<{
+        action: string;
+        target_field: string;
+      }>
+    | undefined;
+  conditions:
+    | Array<{
+        value: string;
+        operand_field: string;
+        operator: string;
+      }>
+    | undefined;
 };

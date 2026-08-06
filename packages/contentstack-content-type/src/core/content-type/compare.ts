@@ -2,7 +2,7 @@ import open from 'open'
 import * as fs from 'fs'
 import * as tmp from 'tmp'
 import * as Diff2html from 'diff2html'
-import gitDiff from 'git-diff'
+import {createTwoFilesPatch} from 'diff'
 import {BuildOutput} from '../../types'
 
 export default async function buildOutput(contentTypeName: string, previous: any, current: any): Promise<BuildOutput> {
@@ -30,10 +30,13 @@ export default async function buildOutput(contentTypeName: string, previous: any
 }
 
 function buildDiffString(previous: any, current: any) {
-  return (
-    `--- ${previous.uid}\t${current.updated_at}\n` +
-        `+++ ${current.uid}\t${current.updated_at}\n` +
-        gitDiff(JSON.stringify(previous, null, 2), JSON.stringify(current, null, 2))
+  return createTwoFilesPatch(
+    previous.uid,
+    current.uid,
+    JSON.stringify(previous, null, 2),
+    JSON.stringify(current, null, 2),
+    current.updated_at,
+    current.updated_at,
   )
 }
 

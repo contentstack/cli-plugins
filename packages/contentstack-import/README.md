@@ -10,7 +10,7 @@ It is Contentstack’s CLI plugin to import content in the stack. To learn how t
 <!-- tocstop -->
 
 Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
-
+P
 # Usage
 
 <!-- usage -->
@@ -19,7 +19,7 @@ $ npm install -g @contentstack/cli-cm-import
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-import/2.0.0-beta.24 darwin-arm64 node-v24.14.0
+@contentstack/cli-cm-import/1.35.0 darwin-arm64 node-v24.18.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
