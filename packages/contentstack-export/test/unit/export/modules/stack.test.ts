@@ -148,6 +148,8 @@ describe('ExportStack', () => {
           displayExecutionTime: false,
           enableDownloadStatus: false,
           includeVersionedAssets: false,
+
+          blockingScanStatuses: ['pending', 'quarantined'],
         },
         content_types: {
           dirName: 'content_types',
