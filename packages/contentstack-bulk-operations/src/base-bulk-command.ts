@@ -144,7 +144,7 @@ export abstract class BaseBulkCommand extends Command {
   protected rateLimiter!: AdaptiveRateLimiter;
   protected retryStrategy!: RetryStrategy;
   protected operationExecutor!: OperationExecutor;
-  private batchResults: Map<string, BulkJobResult> = new Map();
+  protected batchResults: Map<string, BulkJobResult> = new Map();
   protected parsedFlags: any;
 
   /**
@@ -192,7 +192,7 @@ export abstract class BaseBulkCommand extends Command {
     }
 
     // Fill missing required flags via interactive prompts
-    flags = await fillMissingFlags(flags);
+    flags = await this.resolveFlagsInteractively(flags);
     this.parsedFlags = flags;
 
     await this.buildConfiguration(flags);
@@ -293,6 +293,13 @@ export abstract class BaseBulkCommand extends Command {
         throw error;
       }
     }
+  }
+
+  /**
+   * Resolve flags interactively — subclasses can override to skip prompts for specific modes.
+   */
+  protected async resolveFlagsInteractively(flags: any): Promise<any> {
+    return await fillMissingFlags(flags);
   }
 
   /**

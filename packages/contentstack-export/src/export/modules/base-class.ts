@@ -5,8 +5,13 @@ import chunk from 'lodash/chunk';
 import isEmpty from 'lodash/isEmpty';
 import entries from 'lodash/entries';
 import isEqual from 'lodash/isEqual';
-import { log, CLIProgressManager, configHandler, getSessionLogPath } from '@contentstack/cli-utilities';
-
+import {
+  log,
+  CLIProgressManager,
+  configHandler,
+  getSessionLogPath,
+  handleAndLogError,
+} from '@contentstack/cli-utilities';
 import { ExportConfig, ModuleClassParams } from '../../types';
 
 export type ApiOptions = {
@@ -73,7 +78,7 @@ export default abstract class BaseClass {
   }
 
   /**
-   * Create simple progress manager 
+   * Create simple progress manager
    */
   protected createSimpleProgress(moduleName: string, total?: number): CLIProgressManager {
     this.currentModuleName = moduleName;
@@ -121,7 +126,9 @@ export default abstract class BaseClass {
     // Generate default messages if not provided
     const successMessage = options?.customSuccessMessage || `${name} have been exported successfully!`;
     const sessionLogPath = getSessionLogPath();
-    const warningMessage = options?.customWarningMessage || `${name} have been exported with some errors. Please check the logs at: ${sessionLogPath}`;
+    const warningMessage =
+      options?.customWarningMessage ||
+      `${name} have been exported with some errors. Please check the logs at: ${sessionLogPath}`;
 
     this.completeProgress(true);
 
@@ -199,7 +206,16 @@ export default abstract class BaseClass {
         }
 
         /* eslint-disable no-await-in-loop */
-        await Promise.allSettled(allPromise);
+        const settledResults = await Promise.allSettled(allPromise);
+        settledResults.forEach((result) => {
+          if (result.status === 'rejected') {
+            handleAndLogError(
+              result.reason,
+              { ...this.exportConfig.context },
+              `Unhandled rejection in '${module}' batch ${batchNo}`,
+            );
+          }
+        });
         /* eslint-disable no-await-in-loop */
         await this.logMsgAndWaitIfRequired(module, start, batchNo);
 
@@ -235,6 +251,30 @@ export default abstract class BaseClass {
   }
 
   /**
+   * Wraps a caller-supplied resolve/reject callback so that if the callback itself throws
+   * (e.g. a bug while writing/logging the result), the failure is caught right here and
+   * always recorded via handleAndLogError, instead of turning into a rejected promise that
+   * a caller further up the chain may or may not notice.
+   */
+  private guardCallback(
+    callback: (value: any) => void,
+    moduleName: ApiModuleType,
+    context: Record<string, any>,
+  ): (value: any) => void {
+    return (value: any) => {
+      try {
+        callback(value);
+      } catch (error) {
+        handleAndLogError(
+          error,
+          { ...this.exportConfig.context, ...context },
+          `Unhandled error while processing '${moduleName}' API result`,
+        );
+      }
+    };
+  }
+
+  /**
    * @method makeAPICall
    * @param {Record<string, any>} options - Api related params
    * @param {Record<string, any>} isLastRequest - Boolean
@@ -244,32 +284,35 @@ export default abstract class BaseClass {
     { module: moduleName, reject, resolve, url = '', uid = '', additionalInfo, queryParam = {} }: ApiOptions,
     isLastRequest = false,
   ): Promise<any> {
+    const safeResolve = this.guardCallback(resolve, moduleName, { uid, additionalInfo });
+    const safeReject = this.guardCallback(reject, moduleName, { uid, additionalInfo });
+
     switch (moduleName) {
       case 'asset':
         return this.stack
           .asset(uid)
           .fetch(queryParam)
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: Error) => reject({ error, isLastRequest, additionalInfo }));
+          .then((response: any) => safeResolve({ response, isLastRequest, additionalInfo }))
+          .catch((error: Error) => safeReject({ error, isLastRequest, additionalInfo }));
       case 'assets':
         return this.stack
           .asset()
           .query(queryParam)
           .find()
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: Error) => reject({ error, isLastRequest, additionalInfo }));
+          .then((response: any) => safeResolve({ response, isLastRequest, additionalInfo }))
+          .catch((error: Error) => safeReject({ error, isLastRequest, additionalInfo }));
       case 'download-asset':
         return this.stack
           .asset()
           .download({ url, responseType: 'stream' })
-          .then((response: any) => resolve({ response, isLastRequest, additionalInfo }))
-          .catch((error: any) => reject({ error, isLastRequest, additionalInfo }));
+          .then((response: any) => safeResolve({ response, isLastRequest, additionalInfo }))
+          .catch((error: any) => safeReject({ error, isLastRequest, additionalInfo }));
       case 'export-taxonomy':
         return this.stack
           .taxonomy(uid)
           .export(queryParam)
-          .then((response: any) => resolve({ response, uid }))
-          .catch((error: any) => reject({ error, uid }));
+          .then((response: any) => safeResolve({ response, uid }))
+          .catch((error: any) => safeReject({ error, uid }));
       default:
         return Promise.resolve();
     }
