@@ -200,7 +200,38 @@ export const removeReferenceFields = async function (
   log.debug('Reference field removal process completed');
 };
 
-export const updateFieldRules = function (contentType: any) {
+/**
+ * A global field rule is a field rule whose conditions/actions reference fields of an embedded
+ * global field via dotted paths (e.g. `global_field.reference`). Such rules cannot be validated
+ * while the embedded global field schema is still incomplete on the stack, so they are skipped
+ * during the content type update and re-applied once all global fields are fully created.
+ * This predicate is the single source of truth for identifying them.
+ */
+export const isGlobalFieldRule = (rule: any): boolean => Boolean(rule?.is_global_field_rule);
+
+/**
+ * Returns the content type's field rules filtered to those safe to apply at the current import
+ * stage. Two kinds of rules are dropped:
+ *
+ *  1. Reference-condition rules — a condition whose operand is a `reference`-type field. Their
+ *     `value` holds entry uids that do not exist until entries are imported, so they are always
+ *     deferred to the entries module (entries.updateFieldRules), which re-applies them with the
+ *     entry-uid mapping. These are dropped in every mode.
+ *  2. Global field rules (`is_global_field_rule`) — their operand/target are dotted paths into an
+ *     embedded global field (e.g. `global_field.reference`) that cannot be validated until that
+ *     global field's schema is complete on the stack. Dropped during the content type update; once
+ *     the global fields are complete they are re-applied via `keepGlobalFieldRules: true`.
+ *
+ * @param contentType the content type whose `field_rules` to filter
+ * @param options.keepGlobalFieldRules when true, global field rules are retained (reference-condition
+ *   rules are still dropped). Used after global fields are complete to apply the GF rules without
+ *   prematurely resurrecting the reference-condition rules that entries owns.
+ */
+export const updateFieldRules = function (
+  contentType: any,
+  options: { keepGlobalFieldRules?: boolean } = {},
+) {
+  const { keepGlobalFieldRules = false } = options;
   log.debug(`Starting field rules update for content type: ${contentType.uid}`);
 
   const fieldDataTypeMap: { [key: string]: string } = {};
@@ -217,6 +248,18 @@ export const updateFieldRules = function (contentType: any) {
 
   // Looping backwards as we need to delete elements as we move.
   for (let i = len - 1; i >= 0; i--) {
+    // Global field rules reference embedded global field sub-fields via dotted paths
+    // (e.g. `global_field.reference`), which cannot be validated while the embedded global field
+    // schema is still incomplete and would fail the whole content type update with
+    // "Invalid field UID". Dropped during the content type update; re-applied later (see
+    // updateGFFieldRules) with keepGlobalFieldRules once all global fields are complete.
+    if (!keepGlobalFieldRules && isGlobalFieldRule(fieldRules[i])) {
+      log.debug(`Skipping global field rule from content type update`);
+      fieldRules.splice(i, 1);
+      removedRules++;
+      continue;
+    }
+
     const conditions = fieldRules[i].conditions;
     let isReference = false;
 
@@ -235,6 +278,6 @@ export const updateFieldRules = function (contentType: any) {
     }
   }
 
-  log.debug(`Field rules update completed. Removed ${removedRules} rules with reference conditions`);
+  log.debug(`Field rules update completed. Removed ${removedRules} rules`);
   return fieldRules;
 };

@@ -70,6 +70,7 @@ describe('ImportAssets', () => {
       forceStopMarketplaceAppsPrompt: false,
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       auth_token: 'auth-token',
       selectedModules: ['assets'],
       skipAudit: false,
@@ -766,6 +767,67 @@ describe('ImportAssets', () => {
       });
 
       await (importAssets as any).publish();
+    });
+  });
+
+  describe('buildPublishGroups() method', () => {
+    it('collapses a RECTANGULAR asset to a single publish call (behavior-preserving)', () => {
+      importAssets['environments'] = {
+        'e1': { name: 'production' },
+        'e2': { name: 'preview' },
+        'e3': { name: 'development' },
+      };
+      const pd = ['e1', 'e2', 'e3'].flatMap((environment) => [
+        { environment, locale: 'en-us' },
+        { environment, locale: 'fr-fr' },
+      ]);
+
+      const groups = (importAssets as any).buildPublishGroups(pd);
+
+      expect(groups).to.have.lengthOf(1);
+      expect(groups[0].locales).to.deep.equal(['en-us', 'fr-fr']);
+      expect(groups[0].environments).to.have.members(['production', 'preview', 'development']);
+    });
+
+    it('fans a RAGGED asset out into one group per distinct locale set (DX-9772)', () => {
+      importAssets['environments'] = { 'e1': { name: 'new' }, 'e2': { name: 'blt5795' } };
+      const pd = [
+        { environment: 'e2', locale: 'en-us' },
+        { environment: 'e1', locale: 'en-us' },
+        { environment: 'e1', locale: 'ar' },
+      ];
+
+      const groups = (importAssets as any).buildPublishGroups(pd);
+
+      expect(groups).to.have.lengthOf(2);
+      expect(groups).to.deep.include.members([
+        { environments: ['new'], locales: ['ar', 'en-us'] },
+        { environments: ['blt5795'], locales: ['en-us'] },
+      ]);
+      // blt5795 must never be paired with ar (the phantom the old flatten produced).
+      const blt5795 = groups.find((g: any) => g.environments.includes('blt5795'));
+      expect(blt5795.locales).to.not.include('ar');
+    });
+
+    it('handles a single env-locale pair (1×1) as one group', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      const groups = (importAssets as any).buildPublishGroups([{ environment: 'e1', locale: 'en-us' }]);
+      expect(groups).to.deep.equal([{ environments: ['production'], locales: ['en-us'] }]);
+    });
+
+    it('drops environments absent from the destination (preserves DX-1656 guard)', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      const groups = (importAssets as any).buildPublishGroups([
+        { environment: 'e1', locale: 'en-us' },
+        { environment: 'gone', locale: 'en-us' },
+      ]);
+      expect(groups).to.deep.equal([{ environments: ['production'], locales: ['en-us'] }]);
+    });
+
+    it('returns [] for empty publish_details', () => {
+      importAssets['environments'] = { 'e1': { name: 'production' } };
+      expect((importAssets as any).buildPublishGroups([])).to.deep.equal([]);
+      expect((importAssets as any).buildPublishGroups(undefined)).to.deep.equal([]);
     });
   });
 

@@ -120,7 +120,6 @@ const config: DefaultConfig = {
         'created_by',
         'updated_at',
         'updated_by',
-        'is_system',
         'asset_types_count',
       ],
       assetTypesImportInvalidKeys: [
@@ -128,7 +127,6 @@ const config: DefaultConfig = {
         'created_by',
         'updated_at',
         'updated_by',
-        'is_system',
         'category',
         'preview_image_url',
         'category_detail',
@@ -179,7 +177,7 @@ const config: DefaultConfig = {
     },
     'global-fields': {
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads individual {uid}.json files
       validKeys: ['title', 'uid', 'schema', 'options', 'singleton', 'description'],
       limit: 100,
     },

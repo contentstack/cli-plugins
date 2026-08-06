@@ -80,37 +80,27 @@ describe('Bootstrapping an app', () => {
       sandbox.stub(configHandler, 'get').withArgs('tokens').returns(configHandlerTokens);
     }
 
-    // ContentstackClient stubs
-    const contentstackStubMethods = {
-      getOrganizations: sandbox.stub().resolves(mock.organizations),
-      getOrganization: sandbox.stub().resolves(mock.organizations[0]),
-      createStack: sandbox.stub().resolves(mock.stack),
-      getStack: sandbox.stub().resolves(mock.stack),
-      getContentTypeCount: sandbox.stub().resolves(0),
-      createManagementToken: sandbox.stub().resolves(mock.managementToken),
+    // ContentstackClient stubs — stub each prototype method individually so sinon wraps the
+    // real property and sandbox.restore() fully reverts it. (Stubbing the whole prototype and
+    // then Object.assign-ing anonymous stubs over it leaves un-wrapped stubs behind that
+    // restore() can't remove, which leaks into the next test as "already stubbed".)
+    contentstackClientStub = {
+      getOrganizations: sandbox.stub(ContentstackClient.prototype, 'getOrganizations').resolves(mock.organizations),
+      getOrganization: sandbox.stub(ContentstackClient.prototype, 'getOrganization').resolves(mock.organizations[0]),
+      createStack: sandbox.stub(ContentstackClient.prototype, 'createStack').resolves(mock.stack),
+      getStack: sandbox.stub(ContentstackClient.prototype, 'getStack').resolves(mock.stack),
+      getContentTypeCount: sandbox.stub(ContentstackClient.prototype, 'getContentTypeCount').resolves(0),
+      createManagementToken: sandbox.stub(ContentstackClient.prototype, 'createManagementToken').resolves(mock.managementToken),
     };
-    contentstackClientStub = sandbox.stub(ContentstackClient.prototype);
-    Object.assign(contentstackClientStub, contentstackStubMethods);
-    sandbox.stub(ContentstackClient.prototype, 'constructor').callsFake(function () {
-      Object.assign(this, contentstackStubMethods);
-      return this;
-    });
 
     // GitHubClient stubs
-    const githubStubMethods = {
-      getAllRepos: sandbox.stub().resolves(mock.githubRepos),
-      getLatest: sandbox.stub().resolves(),
-      streamRelease: sandbox.stub().resolves(),
-      extract: sandbox.stub().resolves(),
-      makeGetApiCall: sandbox.stub().resolves({ statusCode: 200 }),
-      getLatestTarballUrl: sandbox.stub().resolves(mock.githubRelease.tarball_url),
+    githubClientStub = {
+      getLatest: sandbox.stub(GitHubClient.prototype, 'getLatest').resolves(),
+      streamRelease: sandbox.stub(GitHubClient.prototype, 'streamRelease').resolves(),
+      extract: sandbox.stub(GitHubClient.prototype, 'extract').resolves(),
+      makeGetApiCall: sandbox.stub(GitHubClient.prototype, 'makeGetApiCall').resolves({ statusCode: 200 }),
+      getLatestTarballUrl: sandbox.stub(GitHubClient.prototype, 'getLatestTarballUrl').resolves(mock.githubRelease.tarball_url),
     };
-    githubClientStub = sandbox.stub(GitHubClient.prototype);
-    Object.assign(githubClientStub, githubStubMethods);
-    sandbox.stub(GitHubClient.prototype, 'constructor').callsFake(function () {
-      Object.assign(this, githubStubMethods);
-      return this;
-    });
 
     // HttpClient stub
     httpClientStub = {
@@ -162,7 +152,7 @@ describe('Bootstrapping an app', () => {
         'app-name': 'kickstart-next',
         org: 'org-uid',
         'stack-name': 'test-bootstrap-cmd',
-        'app-type': 'kickstart-next',
+
         yes: true,
       };
       return Promise.resolve(responses[question.name] || {});
@@ -179,16 +169,6 @@ describe('Bootstrapping an app', () => {
   afterEach(() => {
     sandbox.restore();
     delete process.env.CONTENTSTACK_AUTH_TOKEN;
-  });
-
-  it('should handle invalid app type gracefully', async () => {
-    try {
-      await runCommand(['cm:bootstrap', '--app-type', 'invalidtype']);
-    } catch (error) {
-      expect(error).to.exist;
-      expect(error?.oclif?.exit).to.equal(1);
-      expect(error.message).to.contain('Invalid app type provided invalidtype');
-    }
   });
 
   it('should bootstrap a Contentstack app with the correct flags', async () => {
@@ -361,7 +341,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: testAlias,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -438,7 +418,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -495,7 +475,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -552,7 +532,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -608,7 +588,6 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': undefined,
-          'app-type': 'sampleapp',
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,
@@ -623,11 +602,11 @@ describe('Bootstrapping an app', () => {
       command.cmaHost = mock.region.cma;
 
       await command.run();
-      // Verify that appType is set correctly
+      // Verify that appType is hardcoded to 'starterapp'
       expect(bootstrapOptions).to.not.be.null;
-      expect(bootstrapOptions.appType).to.equal('sampleapp');
-      // Verify that inquireApp was called with sampleApps (config.default in compiled CJS)
-      expect(interactive.inquireApp.calledWith(config.default.sampleApps)).to.be.true;
+      expect(bootstrapOptions.appType).to.equal('starterapp');
+      // Verify that inquireApp was called with starterApps
+      expect(interactive.inquireApp.calledWith(config.default.starterApps)).to.be.true;
     });
 
     it('should handle app-name flag correctly', async () => {
@@ -665,7 +644,7 @@ describe('Bootstrapping an app', () => {
         flags: {
           alias: undefined,
           'app-name': 'kickstart-next',
-          'app-type': undefined,
+
           'project-dir': undefined,
           'stack-api-key': undefined,
           org: undefined,

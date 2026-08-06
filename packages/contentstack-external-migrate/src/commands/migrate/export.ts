@@ -26,7 +26,6 @@ export default class MigrateExport extends Command {
       description: 'Contentful CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)',
     }),
     output: flags.string({
-      char: 'o',
       description: 'Migration workspace root (writes export.json here)',
       default: './migration-workspace',
     }),

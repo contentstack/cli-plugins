@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/apps-cli",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.5",
   "description": "App ClI",
   "author": "Contentstack CLI",
   "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-apps-cli",
@@ -22,10 +22,10 @@
   ],
   "dependencies": {
     "@apollo/client": "^3.14.1",
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-launch": "^1.10.0",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
-    "adm-zip": "^0.5.17",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-launch": "^1.11.1",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
+    "adm-zip": "^0.5.18",
     "chalk": "^5.6.2",
     "lodash": "^4.18.1",
     "shelljs": "^0.10.0",
@@ -43,7 +43,7 @@
     "@types/tmp": "^0.2.6",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
-    "axios": "^1.16.1",
+    "axios": "^1.18.1",
     "chai": "^4.5.0",
     "dotenv": "^16.6.1",
     "eslint": "^10.5.0",
@@ -61,6 +61,7 @@
     "bin": "csdx",
     "dirname": "apps-cli",
     "commands": "./lib/commands",
+    "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-apps-cli/<%- commandPath %>",
     "hooks": {
       "init": "./lib/hooks/init/load-chalk.js"
     },
@@ -79,16 +80,15 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && shx rm -rf lib && tsc -b",
-    "lint": "eslint .",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "posttest": "npm run lint",
-    "prepack": "npm run build && oclif manifest && oclif readme",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "build": "pnpm compile",
+    "lint": "eslint \"src/**/*.ts\"",
+    "postpack": "rm -f oclif.manifest.json",
+    "prepack": "pnpm compile && oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib tsconfig.tsbuildinfo oclif.manifest.json",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report:json": "mocha --reporter json --reporter-options output=report.json --forbid-only \"test/unit/**/*.test.ts\" && nyc --reporter=clover --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "compile": "tsc -b tsconfig.json",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"

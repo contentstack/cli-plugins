@@ -26,7 +26,7 @@ export interface ContentModelSeederOptions {
   orgUid: string | undefined;
   stackUid: string | undefined;
   stackName: string | undefined;
-  fetchLimit: string | undefined;
+  fetchLimit?: string | undefined;
   skipStackConfirmation: boolean | undefined;
   isAuthenticated: boolean | false;
   managementToken?: string | undefined;

@@ -200,6 +200,8 @@ const assetServiceMsg = {
  * Bulk assets command messages
  */
 const bulkAssetsMsg = {
+  BULK_ASSETS_OPERATION:
+    'Operation to perform: `publish`/`unpublish` (CMS, requires stack API key or alias) or `delete`/`move` (CS Assets, requires OAuth/Token and --space-uid/--org-uid)',
   FETCHING: 'Fetching assets...',
   FOUND_ASSETS: 'Found {count} assets ({locale})',
   FETCH_FOR_LOCALES: 'Fetch assets for {count} locales',
@@ -216,8 +218,6 @@ const bulkAssetsMsg = {
  * CS Assets bulk delete/move messages
  */
 const csAssetsBulkMsg = {
-  BULK_CS_ASSETS_DESCRIPTION:
-    'Bulk delete or move assets via CS Assets API. Loads asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
   CS_ASSETS_URL_NOT_CONFIGURED:
     'CS Assets operations require csAssetsUrl in your region settings. Ensure your region is configured correctly.',
   SPACE_UID_REQUIRED: '--space-uid is required for CS Assets operations',
@@ -247,14 +247,29 @@ const csAssetsBulkMsg = {
   CS_ASSETS_INVALID_OPERATION: 'Invalid operation: {operation}. Must be delete or move',
   CS_ASSETS_CONFIRM_SUMMARY: 'Proceed with CS Assets {operation} on {count} item(s)?',
   CS_ASSETS_DELETE_SUCCESS: 'CS Assets bulk delete job submitted successfully!',
+  CS_ASSETS_DELETE_JOBS_SUBMITTED:
+    '{count} bulk delete job(s) submitted. Deletion runs asynchronously — this confirms submission, not completion. Verify at the status URL below:',
   CS_ASSETS_DELETE_JOB_ID: 'Job ID: {jobId}',
   CS_ASSETS_DELETE_ASYNC_NOTE: 'The job runs asynchronously — check the bulk task queue for status:',
   CS_ASSETS_MOVE_SUCCESS: 'CS Assets bulk move completed successfully!',
   CS_ASSETS_MOVE_ASSETS_COUNT: '{count} asset(s) moved to folder: {folderUid}',
   CS_ASSETS_OPERATION_FAILED: 'CS Assets {operation} failed.',
+  CS_ASSETS_BATCH_SUMMARY: 'Dispatched in {batchesTotal} batch(es) of up to 100 — {batchesSucceeded} succeeded.',
+  CS_ASSETS_PARTIAL_FAILURE:
+    'CS Assets {operation} partially failed: {batchesFailed} of {batchesTotal} batch(es) failed.',
+  CS_ASSETS_FAILED_BATCH: 'Batch {batchIndex} ({count} item(s)) failed: {error}',
+  CS_ASSETS_FAILED_UIDS_WRITTEN:
+    'Uids whose {operation} request did not confirm success written to: {path} (these requests failed to return success — the server may or may not have applied them).',
+  CS_ASSETS_RETRY_HINT:
+    'Re-run just these with: --operation {operation} --asset-uids-file {path} (plus the same --space-uid/--org-uid, and --locale for delete). Safe to re-run — the operation is idempotent, so assets already applied are a no-op.',
+
+  // Merged-command flag matrix validation
+  FLAG_NOT_ALLOWED_FOR_OPERATION: '{flag} is not valid for operation "{operation}".{hint}',
+  FLAG_NOT_ALLOWED_WITH_RETRY_REVERT: '{flag} cannot be combined with --retry-failed/--revert.',
+  CS_ASSETS_AUTH_REQUIRED:
+    'The {operation} operation requires OAuth login or an auth token. Run "csdx login" and try again.',
 
   // Interactive prompts
-  CS_ASSETS_SELECT_OPERATION: 'Select CS Assets operation:',
   CS_ASSETS_ENTER_SPACE_UID: 'Enter CS Assets space UID:',
   CS_ASSETS_ENTER_ORG_UID: 'Enter organization UID:',
   CS_ASSETS_ENTER_ASSET_UIDS_FILE: 'Enter path to asset UIDs JSON file (e.g. ./assets.json):',
@@ -341,7 +356,7 @@ const interactiveMsg = {
   ENTER_ENVIRONMENTS: 'Enter target environments (comma-separated):',
   ENTER_LOCALES: 'Enter locales (comma-separated):',
   SELECT_ALIAS: 'Select alias:',
-  ENTER_API_KEY: 'Enter stack API key:',
+  ENTER_API_KEY_placeholder: 'Enter stack API key:',
   ENTER_SOURCE_ENV: 'Enter source environment name:',
   SELECT_SOURCE_ALIAS: 'Select delivery token alias for source environment:',
 
@@ -372,7 +387,8 @@ const flagDescriptions = {
   // Common flags
   ALIAS:
     'Uses the name of a saved Management Token to authenticate the command. The command can only access the branches allowed for that token. This option can be used as an alternative to` --stack-api-key.`',
-  STACK_API_KEY: 'API key of the source stack. You must use either the --stack-api-key flag or the --alias flag.',
+  STACK_API_KEY_placeholder:
+    'API key of the source stack. You must use either the --stack-api-key flag or the --alias flag.',
   OPERATION: 'Specifies whether to `publish` or `unpublish` content.',
   ENVIRONMENTS:
     'Specifies one or more environments where the entries or assets should be published. Separate multiple environments with spaces.',
@@ -405,10 +421,6 @@ const flagDescriptions = {
     '(optional) Revert publish operations from a log folder. Specify the folder path containing success logs. Works similar to retry-failed.',
   BULK_OPERATION_FOLDER:
     '(optional) Folder path to store operation logs. Creates separate files for success and failed operations. Default: bulk-operation',
-  API_VERSION:
-    'Specifies the Content Management API version used for publishing. Use version `3.2` when publishing entries with nested references, otherwise, use the default version 3.2',
-  TAXONOMY_API_VERSION:
-    'Content Management API version for taxonomy publish (default: `3.2`; required for the `items` + locales/environments body on POST /v3/taxonomies/publish).',
   TAXONOMY_ITEMS:
     'Comma-separated taxonomy UIDs to include in the job. If omitted, all taxonomies in the stack (current branch) are included. Example: products_tax,brands_tax',
 };
@@ -418,10 +430,10 @@ const flagDescriptions = {
  */
 const commandInfo = {
   BULK_ENTRIES_DESCRIPTION: 'Bulk operations for entries (publish/unpublish/cross-publish)',
-  BULK_ASSETS_DESCRIPTION: 'Bulk operations for assets (publish/unpublish/cross-publish)',
+  BULK_ASSETS_DESCRIPTION:
+    'Bulk operations for assets: publish/unpublish/cross-publish (CMS) and delete/move (CS Assets). Delete/move load asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.',
   BULK_TAXONOMIES_DESCRIPTION:
     'Publish taxonomies to environments and locales (CMA POST /v3/taxonomies/publish; initiates a publish job)',
-  BULK_CS_ASSETS_DESCRIPTION: csAssetsBulkMsg.BULK_CS_ASSETS_DESCRIPTION,
 };
 
 /**

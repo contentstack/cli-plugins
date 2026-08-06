@@ -1,7 +1,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { expect } from 'chai';
+import sinon from 'sinon';
 import {
   buildContentfulSpaceExportArgs,
   exportContentful,
@@ -11,22 +12,34 @@ import { formatContentfulCliInvocation } from '../../../src/lib/contentful-cli-s
 
 const tempDirs: string[] = [];
 
+// Track env vars overridden during a test so afterEach can restore the originals
+// (no built-in env-stubbing helper, so we back up and restore process.env manually).
+const envBackup: Record<string, string | undefined> = {};
+function stubEnv(key: string, value: string): void {
+  if (!(key in envBackup)) envBackup[key] = process.env[key];
+  process.env[key] = value;
+}
+
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
-  vi.unstubAllEnvs();
+  for (const [key, value] of Object.entries(envBackup)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+  for (const key of Object.keys(envBackup)) delete envBackup[key];
 });
 
 describe('resolveContentfulManagementToken', () => {
   it('prefers flag over env', () => {
-    vi.stubEnv('CONTENTFUL_MANAGEMENT_TOKEN', 'env-token');
-    expect(resolveContentfulManagementToken('flag-token')).toBe('flag-token');
+    stubEnv('CONTENTFUL_MANAGEMENT_TOKEN', 'env-token');
+    expect(resolveContentfulManagementToken('flag-token')).to.equal('flag-token');
   });
 
   it('falls back to env when flag is missing', () => {
-    vi.stubEnv('CONTENTFUL_MANAGEMENT_TOKEN', 'env-token');
-    expect(resolveContentfulManagementToken()).toBe('env-token');
+    stubEnv('CONTENTFUL_MANAGEMENT_TOKEN', 'env-token');
+    expect(resolveContentfulManagementToken()).to.equal('env-token');
   });
 });
 
@@ -36,20 +49,18 @@ describe('buildContentfulSpaceExportArgs', () => {
       { outputDir: './migration-workspace', spaceId: 'abc123' },
       'secret-token',
     );
-    expect(args).toContain('space');
-    expect(args).toContain('export');
-    expect(args).toEqual(
-      expect.arrayContaining([
-        '--space-id',
-        'abc123',
-        '--management-token',
-        'secret-token',
-        '--export-dir',
-        path.resolve('./migration-workspace'),
-        '--content-file',
-        'export.json',
-      ]),
-    );
+    expect(args).to.include('space');
+    expect(args).to.include('export');
+    expect(args).to.include.members([
+      '--space-id',
+      'abc123',
+      '--management-token',
+      'secret-token',
+      '--export-dir',
+      path.resolve('./migration-workspace'),
+      '--content-file',
+      'export.json',
+    ]);
   });
 
   it('adds optional draft, archived, and asset flags', () => {
@@ -63,9 +74,9 @@ describe('buildContentfulSpaceExportArgs', () => {
       },
       'tok',
     );
-    expect(args).toContain('--include-drafts');
-    expect(args).toContain('--include-archived');
-    expect(args).toContain('--download-assets');
+    expect(args).to.include('--include-drafts');
+    expect(args).to.include('--include-archived');
+    expect(args).to.include('--download-assets');
   });
 
   it('never logs the management token', () => {
@@ -74,8 +85,8 @@ describe('buildContentfulSpaceExportArgs', () => {
       'super-secret',
     );
     const logged = formatContentfulCliInvocation(args);
-    expect(logged).not.toContain('super-secret');
-    expect(logged).toContain('***');
+    expect(logged).to.not.include('super-secret');
+    expect(logged).to.include('***');
   });
 });
 
@@ -87,20 +98,25 @@ describe('exportContentful', () => {
     const exportFile = path.join(dir, 'export.json');
     fs.copyFileSync(fixture, exportFile);
 
-    const spawnFn = vi.fn().mockResolvedValue(0);
+    const spawnFn = sinon.stub().resolves(0);
 
     const result = await exportContentful(
       { outputDir: dir, spaceId: 'space-1', managementToken: 'tok' },
-      spawnFn,
+      spawnFn as any,
     );
 
-    expect(spawnFn).toHaveBeenCalledOnce();
-    expect(result.exportFile).toBe(exportFile);
+    expect(spawnFn.calledOnce).to.equal(true);
+    expect(result.exportFile).to.equal(exportFile);
   });
 
   it('throws when management token is missing', async () => {
-    await expect(
-      exportContentful({ outputDir: '/tmp', spaceId: '1' }),
-    ).rejects.toThrow(/CONTENTFUL_MANAGEMENT_TOKEN/);
+    let error: any;
+    try {
+      await exportContentful({ outputDir: '/tmp', spaceId: '1' });
+    } catch (err) {
+      error = err;
+    }
+    expect(error, 'expected exportContentful to reject').to.be.an('error');
+    expect(error.message).to.match(/CONTENTFUL_MANAGEMENT_TOKEN/);
   });
 });

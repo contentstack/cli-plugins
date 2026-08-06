@@ -1,15 +1,15 @@
 {
   "name": "@contentstack/cli-cm-clone",
   "description": "Contentstack stack clone plugin",
-  "version": "2.0.0-beta.22",
+  "version": "2.0.0-beta.26",
   "author": "Contentstack",
-  "bugs": "https://github.com/rohitmishra209/cli-cm-clone/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
     "@colors/colors": "^1.6.0",
-    "@contentstack/cli-cm-export": "~2.0.0-beta.21",
-    "@contentstack/cli-cm-import": "~2.0.0-beta.21",
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-cm-export": "~2.0.0-beta.25",
+    "@contentstack/cli-cm-import": "~2.0.0-beta.25",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
     "@oclif/core": "^4.11.4",
     "chalk": "^5.6.2",
     "inquirer": "12.11.1",
@@ -58,19 +58,22 @@
     "bin": "csdx",
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-clone/<%- commandPath %>"
   },
-  "repository": "https://github.com/contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-clone"
+  },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\" 2>&1 | grep -v 'ERR_INVALID_ARG_TYPE' ; npx nyc report --reporter=text-summary --reporter=text || true",
     "pretest": "tsc -p test",
-    "test:unit": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\" 2>&1 | grep -v 'ERR_INVALID_ARG_TYPE' ; npx nyc report --reporter=text-summary --reporter=text || true",
-    "lint": "eslint src/**/*.ts",
-    "format": "eslint src/**/*.ts --fix",
-    "test:unit:report": "nyc --reporter=text --reporter=text-summary --extension .ts mocha --forbid-only \"test/**/*.test.ts\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix",
+    "version": "oclif readme && git add README.md",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\""
   },
   "csdxConfig": {
     "shortCommandName": {

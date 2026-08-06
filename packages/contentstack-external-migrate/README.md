@@ -42,7 +42,7 @@ FLAGS
       --output=<value>        [default: ./output-dir] Parent output directory; bundle written to <output>/bundle
       --source=<option>       (required) Legacy CMS source (contentful)
                               <options: contentful>
-      --source-token=<value>  Sorce CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)
+      --source-token=<value>  Source CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)
       --space-id=<value>      Contentful space ID — export from Contentful first (use this OR --input)
       --workspace=<value>     [default: ./output-dir] Migration workspace root for migration-manifest.json
 

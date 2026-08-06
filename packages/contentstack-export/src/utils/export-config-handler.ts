@@ -1,6 +1,14 @@
 import merge from 'merge';
 import * as path from 'path';
-import { configHandler, isAuthenticated, cliux, sanitizePath, log } from '@contentstack/cli-utilities';
+import {
+  configHandler,
+  isAuthenticated,
+  cliux,
+  sanitizePath,
+  log,
+  isFeatureEnabled,
+  FeatureCtx,
+} from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, isDirectoryNonEmpty } from './file-helper';
 import { askExportDir, askAPIKey } from './interactive';
@@ -8,7 +16,7 @@ import login from './basic-login';
 import { filter, includes } from 'lodash';
 import { ExportConfig } from '../types';
 
-const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
+const setupConfig = async (exportCmdFlags: any, context?: any): Promise<ExportConfig> => {
   // Set progress supported module FIRST, before any log calls
   // This ensures the logger respects the showConsoleLogs setting correctly
   configHandler.set('log.progressSupportedModule', 'export');
@@ -100,9 +108,9 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
 
       config.apiKey =
         exportCmdFlags['stack-uid'] || exportCmdFlags['stack-api-key'] || config.apiKey || (await askAPIKey());
-      if (typeof config.apiKey !== 'string') {
-        log.debug('Invalid API key received!', { apiKey: config.apiKey });
-        throw new Error('Invalid API key received');
+      if (typeof config.apiKey !== 'string' || !config.apiKey || !config.apiKey.trim()) {
+        log.debug('Invalid or empty API key received!', { apiKey: config.apiKey });
+        throw new Error('Invalid or empty API key received. Please provide a valid stack API key.');
       }
     }
   }
@@ -151,6 +159,32 @@ const setupConfig = async (exportCmdFlags: any): Promise<ExportConfig> => {
   // Add authentication details to config for context tracking
   config.authenticationMethod = authenticationMethod;
   log.debug('Export configuration setup completed.', { ...config });
+
+  // Deferred plan check — credentials now available after setupExportConfig
+  const deferredFeatures: string[] = context?.planCheckRequired ?? [];
+  if (deferredFeatures.length > 0) {
+    const planCtx: FeatureCtx = {
+      apiKey: config.apiKey,
+      managementToken: config.management_token,
+      authToken: config.auth_token,
+    };
+    for (const featureUid of deferredFeatures) {
+      try {
+        const status = await isFeatureEnabled(featureUid, planCtx);
+        if (context) {
+          context.planStatus[featureUid] = status;
+        }
+
+        log.debug(`[export] Deferred plan status fetched for "${featureUid}".`);
+      } catch (error) {
+        log.warn(`[export] Could not fetch deferred plan status for "${featureUid}": ${(error as Error).message}`);
+      }
+    }
+  }
+
+  if (context?.planStatus) {
+    config.planStatus = context.planStatus;
+  }
 
   return config;
 };

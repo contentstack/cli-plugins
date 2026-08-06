@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { expect } from 'chai';
 import { mapScheduledActions } from '../../../src/services/contentful/scheduled';
 
 const NOW = new Date('2026-06-10T00:00:00Z').getTime();
@@ -22,17 +22,17 @@ describe('mapScheduledActions', () => {
   const { scheduled, skipped } = mapScheduledActions(ACTIONS, opts, NOW);
 
   it('keeps only future-dated, uid-translatable actions', () => {
-    expect(scheduled).toHaveLength(2);
-    expect(skipped).toBe(2); // past + notMigrated
+    expect(scheduled).to.have.lengthOf(2);
+    expect(skipped).to.equal(2); // past + notMigrated
   });
 
   it('translates a future entry publish', () => {
     const e = scheduled.find((s) => s.cfId === 'entryA');
-    expect(e).toMatchObject({ entryUid: 'blt_a', contentTypeUid: 'home_page', action: 'publish', scheduledAt: FUTURE });
+    expect(e).to.deep.include({ entryUid: 'blt_a', contentTypeUid: 'home_page', action: 'publish', scheduledAt: FUTURE });
   });
 
   it('translates a future asset unpublish to sys_assets', () => {
     const a = scheduled.find((s) => s.cfId === 'assetX');
-    expect(a).toMatchObject({ entryUid: 'blt_x', contentTypeUid: 'sys_assets', action: 'unpublish' });
+    expect(a).to.deep.include({ entryUid: 'blt_x', contentTypeUid: 'sys_assets', action: 'unpublish' });
   });
 });

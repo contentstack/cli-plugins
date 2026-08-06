@@ -15,7 +15,7 @@ $ npm install -g @contentstack/cli-cm-bootstrap
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-bootstrap/2.0.0-beta.19 darwin-arm64 node-v22.13.1
+@contentstack/cli-cm-bootstrap/2.0.0-beta.24 darwin-arm64 node-v24.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -24,7 +24,7 @@ USAGE
 <!-- usagestop -->
 
 ```sh-session
-$ npm install -g @contentstack/cli-cm-clone
+$ npm install -g @contentstack/cli-cm-bootstrap
 $ csdx COMMAND
 running command...
 $ csdx --help [COMMAND]
@@ -76,5 +76,5 @@ EXAMPLES
   $ csdx cm:bootstrap --app-name "kickstart-next" --project-dir <path/to/setup/the/app> --run-dev-server
 ```
 
-_See code: [src/commands/cm/bootstrap.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-bootstrap/src/commands/cm/bootstrap.ts)_
+_See code: [src/commands/cm/bootstrap.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bootstrap/src/commands/cm/bootstrap.ts)_
 <!-- commandsstop -->

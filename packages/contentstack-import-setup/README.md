@@ -1,8 +1,8 @@
-@contentstack/cli-cm-import
+@contentstack/cli-cm-import-setup
 
-It is Contentstack’s CLI plugin to import content in the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/developers/cli/migration/).
+It is Contentstack’s CLI plugin to import content in the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/headless-cms/cli/migration/).
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)it -m
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
 * [Usage](#usage)
@@ -47,7 +47,7 @@ $ npm install -g @contentstack/cli-cm-import-setup
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-import-setup/2.0.0-beta.13 darwin-arm64 node-v22.13.1
+@contentstack/cli-cm-import-setup/2.0.0-beta.18 darwin-arm64 node-v24.14.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -58,15 +58,15 @@ USAGE
 # Commands
 
 <!-- commands -->
-* [`csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]`](#csdx-cmstacksimport-setup--k-value--d-value--a-value---modules-valuevalue)
+* [`csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`](#csdx-cmstacksimport-setup--k-value--d-value--a-value---module-valuevalue)
 
-## `csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]`
+## `csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`
 
 Helps to generate mappers and backup folder for importing (overwriting) specific modules
 
 ```
 USAGE
-  $ csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--modules <value,value>]
+  $ csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]
 
 FLAGS
   -a, --alias=<value>          The management token of the destination stack where you will import the content.
@@ -87,8 +87,8 @@ DESCRIPTION
   Helps to generate mappers and backup folder for importing (overwriting) specific modules
 
 EXAMPLES
-  $ csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --modules <module_name, module_name> --branch <branch_name>
+  $ csdx cm:stacks:import-setup --stack-api-key <target_stack_api_key> --data-dir <path/of/export/destination/dir> --module <module_name, module_name> --branch <branch_name>
 ```
 
-_See code: [src/commands/cm/stacks/import-setup.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-import-setup/src/commands/cm/stacks/import-setup.ts)_
+_See code: [src/commands/cm/stacks/import-setup.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-import-setup/src/commands/cm/stacks/import-setup.ts)_
 <!-- commandsstop -->
