@@ -3,13 +3,7 @@ import * as path from 'path';
 
 import { flags, handleAndLogError, log, FlagInput } from '@contentstack/cli-utilities';
 
-import {
-  AssetPublishData,
-  BulkOperationResult,
-  ResourceType,
-  OperationType,
-  CsAssetsFlags,
-} from '../../../interfaces';
+import { AssetPublishData, BulkOperationResult, ResourceType, OperationType, CsAssetsFlags } from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
 import {
   $t,
