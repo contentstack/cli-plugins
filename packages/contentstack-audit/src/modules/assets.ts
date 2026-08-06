@@ -35,6 +35,7 @@ export default class Assets extends BaseClass {
   public environments: string[] = [];
   protected schema: ContentTypeStruct[] = [];
   protected missingEnvLocales: Record<string, any> = {};
+  public missingScanStatusAssets: Record<string, any> = {};
   public moduleName: keyof typeof auditConfig.moduleConfig;
   private fixOverwriteConfirmed: boolean | null = null;
   /** API key of the exported stack; null when `stack/stack.json` is missing or unreadable. */
@@ -341,6 +342,30 @@ export default class Assets extends BaseClass {
 
         for (const assetUid in assets) {
           log.debug(`Processing asset: ${assetUid}`, this.config.auditContext);
+
+          const scanStatus = this.assets[assetUid]?._asset_scan_status;
+          if (this.config.moduleConfig.assets.blockingScanStatuses.includes(scanStatus)) {
+            log.debug(`Asset ${assetUid} has a non-clean scan status: ${scanStatus}`, this.config.auditContext);
+            cliux.print($t(auditMsg.SCAN_ASSET_QUARANTINE_MSG, { uid: assetUid, status: scanStatus }), {
+              color: 'yellow',
+            });
+            this.missingScanStatusAssets[assetUid] = [
+              { asset_uid: assetUid, filename: this.assets[assetUid].filename, scan_status: scanStatus, space_id: spaceId },
+            ];
+
+            if (this.fix) {
+              log.info(
+                $t(auditFixMsg.ASSET_SCAN_STATUS_FIX, { uid: assetUid, status: scanStatus }),
+                this.config.auditContext,
+              );
+              delete this.assets[assetUid];
+              chunkChanged = true;
+              if (this.progressManager) {
+                this.progressManager.tick(true, `asset: ${assetUid}`, null, spaceProcessName);
+              }
+              continue;
+            }
+          }
 
           if (this.assets[assetUid]?.publish_details && !Array.isArray(this.assets[assetUid].publish_details)) {
             log.debug(`Asset ${assetUid} has invalid publish_details format`, this.config.auditContext);

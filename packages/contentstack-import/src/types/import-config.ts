@@ -15,9 +15,9 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   authenticationMethod?: string;
   skipAssetsPublish?: boolean;
   skipEntriesPublish?: boolean;
-  assetScanningEnabled?: boolean;
   skipTaxonomyPublish?: boolean;
   cliLogsPath: string;
+  assetScanningEnabled?: boolean;
   canCreatePrivateApp: boolean;
   contentDir: string;
   data: string;
@@ -62,6 +62,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   context: Context;
   csAssetsUrl?: string;
   csAssetsEnabled?: boolean;
+
   planStatus?: Record<string, FeatureStatus>;
 }
 

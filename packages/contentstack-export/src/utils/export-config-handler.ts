@@ -6,8 +6,8 @@ import {
   cliux,
   sanitizePath,
   log,
-  isFeatureEnabled,
   FeatureCtx,
+  isFeatureEnabled,
 } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
 import { readFile, isDirectoryNonEmpty } from './file-helper';

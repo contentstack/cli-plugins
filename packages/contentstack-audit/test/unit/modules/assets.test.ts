@@ -10,7 +10,6 @@ import { $t, auditMsg } from '../../../src/messages';
 import Assets from '../../../src/modules/assets';
 import { ModuleConstructorParam, CtConstructorParam } from '../../../src/types';
 import { mockLogger } from '../mock-logger';
-
 const mockContentsPath = resolve(__dirname, '..', 'mock', 'contents');
 
 describe('Assets module', () => {
@@ -351,7 +350,9 @@ describe('Assets module', () => {
         await instance.prerequisiteData();
         const writeFixSpy = Sinon.stub(Assets.prototype, 'writeFixContent').resolves();
         await instance.lookForReference();
-        expect(writeFixSpy.callCount).to.equal(1);
+        // Two chunk files change (chunk0: invalid publish_details, chunk1: blocked scan-status
+        // assets) — the assertion is that this is per-chunk, not per-asset (which would be 8).
+        expect(writeFixSpy.callCount).to.equal(2);
       });
 
     fancy
@@ -369,7 +370,16 @@ describe('Assets module', () => {
           (call: Sinon.SinonSpyCall) =>
             typeof call.args[0] === 'string' && call.args[0].includes("Successfully completed the scanning of Asset with UID"),
         );
-        const expectedAssetUids = ['asset_uid_1', 'asset_uid_invalid', 'asset_uid_two_invalid'];
+        const expectedAssetUids = [
+          'asset_uid_1',
+          'asset_uid_invalid',
+          'asset_uid_two_invalid',
+          'blt-clean-asset',
+          'blt-pending-asset',
+          'blt-quarantined-asset',
+          'blt-no-status-asset',
+          'blt-not-scanned-asset',
+        ];
         expect(successMsgCalls).to.have.lengthOf(expectedAssetUids.length);
         expectedAssetUids.forEach((uid) => {
           const forUid = successMsgCalls.filter((c: Sinon.SinonSpyCall) => c.args[0].includes(uid));
@@ -603,6 +613,56 @@ describe('Assets module', () => {
         expect(result).to.have.property('asset_uid_two_invalid');
         expect((result as any).asset_uid_invalid).to.have.lengthOf(1);
         expect((result as any).asset_uid_two_invalid).to.have.lengthOf(2);
+      });
+  });
+
+  describe('lookForReference method (scan status)', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('flags assets with a non-clean scan status and leaves clean/no-status assets alone', async () => {
+        const assetsInstance = new Assets(constructorParam);
+        await assetsInstance.prerequisiteData();
+        await assetsInstance.lookForReference();
+
+        expect(Object.keys(assetsInstance.missingScanStatusAssets)).to.have.members([
+          'blt-pending-asset',
+          'blt-quarantined-asset',
+        ]);
+        expect(assetsInstance.missingScanStatusAssets['blt-pending-asset'][0]).to.deep.include({
+          asset_uid: 'blt-pending-asset',
+          scan_status: 'pending',
+        });
+        expect(assetsInstance.missingScanStatusAssets['blt-quarantined-asset'][0]).to.deep.include({
+          asset_uid: 'blt-quarantined-asset',
+          scan_status: 'quarantined',
+        });
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-clean-asset');
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-no-status-asset');
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-not-scanned-asset');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it('removes non-clean assets from the written-back chunk when fix mode is on', async () => {
+        const writeFileSyncStub = Sinon.spy(fs, 'writeFileSync');
+        const assetsInstance = new Assets({
+          ...constructorParam,
+          fix: true,
+          config: { ...constructorParam.config, flags: { yes: true } },
+        });
+        await assetsInstance.prerequisiteData();
+        await assetsInstance.lookForReference();
+
+        expect(writeFileSyncStub.called).to.be.true;
+        const chunk1Call = writeFileSyncStub.getCalls().find((c) => String(c.args[0]).includes('chunk1'));
+        expect(chunk1Call).to.not.be.undefined;
+        const writtenContent = JSON.parse(chunk1Call!.args[1] as string);
+        expect(writtenContent).to.not.have.property('blt-pending-asset');
+        expect(writtenContent).to.not.have.property('blt-quarantined-asset');
+        expect(writtenContent).to.have.property('blt-clean-asset');
+        expect(writtenContent).to.have.property('blt-no-status-asset');
+        expect(writtenContent).to.have.property('blt-not-scanned-asset');
       });
   });
 });
