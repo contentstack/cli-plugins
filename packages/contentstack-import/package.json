@@ -1,14 +1,14 @@
 {
   "name": "@contentstack/cli-cm-import",
   "description": "Contentstack CLI plugin to import content into stack",
-  "version": "1.34.0",
+  "version": "1.35.0",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli/issues",
   "dependencies": {
-    "@contentstack/cli-audit": "~1.20.0",
+    "@contentstack/cli-audit": "~1.21.0",
     "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.0",
-    "@contentstack/cli-variants": "~1.6.1",
+    "@contentstack/cli-utilities": "~1.19.1",
+    "@contentstack/cli-variants": "~1.6.2",
     "@oclif/core": "^4.11.4",
     "big-json": "^3.2.0",
     "bluebird": "^3.7.2",
@@ -85,7 +85,8 @@
     "shortCommandName": {
       "cm:stacks:import": "IMPRT",
       "cm:import": "O-IMPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
   },
   "repository": "https://github.com/contentstack/cli"
 }

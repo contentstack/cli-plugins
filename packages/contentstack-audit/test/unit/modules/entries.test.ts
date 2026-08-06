@@ -1540,4 +1540,254 @@ describe('Entries module', () => {
       expect(callHelper('sys_assets', ['ct1'])).to.be.true;
     });
   });
+
+  describe('prepareAssetMetaData method', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('builds an asset metadata index from assets/assets.json when it exists', async () => {
+        const ctInstance = new Entries(constructorParam);
+        await ctInstance.prepareAssetMetaData();
+
+        expect(ctInstance.assetsDataAvailable).to.be.true;
+        expect(ctInstance.assetMetaData['blt-clean-asset']).to.deep.include({
+          uid: 'blt-clean-asset',
+          _asset_scan_status: 'clean',
+        });
+        expect(ctInstance.assetMetaData['blt-pending-asset']).to.deep.include({
+          uid: 'blt-pending-asset',
+          _asset_scan_status: 'pending',
+        });
+        expect(ctInstance.assetMetaData['blt-not-scanned-asset']).to.deep.include({
+          uid: 'blt-not-scanned-asset',
+          _asset_scan_status: 'not_scanned',
+        });
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('leaves assetsDataAvailable false when no assets data exists in this export', async () => {
+        const ctInstance = new Entries({
+          ...constructorParam,
+          config: { ...constructorParam.config, basePath: resolve(__dirname, '..', 'mock', 'contents-1') },
+        });
+        await ctInstance.prepareAssetMetaData();
+
+        expect(ctInstance.assetsDataAvailable).to.be.false;
+        expect(ctInstance.assetMetaData).to.deep.equal({});
+      });
+  });
+
+  describe('isAssetBad method', () => {
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns false when assets data is unavailable', () => {
+      const ctInstance = new Entries(constructorParam);
+      (ctInstance as any).assetsDataAvailable = false;
+      (ctInstance as any).assetMetaData = {};
+      expect(ctInstance.isAssetBad('blt-unknown')).to.be.false;
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns false when uid is falsy', () => {
+      const ctInstance = new Entries(constructorParam);
+      (ctInstance as any).assetsDataAvailable = true;
+      expect(ctInstance.isAssetBad(undefined)).to.be.false;
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns true when the asset uid is not found in the index', () => {
+      const ctInstance = new Entries(constructorParam);
+      (ctInstance as any).assetsDataAvailable = true;
+      (ctInstance as any).assetMetaData = {};
+      expect(ctInstance.isAssetBad('blt-unknown')).to.be.true;
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns true when the asset scan status is non-clean', () => {
+      const ctInstance = new Entries(constructorParam);
+      (ctInstance as any).assetsDataAvailable = true;
+      (ctInstance as any).assetMetaData = { 'blt-1': { uid: 'blt-1', _asset_scan_status: 'quarantined' } };
+      expect(ctInstance.isAssetBad('blt-1')).to.be.true;
+    });
+
+    fancy.stdout({ print: process.env.PRINT === 'true' || false }).it('returns false when the asset is clean or has no scan status', () => {
+      const ctInstance = new Entries(constructorParam);
+      (ctInstance as any).assetsDataAvailable = true;
+      (ctInstance as any).assetMetaData = {
+        'blt-clean': { uid: 'blt-clean', _asset_scan_status: 'clean' },
+        'blt-legacy': { uid: 'blt-legacy' },
+      };
+      expect(ctInstance.isAssetBad('blt-clean')).to.be.false;
+      expect(ctInstance.isAssetBad('blt-legacy')).to.be.false;
+    });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('returns false when the asset scan status is not_scanned (org has asset scanning disabled)', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {
+          'blt-not-scanned': { uid: 'blt-not-scanned', _asset_scan_status: 'not_scanned' },
+        };
+        expect(ctInstance.isAssetBad('blt-not-scanned')).to.be.false;
+      });
+  });
+
+  describe('validateFileField method', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('flags a single file-field value that references a quarantined asset', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).currentTitle = 'Test Entry';
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {
+          'blt-quarantined': { uid: 'blt-quarantined', _asset_scan_status: 'quarantined' },
+        };
+
+        const fieldStructure = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const value = { uid: 'blt-quarantined', filename: 'bad.zip' };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.validateFileField(tree, fieldStructure, value);
+
+        expect(result).to.have.length(1);
+        expect(result[0].missingRefs).to.deep.equal([{ asset_uid: 'blt-quarantined', filename: 'bad.zip' }]);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('does not flag a single file-field value that references a clean asset', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = { 'blt-clean': { uid: 'blt-clean', _asset_scan_status: 'clean' } };
+
+        const fieldStructure = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const value = { uid: 'blt-clean', filename: 'ok.jpg' };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.validateFileField(tree, fieldStructure, value);
+
+        expect(result).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('flags only the bad entries within a multiple:true file-field array', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = { 'blt-clean': { uid: 'blt-clean', _asset_scan_status: 'clean' } };
+
+        const fieldStructure = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const value = [
+          { uid: 'blt-clean', filename: 'ok.jpg' },
+          { uid: 'blt-pending', filename: 'bad.zip' },
+        ];
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.validateFileField(tree, fieldStructure, value);
+
+        expect(result).to.have.length(1);
+        expect(result[0].missingRefs).to.deep.equal([{ asset_uid: 'blt-pending', filename: 'bad.zip' }]);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('does not flag anything when asset metadata is unavailable', () => {
+        const ctInstance = new Entries(constructorParam);
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).assetsDataAvailable = false;
+
+        const fieldStructure = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const value = { uid: 'blt-unknown', filename: 'unknown.jpg' };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.validateFileField(tree, fieldStructure, value);
+
+        expect(result).to.have.length(0);
+      });
+  });
+
+  describe('fixFileFieldReferences method', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('deletes the field key when a single file-field value references a bad asset', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).currentTitle = 'Test Entry';
+        (ctInstance as any).missingAssetRefs = { 'test-entry': [] };
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {
+          'blt-quarantined': { uid: 'blt-quarantined', _asset_scan_status: 'quarantined' },
+        };
+
+        const field = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const entry: Record<string, any> = { file_field: { uid: 'blt-quarantined', filename: 'bad.zip' } };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.fixFileFieldReferences(tree, field, entry);
+
+        expect(result).to.not.have.property('file_field');
+        expect((ctInstance as any).missingAssetRefs['test-entry']).to.have.length(1);
+        expect((ctInstance as any).missingAssetRefs['test-entry'][0].fixStatus).to.equal('Fixed');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('leaves a single file-field value referencing a clean asset untouched', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingAssetRefs = { 'test-entry': [] };
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = { 'blt-clean': { uid: 'blt-clean', _asset_scan_status: 'clean' } };
+
+        const field = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const entry: Record<string, any> = { file_field: { uid: 'blt-clean', filename: 'ok.jpg' } };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        ctInstance.fixFileFieldReferences(tree, field, entry);
+
+        expect(entry).to.have.property('file_field');
+        expect((ctInstance as any).missingAssetRefs['test-entry']).to.have.length(0);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('filters bad entries out of a multiple:true array and deletes the key if it empties out', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingAssetRefs = { 'test-entry': [] };
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {};
+
+        const field = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: false };
+        const entry: Record<string, any> = {
+          file_field: [
+            { uid: 'blt-1', filename: 'one.zip' },
+            { uid: 'blt-2', filename: 'two.zip' },
+          ],
+        };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        const result = ctInstance.fixFileFieldReferences(tree, field, entry);
+
+        expect(result).to.not.have.property('file_field');
+        expect((ctInstance as any).missingAssetRefs['test-entry'][0].missingRefs).to.have.length(2);
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('records mandatory:true on the fix issue so a stripped required field stays visible in the report', () => {
+        const ctInstance = new Entries({ ...constructorParam, fix: true });
+        (ctInstance as any).currentUid = 'test-entry';
+        (ctInstance as any).missingAssetRefs = { 'test-entry': [] };
+        (ctInstance as any).assetsDataAvailable = true;
+        (ctInstance as any).assetMetaData = {};
+
+        const field = { uid: 'file_field', display_name: 'File Field', data_type: 'file', mandatory: true };
+        const entry: Record<string, any> = { file_field: { uid: 'blt-missing', filename: 'gone.zip' } };
+        const tree = [{ uid: 'test-entry', name: 'Test Entry' }];
+
+        ctInstance.fixFileFieldReferences(tree, field, entry);
+
+        expect((ctInstance as any).missingAssetRefs['test-entry'][0].mandatory).to.be.true;
+      });
+  });
 });
