@@ -194,16 +194,6 @@ class ModuleImporter {
       log.error(`Audit failed with following error. ${error}`, this.importConfig.context);
     }
   }
-
-  private async detectAssetScanning(orgUid: string): Promise<boolean> {
-    try {
-      const orgDetails = await this.managementAPIClient.organization(orgUid).fetch({ include_plan: true });
-      const features: Array<{ uid: string; enabled?: boolean }> = orgDetails?.plan?.features || [];
-      return features.some((f) => (f.uid === 'assetsScan' || f.uid === 'amAssetsScan') && f.enabled === true);
-    } catch {
-      return false;
-    }
-  }
 }
 
 export default ModuleImporter;
