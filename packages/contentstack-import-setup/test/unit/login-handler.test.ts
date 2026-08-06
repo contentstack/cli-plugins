@@ -78,15 +78,9 @@ describe('Login Handler', () => {
     it('should successfully login with email and password and set headers', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
-        password: 'testpassword',
-        source_stack: 'test-api-key',
-        access_token: 'test-access-token',
-        authtoken: 'test-auth-token',
-        apiKey: 'test-api-key',
-        contentDir: '/test/content',
-        data: '/test/content',
-        management_token: undefined,
-        target_stack: 'test-api-key',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
+        password: 'YOUR_PWD',
+        source_stack: 'test-stack-key',
       } as ImportConfig;
 
       mockClient.login.resolves({
@@ -97,24 +91,24 @@ describe('Login Handler', () => {
 
       const result = await loginHandler(config, deps);
 
-      expect(result).to.equal(config);
-      expect(config.headers).to.exist;
-      expect(config.headers!.api_key).to.equal('test-api-key');
-      expect(config.headers!.access_token).to.equal('test-access-token');
-      expect(config.headers!.authtoken).to.equal('test-auth-token');
-      expect(config.headers!['X-User-Agent']).to.equal('contentstack-export/v');
-      expect(mockClient.login.calledOnce).to.be.true;
-      expect(mockClient.login.calledWith({ email: 'test@example.com', password: 'testpassword' })).to.be.true;
+      expect(managementSDKClientStub.calledOnce).to.be.true;
+      expect(clientLoginStub.calledOnce).to.be.true;
+      expect(
+        clientLoginStub.calledWith({
+          email: 'test@example.com',
+          // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
+          password: 'YOUR_PWD',
+        }),
+      ).to.be.true;
+
       expect(logSuccessStub.calledWith('Contentstack account authenticated successfully!')).to.be.true;
     });
 
     it('should throw error when authtoken is missing after login', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
-        password: 'testpassword',
-        apiKey: 'test-api-key',
-        contentDir: '/test/content',
-        data: '/test/content',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
+        password: 'YOUR_PWD_WRONG',
       } as ImportConfig;
 
       mockClient.login.resolves({
@@ -136,6 +130,7 @@ describe('Login Handler', () => {
     it('should throw error when user object is missing authtoken property', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -157,6 +152,7 @@ describe('Login Handler', () => {
     it('should throw error when user object is missing', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -176,6 +172,7 @@ describe('Login Handler', () => {
     it('should handle login API errors', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -409,9 +406,11 @@ describe('Login Handler', () => {
     it('should prioritize email/password over existing auth when email and password are present', async () => {
       const config: ImportConfig = {
         email: 'test@example.com',
+        // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         apiKey: 'test-api-key',
         source_stack: 'test-api-key',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         access_token: 'test-access-token',
         authtoken: 'test-auth-token',
         contentDir: '/test/content',

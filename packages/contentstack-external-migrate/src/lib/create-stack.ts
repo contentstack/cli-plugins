@@ -3,6 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import axios from 'axios';
 import { configHandler, authHandler } from '@contentstack/cli-utilities';
+import { sanitizePath, pathValidator } from './helpers';
 
 const AXIOS_TIMEOUT = 60 * 1000;
 /** Shorter timeout for the post-import read/provision calls so a wrong host or
@@ -517,7 +518,7 @@ export async function scheduleEntryAction(
 ): Promise<void> {
   await ensureFreshAuth();
   const session = resolveSession();
-  const headers = { ...session.authHeaders, api_key: apiKey, 'Content-Type': 'application/json', ...(opts.branch ? { branch: opts.branch } : {}) };
+  const headers = { ...session.authHeaders, api_key: apiKey, 'Content-Type': 'application/json', api_version: '3.2', ...(opts.branch ? { branch: opts.branch } : {}) };
   const isAsset = opts.contentTypeUid === 'sys_assets';
   const url = isAsset
     ? `${session.cma}/v3/assets/${opts.entryUid}/${opts.action}`
@@ -598,7 +599,7 @@ export async function ensureWebhooks(
   const result: EnsureWebhooksResult = { total: 0, created: [], skipped: [], failed: [] };
   let bundleWebhooks: Record<string, any> = {};
   try {
-    const raw = fs.readFileSync(path.join(bundleDir, 'webhooks', 'webhooks.json'), 'utf8');
+    const raw = fs.readFileSync(pathValidator(path.join(sanitizePath(bundleDir), 'webhooks', 'webhooks.json')), 'utf8');
     bundleWebhooks = JSON.parse(raw) as Record<string, any>;
   } catch {
     return result; // no webhooks in bundle
@@ -666,7 +667,7 @@ export async function ensureWebhooks(
 /** Environment names from a bundle's environments/environments.json (fallback). */
 function readBundleEnvironments(bundleDir: string): string[] {
   try {
-    const raw = fs.readFileSync(path.join(bundleDir, 'environments', 'environments.json'), 'utf8');
+    const raw = fs.readFileSync(pathValidator(path.join(sanitizePath(bundleDir), 'environments', 'environments.json')), 'utf8');
     const parsed = JSON.parse(raw) as Record<string, { name?: string }>;
     return Object.values(parsed)
       .map((e) => e?.name)

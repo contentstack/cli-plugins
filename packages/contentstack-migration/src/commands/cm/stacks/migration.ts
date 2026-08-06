@@ -41,12 +41,12 @@ export default class MigrationCommand extends Command {
   static description = 'Contentstack migration script.';
 
   static examples: string[] = [
-    '$ csdx cm:migration --file-path <migration/script/file/path> -k <api-key>',
-    '$ csdx cm:migration --file-path <migration/script/file/path> -k <api-key> --branch <target branch name>',
+    '$ csdx cm:stacks:migration --file-path <migration/script/file/path> -k <api-key>',
+    '$ csdx cm:stacks:migration --file-path <migration/script/file/path> -k <api-key> --branch <target branch name>',
     '$ csdx cm:migration --inline-config <key1>:<value1> <key2>:<value2> ... --file-path <migration/script/file/path>',
     '$ csdx cm:migration --config <path/to/json/config/file> --file-path <migration/script/file/path>',
-    '$ csdx cm:migration --multiple --file-path <migration/scripts/dir/path> ',
-    '$ csdx cm:migration --alias <management-token-alias> --file-path <migration/script/file/path>',
+    '$ csdx cm:stacks:migration --multiple --file-path <migration/scripts/dir/path> ',
+    '$ csdx cm:stacks:migration --alias <management-token-alias> --file-path <migration/script/file/path>',
   ];
 
   static flags: FlagInput = {
@@ -80,38 +80,9 @@ export default class MigrationCommand extends Command {
       description:
         'This flag helps you to migrate multiple content files in a single instance. Mention the folder path where your migration script files are stored.',
     }),
-
-    // To be deprecated
-    'api-key': flags.string({
-      char: 'k',
-      description: 'With this flag add the API key of your stack.',
-      // dependsOn: ['authtoken'],
-      exclusive: ['alias'],
-      hidden: true,
-    }),
-    authtoken: flags.boolean({
-      description:
-        'Use this flag to use the auth token of the current session. After logging in CLI, an auth token is generated for each new session.',
-      dependsOn: ['api-key'],
-      exclusive: ['alias'],
-      hidden: true,
-    }),
-    'management-token-alias': flags.string({
-      description: 'Alias of the management token.',
-      exclusive: ['authtoken'],
-      hidden: true,
-    }),
-    filePath: flags.string({
-      description: 'Use this flag to provide the path of the file of the migration script provided by the user.',
-      hidden: true,
-    }),
-    multi: flags.boolean({
-      description: 'This flag helps you to migrate multiple content files in a single instance.',
-      hidden: true,
-    }),
   };
 
-  static aliases: string[] = ['cm:migration'];
+  static aliases: string[] = [];
 
   static usage: string =
     'cm:stacks:migration [-k <value>] [-a <value>] [--file-path <value>] [--branch <value>] [-c <value>] [--inline-config <value>] [--multiple]';
@@ -120,11 +91,11 @@ export default class MigrationCommand extends Command {
     // TODO: filePath validation required.
     const { flags: migrationCommandFlags } = (await this.parse(MigrationCommand)) as any;
     const branch = (migrationCommandFlags as any).branch;
-    const filePath = (migrationCommandFlags as any)['file-path'] || (migrationCommandFlags as any).filePath;
-    const multi = (migrationCommandFlags as any).multiple || (migrationCommandFlags as any).multi;
+    const filePath = (migrationCommandFlags as any)['file-path'];
+    const multi = (migrationCommandFlags as any).multiple;
     const authtoken = isAuthenticated();
-    const apiKey = (migrationCommandFlags as any)['api-key'] || (migrationCommandFlags as any)['stack-api-key'];
-    const alias = (migrationCommandFlags as any)['alias'] || (migrationCommandFlags as any)['management-token-alias'];
+    const apiKey = (migrationCommandFlags as any)['stack-api-key'];
+    const alias = (migrationCommandFlags as any)['alias'];
     const config = (migrationCommandFlags as any)['inline-config'];
 
     if (!authtoken && !alias) {

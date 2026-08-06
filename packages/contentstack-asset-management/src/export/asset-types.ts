@@ -13,19 +13,15 @@ export default class ExportAssetTypes extends CSAssetsExportAdapter {
     super(apiConfig, exportContext);
   }
 
-  async start(spaceUid: string): Promise<void> {
+  async start(spaceUid: string): Promise<number> {
     await this.init();
 
     log.debug('Starting shared asset types export process...', this.exportContext.context);
+    log.info('Exporting shared asset types...', this.exportContext.context);
 
     const assetTypesData = await this.getWorkspaceAssetTypes(spaceUid, this.apiPageSize, this.apiFetchConcurrency);
     const items = getArrayFromResponse(assetTypesData, 'asset_types');
     const dir = this.getAssetTypesDir();
-    if (items.length === 0) {
-      log.info('No asset types to export, writing empty asset-types', this.exportContext.context);
-    } else {
-      log.debug(`Writing ${items.length} shared asset types`, this.exportContext.context);
-    }
     await this.writeItemsToChunkedJson(
       dir,
       'asset-types.json',
@@ -33,6 +29,13 @@ export default class ExportAssetTypes extends CSAssetsExportAdapter {
       ['uid', 'title', 'category', 'file_extension'],
       items,
     );
+    log.info(
+      items.length === 0
+        ? 'No asset types to export'
+        : `Exported ${items.length} shared asset type(s)`,
+      this.exportContext.context,
+    );
     this.tick(true, `asset_types (${items.length})`, null);
+    return items.length;
   }
 }

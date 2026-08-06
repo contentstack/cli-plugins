@@ -14,7 +14,7 @@ export default class SeedCommand extends Command {
   ];
 
   static usage =
-    'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>] [--locale <value>]';
+    'cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>]';
 
   static flags: FlagInput = {
     repo: flags.string({
@@ -42,12 +42,6 @@ export default class SeedCommand extends Command {
       required: false,
       exclusive: ['stack-api-key'],
     }),
-    'fetch-limit': flags.string({
-      description: 'Limit for number of organizations or stacks to be fetched.',
-      multiple: false,
-      required: false,
-      hidden: true,
-    }),
     yes: flags.boolean({
       char: 'y',
       required: false,
@@ -58,9 +52,8 @@ export default class SeedCommand extends Command {
       description: 'Alias of the management token',
     }),
     locale: flags.string({
-      description: 'Master Locale of the stack',
-      default: 'en-us',
       hidden: true,
+      description: 'Master locale for stack creation',
     }),
   };
 
@@ -83,11 +76,10 @@ export default class SeedCommand extends Command {
         orgUid: seedFlags.org,
         stackUid: seedFlags['stack-api-key'],
         stackName: seedFlags['stack-name'],
-        fetchLimit: seedFlags['fetch-limit'],
         skipStackConfirmation: seedFlags.yes,
         isAuthenticated: isAuthenticated(),
         alias: managementTokenAlias,
-        master_locale: seedFlags['locale'],
+        master_locale: seedFlags.locale,
       };
 
       const listOfTokens = configHandler.get('tokens');

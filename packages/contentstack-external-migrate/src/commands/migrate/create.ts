@@ -26,6 +26,7 @@ import { parseJsonLoose } from '../../lib/parse-json-loose';
 import { clearStaleImportState } from '../../lib/clear-import-state';
 import { localDateStamp } from '../../lib/local-date';
 import { inferWorkspace, patchManifest, stackApiKeyPrefix, toWorkspaceRelative } from '../../lib/manifest';
+import { sanitizePath, pathValidator } from '../../lib/helpers';
 
 export default class MigrateCreate extends Command {
   static description = 'Convert a source export, create a new stack in an organization, and import into it';
@@ -42,7 +43,7 @@ export default class MigrateCreate extends Command {
       description: 'Contentful space ID — export from Contentful first (use this OR --input)',
     }),
     'source-token': flags.string({
-      description: 'Sorce CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)',
+      description: 'Source CMA token (prefer CONTENTFUL_MANAGEMENT_TOKEN env)',
     }),
     'download-assets': flags.boolean({
       description: 'Download asset binaries during export (with --space-id)',
@@ -180,7 +181,9 @@ export default class MigrateCreate extends Command {
         );
         // Each space gets its own output subdir + uses the space name as the
         // stack name; --stack-name is honored only for a single target.
-        const outputRoot = multiSpace ? path.join(flags.output, sanitizeBranchUid(sp.name) || sp.id) : flags.output;
+        const outputRoot = multiSpace
+          ? pathValidator(path.join(sanitizePath(flags.output), sanitizeBranchUid(sp.name) || sanitizeBranchUid(sp.id)))
+          : flags.output;
         try {
           const res = await this.migrateSpace({
             adapter,
@@ -259,7 +262,7 @@ export default class MigrateCreate extends Command {
       for (const env of envs) {
         const branch = env === 'master' ? 'main' : sanitizeBranchUid(env);
         const exportResult = await adapter.export({
-          outputDir: path.join(outputRoot, sanitizeBranchUid(env)),
+          outputDir: pathValidator(path.join(sanitizePath(outputRoot), sanitizeBranchUid(env))),
           spaceId: cfSpaceId,
           managementToken: cfManagementToken,
           environmentId: env,
@@ -298,7 +301,7 @@ export default class MigrateCreate extends Command {
     const stats = { locales: 0, contentTypes: 0, entries: 0 };
     for (const j of jobs) {
       const branch = j.branch ?? 'main';
-      const outDir = multi ? path.join(outputRoot, branch) : outputRoot;
+      const outDir = multi ? pathValidator(path.join(sanitizePath(outputRoot), branch)) : outputRoot;
       const result = await adapter.convert({
         input: j.exportFile,
         outputDir: outDir,
@@ -307,7 +310,7 @@ export default class MigrateCreate extends Command {
         verbose: flags.verbose,
         orgUid,
       });
-      converted.push({ job: j, branch, bundleDir: result.bundleDir });
+      converted.push({ job: j, branch, bundleDir: pathValidator(sanitizePath(result.bundleDir)) });
       stats.contentTypes += result.stats.contentTypes;
       stats.entries += result.stats.entries;
       stats.locales = Math.max(stats.locales, result.stats.locales);
@@ -481,7 +484,7 @@ export default class MigrateCreate extends Command {
       delivery_token: creds.deliveryToken,
       preview_token: creds.previewToken,
     };
-    const metadataPath = path.join(mainBundleDir, 'metadata.json');
+    const metadataPath = pathValidator(path.join(sanitizePath(mainBundleDir), 'metadata.json'));
     fs.writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, 'utf8');
     this.log(`✓ Bundle metadata written: ${metadataPath}`);
 
@@ -721,7 +724,7 @@ function readContentfulCliToken(): string | undefined {
  * with `default: true`). Falls back to the first locale. Throws if there are none.
  */
 function detectMasterLocale(input: string): string {
-  const raw = fs.readFileSync(input, 'utf8');
+  const raw = fs.readFileSync(pathValidator(input), 'utf8');
   let locales: Array<{ code?: string; default?: boolean }> = [];
   try {
     locales = parseJsonLoose(raw)?.locales ?? [];

@@ -1,12 +1,12 @@
 {
   "name": "contentstack-cli-tsgen",
   "description": "Generate TypeScript typings from a Stack.",
-  "version": "5.0.0-beta.1",
+  "version": "5.0.0-beta.4",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0-beta.9",
-    "@contentstack/cli-utilities": "~2.0.0-beta.10",
+    "@contentstack/cli-command": "~2.0.0-beta.11",
+    "@contentstack/cli-utilities": "~2.0.0-beta.12",
     "@contentstack/types-generator": "^3.10.2"
   },
   "devDependencies": {
@@ -56,15 +56,15 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.ts\"",
     "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint . --fix",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "jest --testPathPattern=tests",
-    "test:integration": "jest --testPathPattern=tests/integration",
-    "version": "oclif readme && git add README.md"
+    "test": "jest --testPathPattern=test/unit",
+    "test:integration": "jest --testPathPattern=test/integration",
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "csdxConfig": {
     "shortCommandName": {

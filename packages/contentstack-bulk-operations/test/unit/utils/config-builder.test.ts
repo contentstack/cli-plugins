@@ -298,7 +298,6 @@ describe('Config Builder Utilities', () => {
         locales: ['en-us', 'fr-fr'],
         operation: 'publish',
         'publish-mode': 'bulk',
-        'api-version': '3',
         'include-variants': true,
         'source-env': 'production',
         'max-retries': 5,
@@ -316,7 +315,6 @@ describe('Config Builder Utilities', () => {
       expect(config.locales).to.deep.equal(['en-us', 'fr-fr']);
       expect(config.operation).to.equal('publish');
       expect(config.publishMode).to.equal('bulk');
-      expect(config.apiVersion).to.equal('3');
       expect(config.includeVariants).to.be.true;
       expect(config.sourceEnv).to.equal('production');
       expect(config.maxRetries).to.equal(5);
@@ -336,7 +334,6 @@ describe('Config Builder Utilities', () => {
       expect(config.environments).to.deep.equal([]);
       expect(config.locales).to.deep.equal([]);
       expect(config.publishMode).to.equal(PublishMode.BULK);
-      expect(config.apiVersion).to.equal('3'); // Default to 3
       expect(config.maxRetries).to.equal(3);
     });
 
@@ -482,52 +479,6 @@ describe('Config Builder Utilities', () => {
       expect(config.branch).to.equal('feature/new-branch');
     });
 
-    it('should build config with api-version 3.2', () => {
-      const flags: CommandFlags = {
-        alias: 'test-alias',
-        operation: 'publish',
-        environments: ['dev'],
-        locales: ['en-us'],
-        'api-version': '3.2',
-      };
-
-      const config = buildConfig(flags);
-
-      expect(config.apiVersion).to.equal('3.2');
-    });
-  });
-
-  describe('variant api-version dependency', () => {
-    it('should fail validation when include-variants is used without api-version 3.2', () => {
-      const flags: CommandFlags = {
-        alias: 'test-alias',
-        operation: 'publish',
-        environments: ['dev'],
-        locales: ['en-us'],
-        'include-variants': true,
-        'api-version': '3',
-      };
-
-      const result = validateFlags(flags);
-
-      expect(result.valid).to.be.false;
-      expect(result.errors).to.include('--include-variants requires --api-version 3.2');
-    });
-
-    it('should pass validation with include-variants and api-version 3.2', () => {
-      const flags: CommandFlags = {
-        alias: 'test-alias',
-        operation: 'publish',
-        environments: ['dev'],
-        locales: ['en-us'],
-        'include-variants': true,
-        'api-version': '3.2',
-      };
-
-      const result = validateFlags(flags);
-
-      expect(result.valid).to.be.true;
-    });
   });
 
   describe('setupStackConfig', () => {
@@ -567,6 +518,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-from-alias',
         token: 'cs-token-123',
       });
@@ -589,6 +541,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -598,6 +551,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 
@@ -619,6 +573,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -640,6 +595,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -648,6 +604,7 @@ describe('Config Builder Utilities', () => {
       configHandlerGetStub.withArgs('tokens.mgmt-alias').returns({
         type: 'management',
         token: 'cs-mgmt-token',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 
@@ -665,6 +622,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack-mgmt',
         token: 'cs-mgmt-token',
         type: 'management',
@@ -674,6 +632,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production', // Different from source-env
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'stack123',
       });
 

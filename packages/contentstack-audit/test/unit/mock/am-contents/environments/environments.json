@@ -1,0 +1,10 @@
+{
+  "env_own_dev": {
+    "name": "development",
+    "uid": "env_own_dev"
+  },
+  "env_own_prod": {
+    "name": "production",
+    "uid": "env_own_prod"
+  }
+}
