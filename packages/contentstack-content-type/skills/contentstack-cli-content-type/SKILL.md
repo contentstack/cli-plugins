@@ -100,7 +100,7 @@ Errors: response `data.errors` → `ContentstackError`; optional suffix with sta
 
 ### Compare and diagram pipelines
 
-- **Compare**: `core/content-type/compare.ts` builds a unified diff from two JSON snapshots (`git-diff`), parses with **diff2html**, writes a **temporary HTML** file, opens it in the browser (`cli-ux` / `cli.open`). Not a terminal table.
+- **Compare**: `core/content-type/compare.ts` builds a unified diff from two JSON snapshots (`diff`), parses with **diff2html**, writes a **temporary HTML** file, opens it in the browser (`cli-ux` / `cli.open`). Not a terminal table.
 - **Diagram**: `core/content-type/diagram.ts` builds a DOT graph, runs **node-graphviz** (`graphviz` binary must be available on the system for SVG rendering). Output path is sanitized where utilities apply.
 
 ### Commands (flags and behavior)

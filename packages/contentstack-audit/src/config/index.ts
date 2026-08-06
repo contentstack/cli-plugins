@@ -55,6 +55,9 @@ const config = {
       name: 'assets',
       dirName: 'assets',
       fileName: 'assets.json',
+      // Asset scan statuses that must block import/reference; any other value (including
+      // 'not_scanned', 'clean', or the field being absent) is treated as safe.
+      blockingScanStatuses: ['pending', 'quarantined'],
     },
     environments: {
       name: 'environments',
@@ -111,6 +114,8 @@ const config = {
     'publish_environment',
     'asset_uid',
     'space_id',
+    'scan_status',
+    'mandatory',
     'selectedValue',
     'ct_uid',
     'action',
@@ -130,6 +135,7 @@ const config = {
     Entry_Missing_Locale_and_Env: 'Entry_Missing_Locale_and_Env',
     Entry_Missing_Locale_and_Env_in_Publish_Details: 'Entry_Missing_Locale_and_Env_in_Publish_Details',
     Entry_Multiple_Fields: 'Entry_Multiple_Fields',
+    Entries_Asset_field: 'Entries_Asset_field',
   },
   field_level_modules: [
     'Entries_Title_field',
@@ -138,6 +144,8 @@ const config = {
     'Entry_Missing_Locale_and_Env_in_Publish_Details',
     'field-rules',
     'Entry_Multiple_Fields',
+    'Entries_Asset_field',
+    'asset-scan-status',
     'Summary',
   ],
   fixSelectField: false,

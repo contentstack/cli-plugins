@@ -221,6 +221,7 @@ export async function fetchAssets(
           environment: env,
           locale,
         })),
+        _asset_scan_status: asset._asset_scan_status,
       });
     }
   }
