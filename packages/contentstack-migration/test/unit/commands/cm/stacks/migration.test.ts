@@ -122,9 +122,9 @@ describe('Migration Command', () => {
       expect(MigrationCommand.usage).to.include('migration');
     });
 
-    it('should have aliases including cm:migration', () => {
+    it('should have empty aliases array (cm:migration alias removed)', () => {
       expect(MigrationCommand.aliases).to.be.an('array');
-      expect(MigrationCommand.aliases).to.include('cm:migration');
+      expect(MigrationCommand.aliases).to.be.empty;
     });
   });
 

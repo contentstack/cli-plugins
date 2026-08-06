@@ -22,9 +22,4 @@ export const OFFICIAL_SEED_STACKS: OfficialSeedStack[] = [
     owner: OFFICIAL_SEED_OWNER,
     repo: 'compass-starter-stack',
   },
-  {
-    displayName: 'Starter app',
-    owner: OFFICIAL_SEED_OWNER,
-    repo: 'stack-starter-app',
-  },
 ];
