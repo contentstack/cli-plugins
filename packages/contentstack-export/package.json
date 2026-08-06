@@ -24,7 +24,6 @@
   "devDependencies": {
     "@contentstack/cli-auth": "~2.0.0-beta.17",
     "@contentstack/cli-config": "~2.0.0-beta.15",
-    "@contentstack/cli-dev-dependencies": "~2.0.0-beta.0",
     "@oclif/plugin-help": "^6.2.49",
     "@oclif/test": "^4.1.18",
     "@types/big-json": "^3.2.5",

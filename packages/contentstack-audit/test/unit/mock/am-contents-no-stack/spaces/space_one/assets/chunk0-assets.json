@@ -1,0 +1,18 @@
+{
+  "am_asset_tagged": {
+    "uid": "am_asset_tagged",
+    "title": "Api key tagged publish details, unverifiable without stack.json",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_own_missing", "api_key": "blt_own_stack" },
+      { "locale": "de-de", "environment": "env_other_dev", "api_key": "blt_other_stack_one" }
+    ]
+  },
+  "am_asset_legacy_pd": {
+    "uid": "am_asset_legacy_pd",
+    "title": "Legacy publish details without api_key stay auditable",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_own_dev" },
+      { "locale": "en-us", "environment": "env_own_missing" }
+    ]
+  }
+}
