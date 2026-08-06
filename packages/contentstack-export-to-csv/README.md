@@ -18,8 +18,8 @@ Refer to the [Export Content to .CSV](https://www.contentstack.com/docs/headless
 $ npm install -g @contentstack/cli-cm-export-to-csv
 $ csdx COMMAND
 running command...
-$ csdx (-v|--version|version)
-@contentstack/cli-cm-export-to-csv/2.0.0-beta.9 darwin-arm64 node-v22.21.1
+$ csdx (--version)
+@contentstack/cli-cm-export-to-csv/1.12.8 darwin-arm64 node-v24.18.0
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

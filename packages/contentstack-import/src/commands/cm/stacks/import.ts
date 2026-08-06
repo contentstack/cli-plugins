@@ -175,11 +175,18 @@ export default class ImportCommand extends Command {
       }
 
       const moduleImporter = new ModuleImporter(managementAPIClient, importConfig);
-      await moduleImporter.start();
+      const result = await moduleImporter.start();
       backupDir = importConfig.backupDir;
       //Note: Final summary is now handled by summary manager
       CLIProgressManager.printGlobalSummary();
-      if (importConfig.assetScanningEnabled) {
+
+      // Closing reminder: only relevant when assets were actually part of this
+      // run and scanning is why they're unpublished — assetScanningEnabled is an
+      // org-plan flag and isn't scoped to which modules this run touched.
+      const assetsImported = importConfig.moduleName
+        ? importConfig.moduleName === 'assets'
+        : importConfig.modules?.types?.includes('assets');
+      if (!result?.noSuccessMsg && assetsImported && importConfig.assetScanningEnabled) {
         cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
         cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
         cliux.print(

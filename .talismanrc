@@ -1,30 +1,13 @@
 fileignoreconfig:
-- filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/environments/environments.json
-  checksum: fe82c708f5f4d0b05694a601855fb7950661048eef8d7f9f794713e3a665064e
-- filename: packages/contentstack-audit/test/unit/mock/am-contents/environments/environments.json
-  checksum: ffaaee9269a6e833cd3dbe337ddc5c060cce948519873c7a2777754519a31b52
+
 - filename: pnpm-lock.yaml
-  checksum: e91d3320f2cc8450faecfd4c9675feb6ebaad819afd93387b39ce003dea56523
-- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_clean/assets/chunk0-assets.json
-  checksum: f02886c04ea1097ebc5965fa9a63a878adb9437d56a5b1797be1967fae35f9e4
-- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_cross_only/assets/chunk0-assets.json
-  checksum: 27d5398f5d81bd3af53da9a5d10475a36c08e8fd8ad29df24e8f267494419a20
-- filename: packages/contentstack-audit/test/unit/mock/am-contents/stack/stack.json
-  checksum: c4ac3ff80eb38b1c58eb0db21a232bd84f856d4647093542296199036945083c
-- filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/spaces/space_one/assets/chunk0-assets.json
-  checksum: a276dc984efd49c097b4c38a02a17cfd1d28d704bd403d65af2b7673b8e9dbe9
-- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_one/assets/chunk0-assets.json
-  checksum: 9fc8b266ef58ecce8d3c4182632d1f7d088dfbce81b3fcea46b087cde3129b91
-- filename: packages/contentstack-audit/src/modules/assets.ts
-  checksum: 6f90b9620767de82ee6f74cb5b41faad5052a0fd031d07e866d3274dde749d68
-- filename: packages/contentstack-import/src/import/modules/assets.ts
-  checksum: 09b0c23867f356b0d44961bb00d12b0f749e4e785a4f4743c9cad54313ef034e
-- filename: packages/contentstack-seed/test/commands/cm/stacks/seed.test.ts
-  checksum: 1cd4716bc15029286b73d7d459ddc2083ee89aaecaba9211a2ef923e1469fc39
-- filename: packages/contentstack-seed/src/commands/cm/stacks/seed.ts
-  checksum: ff6a2bf11defd3342bc5fcbca870b9f178a412de916a90f778ce3a2028501310
-- filename: packages/contentstack-audit/test/unit/modules/assets.test.ts
-  checksum: 6e9fd03c153a986316c0e432ba4d2784dfd398282a97ce5e9cbb1c4b561477b2
-- filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
-  checksum: 529431473623cf6bbefb35bc898be2a60dcb453e0c9273ecb97923de658769b3
-version: '1.0'
+  checksum: 51ec134ce9a9e713df06b682b6ab6183c95f6cc68253db267081011d0d303d7c
+- filename: packages/contentstack-audit/src/audit-base-command.ts
+  checksum: b706ea114a3cb5e4c0e7e163f32ceffa3356a6b0766bf5b8fe387c3c72f44c36
+- filename: packages/contentstack-audit/src/types/content-types.ts
+  checksum: d16a65415c3184f15a807d58e5858310aeb5633794fc9075e36f89c94da636c3
+- filename: packages/contentstack-audit/src/modules/entries.ts
+  checksum: 13072df0872f8c098d23f49b02f9e8f3e492ab2f483d67a5ea5e423ab406ad94
+- filename: packages/contentstack-audit/test/unit/modules/entries.test.ts
+  checksum: 31d9767d87e4e9db54f641e8cb9d3360f591acdaa8b089a83eaa4aacdf0c3a35
+  version: '1.0'
