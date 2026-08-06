@@ -37,19 +37,11 @@ importers:
         specifier: ^1.11.1
         version: 1.11.2(@types/node@20.19.43)(tslib@2.8.1)(typescript@5.9.3)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       adm-zip:
-        specifier: ^0.5.18
-        version: 0.5.18
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
-      adm-zip:
         specifier: ^0.6.0
         version: 0.6.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -197,13 +189,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -278,29 +265,17 @@ importers:
   packages/contentstack-bootstrap:
     dependencies:
       '@contentstack/cli-cm-seed':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.25
-=======
-        specifier: ~1.15.10
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-seed
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-config':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.15
         version: 2.0.0-beta.15(@types/node@18.19.130)
       '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
-=======
-        specifier: ~1.21.1
-        version: 1.21.1(@types/node@14.18.63)
-      '@contentstack/cli-utilities':
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -360,13 +335,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@22.20.1)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -423,18 +393,13 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/delivery-sdk':
-        specifier: ^5.2.0
+        specifier: ^5.4.0
         version: 5.5.2
       '@contentstack/management':
-        specifier: ^1.30.2
+        specifier: ^1.30.3
         version: 1.31.1
       lodash:
         specifier: 4.18.1
@@ -525,76 +490,16 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
-<<<<<<< HEAD
-=======
-  packages/contentstack-bulk-publish:
-    dependencies:
-      '@contentstack/cli-command':
-        specifier: ~1.8.5
-        version: 1.8.5(@types/node@22.20.1)
-      '@contentstack/cli-config':
-        specifier: ~1.21.1
-        version: 1.21.1(@types/node@22.20.1)
-      '@contentstack/cli-utilities':
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@22.20.1)
-      '@oclif/core':
-        specifier: ^4.11.4
-        version: 4.13.3
-      chalk:
-        specifier: ^4.1.2
-        version: 4.1.2
-      dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
-      inquirer:
-        specifier: 8.2.7
-        version: 8.2.7(@types/node@22.20.1)
-      lodash:
-        specifier: 4.18.1
-        version: 4.18.1
-      winston:
-        specifier: ^3.19.0
-        version: 3.19.0
-    devDependencies:
-      '@oclif/test':
-        specifier: ^4.1.18
-        version: 4.1.21(@oclif/core@4.13.3)
-      chai:
-        specifier: ^4.5.0
-        version: 4.5.0
-      eslint:
-        specifier: ^10.5.0
-        version: 10.8.0
-      eslint-config-oclif:
-        specifier: ^6.0.62
-        version: 6.0.179(eslint@10.8.0)(typescript@6.0.3)
-      mocha:
-        specifier: ^10.8.2
-        version: 10.8.2
-      nyc:
-        specifier: ^15.1.0
-        version: 15.1.0
-      oclif:
-        specifier: ^4.23.8
-        version: 4.23.29(@types/node@22.20.1)
-
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
   packages/contentstack-cli-cm-regex-validate:
     dependencies:
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
-=======
-        specifier: ^1.19.1
-        version: 1.19.1(@types/node@18.19.130)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/management':
-        specifier: ^1.30.2
+        specifier: ^1.30.4
         version: 1.31.1
       cli-table3:
         specifier: ^0.6.5
@@ -685,13 +590,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@22.20.1)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/types-generator':
         specifier: ^3.10.2
         version: 3.10.2(graphql@16.14.2)
@@ -745,29 +645,17 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@contentstack/cli-cm-export':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.25
         version: link:../contentstack-export
       '@contentstack/cli-cm-import':
         specifier: ~2.0.0-beta.25
-=======
-        specifier: ~1.27.0
-        version: link:../contentstack-export
-      '@contentstack/cli-cm-import':
-        specifier: ~1.35.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -845,7 +733,6 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@types/diff2html':
@@ -866,19 +753,6 @@ importers:
       axios:
         specifier: ^1.18.1
         version: 1.19.0(debug@4.4.3)
-=======
-        specifier: ^1.19.1
-        version: 1.19.1(@types/node@22.20.1)
-      axios:
-        specifier: ^1.18.1
-        version: 1.19.0(debug@4.4.3)
-      cli-ux:
-        specifier: ^6.0.9
-        version: 6.0.9
-      diff:
-        specifier: ^9.0.0
-        version: 9.0.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       diff2html:
         specifier: ^3.4.56
         version: 3.4.56
@@ -907,21 +781,12 @@ importers:
       '@oclif/plugin-help':
         specifier: ^6.2.49
         version: 6.2.56
-      '@types/diff2html':
-        specifier: ^3.0.3
-        version: 3.0.3
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
       '@types/node':
         specifier: ^22.19.19
         version: 22.20.1
-      '@types/table':
-        specifier: ^6.3.2
-        version: 6.3.2
-      '@types/tmp':
-        specifier: ^0.2.6
-        version: 0.2.6
       eslint:
         specifier: ^10.5.0
         version: 10.8.0
@@ -956,17 +821,10 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
       '@contentstack/cli-variants':
         specifier: ~2.0.0-beta.20
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@22.20.1)
-      '@contentstack/cli-variants':
-        specifier: ~1.6.2
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1006,16 +864,11 @@ importers:
         specifier: ~2.0.0-beta.17
         version: 2.0.0-beta.17(@types/node@22.20.1)
       '@contentstack/cli-config':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.15
         version: 2.0.0-beta.15(@types/node@22.20.1)
-=======
-        specifier: ~1.21.1
-        version: 1.21.1(@types/node@22.20.1)
       '@contentstack/cli-dev-dependencies':
         specifier: ^1.3.1
         version: 1.3.1
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/plugin-help':
         specifier: ^6.2.49
         version: 6.2.56
@@ -1080,16 +933,11 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@inquirer/prompts':
         specifier: ^7.0.0
         version: 7.10.1(@types/node@20.19.43)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -1149,13 +997,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
         version: 2.1.0
@@ -1251,27 +1094,16 @@ importers:
         specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-audit':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.16
-=======
-        specifier: ~1.21.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-audit
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)(debug@4.4.3)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
       '@contentstack/cli-variants':
         specifier: ~2.0.0-beta.20
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)(debug@4.4.3)
-      '@contentstack/cli-variants':
-        specifier: ~1.6.2
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1368,13 +1200,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -1464,19 +1291,11 @@ importers:
   packages/contentstack-migrate-rte:
     dependencies:
       '@contentstack/cli-command':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities':
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@22.20.1)
-=======
-        specifier: 1.8.5
-        version: 1.8.5(@types/node@14.18.63)
-      '@contentstack/cli-utilities':
-        specifier: 1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/json-rte-serializer':
         specifier: ~2.1.0
         version: 2.1.0
@@ -1548,13 +1367,8 @@ importers:
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@14.18.63)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -1635,27 +1449,16 @@ importers:
         specifier: ~1.0.0-beta.8
         version: link:../contentstack-asset-management
       '@contentstack/cli-cm-export':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.25
-=======
-        specifier: ~1.27.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-export
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@20.19.43)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
       '@contentstack/cli-variants':
         specifier: ~2.0.0-beta.20
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
-      '@contentstack/cli-variants':
-        specifier: ~1.6.2
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-variants
       '@oclif/core':
         specifier: ^4.11.4
@@ -1758,23 +1561,14 @@ importers:
   packages/contentstack-seed:
     dependencies:
       '@contentstack/cli-cm-import':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.25
-=======
-        specifier: ~1.35.0
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
         version: link:../contentstack-import
       '@contentstack/cli-command':
         specifier: ~2.0.0-beta.11
         version: 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@18.19.130)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       inquirer:
         specifier: 12.11.1
         version: 12.11.1(@types/node@18.19.130)
@@ -1840,13 +1634,8 @@ importers:
   packages/contentstack-variants:
     dependencies:
       '@contentstack/cli-utilities':
-<<<<<<< HEAD
         specifier: ~2.0.0-beta.12
         version: 2.0.0-beta.12(@types/node@20.19.43)
-=======
-        specifier: ~1.19.1
-        version: 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core':
         specifier: ^4.11.4
         version: 4.13.3
@@ -2582,18 +2371,16 @@ packages:
     resolution: {integrity: sha512-GlkxqptxgzHPlpyS0yOKWTNDGNom4UpSlwqZgkWe5tWZJLqmml52u6GgzAvB6byDuzdwbaUzIO8+uwnfYuPmkQ==}
     engines: {node: '>=22.0.0'}
 
-<<<<<<< HEAD
   '@contentstack/cli-command@2.0.0-beta.11':
     resolution: {integrity: sha512-WJXoaW8XbnseAkR8fWQeHclF9WhDyNZhdT4L9hPhkasOSNpsNdk7EVVKZUvY4l81XfR2Nq7b8WOC/q1Cbz8FXw==}
-=======
-  '@contentstack/cli-config@1.21.1':
-    resolution: {integrity: sha512-T7acgZVgIv2Q7rkSpuYqHHHJJ1RyS4tmaegQFAamQbUfrVOz/eYf3Oo3YXYDQn8lFPdmr5zHAbVykLZIp1PLBQ==}
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
     engines: {node: '>=22.0.0'}
 
   '@contentstack/cli-config@2.0.0-beta.15':
     resolution: {integrity: sha512-JXgLHc/KLrgzPY4lng11jL2xSTgT0Cl8/zKmVnSuj7in5HKCwWPNdyvbBNtk3C7QkxnR+3OpHqgOVMjVbbtyFg==}
     engines: {node: '>=22.0.0'}
+
+  '@contentstack/cli-dev-dependencies@1.3.1':
+    resolution: {integrity: sha512-RQuCGQxBdZ+aNhOMwt/VMpz/9AL2PwIFz7H9rUS6BzPOe6G4RjmzFLXi/gnyECbyLoIgyGGXTjlz8NQ0oapp7Q==}
 
   '@contentstack/cli-launch@1.11.2':
     resolution: {integrity: sha512-CiGheBsLPq9Y7/KsO2z/Il1atvXILjtElUaLooX79XPb8N2PELEXHGaIlmtWB0oYUTWS+kNoC+cgHXsEAk6vzw==}
@@ -3552,8 +3339,14 @@ packages:
   '@types/fs-extra@11.0.4':
     resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
 
+  '@types/git-diff@2.0.7':
+    resolution: {integrity: sha512-hipFAUcmf3c+45+Y8+J/xk7gT+0HBuT3O8OTtrnoP6R9gI0r2xESZNdYiA0pj7kQyPCwmkgbnxmfwQ9Ld2lZLQ==}
+
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
+
+  '@types/hogan.js@3.0.5':
+    resolution: {integrity: sha512-/uRaY3HGPWyLqOyhgvW9Aa43BNnLZrNeQxl2p8wqId4UHMfPKolSB+U7BlZyO1ng7MkLnyEAItsBzCG0SDhqrA==}
 
   '@types/http-cache-semantics@4.2.0':
     resolution: {integrity: sha512-L3LgimLHXtGkWikKnsPg0/VFx9OGZaC+eN1u4r+OB1XRqH3meBIAVC2zr1WdMH+RHmnRkqliQAOHNJ/E0j/e0Q==}
@@ -9771,13 +9564,8 @@ snapshots:
 
   '@contentstack/cli-auth@2.0.0-beta.17(@types/node@22.20.1)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-command': 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@22.20.1)
-=======
-      '@contentstack/cli-command': 1.8.5(@types/node@22.20.1)
-      '@contentstack/cli-utilities': 1.19.1(@types/node@22.20.1)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       otplib: 12.0.1
     transitivePeerDependencies:
@@ -9787,11 +9575,7 @@ snapshots:
 
   '@contentstack/cli-command@1.8.6(@types/node@20.19.43)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-utilities': 1.19.1(@types/node@20.19.43)
-=======
-      '@contentstack/cli-utilities': 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       contentstack: 3.27.1
     transitivePeerDependencies:
@@ -9801,11 +9585,7 @@ snapshots:
 
   '@contentstack/cli-command@2.0.0-beta.11(@types/node@14.18.63)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@14.18.63)
-=======
-      '@contentstack/cli-utilities': 1.19.1(@types/node@14.18.63)(debug@4.4.3)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       contentstack: 3.27.1
     transitivePeerDependencies:
@@ -9815,11 +9595,7 @@ snapshots:
 
   '@contentstack/cli-command@2.0.0-beta.11(@types/node@14.18.63)(debug@4.4.3)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@14.18.63)(debug@4.4.3)
-=======
-      '@contentstack/cli-utilities': 1.19.1(@types/node@18.19.130)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       contentstack: 3.27.1
     transitivePeerDependencies:
@@ -9829,11 +9605,7 @@ snapshots:
 
   '@contentstack/cli-command@2.0.0-beta.11(@types/node@18.19.130)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@18.19.130)
-=======
-      '@contentstack/cli-utilities': 1.19.1(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       contentstack: 3.27.1
     transitivePeerDependencies:
@@ -9843,11 +9615,7 @@ snapshots:
 
   '@contentstack/cli-command@2.0.0-beta.11(@types/node@20.19.43)':
     dependencies:
-<<<<<<< HEAD
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@20.19.43)
-=======
-      '@contentstack/cli-utilities': 1.19.1(@types/node@22.20.1)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@oclif/core': 4.13.3
       contentstack: 3.27.1
     transitivePeerDependencies:
@@ -9855,7 +9623,6 @@ snapshots:
       - debug
       - supports-color
 
-<<<<<<< HEAD
   '@contentstack/cli-command@2.0.0-beta.11(@types/node@22.20.1)':
     dependencies:
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@22.20.1)
@@ -9870,12 +9637,6 @@ snapshots:
     dependencies:
       '@contentstack/cli-command': 2.0.0-beta.11(@types/node@18.19.130)
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@18.19.130)
-=======
-  '@contentstack/cli-config@1.21.1(@types/node@14.18.63)':
-    dependencies:
-      '@contentstack/cli-command': 1.8.5(@types/node@14.18.63)
-      '@contentstack/cli-utilities': 1.19.1(@types/node@14.18.63)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/utils': 1.9.1
       '@oclif/core': 4.13.3
     transitivePeerDependencies:
@@ -9883,32 +9644,30 @@ snapshots:
       - debug
       - supports-color
 
-<<<<<<< HEAD
   '@contentstack/cli-config@2.0.0-beta.15(@types/node@22.20.1)':
     dependencies:
       '@contentstack/cli-command': 2.0.0-beta.11(@types/node@22.20.1)
       '@contentstack/cli-utilities': 2.0.0-beta.12(@types/node@22.20.1)
-=======
-  '@contentstack/cli-config@1.21.1(@types/node@22.20.1)':
-    dependencies:
-      '@contentstack/cli-command': 1.8.5(@types/node@22.20.1)
-      '@contentstack/cli-utilities': 1.19.1(@types/node@22.20.1)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/utils': 1.9.1
       '@oclif/core': 4.13.3
     transitivePeerDependencies:
       - '@types/node'
       - debug
+      - supports-color
+
+  '@contentstack/cli-dev-dependencies@1.3.1':
+    dependencies:
+      '@oclif/core': 4.13.3
+      '@oclif/test': 4.1.21(@oclif/core@4.13.3)
+      fancy-test: 2.0.42
+      lodash: 4.18.1
+    transitivePeerDependencies:
       - supports-color
 
   '@contentstack/cli-launch@1.11.2(@types/node@20.19.43)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       '@apollo/client': 3.14.1(graphql@16.14.2)
-<<<<<<< HEAD
       '@contentstack/cli-command': 1.8.6(@types/node@20.19.43)
-=======
-      '@contentstack/cli-command': 1.8.5(@types/node@20.19.43)
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
       '@contentstack/cli-utilities': 1.19.1(@types/node@20.19.43)
       '@oclif/core': 4.13.3
       '@oclif/plugin-help': 6.2.56
@@ -9943,123 +9702,6 @@ snapshots:
       - tslib
       - typescript
 
-<<<<<<< HEAD
-=======
-  '@contentstack/cli-utilities@1.19.1(@types/node@14.18.63)':
-    dependencies:
-      '@contentstack/management': 1.30.4(debug@4.4.3)
-      '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
-      '@contentstack/utils': 1.9.1
-      '@oclif/core': 4.13.3
-      axios: 1.19.0(debug@4.4.3)
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-progress: 3.12.0
-      cli-table: 0.3.11
-      conf: 10.2.0
-      dotenv: 16.6.1
-      figures: 3.2.0
-      inquirer: 8.2.7(@types/node@14.18.63)
-      inquirer-search-checkbox: 1.0.0
-      inquirer-search-list: 1.2.6
-      js-yaml: 5.2.3
-      klona: 2.0.6
-      lodash: 4.18.1
-      mkdirp: 1.0.4
-      open: 8.4.2
-      ora: 5.4.1
-      papaparse: 5.5.4
-      recheck: 4.4.5
-      rxjs: 6.6.7
-      short-uuid: 6.0.3
-      traverse: 0.6.11
-      tty-table: 4.2.3
-      unique-string: 2.0.0
-      uuid: 14.0.1
-      winston: 3.19.0
-      xdg-basedir: 4.0.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - supports-color
-
-  '@contentstack/cli-utilities@1.19.1(@types/node@14.18.63)(debug@4.4.3)':
-    dependencies:
-      '@contentstack/management': 1.30.4(debug@4.4.3)
-      '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
-      '@contentstack/utils': 1.9.1
-      '@oclif/core': 4.13.3
-      axios: 1.19.0(debug@4.4.3)
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-progress: 3.12.0
-      cli-table: 0.3.11
-      conf: 10.2.0
-      dotenv: 16.6.1
-      figures: 3.2.0
-      inquirer: 8.2.7(@types/node@14.18.63)
-      inquirer-search-checkbox: 1.0.0
-      inquirer-search-list: 1.2.6
-      js-yaml: 5.2.3
-      klona: 2.0.6
-      lodash: 4.18.1
-      mkdirp: 1.0.4
-      open: 8.4.2
-      ora: 5.4.1
-      papaparse: 5.5.4
-      recheck: 4.4.5
-      rxjs: 6.6.7
-      short-uuid: 6.0.3
-      traverse: 0.6.11
-      tty-table: 4.2.3
-      unique-string: 2.0.0
-      uuid: 14.0.1
-      winston: 3.19.0
-      xdg-basedir: 4.0.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - supports-color
-
-  '@contentstack/cli-utilities@1.19.1(@types/node@18.19.130)':
-    dependencies:
-      '@contentstack/management': 1.30.4(debug@4.4.3)
-      '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
-      '@contentstack/utils': 1.9.1
-      '@oclif/core': 4.13.3
-      axios: 1.19.0(debug@4.4.3)
-      chalk: 4.1.2
-      cli-cursor: 3.1.0
-      cli-progress: 3.12.0
-      cli-table: 0.3.11
-      conf: 10.2.0
-      dotenv: 16.6.1
-      figures: 3.2.0
-      inquirer: 8.2.7(@types/node@18.19.130)
-      inquirer-search-checkbox: 1.0.0
-      inquirer-search-list: 1.2.6
-      js-yaml: 5.2.3
-      klona: 2.0.6
-      lodash: 4.18.1
-      mkdirp: 1.0.4
-      open: 8.4.2
-      ora: 5.4.1
-      papaparse: 5.5.4
-      recheck: 4.4.5
-      rxjs: 6.6.7
-      short-uuid: 6.0.3
-      traverse: 0.6.11
-      tty-table: 4.2.3
-      unique-string: 2.0.0
-      uuid: 14.0.1
-      winston: 3.19.0
-      xdg-basedir: 4.0.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - debug
-      - supports-color
-
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
   '@contentstack/cli-utilities@1.19.1(@types/node@20.19.43)':
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
@@ -10098,11 +9740,7 @@ snapshots:
       - debug
       - supports-color
 
-<<<<<<< HEAD
   '@contentstack/cli-utilities@2.0.0-beta.12(@types/node@14.18.63)':
-=======
-  '@contentstack/cli-utilities@1.19.1(@types/node@22.20.1)':
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
     dependencies:
       '@contentstack/management': 1.30.4(debug@4.4.3)
       '@contentstack/marketplace-sdk': 1.5.4(debug@4.4.3)
@@ -10947,22 +10585,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.20.1
 
-<<<<<<< HEAD
-=======
-  '@inquirer/prompts@7.10.1':
-    dependencies:
-      '@inquirer/checkbox': 4.3.2(@types/node@14.18.63)
-      '@inquirer/confirm': 5.1.21(@types/node@14.18.63)
-      '@inquirer/editor': 4.2.23(@types/node@14.18.63)
-      '@inquirer/expand': 4.0.23(@types/node@14.18.63)
-      '@inquirer/input': 4.3.1(@types/node@14.18.63)
-      '@inquirer/number': 3.0.23(@types/node@14.18.63)
-      '@inquirer/password': 4.0.23(@types/node@14.18.63)
-      '@inquirer/rawlist': 4.1.11(@types/node@14.18.63)
-      '@inquirer/search': 3.2.2(@types/node@14.18.63)
-      '@inquirer/select': 4.4.2(@types/node@14.18.63)
-
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
   '@inquirer/prompts@7.10.1(@types/node@14.18.63)':
     dependencies:
       '@inquirer/checkbox': 4.3.2(@types/node@14.18.63)
@@ -11957,9 +11579,13 @@ snapshots:
       '@types/jsonfile': 6.1.4
       '@types/node': 20.19.43
 
+  '@types/git-diff@2.0.7': {}
+
   '@types/graceful-fs@4.1.9':
     dependencies:
       '@types/node': 20.19.43
+
+  '@types/hogan.js@3.0.5': {}
 
   '@types/http-cache-semantics@4.2.0': {}
 
@@ -14126,8 +13752,8 @@ snapshots:
       '@typescript-eslint/eslint-plugin': 6.21.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0)(typescript@5.9.3)
       '@typescript-eslint/parser': 6.21.0(eslint@10.8.0)(typescript@5.9.3)
       eslint-config-xo-space: 0.35.0(eslint@10.8.0)
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.8.0)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
       eslint-plugin-mocha: 10.5.0(eslint@10.8.0)
       eslint-plugin-n: 15.7.0(eslint@10.8.0)
       eslint-plugin-perfectionist: 2.11.0(eslint@10.8.0)(typescript@5.9.3)
@@ -14198,8 +13824,8 @@ snapshots:
       '@typescript-eslint/parser': 8.66.0(eslint@10.8.0)(typescript@5.9.3)
       eslint-config-xo: 0.49.0(eslint@10.8.0)
       eslint-config-xo-space: 0.35.0(eslint@10.8.0)
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.8.0)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
       eslint-plugin-jsdoc: 50.8.0(eslint@10.8.0)
       eslint-plugin-mocha: 10.5.0(eslint@10.8.0)
       eslint-plugin-n: 17.24.0(eslint@10.8.0)(typescript@5.9.3)
@@ -14269,21 +13895,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0):
-    dependencies:
-      '@nolyfill/is-core-module': 1.0.39
-      debug: 4.4.3(supports-color@8.1.1)
-      eslint: 10.8.0
-      get-tsconfig: 4.14.1
-      is-bun-module: 2.0.0
-      stable-hash: 0.0.5
-      tinyglobby: 0.2.17
-      unrs-resolver: 1.12.2
-    optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0)
-    transitivePeerDependencies:
-      - supports-color
-
   eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@10.8.0):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
@@ -14295,35 +13906,10 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@4.9.5))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
     transitivePeerDependencies:
       - supports-color
 
-<<<<<<< HEAD
-=======
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
-    dependencies:
-      debug: 3.2.7
-    optionalDependencies:
-      '@typescript-eslint/parser': 6.21.0(eslint@10.8.0)(typescript@4.9.5)
-      eslint: 10.8.0
-      eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.8.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0):
-    dependencies:
-      debug: 3.2.7
-    optionalDependencies:
-      '@typescript-eslint/parser': 6.21.0(eslint@10.8.0)(typescript@5.9.3)
-      eslint: 10.8.0
-      eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0)
-    transitivePeerDependencies:
-      - supports-color
-
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
   eslint-module-utils@2.14.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
     dependencies:
       debug: 3.2.7
@@ -14346,14 +13932,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0):
+  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.66.0(eslint@10.8.0)(typescript@5.9.3)
       eslint: 10.8.0
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.8.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -14381,67 +13967,6 @@ snapshots:
       eslint-utils: 2.1.0
       regexpp: 3.2.0
 
-<<<<<<< HEAD
-=======
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@4.9.5))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
-    dependencies:
-      '@rtsao/scc': 1.1.0
-      array-includes: 3.1.9
-      array.prototype.findlastindex: 1.2.6
-      array.prototype.flat: 1.3.3
-      array.prototype.flatmap: 1.3.3
-      debug: 3.2.7
-      doctrine: 2.1.0
-      eslint: 10.8.0
-      eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
-      hasown: 2.0.4
-      is-core-module: 2.16.2
-      is-glob: 4.0.3
-      minimatch: 3.1.5
-      object.fromentries: 2.0.8
-      object.groupby: 1.0.3
-      object.values: 1.2.1
-      semver: 6.3.1
-      string.prototype.trimend: 1.0.10
-      tsconfig-paths: 3.15.0
-    optionalDependencies:
-      '@typescript-eslint/parser': 6.21.0(eslint@10.8.0)(typescript@4.9.5)
-    transitivePeerDependencies:
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - supports-color
-
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0):
-    dependencies:
-      '@rtsao/scc': 1.1.0
-      array-includes: 3.1.9
-      array.prototype.findlastindex: 1.2.6
-      array.prototype.flat: 1.3.3
-      array.prototype.flatmap: 1.3.3
-      debug: 3.2.7
-      doctrine: 2.1.0
-      eslint: 10.8.0
-      eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0)
-      hasown: 2.0.4
-      is-core-module: 2.16.2
-      is-glob: 4.0.3
-      minimatch: 3.1.5
-      object.fromentries: 2.0.8
-      object.groupby: 1.0.3
-      object.values: 1.2.1
-      semver: 6.3.1
-      string.prototype.trimend: 1.0.10
-      tsconfig-paths: 3.15.0
-    optionalDependencies:
-      '@typescript-eslint/parser': 6.21.0(eslint@10.8.0)(typescript@5.9.3)
-    transitivePeerDependencies:
-      - eslint-import-resolver-typescript
-      - eslint-import-resolver-webpack
-      - supports-color
-
->>>>>>> d9406964bb098518c3fac7df67ef9c0f77d3a7d5
   eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
     dependencies:
       '@rtsao/scc': 1.1.0
@@ -14500,7 +14025,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -14511,7 +14036,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 10.8.0
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@10.8.0)(typescript@5.9.3))(eslint@10.8.0))(eslint@10.8.0))(eslint@10.8.0)
+      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0)(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@10.8.0)
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
