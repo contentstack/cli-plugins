@@ -1,5 +1,42 @@
 fileignoreconfig:
-
+- filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/environments/environments.json
+  checksum: fe82c708f5f4d0b05694a601855fb7950661048eef8d7f9f794713e3a665064e
+- filename: packages/contentstack-audit/test/unit/mock/am-contents/environments/environments.json
+  checksum: ffaaee9269a6e833cd3dbe337ddc5c060cce948519873c7a2777754519a31b52
 - filename: pnpm-lock.yaml
-  checksum: 0b457537758c783fd47916e9b51175f62b1c58dd691e7bda29d687be65bcdbe6
+  checksum: 649aae748e3ae8c157439dc6c7c9ea402cc19b4dab7ca64b7e4d839d1375df53
+- filename: packages/contentstack-audit/src/types/content-types.ts
+  checksum: d16a65415c3184f15a807d58e5858310aeb5633794fc9075e36f89c94da636c3
+- filename: packages/contentstack-audit/src/audit-base-command.ts
+  checksum: b706ea114a3cb5e4c0e7e163f32ceffa3356a6b0766bf5b8fe387c3c72f44c36
+- filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/spaces/space_one/assets/chunk0-assets.json
+  checksum: a276dc984efd49c097b4c38a02a17cfd1d28d704bd403d65af2b7673b8e9dbe9
+- filename: packages/contentstack-audit/src/modules/entries.ts
+  checksum: 13072df0872f8c098d23f49b02f9e8f3e492ab2f483d67a5ea5e423ab406ad94
+- filename: packages/contentstack-audit/src/modules/assets.ts
+  checksum: 9cdc568453a3926d866de4d3d56e6fbc4629eafcaca1c51536c11d937a0bf126
+- filename: packages/contentstack-audit/test/unit/modules/assets.test.ts
+  checksum: 203bb83afa84a696b84066dc6959712289e9fc4135c8cba641f9ff634f32b3db
+- filename: packages/contentstack-audit/test/unit/modules/entries.test.ts
+  checksum: 31d9767d87e4e9db54f641e8cb9d3360f591acdaa8b089a83eaa4aacdf0c3a35
+- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_clean/assets/chunk0-assets.json
+  checksum: f02886c04ea1097ebc5965fa9a63a878adb9437d56a5b1797be1967fae35f9e4
+- filename: packages/contentstack-import/src/import/modules/assets.ts
+  checksum: d213265909a1b163ce733b9e2534e3a74304a2589c2d85e059f10fa0acfdee11
+- filename: packages/contentstack-import/src/utils/import-config-handler.ts
+  checksum: 5b2050b283ea3d990e8ad3207b054c6932b76d2bd82a9f659b287ef11dec9f83
+- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_cross_only/assets/chunk0-assets.json
+  checksum: 27d5398f5d81bd3af53da9a5d10475a36c08e8fd8ad29df24e8f267494419a20
+- filename: packages/contentstack-audit/test/unit/mock/am-contents/spaces/space_one/assets/chunk0-assets.json
+  checksum: 9fc8b266ef58ecce8d3c4182632d1f7d088dfbce81b3fcea46b087cde3129b91
+- filename: packages/contentstack-audit/test/unit/mock/am-contents/stack/stack.json
+  checksum: c4ac3ff80eb38b1c58eb0db21a232bd84f856d4647093542296199036945083c
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: 60f33657cc6e2664c17397a2f6b4b54a3f7bf71618931d63cd2811822bd4837e
+- filename: packages/contentstack-bulk-operations/src/utils/data-dir-asset-fetcher.ts
+  checksum: ddcf4601ac47be300eba0eb901e4d45d748c2c4eab676c56677cb9a802fe3db0
+- filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
+  checksum: a64a4d396eddd936a63b799eff58c5c6660b5dcaa3a310fd8b09a027932f1789
+- filename: packages/contentstack-migration/README.md
+  checksum: e96006c1a948f766c88ae972b29582fa58eaf8184606bf011eebddc5a06cd7b6
 version: ""

@@ -10,7 +10,7 @@ export default class Delete extends AppCLIBaseCommand {
   static examples = [
     "$ <%= config.bin %> <%= command.id %>",
     "$ <%= config.bin %> <%= command.id %> --app-uid <value>",
-    "$ <%= config.bin %> <%= command.id %> --app-uid <value> --org <value> -d ./boilerplate",
+    "$ <%= config.bin %> <%= command.id %> --app-uid <value> --org <value>",
   ];
 
   static flags: FlagInput = {

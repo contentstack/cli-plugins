@@ -19,7 +19,7 @@ $ npm install -g @contentstack/cli-cm-branches
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-branches/1.8.5 darwin-arm64 node-v24.18.0
+@contentstack/cli-cm-branches/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -83,7 +83,7 @@ DESCRIPTION
 EXAMPLES
   $ csdx cm:branches:create
 
-  $ csdx cm:branches:create --source main -uid new_branch -k bltxxxxxxxx
+  $ csdx cm:branches:create --source main --uid new_branch -k bltxxxxxxxx
 
   $ csdx cm:branches:create --source main --uid new_branch --stack-api-key bltxxxxxxxx
 ```

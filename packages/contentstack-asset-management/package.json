@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-asset-management",
-  "version": "1.0.0-beta.8",
+  "version": "1.0.0",
   "description": "Contentstack Assets API adapter for export and import",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -27,7 +27,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@contentstack/cli-utilities": "~2.0.0-beta.12",
+    "@contentstack/cli-utilities": "~2.0.0",
     "lodash": "^4.18.1"
   },
   "oclif": {
@@ -39,17 +39,17 @@
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-asset-management/<%- commandPath %>"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.11",
+    "@types/chai": "^4.3.20",
     "@types/lodash": "^4.17.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.17.50",
     "@types/sinon": "^17.0.4",
     "chai": "^4.4.1",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.68",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.8",
+    "oclif": "^4.23.27",
     "sinon": "^17.0.2",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",

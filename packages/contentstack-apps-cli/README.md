@@ -24,7 +24,7 @@ $ npm install -g @contentstack/apps-cli
 $ csdx COMMAND
 running command...
 $ csdx (--version|-v)
-@contentstack/apps-cli/2.0.0-beta.2 darwin-arm64 node-v18.20.2
+@contentstack/apps-cli/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -82,17 +82,17 @@ Create a new app in Developer Hub and optionally clone a boilerplate locally.
 
 ```
 USAGE
-  $ csdx app:create [--org <value>] [-n <value>] [--app-type stack|organization] [-c <value>] [-d <value>]
+  $ csdx app:create [--org <value>] [--name <value>] [--app-type stack|organization] [-c <value>] [-d <value>]
     [--boilerplate <value>]
 
 FLAGS
   -c, --config=<value>       Path of the external config
   -d, --data-dir=<value>     Current working directory.
-  -n, --name=<value>         Name of the app to be created
       --app-type=<option>    [default: stack] Type of app
                              <options: stack|organization>
       --boilerplate=<value>  Provide a boilerplate. <options: App Boilerplate|DAM App Boilerplate|Ecommerce App
                              Boilerplate>
+      --name=<value>         Name of the app to be created
       --org=<value>          Provide the organization UID to fetch the app details for the operation.
 
 DESCRIPTION
@@ -136,7 +136,7 @@ EXAMPLES
 
   $ csdx app:delete --app-uid <value>
 
-  $ csdx app:delete --app-uid <value> --org <value> -d ./boilerplate
+  $ csdx app:delete --app-uid <value> --org <value>
 ```
 
 _See code: [src/commands/app/delete.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-apps-cli/src/commands/app/delete.ts)_
@@ -151,7 +151,7 @@ USAGE
     [--app-url <value>] [--launch-project existing|new] [-c <value>]
 
 FLAGS
-  -c, --config=<value>           Path to the optional config file.
+  -c, --config=<value>           [optional] Please enter the path of the config file.
       --app-uid=<value>          Provide the app UID of an existing app.
       --app-url=<value>          Please enter the URL of the app you want to deploy.
       --hosting-type=<option>    Choose a valid Hosting Type.
@@ -215,12 +215,12 @@ Install an app from the marketplace
 
 ```
 USAGE
-  $ csdx app:install [--org <value>] [--app-uid <value>] [--stack-api-key <value>]
+  $ csdx app:install [--org <value>] [--app-uid <value>] [-k <value>]
 
 FLAGS
-  --app-uid=<value>        Provide the app UID of an existing app.
-  --org=<value>            Provide the organization UID to fetch the app details for the operation.
-  --stack-api-key=<value>  API key of the stack where the app operation is to be performed.
+  -k, --stack-api-key=<value>  API key of the stack where the app operation is to be performed.
+      --app-uid=<value>        Provide the app UID of an existing app.
+      --org=<value>            Provide the organization UID to fetch the app details for the operation.
 
 DESCRIPTION
   Install an app from the marketplace
@@ -241,12 +241,12 @@ Reinstall an app from the marketplace
 
 ```
 USAGE
-  $ csdx app:reinstall [--org <value>] [--app-uid <value>] [--stack-api-key <value>]
+  $ csdx app:reinstall [--org <value>] [--app-uid <value>] [-k <value>]
 
 FLAGS
-  --app-uid=<value>        Provide the app UID of an existing app.
-  --org=<value>            Provide the organization UID to fetch the app details for the operation.
-  --stack-api-key=<value>  API key of the stack where the app operation is to be performed.
+  -k, --stack-api-key=<value>  API key of the stack where the app operation is to be performed.
+      --app-uid=<value>        Provide the app UID of an existing app.
+      --org=<value>            Provide the organization UID to fetch the app details for the operation.
 
 DESCRIPTION
   Reinstall an app from the marketplace

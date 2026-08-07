@@ -32,10 +32,10 @@ npm install @contentstack/cli-cm-export-query
 
 ```bash
 # Export using management token alias
-csdx cm:stacks:export-query -a <alias> -q "{'title': {'$exists': true}}"
+csdx cm:stacks:export-query -a <alias> --query "{'title': {'$exists': true}}"
 
 # Export using API key
-csdx cm:stacks:export-query --stack-api-key <api-key> -q "{'title': {'$exists': true}}"
+csdx cm:stacks:export-query --stack-api-key <api-key> --query "{'title': {'$exists': true}}"
 ```
 
 ### Command Options
@@ -44,7 +44,7 @@ csdx cm:stacks:export-query --stack-api-key <api-key> -q "{'title': {'$exists': 
 |------|-------------|----------|
 | `-a, --alias` | Management token alias | No |
 | `--stack-api-key` | Stack API key | No |
-| `-q, --query` | Query for content export | Yes |
+| `--query` | Query for content export | Yes |
 | `-d, --data-dir` | Export directory path | No |
 | `--branch` | Branch name to export from | No |
 | `--branch-alias` | Alias of Branch to export from | No |
@@ -58,17 +58,17 @@ csdx cm:stacks:export-query --stack-api-key <api-key> -q "{'title': {'$exists': 
 
 **Basic Content Query:**
 ```bash
-csdx cm:stacks:export-query -a prod -q "{'title': {'$regex': 'blog'}}"
+csdx cm:stacks:export-query -a prod --query "{'title': {'$regex': 'blog'}}"
 ```
 
 **Date Range Query:**
 ```bash
-csdx cm:stacks:export-query -a prod -q "{'updated_at': {'$gte': '2024-01-01'}}"
+csdx cm:stacks:export-query -a prod --query "{'updated_at': {'$gte': '2024-01-01'}}"
 ```
 
 **Complex Query:**
 ```bash
-csdx cm:stacks:export-query -a prod -q "{'$and': [{'title': {'$exists': true}}, {'tags': {'$in': ['featured']}}]}"
+csdx cm:stacks:export-query -a prod --query "{'$and': [{'title': {'$exists': true}}, {'tags': {'$in': ['featured']}}]}"
 ```
 
 ## Configuration
@@ -105,5 +105,5 @@ Create a custom config file and pass it using the `--config` flag:
 ```
 
 ```bash
-csdx cm:stacks:export-query -a prod -q "{'title': {'$exists': true}}" --config ./my-config.json
+csdx cm:stacks:export-query -a prod --query "{'title': {'$exists': true}}" --config ./my-config.json
 ```
