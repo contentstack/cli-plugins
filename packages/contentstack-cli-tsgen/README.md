@@ -32,7 +32,7 @@ USAGE
 
 FLAGS
   -a, --alias=<value>         (required) delivery token alias
-  -o, --output=<value>        (required) full path to output
+      --output=<value>          (required) full path to output
       --[no-]doc              include documentation comments
       --prefix=<value>        interface prefix, e.g. "I"
       --branch=<value>        branch

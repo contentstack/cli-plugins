@@ -83,7 +83,7 @@ DESCRIPTION
 EXAMPLES
   $ csdx cm:branches:create
 
-  $ csdx cm:branches:create --source main -uid new_branch -k bltxxxxxxxx
+  $ csdx cm:branches:create --source main --uid new_branch -k bltxxxxxxxx
 
   $ csdx cm:branches:create --source main --uid new_branch --stack-api-key bltxxxxxxxx
 ```
