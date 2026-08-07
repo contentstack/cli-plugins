@@ -36,20 +36,17 @@ The Content Type's Display Name, UID, Last Modified Date, and Version number is 
 $ csdx plugins:install contentstack-cli-content-type
 ```
 
-## How to use this plugin
-This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/headless-cms/cli-authentication).
-
-Several commands, such as `csdx content-type:compare` support token aliases as input.
-These token aliases should be created using `csdx auth:tokens:add`.
-
-The commands only use the **Stack API Key**. The management token is ignored.
-They are provided as a convenience, so the Stack API Keys do not have to be re-typed. 
-
-## Usability
-The `csdx content-type:details` command requires a wide terminal window. If the `path` column is not needed, you can hide it:
-
-```shell
-$ csdx content-type:details -a "management token" -c "content type" --no-path
+<!-- usage -->
+```sh-session
+$ npm install -g contentstack-cli-content-type
+$ csdx COMMAND
+running command...
+$ csdx (--version)
+contentstack-cli-content-type/1.5.4 darwin-arm64 node-v24.18.0
+$ csdx --help [COMMAND]
+USAGE
+  $ csdx COMMAND
+...
 ```
 <!-- usagestop -->
 # Commands

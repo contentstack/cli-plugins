@@ -1,3 +1,4 @@
+import { FeatureStatus } from '@contentstack/cli-utilities';
 import { Context, Modules, Region } from '.';
 import DefaultConfig from './default-config';
 
@@ -16,6 +17,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   skipEntriesPublish?: boolean;
   skipTaxonomyPublish?: boolean;
   cliLogsPath: string;
+  assetScanningEnabled?: boolean;
   canCreatePrivateApp: boolean;
   contentDir: string;
   data: string;
@@ -60,6 +62,8 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   context: Context;
   csAssetsUrl?: string;
   csAssetsEnabled?: boolean;
+
+  planStatus?: Record<string, FeatureStatus>;
 }
 
 type branch = {

@@ -7,6 +7,18 @@ To import content to your stack, you can use either of the following:
 
 **Any GitHub repository**: You can also import content from another GitHub repository by passing `--repo` in `owner/repository` form (organization, user, or enterprise account).
 
+<!-- usage -->
+```sh-session
+$ npm install -g @contentstack/cli-cm-seed
+$ csdx COMMAND
+running command...
+$ csdx (--version)
+@contentstack/cli-cm-seed/1.15.10 darwin-arm64 node-v24.18.0
+$ csdx --help [COMMAND]
+USAGE
+  $ csdx COMMAND
+...
+```
 <!-- usagestop -->
 ## Commands
 <!-- commands -->

@@ -101,6 +101,7 @@ export default interface DefaultConfig {
       displayExecutionTime: boolean;
       enableDownloadStatus: boolean;
       includeVersionedAssets: boolean;
+      blockingScanStatuses: string[];
       dependencies?: Modules[];
     };
     'cs-assets': {

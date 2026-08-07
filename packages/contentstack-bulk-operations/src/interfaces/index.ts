@@ -59,6 +59,8 @@ export interface BulkOperationConfig {
 
   // Asset-specific options
   folderUid?: string;
+  dataDir?: string;
+  dryRun?: boolean;
 
   // Cross-publish
   sourceEnv?: string;
@@ -135,6 +137,7 @@ export interface Asset {
   title?: string;
   _version?: number;
   publish_details?: PublishDetails[];
+  _asset_scan_status?: 'pending' | 'clean' | 'quarantined';
   [key: string]: any;
 }
 
@@ -196,6 +199,8 @@ export interface CommandFlags {
 
   // Asset-specific flags
   'folder-uid'?: string;
+  'data-dir'?: string;
+  'dry-run'?: boolean;
 
   /** CS Assets bulk delete/move */
   'space-uid'?: string;
@@ -253,6 +258,7 @@ export interface AssetPublishData {
   locale: string;
   version?: number;
   publish_details?: PublishDetails[];
+  _asset_scan_status?: 'pending' | 'clean' | 'quarantined';
 }
 
 /** One row for CS Assets bulk-delete payload `{ uid, locale }[]`. */

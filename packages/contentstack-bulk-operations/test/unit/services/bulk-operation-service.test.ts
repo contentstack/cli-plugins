@@ -133,7 +133,7 @@ describe('BulkOperationService', () => {
           content_type: 'blog',
           locale: 'en-us',
           version: 1,
-          publish_details: [],
+          publish_details: [{ environment: 'production', locale: 'en-us', version: 1 }],
         },
       ];
 
@@ -170,7 +170,7 @@ describe('BulkOperationService', () => {
           content_type: 'blog',
           locale: 'en-us',
           version: 1,
-          publish_details: [],
+          publish_details: [{ environment: 'production', locale: 'en-us', version: 1 }],
         },
       ];
 
@@ -509,14 +509,9 @@ describe('BulkOperationService', () => {
         } as EntryPublishData,
       ];
 
-      const payload = (bulkOperationService as any).prepareBulkPayload(
-        mockItems,
-        OperationType.PUBLISH,
-        ResourceType.ENTRY
-      );
-
-      expect(payload.entries).to.have.lengthOf(1);
-      expect(payload.environments).to.deep.equal([]);
+      expect(() =>
+        (bulkOperationService as any).prepareBulkPayload(mockItems, OperationType.PUBLISH, ResourceType.ENTRY)
+      ).to.throw('No environments for bulk publish');
     });
   });
 

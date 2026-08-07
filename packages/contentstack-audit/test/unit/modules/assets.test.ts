@@ -3,13 +3,13 @@ import { resolve } from 'path';
 import { expect } from 'chai';
 import fancy from 'fancy-test';
 import Sinon from 'sinon';
+import isEmpty from 'lodash/isEmpty';
 import { cliux } from '@contentstack/cli-utilities';
 import config from '../../../src/config';
 import { $t, auditMsg } from '../../../src/messages';
 import Assets from '../../../src/modules/assets';
 import { ModuleConstructorParam, CtConstructorParam } from '../../../src/types';
 import { mockLogger } from '../mock-logger';
-
 const mockContentsPath = resolve(__dirname, '..', 'mock', 'contents');
 
 describe('Assets module', () => {
@@ -350,7 +350,9 @@ describe('Assets module', () => {
         await instance.prerequisiteData();
         const writeFixSpy = Sinon.stub(Assets.prototype, 'writeFixContent').resolves();
         await instance.lookForReference();
-        expect(writeFixSpy.callCount).to.equal(1);
+        // Two chunk files change (chunk0: invalid publish_details, chunk1: blocked scan-status
+        // assets) — the assertion is that this is per-chunk, not per-asset (which would be 8).
+        expect(writeFixSpy.callCount).to.equal(2);
       });
 
     fancy
@@ -368,13 +370,236 @@ describe('Assets module', () => {
           (call: Sinon.SinonSpyCall) =>
             typeof call.args[0] === 'string' && call.args[0].includes("Successfully completed the scanning of Asset with UID"),
         );
-        const expectedAssetUids = ['asset_uid_1', 'asset_uid_invalid', 'asset_uid_two_invalid'];
+        const expectedAssetUids = [
+          'asset_uid_1',
+          'asset_uid_invalid',
+          'asset_uid_two_invalid',
+          'blt-clean-asset',
+          'blt-pending-asset',
+          'blt-quarantined-asset',
+          'blt-no-status-asset',
+          'blt-not-scanned-asset',
+        ];
         expect(successMsgCalls).to.have.lengthOf(expectedAssetUids.length);
         expectedAssetUids.forEach((uid) => {
           const forUid = successMsgCalls.filter((c: Sinon.SinonSpyCall) => c.args[0].includes(uid));
           expect(forUid).to.have.lengthOf(1, `expected exactly one success log for asset ${uid}`);
         });
       });
+  });
+
+  describe('AM cross-stack publish details', () => {
+    const amContentsPath = resolve(__dirname, '..', 'mock', 'am-contents');
+
+    const amParam = (overrides: Record<string, any> = {}) => ({
+      ...constructorParam,
+      ...overrides,
+      config: { ...constructorParam.config, basePath: amContentsPath, flags: {} as any, ...(overrides.config || {}) },
+    });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should not report publish details owned by other stacks', async () => {
+        const instance = new Assets(amParam());
+        await instance.prerequisiteData();
+        await instance.lookForReference();
+        const missing = (instance as any).missingEnvLocales;
+        expect(Object.keys(missing)).to.have.members([
+          'am_asset_mixed',
+          'am_asset_bad_locale',
+          'am_asset_bad_both',
+          'am_asset_legacy_pd',
+        ]);
+        expect(missing).to.not.have.property('am_asset_cross_only');
+        expect(missing).to.not.have.property('am_asset_clean');
+        expect(missing.am_asset_mixed).to.have.lengthOf(1);
+        expect(missing.am_asset_mixed[0]).to.include({
+          asset_uid: 'am_asset_mixed',
+          publish_locale: 'en-us',
+          publish_environment: 'env_own_missing',
+          space_id: 'space_one',
+        });
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should keep other stacks publish details and only strip own-stack invalid ones on fix', async () => {
+        const instance = new Assets(amParam({ fix: true, config: { flags: { yes: true } as any } }));
+        await instance.prerequisiteData();
+        const writeStub = Sinon.stub(fs, 'writeFileSync');
+        await instance.lookForReference();
+
+        // space_clean has nothing to fix, so only space_one's chunk is written
+        expect(writeStub.callCount).to.equal(1);
+        expect(writeStub.firstCall.args[0]).to.include('space_one');
+
+        const written = JSON.parse(writeStub.firstCall.args[1] as string);
+        expect(written.am_asset_cross_only.publish_details).to.have.lengthOf(2);
+        expect(written.am_asset_mixed.publish_details.map((pd: any) => pd.environment)).to.eql([
+          'env_own_dev',
+          'env_other_dev',
+        ]);
+        expect(written.am_asset_bad_locale.publish_details).to.have.lengthOf(0);
+        expect(written.am_asset_bad_both.publish_details).to.have.lengthOf(0);
+        expect(written.am_asset_legacy_pd.publish_details.map((pd: any) => pd.environment)).to.eql(['env_own_dev']);
+        writeStub.restore();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should not write or ask for confirmation when a chunk has nothing to fix', async () => {
+        const instance = new Assets(amParam({ fix: true }));
+        await instance.prerequisiteData();
+        (instance as any).resolvedBasePaths = [
+          { path: resolve(amContentsPath, 'spaces', 'space_clean', 'assets'), spaceId: 'space_clean' },
+        ];
+        const confirmStub = Sinon.stub(cliux, 'confirm').resolves(true);
+        const writeStub = Sinon.stub(fs, 'writeFileSync');
+        await instance.lookForReference();
+        expect(writeStub.called).to.be.false;
+        expect(confirmStub.called).to.be.false;
+        confirmStub.restore();
+        writeStub.restore();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should name the missing environment, locale or both in the warning', async () => {
+        const instance = new Assets(amParam());
+        await instance.prerequisiteData();
+        const printStub = Sinon.stub(cliux, 'print');
+        await instance.lookForReference();
+
+        const printed = printStub.getCalls().map((call: Sinon.SinonSpyCall) => call.args[0]);
+        expect(printed).to.include(
+          $t(auditMsg.SCAN_ASSET_ENV_MISSING, {
+            uid: 'am_asset_mixed',
+            locale: 'en-us',
+            environment: 'env_own_missing',
+          }),
+        );
+        expect(printed).to.include(
+          $t(auditMsg.SCAN_ASSET_LOCALE_MISSING, {
+            uid: 'am_asset_bad_locale',
+            locale: 'de-de',
+            environment: 'env_own_prod',
+          }),
+        );
+        expect(printed).to.include(
+          $t(auditMsg.SCAN_ASSET_ENV_AND_LOCALE_MISSING, {
+            uid: 'am_asset_bad_both',
+            locale: 'de-de',
+            environment: 'env_own_missing',
+          }),
+        );
+        printStub.restore();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should skip api_key tagged publish details and warn once when source stack is unknown', async () => {
+        const warnStub = Sinon.stub(mockLogger, 'warn');
+        const instance = new Assets(amParam());
+        await instance.prerequisiteData();
+        (instance as any).sourceStackApiKey = null;
+        await instance.lookForReference();
+
+        const missing = (instance as any).missingEnvLocales;
+        // Only the legacy publish detail (no api_key) stays auditable
+        expect(Object.keys(missing)).to.eql(['am_asset_legacy_pd']);
+        expect(warnStub.callCount).to.equal(1);
+        expect(warnStub.firstCall.args[0]).to.include('Source stack API key not found');
+        warnStub.restore();
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('should resolve the source stack api key from stack/stack.json, null when absent', async () => {
+        const amInstance = new Assets(amParam());
+        expect((amInstance as any).resolveSourceStackApiKey()).to.eql('blt_own_stack');
+
+        const legacyInstance = new Assets(constructorParam);
+        expect((legacyInstance as any).resolveSourceStackApiKey()).to.be.null;
+      });
+
+    describe('export whose assets are published only into other stacks (DX-9739)', () => {
+      const crossOnlyPaths = [
+        { path: resolve(amContentsPath, 'spaces', 'space_cross_only', 'assets'), spaceId: 'space_cross_only' },
+      ];
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should report nothing, so audit reports no asset issues', async () => {
+          const instance = new Assets(amParam());
+          await instance.prerequisiteData();
+          (instance as any).resolvedBasePaths = crossOnlyPaths;
+          const printStub = Sinon.stub(cliux, 'print');
+          await instance.lookForReference();
+
+          // `hasFix` in audit-base-command is an OR of `!isEmpty(...)` across the module results, and
+          // an empty assets result is what keeps cm:stacks:import from raising the fix confirmation.
+          expect(isEmpty((instance as any).missingEnvLocales)).to.be.true;
+          expect(printStub.called).to.be.false;
+          printStub.restore();
+        });
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should not prompt or write anything in fix mode', async () => {
+          const instance = new Assets(amParam({ fix: true }));
+          await instance.prerequisiteData();
+          (instance as any).resolvedBasePaths = crossOnlyPaths;
+          const confirmStub = Sinon.stub(cliux, 'confirm').resolves(true);
+          const writeStub = Sinon.stub(fs, 'writeFileSync');
+          await instance.lookForReference();
+
+          expect(confirmStub.called).to.be.false;
+          expect(writeStub.called).to.be.false;
+          expect(isEmpty((instance as any).missingEnvLocales)).to.be.true;
+          confirmStub.restore();
+          writeStub.restore();
+        });
+    });
+
+    describe('export without stack/stack.json', () => {
+      const noStackPath = resolve(__dirname, '..', 'mock', 'am-contents-no-stack');
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should audit only legacy publish details and warn once', async () => {
+          const warnStub = Sinon.stub(mockLogger, 'warn');
+          const instance = new Assets(amParam({ config: { basePath: noStackPath } }));
+          await instance.prerequisiteData();
+          expect((instance as any).sourceStackApiKey).to.be.null;
+          await instance.lookForReference();
+
+          const missing = (instance as any).missingEnvLocales;
+          expect(Object.keys(missing)).to.eql(['am_asset_legacy_pd']);
+          expect(missing.am_asset_legacy_pd).to.have.lengthOf(1);
+          expect(missing.am_asset_legacy_pd[0]).to.include({ publish_environment: 'env_own_missing' });
+          expect(warnStub.callCount).to.equal(1);
+          expect(warnStub.firstCall.args[0]).to.include('Source stack API key not found');
+          warnStub.restore();
+        });
+
+      fancy
+        .stdout({ print: process.env.PRINT === 'true' || false })
+        .it('should leave api_key tagged publish details untouched in fix mode', async () => {
+          Sinon.stub(mockLogger, 'warn');
+          const instance = new Assets(
+            amParam({ fix: true, config: { basePath: noStackPath, flags: { yes: true } as any } }),
+          );
+          await instance.prerequisiteData();
+          const writeStub = Sinon.stub(fs, 'writeFileSync');
+          await instance.lookForReference();
+
+          const written = JSON.parse(writeStub.firstCall.args[1] as string);
+          // Both tagged entries survive even though neither is valid for this export's env/locale set
+          expect(written.am_asset_tagged.publish_details).to.have.lengthOf(2);
+          expect(written.am_asset_legacy_pd.publish_details.map((pd: any) => pd.environment)).to.eql(['env_own_dev']);
+          writeStub.restore();
+        });
+    });
   });
 
   describe('integration-style run with real FsUtility', () => {
@@ -388,6 +613,56 @@ describe('Assets module', () => {
         expect(result).to.have.property('asset_uid_two_invalid');
         expect((result as any).asset_uid_invalid).to.have.lengthOf(1);
         expect((result as any).asset_uid_two_invalid).to.have.lengthOf(2);
+      });
+  });
+
+  describe('lookForReference method (scan status)', () => {
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .it('flags assets with a non-clean scan status and leaves clean/no-status assets alone', async () => {
+        const assetsInstance = new Assets(constructorParam);
+        await assetsInstance.prerequisiteData();
+        await assetsInstance.lookForReference();
+
+        expect(Object.keys(assetsInstance.missingScanStatusAssets)).to.have.members([
+          'blt-pending-asset',
+          'blt-quarantined-asset',
+        ]);
+        expect(assetsInstance.missingScanStatusAssets['blt-pending-asset'][0]).to.deep.include({
+          asset_uid: 'blt-pending-asset',
+          scan_status: 'pending',
+        });
+        expect(assetsInstance.missingScanStatusAssets['blt-quarantined-asset'][0]).to.deep.include({
+          asset_uid: 'blt-quarantined-asset',
+          scan_status: 'quarantined',
+        });
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-clean-asset');
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-no-status-asset');
+        expect(assetsInstance.missingScanStatusAssets).to.not.have.property('blt-not-scanned-asset');
+      });
+
+    fancy
+      .stdout({ print: process.env.PRINT === 'true' || false })
+      .stub(fs, 'writeFileSync', () => {})
+      .it('removes non-clean assets from the written-back chunk when fix mode is on', async () => {
+        const writeFileSyncStub = Sinon.spy(fs, 'writeFileSync');
+        const assetsInstance = new Assets({
+          ...constructorParam,
+          fix: true,
+          config: { ...constructorParam.config, flags: { yes: true } },
+        });
+        await assetsInstance.prerequisiteData();
+        await assetsInstance.lookForReference();
+
+        expect(writeFileSyncStub.called).to.be.true;
+        const chunk1Call = writeFileSyncStub.getCalls().find((c) => String(c.args[0]).includes('chunk1'));
+        expect(chunk1Call).to.not.be.undefined;
+        const writtenContent = JSON.parse(chunk1Call!.args[1] as string);
+        expect(writtenContent).to.not.have.property('blt-pending-asset');
+        expect(writtenContent).to.not.have.property('blt-quarantined-asset');
+        expect(writtenContent).to.have.property('blt-clean-asset');
+        expect(writtenContent).to.have.property('blt-no-status-asset');
+        expect(writtenContent).to.have.property('blt-not-scanned-asset');
       });
   });
 });
