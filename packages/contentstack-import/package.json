@@ -84,7 +84,9 @@
   "csdxConfig": {
     "shortCommandName": {
       "cm:stacks:import": "IMPRT"
-    }
+    },
+    "planProtectedFeatures": ["assetsScan"]
+
   },
   "repository": {
     "type": "git",

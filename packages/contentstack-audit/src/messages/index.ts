@@ -40,7 +40,10 @@ const auditMsg = {
   SCAN_CR_SUCCESS_MSG: 'Successfully completed the scanning of custom role with UID {uid} and name {name}.',
   SCAN_CS_SUCCESS_MSG: 'Successfully completed the scanning of studio project with UID {uid} and name {name}.',
   SCAN_ASSET_SUCCESS_MSG: `Successfully completed the scanning of Asset with UID '{uid}'.`,
-  SCAN_ASSET_WARN_MSG: `The locale '{locale}' or environment '{environment}' are not present for asset with uid '{uid}'`,
+  SCAN_ASSET_ENV_MISSING: `Environment '{environment}' is not present for asset '{uid}' (locale '{locale}')`,
+  SCAN_ASSET_LOCALE_MISSING: `Locale '{locale}' is not present for asset '{uid}' (environment '{environment}')`,
+  SCAN_ASSET_ENV_AND_LOCALE_MISSING: `Neither locale '{locale}' nor environment '{environment}' is present for asset '{uid}'`,
+  ASSET_PD_SOURCE_STACK_UNKNOWN: `Source stack API key not found at '{path}'; asset publish details tagged with an api_key were skipped and left unchanged.`,
   ENTRY_PUBLISH_DETAILS: `Removing the publish details for entry '{uid}' of ct '{ctuid}' in locale '{locale}' as locale '{publocale}' or environment '{environment}' does not exist`,
   CT_REFERENCE_FIELD: `The mentioned Reference field is not Array field reference is '{reference_to}' having display name '{display_name}''`,
   ASSET_NOT_EXIST: `The publish_details either does not exist or is not an array for asset uid '{uid}'`,
@@ -50,6 +53,8 @@ const auditMsg = {
   FIELD_RULE_TARGET_ABSENT: `The target field '{target_field}' is not present in the schema of the content-type {ctUid}`,
   FIELD_RULE_CONDITION_SCAN_MESSAGE: `Completed Scanning of Field Rule '{num}' condition of Content-type '{ctUid}'`,
   FIELD_RULE_TARGET_SCAN_MESSAGE: `Completed Scanning of Field Rule '{num}' target of Content-type '{ctUid}'`,
+  SCAN_ASSET_QUARANTINE_MSG: `Asset with UID '{uid}' has a non-clean scan status ('{status}') and will be excluded from import.`,
+  ENTRY_ASSET_REF_WARN_MSG: `Entry '{uid}' field '{field}' references asset '{asset_uid}' with scan status '{status}'; it will be removed on fix.`,
 };
 
 const auditFixMsg = {
@@ -63,7 +68,9 @@ const auditFixMsg = {
   ENTRY_MANDATORY_FIELD_FIX: `Removing the publish details from the entry with UID '{uid}' in Locale '{locale}'...`,
   ENTRY_SELECT_FIELD_FIX: `Adding the value '{value}' in the select field of entry UID '{uid}'...`,
   ASSET_FIX: `Fixed publish details for Asset with UID '{uid}'`,
-  FIELD_RULE_FIX_MESSAGE: `Fixed Field Rule '{num}' target of Content-type '{ctUid}'`,
+  FIELD_RULE_FIX_MESSAGE: `Fixed Field Rule '{num}' target of Content-type '{ctUid}`,
+  ASSET_SCAN_STATUS_FIX: `Removed asset with UID '{uid}' (scan status: '{status}') from assets.json.`,
+  ENTRY_ASSET_REF_FIX: `Removed reference to asset '{asset_uid}' from entry '{uid}' field '{field}'.`,
 };
 
 const messages: typeof errors &

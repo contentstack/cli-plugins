@@ -158,6 +158,7 @@ describe('BaseClass', () => {
           displayExecutionTime: false,
           enableDownloadStatus: false,
           includeVersionedAssets: false,
+          blockingScanStatuses: ['pending', 'quarantined'],
         },
         'cs-assets': {
           chunkFileSizeMb: 1,

@@ -674,53 +674,16 @@ describe('ImportAssets', () => {
       expect(makeConcurrentCallStub.called).to.be.true;
     });
 
-    it('should filter publish_details by valid environments', async () => {
-      importAssets['environments'] = { 'env-1': { name: 'production' } };
-
-      makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-invalid', locale: 'en-us' },
-            ],
-          },
-        });
-
-        expect(result.apiData.environments).to.deep.equal(['production']);
-        expect(result.apiData.locales).to.deep.equal(['en-us']);
-      });
-
-      await (importAssets as any).publish();
-    });
-
-    it('should skip publish when no valid environments', async () => {
-      makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [{ environment: 'env-invalid', locale: 'en-us' }],
-          },
-        });
-
-        expect(result.entity).to.be.undefined;
-      });
-
-      await (importAssets as any).publish();
-    });
-
     it('should skip publish when no UID mapping found', async () => {
       importAssets['assetsUidMap'] = {};
 
       makeConcurrentCallStub.callsFake(async (options: any) => {
         const serializeData = options.apiParams.serializeData;
+        // apiData is now a pre-grouped sub-item.
         const result = serializeData({
           apiData: {
             uid: 'asset-unknown',
-            publish_details: [{ environment: 'env-1', locale: 'en-us' }],
+            publishDetails: { environments: ['production'], locales: ['en-us'] },
           },
         });
 
@@ -730,7 +693,7 @@ describe('ImportAssets', () => {
       await (importAssets as any).publish();
     });
 
-    it('should set correct UID from mapping', async () => {
+    it('should set correct UID from mapping and preserve the grouped payload', async () => {
       importAssets['assetsUidMap'] = { 'asset-1': 'mapped-asset-1' };
 
       makeConcurrentCallStub.callsFake(async (options: any) => {
@@ -738,35 +701,58 @@ describe('ImportAssets', () => {
         const result = serializeData({
           apiData: {
             uid: 'asset-1',
-            publish_details: [{ environment: 'env-1', locale: 'en-us' }],
+            publishDetails: { environments: ['production'], locales: ['en-us'] },
           },
         });
 
         expect(result.uid).to.equal('mapped-asset-1');
+        // serializeData no longer flattens — it leaves the pre-grouped payload untouched.
+        expect(result.apiData.publishDetails).to.deep.equal({ environments: ['production'], locales: ['en-us'] });
       });
 
       await (importAssets as any).publish();
     });
 
-    it('should extract unique locales from publish_details', async () => {
-      makeConcurrentCallStub.callsFake(async (options: any) => {
-        const serializeData = options.apiParams.serializeData;
-        const result = serializeData({
-          apiData: {
-            uid: 'asset-1',
-            publish_details: [
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-1', locale: 'en-us' },
-              { environment: 'env-1', locale: 'fr-fr' },
-            ],
-          },
-        });
+    it('preserves env-locale pairing for a RAGGED asset (DX-9772) — no phantom pairs', async () => {
+      // production published only in en-us; preview published only in fr-fr.
+      importAssets['assetsUidMap'] = { 'asset-1': 'new-asset-1' };
+      importAssets['environments'] = { 'env-1': { name: 'production' }, 'env-2': { name: 'preview' } };
+      Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
+        get: sinon.stub().returns({
+          next: sinon.stub().resolves([
+            {
+              uid: 'asset-1',
+              title: 'ragged.jpg',
+              publish_details: [
+                { environment: 'env-1', locale: 'en-us' },
+                { environment: 'env-2', locale: 'fr-fr' }
+              ]
+            }
+          ])
+        }),
+        configurable: true
+      });
 
-        expect(result.apiData.locales).to.have.lengthOf(2);
-        expect(result.apiData.locales).to.include.members(['en-us', 'fr-fr']);
+      let apiContent: any[] = [];
+      makeConcurrentCallStub.callsFake(async (options: any) => {
+        apiContent = options.apiContent;
       });
 
       await (importAssets as any).publish();
+
+      // Two separate publish calls, each a single-rectangle payload — never a cartesian.
+      expect(apiContent).to.have.lengthOf(2);
+      const payloads = apiContent.map((i) => i.publishDetails);
+      expect(payloads).to.deep.include.members([
+        { environments: ['production'], locales: ['en-us'] },
+        { environments: ['preview'], locales: ['fr-fr'] }
+      ]);
+      for (const p of payloads) {
+        const hasPhantom =
+          (p.environments.includes('production') && p.locales.includes('fr-fr')) ||
+          (p.environments.includes('preview') && p.locales.includes('en-us'));
+        expect(hasPhantom, `phantom pair in ${JSON.stringify(p)}`).to.be.false;
+      }
     });
   });
 
