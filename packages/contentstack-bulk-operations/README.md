@@ -44,8 +44,8 @@ USAGE
   $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish|delete|move] [--environments
     <value>...] [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single]
     [--branch <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>]
-    [--folder-uid <value>] [--space-uid <value>] [--org-uid <value>] [--workspace <value>] [--asset-uids-file <value>]
-    [--locale <value>] [--target-folder-uid <value>]
+    [--folder-uid <value>] [-d <value>] [--dry-run] [--space-uid <value>] [--org-uid <value>] [--workspace <value>]
+    [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid <value>]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
@@ -54,6 +54,7 @@ FLAGS
   -c, --config=<value>               (optional) Specifies the path to a JSON configuration file that defines the options
                                      for the command. Use this file instead of passing multiple CLI flags for a single
                                      run.
+  -d, --data-dir=<value>             Path to exported content folder containing asset publish details.
   -k, --stack-api-key=<value>        API key of the source stack. You must use either the --stack-api-key flag or the
                                      --alias flag.
   -y, --yes                          Skips interactive confirmation prompts and runs the command immediately using the
@@ -65,6 +66,7 @@ FLAGS
                                      main branch will be published.
       --bulk-operation-file=<value>  [default: bulk-operation] (optional) Folder path to store operation logs. Creates
                                      separate files for success and failed operations. Default: bulk-operation
+      --dry-run                      Preview the publish plan without making any API calls.
       --environments=<value>...      Specifies one or more environments where the entries or assets should be published.
                                      Separate multiple environments with spaces.
       --folder-uid=<value>           (optional) The UID of the Assets' folder from which the assets need to be
@@ -111,6 +113,8 @@ EXAMPLES
   $ csdx cm:stacks:bulk-assets --retry-failed ./bulk-operation -a myAlias
 
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
+
+  $ csdx cm:stacks:bulk-assets --data-dir ./content --operation publish -k blt123
 
   $ csdx cm:stacks:bulk-assets --operation delete --space-uid am123 --org-uid bltOrg --locale en-us --asset-uids-file ./assets.json
 
