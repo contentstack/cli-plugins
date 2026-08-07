@@ -136,7 +136,7 @@ EXAMPLES
 
   $ csdx app:delete --app-uid <value>
 
-  $ csdx app:delete --app-uid <value> --org <value> -d ./boilerplate
+  $ csdx app:delete --app-uid <value> --org <value>
 ```
 
 _See code: [src/commands/app/delete.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-apps-cli/src/commands/app/delete.ts)_

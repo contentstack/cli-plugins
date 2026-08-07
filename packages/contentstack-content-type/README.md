@@ -127,7 +127,7 @@ DESCRIPTION
   compare two Content Types on different Stacks
 
 EXAMPLES
-  $ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" -content-type "home_page"
+  $ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" --content-type "home_page"
 ```
 
 _See code: [src/commands/content-type/compare-remote.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-content-type/src/commands/content-type/compare-remote.ts)_

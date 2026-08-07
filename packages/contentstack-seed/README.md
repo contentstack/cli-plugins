@@ -64,7 +64,7 @@ The following flags allow you to host and import Stacks from your own GitHub rep
 The account name can be a personal user account, organization account, or enterprise account.
 
 ```
-  $ csdx cm:stacks:seed -r "account/repository"
+  $ csdx cm:stacks:seed --repo "account/repository"
 ```
 
 **Step 1.** Export a Stack
@@ -84,8 +84,8 @@ Once the Stack is exported:
 
 * Create a GitHub repository.
     * By convention, your repository name should be prefixed with `stack-`. For example: `stack-your-starter-app`.
-      Doing so will allow the stack names to be found by the interactive prompt when running `csdx cm:stacks:seed -r "account"`.
-      This step is optional. You can fully qualify the repository name if required: `csdx cm:stacks:seed -r "account/repo`.
+      Doing so will allow the stack names to be found by the interactive prompt when running `csdx cm:stacks:seed --repo "account"`.
+      This step is optional. You can fully qualify the repository name if required: `csdx cm:stacks:seed --repo "account/repo`.
 * Create a folder named `stack` within the newly created GitHub repository
 * Take the content from **Step 1** and commit it to the `stack` folder
 * Create a [Release](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/managing-releases-in-a-repository)
@@ -93,8 +93,8 @@ Once the Stack is exported:
 The latest release will be downloaded and extracted, when a user attempts to install a Stack using:
 
 ```
-$ csdx cm:stacks:seed -r "account"
-$ csdx cm:stacks:seed -r "account/repository"
+$ csdx cm:stacks:seed --repo "account"
+$ csdx cm:stacks:seed --repo "account/repository"
 ```
 
 ## Documentation

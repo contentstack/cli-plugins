@@ -12,7 +12,7 @@ export default class CompareRemoteCommand extends Command {
   static description = "compare two Content Types on different Stacks";
 
   static examples = [
-    '$ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" -content-type "home_page"',
+    '$ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" --content-type "home_page"',
   ];
 
   static flags: any = {
