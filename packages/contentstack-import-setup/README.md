@@ -9,35 +9,7 @@ It is Contentstack’s CLI plugin to import content in the stack. To learn how t
 * [Commands](#commands)
 <!-- tocstop -->
 
-For switching to EU region update the hosts at config/default.js
-
-```js
-{
-  host:'https://eu-api.contentstack.com/v3',
-  cdn: 'https://eu-cdn.contentstack.com/v3',
- ...
-}
-```
-
-For switching to AZURE-NA region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-na-api.contentstack.com/v3',
-  cdn: 'https://azure-na-cdn.contentstack.com/v3'
- ...
-}
-```
-
-For switching to AZURE-EU region update the hosts at config/default.js
-
-```js
-{
-  host:'https://azure-eu-api.contentstack.com/v3',
-  cdn: 'https://azure-eu-cdn.contentstack.com/v3'
- ...
-}
-```
+Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
 
 # Usage
 
