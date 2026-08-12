@@ -2,7 +2,7 @@ name: Release CLI Plugins (Production)
 
 on:
   push:
-    branches: [main]
+    branches: [v1-legacy]
   workflow_dispatch: # manually trigger the workflow
 
 jobs:
