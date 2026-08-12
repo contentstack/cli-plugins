@@ -1,0 +1,205 @@
+name: Release CLI Plugins (Production)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install pnpm
+        run: corepack prepare pnpm@10.28.0 --activate
+
+      - name: Clean the repository
+        run: pnpm run clean:all
+
+      - name: Install root dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build all plugins
+        run: pnpm -r --sort run build
+
+      - name: Reading Configuration
+        id: release_config
+        uses: rgarcia-phi/json-to-variables@v1.1.0
+        with:
+          filename: .github/config/release.json
+          prefix: release
+
+      # Asset Management
+      - name: Publishing asset-management (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-asset-management/package.json
+          access: public
+          tag: latest
+
+      # Variants
+      - name: Publishing variants (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-variants/package.json
+          tag: latest
+
+      # Export
+      - name: Publishing export (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-export/package.json
+          tag: latest
+
+      # Audit
+      - name: Publishing audit (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-audit/package.json
+          tag: latest
+
+      # Import
+      - name: Publishing import (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-import/package.json
+          tag: latest
+
+      # Clone
+      - name: Publishing clone (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-clone/package.json
+          tag: latest
+
+      # Import Setup
+      - name: Publishing import-setup (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-import-setup/package.json
+          tag: latest
+
+      # Export to CSV
+      - name: Publishing export-to-csv (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-export-to-csv/package.json
+          tag: latest
+
+      # Migration
+      - name: Publishing migration (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-migration/package.json
+          tag: latest
+
+      # Migrate RTE
+      - name: Publishing migrate-rte (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-migrate-rte/package.json
+          access: public
+          tag: latest
+
+      # Seed
+      - name: Publishing seed (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-seed/package.json
+          tag: latest
+
+      # Bootstrap
+      - name: Publishing bootstrap (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bootstrap/package.json
+          tag: latest
+
+      # Branches
+      - name: Publishing branches (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-branches/package.json
+          tag: latest
+
+      # Apps CLI
+      - name: Publishing apps-cli (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-apps-cli/package.json
+          tag: latest
+
+      # Query Export
+      - name: Publishing query-export (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-query-export/package.json
+          tag: latest
+
+      # Content Type
+      - name: Publishing content-type (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-content-type/package.json
+          tag: latest
+
+      # Regex Validate
+      - name: Publishing regex-validate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          access: public
+          tag: latest
+
+      # Tsgen
+      - name: Publishing tsgen (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-cli-tsgen/package.json
+          tag: latest
+
+      # External Migrate
+      - name: Publishing external-migrate (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-external-migrate/package.json
+          access: public
+          tag: latest
+
+      # Bulk Operations
+      - name: Publishing bulk-operations (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bulk-operations/package.json
+          access: public
+          tag: latest
