@@ -1,4 +1,3 @@
-import { join } from "path";
 import { expect } from "chai";
 import { cliux, configHandler } from "@contentstack/cli-utilities";
 import { runCommand } from "@oclif/test";
@@ -8,11 +7,16 @@ import manifestData from "../../config/manifest.json";
 import sinon from "sinon";
 import nock from "nock";
 import fs from "fs";
+import { join } from "path";
 import { stubAuthentication } from "../../helpers/auth-stub-helper";
 import Update from "../../../../src/commands/app/update";
 import { BaseCommand } from "../../../../src/base-command";
 
 const region = configHandler.get("region");
+
+// oclif loads commands from src/ (ts-node is registered), so stub the src classes directly
+const BaseCommandToStub = BaseCommand;
+const LibUpdate = Update;
 
 /** Optional override: return a custom marketplace SDK mock for this test. */
 let marketplaceMockOverride: any = null;
@@ -41,11 +45,11 @@ function stubUpdateInit(sandbox: sinon.SinonSandbox) {
       }),
     }),
   };
-  sandbox.stub(BaseCommand.prototype, "initCmaSDK").callsFake(async function (this: any) {
+  sandbox.stub(BaseCommandToStub.prototype, "initCmaSDK").callsFake(async function (this: any) {
     this.managementSdk = mockManagementSdk;
     this.managementAppSdk = mockManagementSdk;
   });
-  sandbox.stub(BaseCommand.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
+  sandbox.stub(BaseCommandToStub.prototype, "initMarketplaceSDK").callsFake(async function (this: any) {
     this.marketplaceAppSdk = marketplaceMockOverride ?? defaultMarketplaceSdk;
   });
 }
@@ -81,7 +85,7 @@ describe("app:update", () => {
       sandbox.stub(fs, "writeFileSync").callsFake(() => {});
 
       sandbox
-        .stub(Update.prototype, "updateAppOnDeveloperHub")
+        .stub(LibUpdate.prototype, "updateAppOnDeveloperHub")
         .callsFake(async function (this: any) {
           this.log(this.messages.APP_UPDATE_SUCCESS, "info");
         });
@@ -179,7 +183,7 @@ describe("app:update", () => {
   describe("Update app with wrong app-uid API failure", () => {
     beforeEach(() => {
       sandbox
-        .stub(Update.prototype, "updateAppOnDeveloperHub")
+        .stub(LibUpdate.prototype, "updateAppOnDeveloperHub")
         .callsFake(async function (this: any) {
           this.log(this.messages.INVALID_APP_ID, "error");
           throw { status: 400 };
@@ -200,7 +204,7 @@ describe("app:update", () => {
   describe("Update app API failure", () => {
     beforeEach(() => {
       sandbox
-        .stub(Update.prototype, "updateAppOnDeveloperHub")
+        .stub(LibUpdate.prototype, "updateAppOnDeveloperHub")
         .callsFake(async function (this: any) {
           this.log(this.messages.APP_INVALID_ORG, "error");
           throw { status: 403 };
@@ -220,7 +224,7 @@ describe("app:update", () => {
   describe("Update app with duplicate app name (409 status)", () => {
     beforeEach(() => {
       sandbox
-        .stub(Update.prototype, "updateAppOnDeveloperHub")
+        .stub(LibUpdate.prototype, "updateAppOnDeveloperHub")
         .callsFake(async function (this: any) {
           this.log(
             this.$t(this.messages.DUPLICATE_APP_NAME, {

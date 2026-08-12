@@ -1,15 +1,13 @@
-## Migrating to 4.10.0 (cli-plugins monorepo, CLI 1.x)
+## Migrating to 5.0.0-beta.0 (cli-plugins monorepo)
 
 The plugin source moved to [contentstack/cli-plugins](https://github.com/contentstack/cli-plugins) at `packages/contentstack-cli-tsgen`. See [TSGEN-MIGRATION.md](../../TSGEN-MIGRATION.md).
 
 | Change | Notes |
 | --- | --- |
-| Version | **4.10.0** — first release from monorepo on the **1.x** line |
-| Install | `csdx plugins:install contentstack-cli-tsgen` |
-| Dependencies | `@contentstack/cli-command` ~1.8.2, `@contentstack/cli-utilities` ~1.18.3 |
+| Version | `5.0.0-beta.0` — aligns with **CLI 2.x beta** |
+| Install | `csdx plugins:install contentstack-cli-tsgen@beta` |
+| Dependencies | `@contentstack/cli-command` / `@contentstack/cli-utilities` `~2.0.0-beta.*` |
 | Command | `csdx tsgen` unchanged |
-
-For **CLI 2.x beta**, use the `v2-beta` branch and `contentstack-cli-tsgen@beta` (**5.0.0-beta.0**+).
 
 ---
 

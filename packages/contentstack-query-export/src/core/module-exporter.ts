@@ -1,8 +1,6 @@
-import * as path from 'path';
-import { log, handleAndLogError, sanitizePath } from '@contentstack/cli-utilities';
+import { log, handleAndLogError } from '@contentstack/cli-utilities';
 import ExportCommand from '@contentstack/cli-cm-export';
 import { QueryExportConfig, Modules, ExportOptions } from '../types';
-import { rebuildContentTypesSchemaJson } from '../utils/read-content-type-schemas';
 
 export class ModuleExporter {
   private exportQueryConfig: QueryExportConfig;
@@ -28,14 +26,6 @@ export class ModuleExporter {
       // Create export command instance
       await ExportCommand.run(cmd);
       log.debug(`Export command completed for module: ${moduleName}`, moduleLogContext);
-
-      if (moduleName === 'content-types') {
-        const baseDir = options.directory || this.exportQueryConfig.exportDir;
-        const branch = options.branch || this.exportQueryConfig.branchName || '';
-        const ctDir = path.join(sanitizePath(baseDir), sanitizePath(branch), 'content_types');
-        rebuildContentTypesSchemaJson(ctDir);
-        log.debug('Rebuilt content_types/schema.json from all per-UID JSON files', moduleLogContext);
-      }
 
       // Read the exported data
       // const data = await this.readExportedData(moduleName, options);

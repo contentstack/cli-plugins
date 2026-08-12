@@ -123,6 +123,7 @@ describe('BulkOperationService', () => {
 
       expect(jobId).to.equal('job123');
       expect(mockPublish.called).to.be.true;
+      expect(mockPublish.firstCall.args[0].api_version).to.equal('3.2');
     });
 
     it('should submit bulk unpublish job', async () => {
@@ -132,7 +133,7 @@ describe('BulkOperationService', () => {
           content_type: 'blog',
           locale: 'en-us',
           version: 1,
-          publish_details: [],
+          publish_details: [{ environment: 'production', locale: 'en-us', version: 1 }],
         },
       ];
 
@@ -147,6 +148,7 @@ describe('BulkOperationService', () => {
 
       expect(jobId).to.equal('job456');
       expect(mockUnpublish.called).to.be.true;
+      expect(mockUnpublish.firstCall.args[0].api_version).to.equal('3.2');
     });
 
     it('should handle unsupported operation', async () => {
@@ -168,7 +170,7 @@ describe('BulkOperationService', () => {
           content_type: 'blog',
           locale: 'en-us',
           version: 1,
-          publish_details: [],
+          publish_details: [{ environment: 'production', locale: 'en-us', version: 1 }],
         },
       ];
 
@@ -360,7 +362,7 @@ describe('BulkOperationService', () => {
       expect(payload.entries[0].variants).to.be.undefined;
     });
 
-    it('should prepare asset payload', () => {
+    it('should prepare asset payload for single locale', () => {
       const mockItems: AssetPublishData[] = [
         {
           uid: 'asset1',
@@ -378,6 +380,123 @@ describe('BulkOperationService', () => {
 
       expect(payload.assets).to.have.lengthOf(1);
       expect(payload.assets[0].uid).to.equal('asset1');
+      expect(payload.locales).to.deep.equal(['en-us']);
+      expect(payload.environments).to.deep.equal(['production']);
+    });
+
+    it('should collect all locales from multi-locale asset items', () => {
+      // fetchAssets creates one item per asset per locale — simulate 2 assets × 2 locales
+      const mockItems: AssetPublishData[] = [
+        {
+          uid: 'asset1',
+          version: 1,
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'beta', locale: 'en-us' },
+            { environment: 'beta2', locale: 'en-us' },
+          ],
+        },
+        {
+          uid: 'asset2',
+          version: 1,
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'beta', locale: 'en-us' },
+            { environment: 'beta2', locale: 'en-us' },
+          ],
+        },
+        {
+          uid: 'asset1',
+          version: 1,
+          locale: 'ar',
+          publish_details: [
+            { environment: 'beta', locale: 'ar' },
+            { environment: 'beta2', locale: 'ar' },
+          ],
+        },
+        {
+          uid: 'asset2',
+          version: 1,
+          locale: 'ar',
+          publish_details: [
+            { environment: 'beta', locale: 'ar' },
+            { environment: 'beta2', locale: 'ar' },
+          ],
+        },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.PUBLISH,
+        ResourceType.ASSET
+      );
+
+      // Both locales must appear in the payload
+      expect(payload.locales).to.include('en-us');
+      expect(payload.locales).to.include('ar');
+      expect(payload.locales).to.have.lengthOf(2);
+    });
+
+    it('should deduplicate asset UIDs when items contain one entry per locale per asset', () => {
+      // 2 assets × 2 locales = 4 items, but payload should have only 2 unique asset UIDs
+      const mockItems: AssetPublishData[] = [
+        { uid: 'asset1', version: 1, locale: 'en-us', publish_details: [{ environment: 'beta', locale: 'en-us' }] },
+        { uid: 'asset2', version: 2, locale: 'en-us', publish_details: [{ environment: 'beta', locale: 'en-us' }] },
+        { uid: 'asset1', version: 1, locale: 'ar', publish_details: [{ environment: 'beta', locale: 'ar' }] },
+        { uid: 'asset2', version: 2, locale: 'ar', publish_details: [{ environment: 'beta', locale: 'ar' }] },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.PUBLISH,
+        ResourceType.ASSET
+      );
+
+      expect(payload.assets).to.have.lengthOf(2);
+      const uids = payload.assets.map((a: any) => a.uid);
+      expect(uids).to.deep.equal(['asset1', 'asset2']);
+    });
+
+    it('should collect all environments from multi-env asset items', () => {
+      const mockItems: AssetPublishData[] = [
+        {
+          uid: 'asset1',
+          version: 1,
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'beta', locale: 'en-us' },
+            { environment: 'beta2', locale: 'en-us' },
+            { environment: 'beta3', locale: 'en-us' },
+          ],
+        },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.PUBLISH,
+        ResourceType.ASSET
+      );
+
+      expect(payload.environments).to.deep.equal(['beta', 'beta2', 'beta3']);
+    });
+
+    it('should include all locales and deduplicated assets together for unpublish', () => {
+      const mockItems: AssetPublishData[] = [
+        { uid: 'asset1', version: 1, locale: 'en-us', publish_details: [{ environment: 'beta', locale: 'en-us' }] },
+        { uid: 'asset1', version: 1, locale: 'ar', publish_details: [{ environment: 'beta', locale: 'ar' }] },
+        { uid: 'asset1', version: 1, locale: 'fr-fr', publish_details: [{ environment: 'beta', locale: 'fr-fr' }] },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.UNPUBLISH,
+        ResourceType.ASSET
+      );
+
+      expect(payload.assets).to.have.lengthOf(1);
+      expect(payload.assets[0].uid).to.equal('asset1');
+      expect(payload.locales).to.have.lengthOf(3);
+      expect(payload.locales).to.include.members(['en-us', 'ar', 'fr-fr']);
     });
 
     it('should handle items with no publish_details', () => {
@@ -390,14 +509,9 @@ describe('BulkOperationService', () => {
         } as EntryPublishData,
       ];
 
-      const payload = (bulkOperationService as any).prepareBulkPayload(
-        mockItems,
-        OperationType.PUBLISH,
-        ResourceType.ENTRY
-      );
-
-      expect(payload.entries).to.have.lengthOf(1);
-      expect(payload.environments).to.deep.equal([]);
+      expect(() =>
+        (bulkOperationService as any).prepareBulkPayload(mockItems, OperationType.PUBLISH, ResourceType.ENTRY)
+      ).to.throw('No environments for bulk publish');
     });
   });
 

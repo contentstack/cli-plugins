@@ -6,8 +6,6 @@ import { AuditBaseCommand } from '../../../../audit-base-command';
 import { tableFlags } from '../../../../util';
 
 export default class Audit extends AuditBaseCommand {
-  static aliases: string[] = ['audit', 'cm:stacks:audit'];
-
   static description = auditMsg.AUDIT_CMD_DESCRIPTION;
 
   static examples = [
@@ -21,10 +19,6 @@ export default class Audit extends AuditBaseCommand {
   static flags: FlagInput = {
     'report-path': Flags.string({
       description: auditMsg.REPORT_PATH,
-    }),
-    'reference-only': Flags.boolean({
-      hidden: true,
-      description: auditMsg.REFERENCE_ONLY,
     }),
     modules: Flags.string({
       multiple: true,

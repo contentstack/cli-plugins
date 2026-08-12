@@ -70,7 +70,7 @@ describe('Login Handler', () => {
       expect(config.headers!.access_token).to.equal('test-access-token');
       expect(config.headers!.authtoken).to.equal('test-auth-token');
       expect(config.headers!['X-User-Agent']).to.equal('contentstack-export/v');
-      expect(mockClient.login.calledOnce).to.be.true
+      expect(mockClient.login.calledOnce).to.be.true;
       // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
       expect(mockClient.login.calledWith({ email: 'test@example.com', password: 'testpassword' })).to.be.true;
     });

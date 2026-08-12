@@ -1,7 +1,7 @@
 import { Ora, default as ora } from 'ora';
 import * as path from 'path';
 import inquirer from 'inquirer';
-import chalk from 'chalk';
+import { getChalk } from '@contentstack/cli-utilities';
 import * as fs from 'fs';
 import { rimraf } from 'rimraf';
 import { CustomAbortController } from './abort-controller';
@@ -170,8 +170,7 @@ export class CloneHandler {
   }
 
   displayBackOptionMessage(): void {
-    const ui = new inquirer.ui.BottomBar();
-    ui.updateBottomBar(chalk.cyan('\nPress shift & left arrow together to undo the operation\n'));
+    process.stdout.write(getChalk().cyan('\nPress shift & left arrow together to undo the operation\n'));
   }
 
   setBackKeyPressHandler(backKeyPressHandler: (...args: any[]) => void): void {
@@ -568,11 +567,15 @@ export class CloneHandler {
       delete exportConfig.import;
       delete exportConfig.export;
 
+      if (exportConfig.source_stack) {
+        exportConfig.apiKey = exportConfig.source_stack;
+      }
       // Resolve path to package root - go up 3 levels from __dirname (core/util -> package root)
       const packageRoot = path.resolve(__dirname, '../../..');
       const exportDir = path.join(packageRoot, 'contents');
+      this.config.contentDir = exportDir;
       log.debug(`Export directory: ${exportDir}`, this.config.cloneContext);
-      const cmd: string[] = ['-k', exportConfig.source_stack, '-d', exportDir];
+      const cmd: string[] = ['-k', exportConfig.apiKey || exportConfig.source_stack, '-d', exportDir];
       
       if (exportConfig.cloneType === 'a') {
         exportConfig.filteredModules = ['stack'].concat(STRUCTURE_LIST);
@@ -604,7 +607,7 @@ export class CloneHandler {
         ...this.config.cloneContext,
         cmd: cmd.join(' '),
         exportDir,
-        sourceStack: exportConfig.source_stack,
+        sourceStack: exportConfig.apiKey || exportConfig.source_stack,
         branch: exportConfig.sourceStackBranch 
       });
       log.debug('Running export command', { ...this.config.cloneContext, cmd });
@@ -634,8 +637,16 @@ export class CloneHandler {
         cmd.push('-a', importConfig.destination_alias);
         log.debug(`Using destination alias: ${importConfig.destination_alias}`, this.config.cloneContext);
       }
-      if (!importConfig.data && importConfig.sourceStackBranch && importConfig.pathDir) {
-        const dataPath = path.join(importConfig.pathDir, importConfig.sourceStackBranch);
+      if (importConfig.target_stack) {
+        importConfig.apiKey = importConfig.target_stack;
+        log.debug(`Using target stack api key for import: ${importConfig.target_stack}`, this.config.cloneContext);
+      }
+      if (importConfig.data) {
+        importConfig.contentDir = importConfig.data;
+      }
+
+      if (!importConfig.contentDir && importConfig.pathDir) {
+        const dataPath = importConfig.pathDir;
         cmd.push('-d', dataPath);
         log.debug(`Import data path: ${dataPath}`, this.config.cloneContext);
       }
@@ -660,12 +671,12 @@ export class CloneHandler {
 
       log.debug(`Writing import config to: ${configFilePath}`, this.config.cloneContext);
       fs.writeFileSync(configFilePath, JSON.stringify(importConfig));
-      log.debug('Import command prepared', { 
+      log.debug('Import command prepared', {
         ...this.config.cloneContext,
         cmd: cmd.join(' '),
-        targetStack: importConfig.target_stack,
+        targetStack: importConfig.apiKey || importConfig.target_stack,
         targetBranch: importConfig.targetStackBranch,
-        dataPath: importConfig.data || (importConfig.pathDir && importConfig.sourceStackBranch ? path.join(importConfig.pathDir, importConfig.sourceStackBranch) : undefined)
+        dataPath: importConfig.contentDir || importConfig.pathDir || undefined
       });
       log.debug('Running import command', { ...this.config.cloneContext, cmd });
       const importData = importCmd.run(cmd);
@@ -776,7 +787,6 @@ export class CloneHandler {
   }
 
   async cloneTypeSelection(): Promise<any> {
-    console.clear();
     return new Promise(async (resolve, reject) => {
       try {
         log.debug('Starting clone type selection', this.config.cloneContext);
@@ -794,10 +804,11 @@ export class CloneHandler {
         ];
         let successMsg: string;
         let selectedValue: any = {};
-        // Resolve path to package root - go up 3 levels from __dirname (core/util -> package root)
+        // Export root only (single-branch layout: modules live directly under -d, not pathDir/<branch>)
         const cloneTypePackageRoot = path.resolve(__dirname, '../../..');
-        this.config.data = path.join(cloneTypePackageRoot, 'contents', this.config.sourceStackBranch || '');
-        log.debug(`Clone data directory: ${this.config.data}`, this.config.cloneContext);
+        this.config.contentDir =
+          this.config.contentDir || this.config.pathDir || path.join(cloneTypePackageRoot, 'contents');
+        log.debug(`Clone content directory: ${this.config.contentDir}`, this.config.cloneContext);
 
         if (!this.config.cloneType) {
           log.debug('Clone type not specified, prompting user for selection', this.config.cloneContext);

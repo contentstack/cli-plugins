@@ -4,19 +4,28 @@
  * Copyright (c) 2026 Contentstack LLC
  * MIT Licensed
  */
-
 import * as path from 'path';
-import { isEmpty, find, cloneDeep, map } from 'lodash';
-import { sanitizePath, log, handleAndLogError } from '@contentstack/cli-utilities';
-import { fsUtil, schemaTemplate, lookupExtension, lookUpTaxonomy, fileHelper } from '../../utils';
+import { find, cloneDeep, map } from 'lodash';
+import { sanitizePath, log, handleAndLogError, readContentTypeSchemas, readGlobalFieldSchemas } from '@contentstack/cli-utilities';
+import { PATH_CONSTANTS } from '../../constants';
 import { ImportConfig, ModuleClassParams } from '../../types';
 import BaseClass, { ApiOptions } from './base-class';
 import { updateFieldRules, isGlobalFieldRule } from '../../utils/content-type-helper';
+import {
+  fsUtil,
+  schemaTemplate,
+  lookupExtension,
+  lookUpTaxonomy,
+  fileHelper,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  PROCESS_STATUS,
+  MODULE_NAMES,
+} from '../../utils';
 
 export default class ContentTypesImport extends BaseClass {
   private cTsMapperPath: string;
   private cTsFolderPath: string;
-  private cTsFailsPath: string;
   private cTsSuccessPath: string;
   private gFsPendingPath: string;
   private pendingGFs: string[];
@@ -24,12 +33,8 @@ export default class ContentTypesImport extends BaseClass {
   private gFsFolderPath: string;
   private gFsMapperFolderPath: string;
   private gFs: Record<string, unknown>[];
-  private failedCTs: Record<string, unknown>[];
   private createdCTs: string[];
   private cTs: Record<string, unknown>[];
-  private cTsUidMapper: Record<string, string>;
-  private config: ImportConfig;
-  private stackAPIClient: any;
   private marketplaceAppMapperPath: string;
   private reqConcurrency: number;
   private ignoredFilesInContentTypesFolder: Map<string, string>;
@@ -45,7 +50,6 @@ export default class ContentTypesImport extends BaseClass {
   };
   private gFsConfig: {
     dirName: string;
-    fileName: string;
     validKeys: string[];
     limit: number;
     writeConcurrency?: number;
@@ -54,50 +58,67 @@ export default class ContentTypesImport extends BaseClass {
   public taxonomies: Record<string, unknown>;
   private extPendingPath: string;
   private isExtensionsUpdate = false;
+  private pendingExts: string[];
   private composableStudioSuccessPath: string;
   private composableStudioExportPath: string;
 
   constructor({ importConfig, stackAPIClient }: ModuleClassParams) {
     super({ importConfig, stackAPIClient });
-    this.importConfig.context.module = 'content-types';
+    this.importConfig.context.module = MODULE_CONTEXTS.CONTENT_TYPES;
+    this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.CONTENT_TYPES];
     this.cTsConfig = importConfig.modules['content-types'];
     this.gFsConfig = importConfig.modules['global-fields'];
     this.reqConcurrency = this.cTsConfig.writeConcurrency || this.importConfig.writeConcurrency;
-    this.cTsFolderPath = path.join(sanitizePath(this.importConfig.data), sanitizePath(this.cTsConfig.dirName));
-    this.cTsMapperPath = path.join(sanitizePath(this.importConfig.data), 'mapper', 'content_types');
-    this.cTsSuccessPath = path.join(sanitizePath(this.cTsMapperPath), 'success.json');
-    this.gFsFolderPath = path.resolve(sanitizePath(this.importConfig.data), sanitizePath(this.gFsConfig.dirName));
-    this.gFsMapperFolderPath = path.join(sanitizePath(importConfig.data), 'mapper', 'global_fields', 'success.json');
+    this.cTsFolderPath = path.join(sanitizePath(this.importConfig.contentDir), sanitizePath(this.cTsConfig.dirName));
+    this.cTsMapperPath = path.join(
+      sanitizePath(this.importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.CONTENT_TYPES,
+    );
+    this.cTsSuccessPath = path.join(
+      sanitizePath(this.importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.CONTENT_TYPES,
+      PATH_CONSTANTS.FILES.SUCCESS,
+    );
+    this.gFsFolderPath = path.resolve(sanitizePath(this.importConfig.backupDir), sanitizePath(this.gFsConfig.dirName));
+    this.gFsMapperFolderPath = path.join(
+      sanitizePath(importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.GLOBAL_FIELDS,
+      PATH_CONSTANTS.FILES.SUCCESS,
+    );
     this.gFsPendingPath = path.join(
-      sanitizePath(importConfig.data),
-      'mapper',
-      'global_fields',
-      'pending_global_fields.js',
+      sanitizePath(importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.GLOBAL_FIELDS,
+      PATH_CONSTANTS.FILES.PENDING_GLOBAL_FIELDS,
     );
     this.marketplaceAppMapperPath = path.join(
-      sanitizePath(this.importConfig.data),
-      'mapper',
-      'marketplace_apps',
-      'uid-mapping.json',
+      sanitizePath(this.importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.MARKETPLACE_APPS,
+      PATH_CONSTANTS.FILES.UID_MAPPING,
     );
     this.ignoredFilesInContentTypesFolder = new Map([
       ['__master.json', 'true'],
       ['__priority.json', 'true'],
-      ['schema.json', 'true'],
+      [PATH_CONSTANTS.FILES.SCHEMA, 'true'],
+      ['globalfields.json', 'true'],
       ['.DS_Store', 'true'],
     ]);
 
     // Initialize composable studio paths if config exists
     if (this.importConfig.modules['composable-studio']) {
       this.composableStudioSuccessPath = path.join(
-        sanitizePath(this.importConfig.data),
-        'mapper',
+        sanitizePath(importConfig.backupDir),
+        PATH_CONSTANTS.MAPPER,
         this.importConfig.modules['composable-studio'].dirName,
         this.importConfig.modules['composable-studio'].fileName,
       );
 
       this.composableStudioExportPath = path.join(
-        sanitizePath(this.importConfig.data),
+        sanitizePath(importConfig.backupDir),
         this.importConfig.modules['composable-studio'].dirName,
         this.importConfig.modules['composable-studio'].fileName,
       );
@@ -113,126 +134,110 @@ export default class ContentTypesImport extends BaseClass {
     this.gFs = [];
     this.createdGFs = [];
     this.pendingGFs = [];
-    this.taxonomiesPath = path.join(sanitizePath(importConfig.data), 'mapper/taxonomies', 'success.json');
-    this.extPendingPath = path.join(sanitizePath(importConfig.data), 'mapper', 'extensions', 'pending_extensions.js');
+    this.pendingExts = [];
+    this.taxonomiesPath = path.join(
+      sanitizePath(importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.TAXONOMIES,
+      PATH_CONSTANTS.FILES.SUCCESS,
+    );
+    this.extPendingPath = path.join(
+      sanitizePath(importConfig.backupDir),
+      PATH_CONSTANTS.MAPPER,
+      PATH_CONSTANTS.MAPPER_MODULES.EXTENSIONS,
+      PATH_CONSTANTS.FILES.PENDING_EXTENSIONS,
+    );
   }
 
   async start(): Promise<any> {
-    /**
-     * read content type, check if it is necessary to read the entire dir
-     * Seed content types
-     * Update content types, lookup extension.
-     * Update pending global fields
-     * write field rules
-     */
-    this.cTs = fsUtil.readFile(path.join(this.cTsFolderPath, 'schema.json')) as Record<string, unknown>[];
-    if (!this.cTs || isEmpty(this.cTs)) {
-      log.info('No content type found to import.', this.importConfig.context);
-      return;
-    }
-    log.debug(`Found ${this.cTs.length} content types to import`, this.importConfig.context);
+    try {
+      log.debug('Starting content types import process...', this.importConfig.context);
+      await this.analyzeImportData();
 
-    // If success file doesn't exist but export file does, skip the composition content type
-    // Only check if composable studio paths are configured
-    if (
-      this.composableStudioSuccessPath &&
-      this.composableStudioExportPath &&
-      !fileHelper.fileExistsSync(this.composableStudioSuccessPath) &&
-      fileHelper.fileExistsSync(this.composableStudioExportPath)
-    ) {
-      const exportedProject = fileHelper.readFileSync(this.composableStudioExportPath) as {
-        contentTypeUid: string;
-      };
+      if (!this.cTs?.length) {
+        log.info('No content type found to import', this.importConfig.context);
+        return;
+      }
+      // If success file doesn't exist but export file does, skip the composition content type
+      // Only check if composable studio paths are configured
+      if (
+        this.composableStudioSuccessPath &&
+        this.composableStudioExportPath &&
+        !fileHelper.fileExistsSync(this.composableStudioSuccessPath) &&
+        fileHelper.fileExistsSync(this.composableStudioExportPath)
+      ) {
+        const exportedProject = fileHelper.readFileSync(this.composableStudioExportPath) as {
+          contentTypeUid: string;
+        };
 
-      if (exportedProject?.contentTypeUid) {
-        const originalCount = this.cTs.length;
-        this.cTs = this.cTs.filter((ct: Record<string, unknown>) => {
-          const shouldSkip = ct.uid === exportedProject.contentTypeUid;
-          if (shouldSkip) {
-            log.info(
-              `Skipping content type '${ct.uid}' as Composable Studio project was not created successfully`,
+        if (exportedProject?.contentTypeUid) {
+          const originalCount = this.cTs.length;
+          this.cTs = this.cTs.filter((ct: Record<string, unknown>) => {
+            const shouldSkip = ct.uid === exportedProject.contentTypeUid;
+            if (shouldSkip) {
+              log.info(
+                `Skipping content type '${ct.uid}' as Composable Studio project was not created successfully`,
+                this.importConfig.context,
+              );
+            }
+            return !shouldSkip;
+          });
+
+          const skippedCount = originalCount - this.cTs.length;
+          if (skippedCount > 0) {
+            log.debug(
+              `Filtered out ${skippedCount} composition content type(s) from import`,
               this.importConfig.context,
             );
           }
-          return !shouldSkip;
-        });
-
-        const skippedCount = originalCount - this.cTs.length;
-        if (skippedCount > 0) {
-          log.debug(`Filtered out ${skippedCount} composition content type(s) from import`, this.importConfig.context);
         }
       }
-    }
 
-    await fsUtil.makeDirectory(this.cTsMapperPath);
-    log.debug('Created content types mapper directory.', this.importConfig.context);
+      await fsUtil.makeDirectory(this.cTsMapperPath);
+      log.debug('Created content types mapper directory.', this.importConfig.context);
 
-    this.installedExtensions = (
-      (fsUtil.readFile(this.marketplaceAppMapperPath) as any) || { extension_uid: {} }
-    ).extension_uid;
-    log.debug(
-      `Loaded ${Object.keys(this.installedExtensions)?.length} installed extensions`,
-      this.importConfig.context,
-    );
+      const progress = this.initializeProgress();
 
-    this.taxonomies = fsUtil.readFile(this.taxonomiesPath) as Record<string, unknown>;
-    const taxonomyCount = Object.keys(this.taxonomies || {}).length;
-    log.debug(`Loaded ${taxonomyCount} taxonomy definitions`, this.importConfig.context);
+      if (this.cTs.length > 0) {
+        await this.handleContentTypesCreation(progress);
+        await this.handleContentTypesUpdate(progress);
+      }
 
-    log.info('Starting content types seeding process...', this.importConfig.context);
-    await this.seedCTs();
-    if (this.createdCTs?.length) {
-      fsUtil.writeFile(this.cTsSuccessPath, this.createdCTs);
-      log.debug(`Written ${this.createdCTs.length} successful content types to file`, this.importConfig.context);
-    }
-    log.success('Created content types', this.importConfig.context);
+      if (this.fieldRules.length > 0) {
+        fsUtil.writeFile(path.join(this.cTsFolderPath, 'field_rules_uid.json'), this.fieldRules);
+        log.debug(`Written ${this.fieldRules.length} field rules to file`, this.importConfig.context);
+      }
 
-    log.info('Starting content types update process...', this.importConfig.context);
-    await this.updateCTs();
-    log.success('Updated content types with references', this.importConfig.context);
+      if (this.pendingExts.length > 0) {
+        await this.handlePendingExtensions(progress);
+      }
 
-    if (this.fieldRules.length > 0) {
-      fsUtil.writeFile(path.join(this.cTsFolderPath, 'field_rules_uid.json'), this.fieldRules);
-      log.debug(`Written ${this.fieldRules.length} field rules to file`, this.importConfig.context);
-    }
+      if (this.pendingGFs.length > 0) {
+        await this.handlePendingGlobalFields(progress);
+      }
 
-    log.info('Updating the extensions...', this.importConfig.context);
-    await this.updatePendingExtensions();
-    if (this.isExtensionsUpdate) {
-      log.success('Successfully updated the extensions.', this.importConfig.context);
-    }
-
-    log.info('Starting pending global fields update...', this.importConfig.context);
-    this.pendingGFs = fsUtil.readFile(this.gFsPendingPath) as any;
-    if (!this.pendingGFs || isEmpty(this.pendingGFs)) {
-      log.info('No pending global fields found to update.', this.importConfig.context);
-    } else {
-      await this.updatePendingGFs().catch((error) => {
+      // Global field rules were skipped during the content type update (see updateFieldRules)
+      // because the embedded global field schema was not yet complete on the stack. By now global
+      // fields are expected to be complete (deferred ones via handlePendingGlobalFields above;
+      // others already applied in the global-fields module / pre-existing on the stack for
+      // module-only imports). Re-apply the global field rules now; failures are surfaced below.
+      const failedGFFieldRuleCTs = await this.updateGFFieldRules().catch((error) => {
         handleAndLogError(error, { ...this.importConfig.context });
+        return [] as string[];
       });
-      log.success('Updated pending global fields with content type with references', this.importConfig.context);
-    }
+      if (failedGFFieldRuleCTs.length) {
+        // Surface the partial failure instead of claiming an unqualified success.
+        log.error(
+          `Content types imported, but failed to apply global field rules for: ${failedGFFieldRuleCTs.join(', ')}`,
+          this.importConfig.context,
+        );
+      }
 
-    // Global field rules were skipped during the content type update (see updateFieldRules) because
-    // the embedded global field schema was not yet complete on the stack. At this point global
-    // fields are expected to be complete (deferred ones via updatePendingGFs above; others already
-    // applied in the global-fields module / pre-existing on the stack for module-only imports).
-    // Re-apply the global field rules now; if global fields are still incomplete this step may fail
-    // and will be reported below.
-    const failedGFFieldRuleCTs = await this.updateGFFieldRules().catch((error) => {
+      this.completeProgressWithMessage();
+    } catch (error) {
+      this.completeProgress(false, error?.message || 'Content types import failed');
       handleAndLogError(error, { ...this.importConfig.context });
-      return [] as string[];
-    });
-
-    if (failedGFFieldRuleCTs.length) {
-      // Surface the partial failure instead of claiming an unqualified success.
-      log.error(
-        `Content types imported, but failed to apply global field rules for: ${failedGFFieldRuleCTs.join(', ')}`,
-        this.importConfig.context,
-      );
-    } 
-    log.success('Content types have been imported successfully!', this.importConfig.context);
-    
+    }
   }
 
   /**
@@ -308,12 +313,19 @@ export default class ContentTypesImport extends BaseClass {
   async seedCTs(): Promise<any> {
     const onSuccess = ({ response: globalField, apiData: { content_type: { uid = null } = {} } = {} }: any) => {
       this.createdCTs.push(uid);
-      log.info(`${uid} content type seeded`, this.importConfig.context);
+      this.progressManager?.tick(true, `content type: ${uid}`, null, PROCESS_NAMES.CONTENT_TYPES_CREATE);
+      log.success(`Content type '${uid}' created successfully`, this.importConfig.context);
       log.debug(`Successfully seeded content type: ${uid}`, this.importConfig.context);
     };
     const onReject = ({ error, apiData: { content_type: { uid = null } = {} } = {} }: any) => {
+      this.progressManager?.tick(
+        false,
+        `content type: ${uid}`,
+        error?.message || `Failed to create content type '${uid}'`,
+        PROCESS_NAMES.CONTENT_TYPES_CREATE,
+      );
       if (error.errorCode === 115 && (error.errors.uid || error.errors.title)) {
-        log.info(`${uid} content type already exists.`, this.importConfig.context);
+        log.info(`${uid} content type already exist`, this.importConfig.context);
         log.debug(`Skipping existing content type: ${uid}`, this.importConfig.context);
       } else {
         handleAndLogError(error, { ...this.importConfig.context, uid }, `Failed to seed content type ${uid}`);
@@ -352,14 +364,23 @@ export default class ContentTypesImport extends BaseClass {
 
   async updateCTs(): Promise<any> {
     const onSuccess = ({ response: contentType, apiData: { uid } }: any) => {
+      this.progressManager?.tick(true, `content type: ${uid}`, null, PROCESS_NAMES.CONTENT_TYPES_UPDATE);
       log.success(`'${uid}' updated with references`, this.importConfig.context);
       log.debug(`Content type update completed for: ${uid}`, this.importConfig.context);
     };
+
     const onReject = ({ error, apiData: { uid } }: any) => {
+      this.progressManager?.tick(
+        false,
+        `content type: ${uid}`,
+        error?.message || `Content type '${uid}' update failed`,
+        PROCESS_NAMES.CONTENT_TYPES_UPDATE,
+      );
       handleAndLogError(error, { ...this.importConfig.context, uid }, `Content type '${uid}' update failed`);
-      throw new Error(`Content type '${uid}' update error`);
     };
+
     log.debug(`Starting to update ${this.cTs.length} content types with references`, this.importConfig.context);
+
     return await this.makeConcurrentCall({
       processName: 'Update content types',
       apiContent: this.cTs,
@@ -420,18 +441,26 @@ export default class ContentTypesImport extends BaseClass {
   }
 
   async updatePendingGFs(): Promise<any> {
-    this.pendingGFs = fsUtil.readFile(this.gFsPendingPath) as any;
-    log.info(`Found ${this.pendingGFs.length} pending global fields to update`, this.importConfig.context);
-    this.gFs = fsUtil.readFile(path.resolve(this.gFsFolderPath, this.gFsConfig.fileName)) as Record<string, unknown>[];
+    if (!this.pendingGFs || this.pendingGFs.length === 0) {
+      log.info('No pending global fields found to update', this.importConfig.context);
+      return;
+    }
 
     log.debug(`Found ${this.pendingGFs?.length || 0} pending global fields to update`, this.importConfig.context);
     log.debug(`Loaded ${this.gFs?.length || 0} global fields from file`, this.importConfig.context);
 
     const onSuccess = ({ response: globalField, apiData: { uid } = undefined }: any) => {
-      log.info(`Updated the global field ${uid} with content type references`, this.importConfig.context);
+      this.progressManager?.tick(true, `global field: ${uid}`, null, PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE);
+      log.success(`Updated the global field ${uid} with content type references`, this.importConfig.context);
       log.debug(`Global field update completed for: ${uid}`, this.importConfig.context);
     };
     const onReject = ({ error, apiData: { uid } = undefined }: any) => {
+      this.progressManager?.tick(
+        false,
+        `global field: ${uid}`,
+        error?.message || `Failed to update the global field '${uid}'`,
+        PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE,
+      );
       handleAndLogError(error, { ...this.importConfig.context, uid }, `Failed to update the global field '${uid}'`);
     };
 
@@ -496,7 +525,7 @@ export default class ContentTypesImport extends BaseClass {
 
     if (!apiContent || apiContent?.length === 0) {
       log.info(`No extensions found to be updated.`, this.importConfig.context);
-      log.debug('Skipping extensions update – no pending extensions.', this.importConfig.context);
+      log.debug('Skipping extensions update - no pending extensions', this.importConfig.context);
       return;
     }
 
@@ -504,12 +533,24 @@ export default class ContentTypesImport extends BaseClass {
     this.isExtensionsUpdate = true;
 
     const onSuccess = ({ response, apiData: { uid, title } = { uid: null, title: '' } }: any) => {
+      this.progressManager?.tick(
+        true,
+        `extension: ${response.title || title || uid}`,
+        null,
+        PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE,
+      );
       log.success(`Successfully updated the '${response.title}' extension.`, this.importConfig.context);
       log.debug(`Extension update completed for: ${uid}`, this.importConfig.context);
     };
 
     const onReject = ({ error, apiData }: any) => {
-      const { uid } = apiData;
+      const { uid, title } = apiData;
+      this.progressManager?.tick(
+        false,
+        `extension: ${title || uid}`,
+        error?.message || `Failed to update '${uid}' extension`,
+        PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE,
+      );
       if (error?.errors?.title) {
         if (!this.importConfig.skipExisting) {
           log.info(`Extension '${uid}' already exists.`, this.importConfig.context);
@@ -520,7 +561,7 @@ export default class ContentTypesImport extends BaseClass {
       }
     };
 
-    log.debug('Starting extensions update process...', this.importConfig.context);
+    log.debug('Starting extensions update process', this.importConfig.context);
     return await this.makeConcurrentCall(
       {
         apiContent,
@@ -536,5 +577,108 @@ export default class ContentTypesImport extends BaseClass {
       undefined,
       false,
     );
+  }
+
+  async analyzeImportData(): Promise<void> {
+    const [cts, gfs, pendingGfs, pendingExt] = await this.withLoadingSpinner(
+      'CONTENT TYPES: Analyzing import data...',
+      async () => {
+        const cts = readContentTypeSchemas(this.cTsFolderPath);
+        const gfs = readGlobalFieldSchemas(this.gFsFolderPath);
+        const pendingGfs = fsUtil.readFile(this.gFsPendingPath);
+        const pendingExt = fsUtil.readFile(this.extPendingPath);
+        return [cts, gfs, pendingGfs, pendingExt];
+      },
+    );
+
+    this.cTs = (Array.isArray(cts) ? cts : []) as Record<string, unknown>[];
+    this.gFs = (Array.isArray(gfs) ? gfs : []) as Record<string, unknown>[];
+    this.pendingGFs = (Array.isArray(pendingGfs) ? pendingGfs : []) as unknown as string[];
+    this.pendingExts = (Array.isArray(pendingExt) ? pendingExt : []) as unknown as string[];
+
+    const marketplaceAppData = fsUtil.readFile(this.marketplaceAppMapperPath) as any;
+    this.installedExtensions = marketplaceAppData?.extension_uid || { extension_uid: {} };
+    this.taxonomies = fsUtil.readFile(this.taxonomiesPath) as Record<string, unknown>;
+
+    log.debug(
+      `Analysis complete: ${this.cTs?.length} content types, ${this.gFs?.length} global fields, ${
+        this.pendingGFs?.length
+      } pending GFs, ${Object.keys(this.installedExtensions || {})?.length} extensions, ${
+        Object.keys(this.taxonomies || {})?.length
+      } taxonomies`,
+      this.importConfig.context,
+    );
+  }
+
+  initializeProgress() {
+    const progress = this.createNestedProgress(this.currentModuleName);
+    if (this.cTs.length) {
+      progress.addProcess(PROCESS_NAMES.CONTENT_TYPES_CREATE, this.cTs.length);
+      progress.addProcess(PROCESS_NAMES.CONTENT_TYPES_UPDATE, this.cTs.length);
+    }
+    if (this.pendingGFs.length) {
+      progress.addProcess(PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE, this.pendingGFs.length);
+    }
+    if (this.pendingExts.length) {
+      progress.addProcess(PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE, this.pendingExts.length);
+    }
+    return progress;
+  }
+
+  async handlePendingGlobalFields(progress: any) {
+    progress
+      .startProcess(PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE)
+      .updateStatus(
+        PROCESS_STATUS[PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE].UPDATING,
+        PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE,
+      );
+
+    log.info('Starting pending global fields update process', this.importConfig.context);
+    await this.updatePendingGFs();
+    progress.completeProcess(PROCESS_NAMES.CONTENT_TYPES_GF_UPDATE, true);
+  }
+
+  async handleContentTypesCreation(progress: any) {
+    progress
+      .startProcess(PROCESS_NAMES.CONTENT_TYPES_CREATE)
+      .updateStatus(PROCESS_STATUS[PROCESS_NAMES.CONTENT_TYPES_CREATE].CREATING, PROCESS_NAMES.CONTENT_TYPES_CREATE);
+
+    log.info('Starting content types seeding process', this.importConfig.context);
+    await this.seedCTs();
+
+    if (this.createdCTs?.length) {
+      fsUtil.writeFile(this.cTsSuccessPath, this.createdCTs);
+      log.debug(`Written ${this.createdCTs.length} successful content types to file`, this.importConfig.context);
+    }
+
+    progress.completeProcess(PROCESS_NAMES.CONTENT_TYPES_CREATE, true);
+  }
+
+  async handleContentTypesUpdate(progress: any) {
+    progress
+      .startProcess(PROCESS_NAMES.CONTENT_TYPES_UPDATE)
+      .updateStatus(PROCESS_STATUS[PROCESS_NAMES.CONTENT_TYPES_UPDATE].UPDATING, PROCESS_NAMES.CONTENT_TYPES_UPDATE);
+
+    log.info('Starting Update process', this.importConfig.context);
+    await this.updateCTs();
+
+    progress.completeProcess(PROCESS_NAMES.CONTENT_TYPES_UPDATE, true);
+  }
+
+  async handlePendingExtensions(progress: any) {
+    progress
+      .startProcess(PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE)
+      .updateStatus(
+        PROCESS_STATUS[PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE].UPDATING,
+        PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE,
+      );
+
+    log.info('Starting pending extensions update process', this.importConfig.context);
+    await this.updatePendingExtensions();
+    progress.completeProcess(PROCESS_NAMES.CONTENT_TYPES_EXT_UPDATE, true);
+
+    if (this.isExtensionsUpdate) {
+      log.success('Successfully updated the extensions.', this.importConfig.context);
+    }
   }
 }

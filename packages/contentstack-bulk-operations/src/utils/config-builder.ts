@@ -69,24 +69,28 @@ function validateConfig(config: BulkOperationConfig): string[] {
     errors.push(`Invalid operation type: ${config.operation}. Must be 'publish' or 'unpublish'`);
   }
 
-  // Environments validation
-  if (
-    (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
-    (!config.environments || config.environments.length === 0)
-  ) {
-    errors.push('Environments are required for publish/unpublish operations');
-  }
-  if (config.environments?.some((env) => !env || env.trim() === '')) {
-    errors.push('Environment list cannot contain empty values');
+  // Environments validation — skipped when assets are read from a data directory
+  if (!config.dataDir) {
+    if (
+      (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
+      (!config.environments || config.environments.length === 0)
+    ) {
+      errors.push('Environments are required for publish/unpublish operations');
+    }
+    if (config.environments?.some((env) => !env || env.trim() === '')) {
+      errors.push('Environment list cannot contain empty values');
+    }
   }
 
-  // Locales validation
+  // Locales validation — skipped when assets are read from a data directory
   const isNonLocalized = config.filter === FilterType.NON_LOCALIZED;
-  if (!isNonLocalized && (!config.locales || config.locales.length === 0)) {
-    errors.push('Locales are required');
-  }
-  if (config.locales?.some((locale) => !locale || locale.trim() === '')) {
-    errors.push('Locale list cannot contain empty values');
+  if (!config.dataDir) {
+    if (!isNonLocalized && (!config.locales || config.locales.length === 0)) {
+      errors.push('Locales are required');
+    }
+    if (config.locales?.some((locale) => !locale || locale.trim() === '')) {
+      errors.push('Locale list cannot contain empty values');
+    }
   }
 
   // Filter validation
@@ -97,11 +101,6 @@ function validateConfig(config: BulkOperationConfig): string[] {
         `Invalid filter value: ${config.filter}. Must be one of: draft, modified, unpublished, non-localized`
       );
     }
-  }
-
-  // API version validation
-  if (config.apiVersion && !['3', '3.2'].includes(config.apiVersion)) {
-    errors.push(`Invalid API version: ${config.apiVersion}. Supported versions: 3, 3.2`);
   }
 
   // Publish mode validation
@@ -144,24 +143,28 @@ function validateCommandFlags(flags: CommandFlags): string[] {
 
   const operation = flags.operation as OperationType;
 
-  // Environment validation
-  if (
-    (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
-    (!flags.environments || flags.environments.length === 0)
-  ) {
-    errors.push('Environments are required for publish/unpublish operations');
-  }
-  if (flags.environments?.some((env) => !env || env.trim() === '')) {
-    errors.push('Environment list cannot contain empty values');
+  // Environment validation — skipped when assets are read from a data directory
+  if (!flags['data-dir']) {
+    if (
+      (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
+      (!flags.environments || flags.environments.length === 0)
+    ) {
+      errors.push('Environments are required for publish/unpublish operations');
+    }
+    if (flags.environments?.some((env) => !env || env.trim() === '')) {
+      errors.push('Environment list cannot contain empty values');
+    }
   }
 
-  // Locale validation
+  // Locale validation — skipped when assets are read from a data directory
   const isNonLocalized = flags.filter === FilterType.NON_LOCALIZED;
-  if (!isNonLocalized && (!flags.locales || flags.locales.length === 0)) {
-    errors.push('Locales are required');
-  }
-  if (flags.locales?.some((locale) => !locale || locale.trim() === '')) {
-    errors.push('Locale list cannot contain empty values');
+  if (!flags['data-dir']) {
+    if (!isNonLocalized && (!flags.locales || flags.locales.length === 0)) {
+      errors.push('Locales are required');
+    }
+    if (flags.locales?.some((locale) => !locale || locale.trim() === '')) {
+      errors.push('Locale list cannot contain empty values');
+    }
   }
 
   // Content types validation
@@ -179,11 +182,6 @@ function validateCommandFlags(flags: CommandFlags): string[] {
     }
   }
 
-  // API version validation
-  if (flags['api-version'] && !['3', '3.2'].includes(flags['api-version'])) {
-    errors.push(`Invalid API version: ${flags['api-version']}. Supported versions: 3, 3.2`);
-  }
-
   // Publish mode validation
   if (flags['publish-mode'] && !['bulk', 'single'].includes(flags['publish-mode'])) {
     errors.push(`Invalid publish mode: ${flags['publish-mode']}. Must be 'bulk' or 'single'`);
@@ -197,11 +195,6 @@ function validateCommandFlags(flags: CommandFlags): string[] {
   }
   if (flags['source-alias'] && !flags['source-env']) {
     errors.push('--source-alias can only be used with --source-env for cross-publish operations');
-  }
-
-  // Variants require api-version 3.2
-  if (flags['include-variants'] && flags['api-version'] !== '3.2') {
-    errors.push('--include-variants requires --api-version 3.2');
   }
 
   return errors;
@@ -243,9 +236,10 @@ export function buildConfig(flags: CommandFlags): BulkOperationConfig {
     contentTypes: flags['content-types'] !== undefined ? expandFlagStringList(flags['content-types']) : undefined,
     includeVariants: flags['include-variants'],
     folderUid: flags['folder-uid'],
+    dataDir: flags['data-dir'],
+    dryRun: flags['dry-run'],
     sourceEnv: flags['source-env'],
     publishMode: (flags['publish-mode'] as PublishMode) || PublishMode.BULK,
-    apiVersion: flags['api-version'] || '3',
     branch: flags.branch || 'main',
     filter: flags.filter,
     maxRetries: flags['max-retries'] || 3,

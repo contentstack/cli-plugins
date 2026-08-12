@@ -22,8 +22,7 @@ export default class ExportPublishingRules extends BaseClass {
 
   async start(): Promise<void> {
     this.publishingRulesFolderPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
+      this.exportConfig.exportDir,
       this.publishingRulesConfig.dirName,
     );
     log.debug(`Publishing rules folder path: ${this.publishingRulesFolderPath}`, this.exportConfig.context);
@@ -68,10 +67,7 @@ export default class ExportPublishingRules extends BaseClass {
       for (const rule of items) {
         const uid = rule.uid as string | undefined;
         if (uid) {
-          this.publishingRules[uid] = omit(rule, this.publishingRulesConfig.invalidKeys) as Record<
-            string,
-            unknown
-          >;
+          this.publishingRules[uid] = omit(rule, this.publishingRulesConfig.invalidKeys) as Record<string, unknown>;
         }
       }
 

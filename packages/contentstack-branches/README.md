@@ -1,7 +1,7 @@
 # @contentstack/cli-cm-branches
 
 It is Contentstack’s CLI plugin to compare and merge content.
-[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-branches)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-branches](#contentstackcli-cm-branches)
@@ -9,11 +9,7 @@ It is Contentstack’s CLI plugin to compare and merge content.
 * [Commands](#commands)
 <!-- tocstop -->
 
-To switch regions, use:
-
-```sh-session
-$ csdx config:set:region [EU | AZURE-NA | AZURE-EU]
-```
+To switch regions, use the `csdx config:set:region` command instead of manually editing config files.
 
 # Usage
 
@@ -23,7 +19,7 @@ $ npm install -g @contentstack/cli-cm-branches
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-branches/1.8.5 darwin-arm64 node-v24.18.0
+@contentstack/cli-cm-branches/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -64,7 +60,7 @@ EXAMPLES
   $ csdx cm:branches -k <stack api key>
 ```
 
-_See code: [src/commands/cm/branches/index.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/index.ts)_
+_See code: [src/commands/cm/branches/index.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/index.ts)_
 
 ## `csdx cm:branches:create`
 
@@ -87,12 +83,12 @@ DESCRIPTION
 EXAMPLES
   $ csdx cm:branches:create
 
-  $ csdx cm:branches:create --source main -uid new_branch -k bltxxxxxxxx
+  $ csdx cm:branches:create --source main --uid new_branch -k bltxxxxxxxx
 
   $ csdx cm:branches:create --source main --uid new_branch --stack-api-key bltxxxxxxxx
 ```
 
-_See code: [src/commands/cm/branches/create.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/create.ts)_
+_See code: [src/commands/cm/branches/create.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/create.ts)_
 
 ## `csdx cm:branches:delete [-uid <value>] [-k <value>]`
 
@@ -121,7 +117,7 @@ EXAMPLES
   $ csdx cm:branches:delete --uid main --stack-api-key bltxxxxxxxx --yes
 ```
 
-_See code: [src/commands/cm/branches/delete.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/delete.ts)_
+_See code: [src/commands/cm/branches/delete.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/delete.ts)_
 
 ## `csdx cm:branches:diff [--base-branch <value>] [--compare-branch <value>] [-k <value>][--module <value>] [--format <value>] [--csv-path <value>]`
 
@@ -177,7 +173,7 @@ EXAMPLES
   $ csdx cm:branches:diff --stack-api-key "bltxxxxxxxx" --base-branch "main" --compare-branch "develop" --module "content-types" --format "detailed-text" --csv-path "./reports/diff-report.csv"
 ```
 
-_See code: [src/commands/cm/branches/diff.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/diff.ts)_
+_See code: [src/commands/cm/branches/diff.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/diff.ts)_
 
 ## `csdx cm:branches:merge [-k <value>][--compare-branch <value>] [--no-revert] [--export-summary-path <value>] [--use-merge-summary <value>] [--comment <value>] [--base-branch <value>]`
 
@@ -216,7 +212,7 @@ EXAMPLES
   $ csdx cm:branches:merge -k bltxxxxxxxx --compare-branch feature-branch --no-revert
 ```
 
-_See code: [src/commands/cm/branches/merge.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/merge.ts)_
+_See code: [src/commands/cm/branches/merge.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/merge.ts)_
 
 ## `csdx cm:branches:merge-status -k <value> --merge-uid <value>`
 
@@ -239,5 +235,5 @@ EXAMPLES
   $ csdx cm:branches:merge-status --stack-api-key bltxxxxxxxx --merge-uid merge_abc123
 ```
 
-_See code: [src/commands/cm/branches/merge-status.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export/src/commands/cm/branches/merge-status.ts)_
+_See code: [src/commands/cm/branches/merge-status.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-branches/src/commands/cm/branches/merge-status.ts)_
 <!-- commandsstop -->

@@ -1,6 +1,6 @@
-# @contentstack/cli-cm-migrate-rte
+> **Source of truth:** [cli-plugins](https://github.com/contentstack/cli-plugins) — `packages/contentstack-migrate-rte`. Migrated from [cli-cm-migrate-rte](https://github.com/contentstack/cli-cm-migrate-rte). See [MIGRATE-RTE-MIGRATION.md](../../MIGRATE-RTE-MIGRATION.md).
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-migrate-rte)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
+# @contentstack/cli-cm-migrate-rte
 
 It is Contentstack’s CLI plugin to migrate rte. Using this command, you can copy existing value of HTML RTE into JSON RTE.
 
@@ -18,7 +18,7 @@ $ npm install -g @contentstack/cli-cm-migrate-rte
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-migrate-rte/2.0.0-beta.1 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-migrate-rte/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -62,19 +62,19 @@ DESCRIPTION
   Migration script to migrate content from HTML RTE to JSON RTE
 
 EXAMPLES
-  # General Usage
+  General Usage
 
   $ csdx cm:entries:migrate-html-rte --config-path path/to/config.json
 
 
 
-  # Using Flags
+  Using Flags
 
   $ csdx cm:entries:migrate-html-rte --alias alias --content-type content_type_uid --html-path html-path --json-path json-path
 
 
 
-  # Nested RTE
+  Nested RTE
 
   $ csdx cm:entries:migrate-html-rte --alias alias --content-type content_type_uid --html-path modular_block_uid.block_uid.html_rte_uid --json-path modular_block_uid.block_uid.json_rte_uid
 
@@ -84,7 +84,7 @@ EXAMPLES
 
 
 
-  # Global Field
+  Global Field
 
   $ csdx cm:entries:migrate-html-rte --alias alias --content-type global_field_uid --global-field --html-path html-path --json-path json-path
 ```

@@ -44,7 +44,7 @@ description: >-
 
 ### CI
 
-Unit tests run in the monorepo via [.github/workflows/unit-test.yml](../../../../.github/workflows/unit-test.yml) (`Run tests for Contentstack Content Type plugin` step, `npm run test:unit`). Release publishing is handled by [release-production-plugins.yml](../../../../.github/workflows/release-production-plugins.yml) on push to `main` (tag `latest`). Align local validation with these workflows before opening a PR.
+Unit tests run in the monorepo via [.github/workflows/unit-test.yml](../../../../.github/workflows/unit-test.yml) (`Run tests for Contentstack Content Type plugin` step, `npm run test:unit`). Release publishing is handled by [release-v2-beta-plugins.yml](../../../../.github/workflows/release-v2-beta-plugins.yml) on push to `v2-beta`. Align local validation with these workflows before opening a PR.
 
 ## References
 

@@ -4,7 +4,6 @@ import {
   FlagInput,
   managementSDKClient,
   cliux,
-  printFlagDeprecation,
 } from "@contentstack/cli-utilities";
 import { createDiagram } from "../../core/content-type/diagram";
 import { CreateDiagramOptions, DiagramOrientation } from "../../types";
@@ -21,24 +20,13 @@ export default class DiagramCommand extends Command {
   ];
 
   static flags: any = {
-    stack: flags.string({
-      char: "s",
-      description: "Stack UID",
-      exclusive: ["token-alias", "alias"],
-      parse: printFlagDeprecation(["-s", "--stack"], ["-k", "--stack-api-key"]),
-    }),
 
     "stack-api-key": flags.string({
       char: "k",
       description: "Stack API Key",
-      exclusive: ["token-alias", "alias"],
+      exclusive: ["alias"],
     }),
 
-    "token-alias": flags.string({
-      char: "a",
-      description: "Management token alias",
-      parse: printFlagDeprecation(["--token-alias"], ["-a", "--alias"]),
-    }),
 
     alias: flags.string({
       char: "a",
@@ -46,34 +34,28 @@ export default class DiagramCommand extends Command {
     }),
 
     output: flags.string({
-      char: "o",
       description: "full path to output",
       hidden: false,
       multiple: false,
       required: true,
-      parse: printFlagDeprecation(["-o"], ["--output"]),
     }),
 
     direction: flags.string({
-      char: "d",
       description: "graph orientation",
       default: "portrait",
       options: ["portrait", "landscape"],
       hidden: false,
       multiple: false,
       required: true,
-      parse: printFlagDeprecation(["-d"], ["--direction"]),
     }),
 
     type: flags.string({
-      char: "t",
       description: "graph output file type",
       default: "svg",
       options: ["svg", "dot"],
       hidden: false,
       multiple: false,
       required: true,
-      parse: printFlagDeprecation(["-t"], ["--type"]),
     }),
   };
 

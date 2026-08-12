@@ -1,33 +1,35 @@
 {
   "name": "@contentstack/cli-cm-seed",
   "description": "create a Stack from existing content types, entries, assets, etc.",
-  "version": "1.15.10",
+  "version": "2.0.0",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-cm-import": "~1.35.0",
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.1",
-    "inquirer": "8.2.7",
+    "@contentstack/cli-cm-import": "~2.0.0",
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
+    "inquirer": "12.11.1",
     "mkdirp": "^1.0.4",
-    "tar": "^7.5.19",
+    "tar": "^7.5.22",
     "tmp": "^0.2.7"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.29.7",
     "@types/inquirer": "^9.0.10",
     "@types/jest": "^26.0.24",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^14.18.63",
-    "@types/tar": "^6.1.13",
+    "@types/node": "^18.11.9",
+    "@types/tar": "^7.0.87",
     "@types/tmp": "^0.2.6",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.137",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "eslint-config-oclif-typescript": "^3.1.14",
     "jest": "^29.7.0",
-    "oclif": "^4.23.8",
+    "oclif": "^4.23.27",
+    "@oclif/plugin-help": "^6.2.53",
     "ts-jest": "^29.4.6",
     "ts-node": "^8.10.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -48,27 +50,30 @@
   "oclif": {
     "commands": "./lib/commands",
     "bin": "csdx",
+    "devPlugins": [
+      "@oclif/plugin-help"
+    ],
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-seed/<%- commandPath %>"
   },
   "csdxConfig": {
-    "expiredCommands": {
-      "cm:seed": "csdx cm:stacks:seed"
-    },
     "shortCommandName": {
-      "cm:stacks:seed": "SEED",
-      "cm:seed": "O-SEED"
+      "cm:stacks:seed": "SEED"
     }
   },
-  "repository": "contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-seed"
+  },
   "scripts": {
     "test": "jest",
-    "pack": "npm pack --dry-run",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "lint": "eslint \"src/**/*.ts\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix"
   }
 }

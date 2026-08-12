@@ -1,12 +1,13 @@
-import {cli} from 'cli-ux'
-import safeRegex from './safe-regex'
+import {ux} from '@contentstack/cli-utilities'
+
 import generateOutput from './generate-output'
+import safeRegex from './safe-regex'
 const regexMessages = require('../../messages/index.json').validateRegex
 
 export default async function processStack(flags: any, stack: any, startTime: number) {
-  cli.action.stop(regexMessages.cliAction.connectStackStop + (Date.now() - startTime) + ' ms')
+  ux.action.stop(regexMessages.cliAction.connectStackStop + (Date.now() - startTime) + ' ms')
   const processTime = Date.now()
-  cli.action.start(regexMessages.cliAction.processStackStart, '', {stdout: true})
+  ux.action.start(regexMessages.cliAction.processStackStart)
   const query = {}
   const invalidRegex: object[] = []
   const tableData: object[] = []
@@ -32,6 +33,6 @@ export default async function processStack(flags: any, stack: any, startTime: nu
     })
   }
 
-  cli.action.stop(regexMessages.cliAction.processStackStop + (Date.now() - processTime) + ' ms')
+  ux.action.stop(regexMessages.cliAction.processStackStop + (Date.now() - processTime) + ' ms')
   await generateOutput(flags, invalidRegex, tableData)
 }

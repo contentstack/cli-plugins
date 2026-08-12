@@ -1,16 +1,17 @@
 {
   "name": "@contentstack/cli-cm-import-setup",
   "description": "Contentstack CLI plugin to setup the mappers and configurations for the import command",
-  "version": "1.8.8",
+  "version": "2.0.0",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.1",
-    "@oclif/core": "^4.11.4",
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
+    "@contentstack/cli-asset-management": "~1.0.0",
+    "@oclif/core": "^4.11.14",
     "big-json": "^3.2.0",
-    "chalk": "^4.1.2",
-    "fs-extra": "^11.3.0",
+    "chalk": "^5.6.2",
+    "fs-extra": "^11.3.6",
     "lodash": "^4.18.1",
     "merge": "^2.1.1",
     "mkdirp": "^1.0.4",
@@ -21,30 +22,34 @@
     "@types/chai": "^4.3.20",
     "@types/fs-extra": "^11.0.4",
     "@types/mkdirp": "^1.0.2",
-    "@types/mocha": "^8.2.3",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^14.18.63",
+    "@types/rewire": "^2.5.30",
+    "@types/sinon": "^21.0.1",
+    "@types/tar": "^7.0.87",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "chai": "^4.5.0",
-    "eslint": "^10.5.0",
+    "eslint": "^10.6.0",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.8",
+    "oclif": "^4.23.27",
+    "rewire": "^9.0.1",
+    "sinon": "^21.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "test:unit:report": "nyc --extension .ts  mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\""
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -74,5 +79,9 @@
       "cm:stacks:import": "IMPRTSTP"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-import-setup"
+  }
 }

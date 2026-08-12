@@ -1,31 +1,30 @@
 {
   "name": "@contentstack/cli-cm-export-to-csv",
   "description": "Export entries, taxonomies, terms, or organization users to CSV",
-  "version": "1.12.8",
+  "version": "2.0.0",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.1",
-    "@oclif/core": "^4.11.4",
-    "fast-csv": "^4.3.6",
-    "inquirer": "8.2.7",
-    "inquirer-checkbox-plus-prompt": "1.4.2"
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
+    "@oclif/core": "^4.11.14",
+    "@inquirer/prompts": "^7.10.1",
+    "fast-csv": "^4.3.6"
   },
   "devDependencies": {
-    "@oclif/test": "^4.1.18",
+    "@oclif/test": "^4.1.20",
     "@types/chai": "^4.3.20",
-    "@types/inquirer": "^9.0.8",
+    "@types/inquirer": "^9.0.10",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.50",
     "chai": "^4.5.0",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.62",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "eslint-config-oclif-typescript": "^3.1.14",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.8",
-    "sinon": "^19.0.5",
+    "oclif": "^4.23.27",
+    "sinon": "^21.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
@@ -59,18 +58,20 @@
       "cm:export-to-csv": "EXPRTCSV"
     }
   },
-  "repository": "https://github.com/contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-export-to-csv"
+  },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint src/**/*.ts --fix",
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
-    "test:unit": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "version": "oclif readme && git add README.md"
+    "test": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "format": "eslint \"src/**/*.ts\" --fix"
   }
 }

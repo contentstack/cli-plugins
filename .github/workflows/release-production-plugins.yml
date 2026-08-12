@@ -3,7 +3,7 @@ name: Release CLI Plugins (Production)
 on:
   push:
     branches: [main]
-  workflow_dispatch: # manually trigger the workflow
+  workflow_dispatch:
 
 jobs:
   build:
@@ -38,6 +38,15 @@ jobs:
         with:
           filename: .github/config/release.json
           prefix: release
+
+      # Asset Management
+      - name: Publishing asset-management (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-asset-management/package.json
+          access: public
+          tag: latest
 
       # Variants
       - name: Publishing variants (Production)
@@ -88,7 +97,7 @@ jobs:
           tag: latest
 
       # Export to CSV
-      - name: Publishing export to csv (Production)
+      - name: Publishing export-to-csv (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
@@ -104,11 +113,12 @@ jobs:
           tag: latest
 
       # Migrate RTE
-      - name: Publishing migrate RTE (Production)
+      - name: Publishing migrate-rte (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-migrate-rte/package.json
+          access: public
           tag: latest
 
       # Seed
@@ -125,22 +135,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bootstrap/package.json
-          tag: latest
-
-      # Bulk Publish
-      - name: Publishing bulk publish (Production)
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          package: ./packages/contentstack-bulk-publish/package.json
-          tag: latest
-
-      # Bulk Operations
-      - name: Publishing bulk operations (Production)
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          package: ./packages/contentstack-bulk-operations/package.json
           tag: latest
 
       # Branches
@@ -160,7 +154,7 @@ jobs:
           tag: latest
 
       # Query Export
-      - name: Publishing query export (Production)
+      - name: Publishing query-export (Production)
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
@@ -181,6 +175,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-cli-cm-regex-validate/package.json
+          access: public
           tag: latest
 
       # Tsgen
@@ -197,19 +192,14 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-external-migrate/package.json
+          access: public
           tag: latest
 
-      - name: Create Production Release
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.PKG_TOKEN }}
-          VERSION: ${{ steps.publish-plugins.outputs.version }}
-        run: |
-          # Get the previous production release for comparison
-          PREVIOUS_PROD=$(gh release list --limit 10 | grep -v 'prerelease' | head -1 | cut -f1)
-
-          if [ -n "$PREVIOUS_PROD" ]; then
-            gh release create "v${VERSION}" --title "Production Release $VERSION" --notes-from-tag "$PREVIOUS_PROD"
-          else
-            gh release create "v${VERSION}" --title "Production Release $VERSION" --generate-notes
-          fi
+      # Bulk Operations
+      - name: Publishing bulk-operations (Production)
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: ./packages/contentstack-bulk-operations/package.json
+          access: public
+          tag: latest

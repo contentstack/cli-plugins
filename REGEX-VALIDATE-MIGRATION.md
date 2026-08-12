@@ -53,4 +53,5 @@ This package uses **Jest + ts-jest** (unlike most other packages in this monorep
 
 ## Related migrations
 
+- Content Type plugin: [CONTENT-TYPE-MIGRATION.md](./CONTENT-TYPE-MIGRATION.md)
 - Apps CLI: [APPS-CLI-MIGRATION.md](./APPS-CLI-MIGRATION.md)

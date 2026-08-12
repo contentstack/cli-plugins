@@ -13,7 +13,6 @@ describe('ImportAssets', () => {
   let makeConcurrentCallStub: sinon.SinonStub;
 
   beforeEach(() => {
-    // Mock FsUtility to prevent directory creation
     sinon.stub(FsUtility.prototype, 'createFolderIfNotExist').callsFake(() => {
       return Promise.resolve();
     });
@@ -26,21 +25,22 @@ describe('ImportAssets', () => {
       asset: sinon.stub().returns({
         create: sinon.stub().resolves({ uid: 'asset-123', url: 'https://example.com/asset.jpg' }),
         folder: sinon.stub().returns({
-          create: sinon.stub().resolves({ uid: 'folder-123' })
+          create: sinon.stub().resolves({ uid: 'folder-123' }),
         }),
         replace: sinon.stub().resolves({ uid: 'asset-123', url: 'https://example.com/asset.jpg' }),
-        publish: sinon.stub().resolves({ uid: 'asset-123' })
-      })
+        publish: sinon.stub().resolves({ uid: 'asset-123' }),
+      }),
     };
 
     mockImportConfig = {
       apiKey: 'test',
       contentDir: '/test/content',
       data: '/test/content',
-      contentVersion: 1,
       region: 'us',
       master_locale: { code: 'en-us' },
       masterLocale: { code: 'en-us' },
+      fetchConcurrency: 5,
+      writeConcurrency: 1,
       context: {
         command: 'cm:stacks:import',
         module: 'assets',
@@ -49,21 +49,20 @@ describe('ImportAssets', () => {
         sessionId: 'session-123',
         apiKey: 'test',
         orgId: 'org-123',
-        authenticationMethod: 'Basic Auth'
+        authenticationMethod: 'Basic Auth',
       },
       modules: {
         types: ['assets'],
-        assets: { 
+        assets: {
           dirName: 'assets',
           validKeys: ['title', 'filename', 'content_type', 'parent_uid', 'description', 'tags'],
           folderValidKeys: ['name', 'parent_uid'],
-          apiConcurrency: 5,
           importFoldersConcurrency: 3,
           uploadAssetsConcurrency: 5,
           includeVersionedAssets: true,
           importSameStructure: false,
-          displayExecutionTime: false
-        }
+          displayExecutionTime: false,
+        },
       },
       backupDir: '/test/backup',
       cliLogsPath: '/test/logs',
@@ -77,13 +76,13 @@ describe('ImportAssets', () => {
       skipAudit: false,
       skipAssetsPublish: false,
       'exclude-global-modules': false,
-      replaceExisting: false
+      replaceExisting: false,
     } as any;
 
     importAssets = new ImportAssets({
       importConfig: mockImportConfig as any,
       stackAPIClient: mockStackClient,
-      moduleName: 'assets'
+      moduleName: 'assets',
     });
   });
 
@@ -92,20 +91,20 @@ describe('ImportAssets', () => {
   });
 
   describe('Constructor', () => {
-  it('should initialize with correct parameters', () => {
-    expect(importAssets).to.be.instanceOf(ImportAssets);
-    expect(importAssets['importConfig']).to.equal(mockImportConfig);
-    expect((importAssets as any)['client']).to.equal(mockStackClient);
-  });
+    it('should initialize with correct parameters', () => {
+      expect(importAssets).to.be.instanceOf(ImportAssets);
+      expect(importAssets['importConfig']).to.equal(mockImportConfig);
+      expect((importAssets as any)['client']).to.equal(mockStackClient);
+    });
 
-  it('should have assetConfig property', () => {
-    expect(importAssets.assetConfig).to.be.an('object');
-    expect(importAssets.assetConfig).to.have.property('dirName', 'assets');
-  });
+    it('should have assetConfig property', () => {
+      expect(importAssets.assetConfig).to.be.an('object');
+      expect(importAssets.assetConfig).to.have.property('dirName', 'assets');
+    });
 
-  it('should set context module to assets', () => {
-    expect(importAssets['importConfig'].context.module).to.equal('assets');
-  });
+    it('should set context module to assets', () => {
+      expect(importAssets['importConfig'].context.module).to.equal('assets');
+    });
 
     it('should initialize paths correctly', () => {
       expect(importAssets['assetsPath']).to.include('assets');
@@ -131,6 +130,10 @@ describe('ImportAssets', () => {
     let importAssetsStub: sinon.SinonStub;
     let publishStub: sinon.SinonStub;
     let existsSyncStub: sinon.SinonStub;
+    let analyzeImportDataStub: sinon.SinonStub;
+    let withLoadingSpinnerStub: sinon.SinonStub;
+    let createNestedProgressStub: sinon.SinonStub;
+    let executeStepStub: sinon.SinonStub;
 
     beforeEach(() => {
       importFoldersStub = sinon.stub(importAssets as any, 'importFolders').resolves();
@@ -138,6 +141,29 @@ describe('ImportAssets', () => {
       publishStub = sinon.stub(importAssets as any, 'publish').resolves();
       existsSyncStub = sinon.stub().returns(true);
       sinon.replace(require('node:fs'), 'existsSync', existsSyncStub);
+
+      analyzeImportDataStub = sinon.stub(importAssets as any, 'analyzeImportData').resolves([1, 2, 0, 1]);
+      withLoadingSpinnerStub = sinon
+        .stub(importAssets as any, 'withLoadingSpinner')
+        .callsFake(async (msg: string, fn: () => Promise<any>) => {
+          return await fn();
+        });
+      createNestedProgressStub = sinon.stub(importAssets as any, 'createNestedProgress').returns({
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns({ updateStatus: sinon.stub() }),
+        completeProcess: sinon.stub(),
+        tick: sinon.stub(),
+      });
+      sinon.stub(importAssets as any, 'initializeProgress').resolves();
+      sinon.stub(importAssets as any, 'completeProgress').resolves();
+      executeStepStub = sinon
+        .stub(importAssets as any, 'executeStep')
+        .callsFake(async (progress: any, processName: string, status: string, fn: () => Promise<any>) => {
+          // Call the function to ensure the actual methods are invoked
+          if (fn) {
+            return await fn();
+          }
+        });
     });
 
     it('should call importFolders first', async () => {
@@ -149,6 +175,7 @@ describe('ImportAssets', () => {
       const originalValue = importAssets.assetConfig.includeVersionedAssets;
       importAssets.assetConfig.includeVersionedAssets = true;
       existsSyncStub.returns(true);
+      analyzeImportDataStub.resolves([1, 2, 1, 1]); // foldersCount, assetsCount, versionedAssetsCount, publishableAssetsCount
 
       await importAssets.start();
 
@@ -158,13 +185,13 @@ describe('ImportAssets', () => {
       expect(importAssetsStub.secondCall.calledWith()).to.be.true;
       expect(publishStub.calledOnce).to.be.true;
 
-      // Restore original value
       importAssets.assetConfig.includeVersionedAssets = originalValue;
     });
 
     it('should skip versioned assets when directory does not exist', async () => {
       mockImportConfig.modules.assets.includeVersionedAssets = true;
       existsSyncStub.returns(false);
+      analyzeImportDataStub.resolves([1, 2, 0, 1]); // versionedAssetsCount = 0
 
       await importAssets.start();
 
@@ -174,6 +201,7 @@ describe('ImportAssets', () => {
 
     it('should not import versioned assets when includeVersionedAssets is false', async () => {
       mockImportConfig.modules.assets.includeVersionedAssets = false;
+      analyzeImportDataStub.resolves([1, 2, 1, 1]); // versionedAssetsCount = 1, but includeVersionedAssets is false
 
       await importAssets.start();
 
@@ -190,6 +218,7 @@ describe('ImportAssets', () => {
 
     it('should skip publish when skipAssetsPublish is true', async () => {
       mockImportConfig.skipAssetsPublish = true;
+      analyzeImportDataStub.resolves([1, 2, 0, 1]); // publishableAssetsCount = 1, but skipAssetsPublish is true
 
       await importAssets.start();
 
@@ -205,11 +234,18 @@ describe('ImportAssets', () => {
 
     it('should handle errors gracefully', async () => {
       const error = new Error('Import failed');
-      importFoldersStub.rejects(error);
+      analyzeImportDataStub.rejects(error);
+      // completeProgress is already stubbed in beforeEach, restore it first
+      (importAssets as any).completeProgress.restore();
+      const completeProgressStub = sinon.stub(importAssets as any, 'completeProgress').resolves();
 
       await importAssets.start();
 
-      expect(importFoldersStub.calledOnce).to.be.true;
+      // When analyzeImportData fails, importFolders is never called
+      // Instead, completeProgress should be called with error
+      expect(importFoldersStub.called).to.be.false;
+      expect(completeProgressStub.called).to.be.true;
+      expect(completeProgressStub.calledWith(false, 'Import failed')).to.be.true;
     });
   });
 
@@ -231,7 +267,7 @@ describe('ImportAssets', () => {
     it('should import folders successfully', async () => {
       const mockFolders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
       fsUtilityReadFileStub.returns(mockFolders);
 
@@ -243,7 +279,7 @@ describe('ImportAssets', () => {
     it('should construct folder import order', async () => {
       const mockFolders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
       fsUtilityReadFileStub.returns(mockFolders);
       const constructStub = sinon.stub(importAssets as any, 'constructFolderImportOrder').returns(mockFolders);
@@ -255,17 +291,15 @@ describe('ImportAssets', () => {
     });
 
     it('should write folder mappings after import', async () => {
-      const mockFolders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
-      ];
+      const mockFolders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }];
       fsUtilityReadFileStub.returns(mockFolders);
-      
+
       // Simulate successful folder creation
       makeConcurrentCallStub.callsFake(async (options) => {
         const onSuccess = options.apiParams.resolve;
         onSuccess({
           response: { uid: 'new-folder-1' },
-          apiData: { uid: 'folder-1', name: 'Folder 1' }
+          apiData: { uid: 'folder-1', name: 'Folder 1' },
         });
       });
 
@@ -275,16 +309,14 @@ describe('ImportAssets', () => {
     });
 
     it('should handle onSuccess callback correctly', async () => {
-      const mockFolders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
-      ];
+      const mockFolders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }];
       fsUtilityReadFileStub.returns(mockFolders);
 
       makeConcurrentCallStub.callsFake(async (options) => {
         const onSuccess = options.apiParams.resolve;
         onSuccess({
           response: { uid: 'new-folder-1' },
-          apiData: { uid: 'folder-1', name: 'Folder 1' }
+          apiData: { uid: 'folder-1', name: 'Folder 1' },
         });
       });
 
@@ -294,16 +326,14 @@ describe('ImportAssets', () => {
     });
 
     it('should handle onReject callback correctly', async () => {
-      const mockFolders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
-      ];
+      const mockFolders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }];
       fsUtilityReadFileStub.returns(mockFolders);
 
       makeConcurrentCallStub.callsFake(async (options) => {
         const onReject = options.apiParams.reject;
         onReject({
           error: new Error('Failed to create folder'),
-          apiData: { name: 'Folder 1' }
+          apiData: { name: 'Folder 1' },
         });
       });
 
@@ -315,7 +345,7 @@ describe('ImportAssets', () => {
     it('should map parent folder UIDs in serializeData', async () => {
       const mockFolders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
       fsUtilityReadFileStub.returns(mockFolders);
       importAssets['assetsFolderMap'] = { 'folder-1': 'new-folder-1' };
@@ -324,7 +354,7 @@ describe('ImportAssets', () => {
       makeConcurrentCallStub.callsFake(async (options) => {
         const serializeData = options.apiParams.serializeData;
         capturedApiOptions = serializeData({
-          apiData: { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1' }
+          apiData: { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1' },
         });
       });
 
@@ -340,19 +370,19 @@ describe('ImportAssets', () => {
 
     beforeEach(() => {
       makeConcurrentCallStub = sinon.stub(importAssets as any, 'makeConcurrentCall').resolves();
-      
+
       fsUtilityStub = sinon.stub(FsUtility.prototype, 'constructor' as any);
       Object.defineProperty(FsUtility.prototype, 'indexFileContent', {
         get: sinon.stub().returns({ '0': 'chunk-0' }),
-        configurable: true
+        configurable: true,
       });
       Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
         get: sinon.stub().returns({
           next: sinon.stub().resolves({
-            'asset-1': { uid: 'asset-1', title: 'Asset 1', url: 'url-1', filename: 'file1.jpg', _version: 1 }
-          })
+            'asset-1': { uid: 'asset-1', title: 'Asset 1', url: 'url-1', filename: 'file1.jpg', _version: 1 },
+          }),
         }),
-        configurable: true
+        configurable: true,
       });
     });
 
@@ -381,10 +411,10 @@ describe('ImportAssets', () => {
         get: sinon.stub().returns({
           next: sinon.stub().resolves({
             'asset-1': { uid: 'asset-1', title: 'Asset 1', _version: 1 },
-            'asset-2': { uid: 'asset-2', title: 'Asset 2', _version: 2 }
-          })
+            'asset-2': { uid: 'asset-2', title: 'Asset 2', _version: 2 },
+          }),
         }),
-        configurable: true
+        configurable: true,
       });
 
       await (importAssets as any).importAssets(true);
@@ -423,7 +453,7 @@ describe('ImportAssets', () => {
         const onSuccess = options.apiParams.resolve;
         onSuccess({
           response: { uid: 'new-asset-1', url: 'new-url-1' },
-          apiData: { uid: 'asset-1', url: 'url-1', title: 'Asset 1' }
+          apiData: { uid: 'asset-1', url: 'url-1', title: 'Asset 1' },
         });
       });
 
@@ -438,7 +468,7 @@ describe('ImportAssets', () => {
         const onReject = options.apiParams.reject;
         onReject({
           error: new Error('Upload failed'),
-          apiData: { title: 'Asset 1' }
+          apiData: { title: 'Asset 1' },
         });
       });
 
@@ -450,9 +480,9 @@ describe('ImportAssets', () => {
     it('should handle chunk read errors', async () => {
       Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
         get: sinon.stub().returns({
-          next: sinon.stub().rejects(new Error('Read failed'))
+          next: sinon.stub().rejects(new Error('Read failed')),
         }),
-        configurable: true
+        configurable: true,
       });
 
       await (importAssets as any).importAssets(false);
@@ -464,11 +494,10 @@ describe('ImportAssets', () => {
 
   describe('serializeAssets() method', () => {
     it('should skip existing asset when not importing same structure', () => {
-      // Create a fresh instance for this test to avoid side effects
       const testImportAssets = new ImportAssets({
         importConfig: mockImportConfig as any,
         stackAPIClient: mockStackClient,
-        moduleName: 'assets'
+        moduleName: 'assets',
       });
       testImportAssets['assetConfig'].importSameStructure = false;
       testImportAssets['assetConfig'].includeVersionedAssets = false;
@@ -476,7 +505,7 @@ describe('ImportAssets', () => {
 
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (testImportAssets as any).serializeAssets(apiOptions);
@@ -487,7 +516,7 @@ describe('ImportAssets', () => {
     it('should set upload path for asset', () => {
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -501,7 +530,7 @@ describe('ImportAssets', () => {
 
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg', parent_uid: 'folder-1' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg', parent_uid: 'folder-1' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -516,7 +545,7 @@ describe('ImportAssets', () => {
 
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -532,7 +561,7 @@ describe('ImportAssets', () => {
 
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -540,7 +569,6 @@ describe('ImportAssets', () => {
       expect(result.entity).to.equal('replace-assets');
       expect(result.uid).to.equal('existing-asset-1');
 
-      // Restore original value
       importAssets.assetConfig.importSameStructure = originalValue;
     });
 
@@ -550,7 +578,7 @@ describe('ImportAssets', () => {
 
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -567,11 +595,10 @@ describe('ImportAssets', () => {
       makeConcurrentCallStub = sinon.stub(importAssets as any, 'makeConcurrentCall').resolves();
       importAssets['assetsUidMap'] = { 'asset-1': 'new-asset-1' };
       importAssets['environments'] = { 'env-1': { name: 'production' } };
-      
-      // Mock FsUtility for publish method
+
       Object.defineProperty(FsUtility.prototype, 'indexFileContent', {
         get: sinon.stub().returns({ '0': 'chunk-0' }),
-        configurable: true
+        configurable: true,
       });
       Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
         get: sinon.stub().returns({
@@ -579,13 +606,11 @@ describe('ImportAssets', () => {
             {
               uid: 'asset-1',
               title: 'Asset 1',
-              publish_details: [
-                { environment: 'env-1', locale: 'en-us' }
-              ]
-            }
-          ])
+              publish_details: [{ environment: 'env-1', locale: 'en-us' }],
+            },
+          ]),
         }),
-        configurable: true
+        configurable: true,
       });
     });
 
@@ -606,11 +631,9 @@ describe('ImportAssets', () => {
     it('should skip assets without publish_details', async () => {
       Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
         get: sinon.stub().returns({
-          next: sinon.stub().resolves([
-            { uid: 'asset-1', title: 'Asset 1', publish_details: [] }
-          ])
+          next: sinon.stub().resolves([{ uid: 'asset-1', title: 'Asset 1', publish_details: [] }]),
         }),
-        configurable: true
+        configurable: true,
       });
 
       await (importAssets as any).publish();
@@ -628,7 +651,7 @@ describe('ImportAssets', () => {
       makeConcurrentCallStub.callsFake(async (options) => {
         const onSuccess = options.apiParams.resolve;
         onSuccess({
-          apiData: { uid: 'asset-1', title: 'Asset 1' }
+          apiData: { uid: 'asset-1', title: 'Asset 1' },
         });
       });
 
@@ -642,7 +665,7 @@ describe('ImportAssets', () => {
         const onReject = options.apiParams.reject;
         onReject({
           error: new Error('Publish failed'),
-          apiData: { uid: 'asset-1', title: 'Asset 1' }
+          apiData: { uid: 'asset-1', title: 'Asset 1' },
         });
       });
 
@@ -660,8 +683,8 @@ describe('ImportAssets', () => {
         const result = serializeData({
           apiData: {
             uid: 'asset-unknown',
-            publishDetails: { environments: ['production'], locales: ['en-us'] }
-          }
+            publishDetails: { environments: ['production'], locales: ['en-us'] },
+          },
         });
 
         expect(result.entity).to.be.undefined;
@@ -678,8 +701,8 @@ describe('ImportAssets', () => {
         const result = serializeData({
           apiData: {
             uid: 'asset-1',
-            publishDetails: { environments: ['production'], locales: ['en-us'] }
-          }
+            publishDetails: { environments: ['production'], locales: ['en-us'] },
+          },
         });
 
         expect(result.uid).to.equal('mapped-asset-1');
@@ -738,11 +761,11 @@ describe('ImportAssets', () => {
       importAssets['environments'] = {
         'e1': { name: 'production' },
         'e2': { name: 'preview' },
-        'e3': { name: 'development' }
+        'e3': { name: 'development' },
       };
       const pd = ['e1', 'e2', 'e3'].flatMap((environment) => [
         { environment, locale: 'en-us' },
-        { environment, locale: 'fr-fr' }
+        { environment, locale: 'fr-fr' },
       ]);
 
       const groups = (importAssets as any).buildPublishGroups(pd);
@@ -757,7 +780,7 @@ describe('ImportAssets', () => {
       const pd = [
         { environment: 'e2', locale: 'en-us' },
         { environment: 'e1', locale: 'en-us' },
-        { environment: 'e1', locale: 'ar' }
+        { environment: 'e1', locale: 'ar' },
       ];
 
       const groups = (importAssets as any).buildPublishGroups(pd);
@@ -765,8 +788,9 @@ describe('ImportAssets', () => {
       expect(groups).to.have.lengthOf(2);
       expect(groups).to.deep.include.members([
         { environments: ['new'], locales: ['ar', 'en-us'] },
-        { environments: ['blt5795'], locales: ['en-us'] }
+        { environments: ['blt5795'], locales: ['en-us'] },
       ]);
+      // blt5795 must never be paired with ar (the phantom the old flatten produced).
       const blt5795 = groups.find((g: any) => g.environments.includes('blt5795'));
       expect(blt5795.locales).to.not.include('ar');
     });
@@ -781,7 +805,7 @@ describe('ImportAssets', () => {
       importAssets['environments'] = { 'e1': { name: 'production' } };
       const groups = (importAssets as any).buildPublishGroups([
         { environment: 'e1', locale: 'en-us' },
-        { environment: 'gone', locale: 'en-us' }
+        { environment: 'gone', locale: 'en-us' },
       ]);
       expect(groups).to.deep.equal([{ environments: ['production'], locales: ['en-us'] }]);
     });
@@ -797,7 +821,7 @@ describe('ImportAssets', () => {
     it('should order folders with null parent_uid first', () => {
       const folders = [
         { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
+        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -810,7 +834,7 @@ describe('ImportAssets', () => {
       const folders = [
         { uid: 'folder-3', name: 'Folder 3', parent_uid: 'folder-2', created_at: '2023-01-03' },
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -823,7 +847,7 @@ describe('ImportAssets', () => {
     it('should handle multiple root folders', () => {
       const folders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: null as any, created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: null as any, created_at: '2023-01-02' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -838,7 +862,7 @@ describe('ImportAssets', () => {
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
         { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
         { uid: 'folder-3', name: 'Folder 3', parent_uid: 'folder-2', created_at: '2023-01-03' },
-        { uid: 'folder-4', name: 'Folder 4', parent_uid: 'folder-3', created_at: '2023-01-04' }
+        { uid: 'folder-4', name: 'Folder 4', parent_uid: 'folder-3', created_at: '2023-01-04' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -849,9 +873,7 @@ describe('ImportAssets', () => {
 
     it('should add root folder when replaceExisting is true', () => {
       mockImportConfig.replaceExisting = true;
-      const folders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
-      ];
+      const folders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
 
@@ -862,9 +884,7 @@ describe('ImportAssets', () => {
 
     it('should update root folder parent_uid when replaceExisting', () => {
       mockImportConfig.replaceExisting = true;
-      const folders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }
-      ];
+      const folders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' }];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
 
@@ -876,7 +896,7 @@ describe('ImportAssets', () => {
       mockImportConfig.replaceExisting = true;
       const folders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -898,7 +918,7 @@ describe('ImportAssets', () => {
     it('should maintain created_at timestamps', () => {
       const folders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: null as any, created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -913,6 +933,23 @@ describe('ImportAssets', () => {
       const importFoldersStub = sinon.stub(importAssets as any, 'importFolders').resolves();
       const importAssetsStub = sinon.stub(importAssets as any, 'importAssets').resolves();
       const publishStub = sinon.stub(importAssets as any, 'publish').resolves();
+      const analyzeImportDataStub = sinon.stub(importAssets as any, 'analyzeImportData').resolves([1, 2, 0, 1]);
+      sinon.stub(importAssets as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
+        return await fn();
+      });
+      sinon.stub(importAssets as any, 'createNestedProgress').returns({
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns({ updateStatus: sinon.stub() }),
+        completeProcess: sinon.stub(),
+        tick: sinon.stub(),
+      });
+      sinon.stub(importAssets as any, 'initializeProgress').resolves();
+      sinon.stub(importAssets as any, 'completeProgress').resolves();
+      sinon
+        .stub(importAssets as any, 'executeStep')
+        .callsFake(async (progress: any, processName: string, status: string, fn: () => Promise<any>) => {
+          return await fn();
+        });
 
       await importAssets.start();
 
@@ -929,6 +966,26 @@ describe('ImportAssets', () => {
       const testExistsSyncStub = sinon.stub().returns(true);
       sinon.replace(require('node:fs'), 'existsSync', testExistsSyncStub);
 
+      sinon.stub(importAssets as any, 'analyzeImportData').resolves([1, 2, 1, 1]);
+      sinon.stub(importAssets as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
+        return await fn();
+      });
+      sinon.stub(importAssets as any, 'createNestedProgress').returns({
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns({ updateStatus: sinon.stub() }),
+        completeProcess: sinon.stub(),
+        tick: sinon.stub(),
+      });
+      sinon.stub(importAssets as any, 'initializeProgress').resolves();
+      sinon.stub(importAssets as any, 'completeProgress').resolves();
+      sinon
+        .stub(importAssets as any, 'executeStep')
+        .callsFake(async (progress: any, processName: string, status: string, fn: () => Promise<any>) => {
+          if (fn) {
+            return await fn();
+          }
+        });
+
       const testImportFoldersStub = sinon.stub(importAssets as any, 'importFolders').resolves();
       const testImportAssetsStub = sinon.stub(importAssets as any, 'importAssets').resolves();
       const testPublishStub = sinon.stub(importAssets as any, 'publish').resolves();
@@ -939,12 +996,31 @@ describe('ImportAssets', () => {
       expect(testImportAssetsStub.calledTwice).to.be.true;
       expect(testPublishStub.calledOnce).to.be.true;
 
-      // Restore original value
       importAssets.assetConfig.includeVersionedAssets = originalValue;
     });
 
     it('should skip publish when skipAssetsPublish is true', async () => {
       mockImportConfig.skipAssetsPublish = true;
+
+      sinon.stub(importAssets as any, 'analyzeImportData').resolves([1, 2, 0, 1]);
+      sinon.stub(importAssets as any, 'withLoadingSpinner').callsFake(async (msg: string, fn: () => Promise<any>) => {
+        return await fn();
+      });
+      sinon.stub(importAssets as any, 'createNestedProgress').returns({
+        addProcess: sinon.stub(),
+        startProcess: sinon.stub().returns({ updateStatus: sinon.stub() }),
+        completeProcess: sinon.stub(),
+        tick: sinon.stub(),
+      });
+      sinon.stub(importAssets as any, 'initializeProgress').resolves();
+      sinon.stub(importAssets as any, 'completeProgress').resolves();
+      sinon
+        .stub(importAssets as any, 'executeStep')
+        .callsFake(async (progress: any, processName: string, status: string, fn: () => Promise<any>) => {
+          if (fn) {
+            return await fn();
+          }
+        });
 
       const importFoldersStub = sinon.stub(importAssets as any, 'importFolders').resolves();
       const importAssetsStub = sinon.stub(importAssets as any, 'importAssets').resolves();
@@ -971,10 +1047,10 @@ describe('ImportAssets', () => {
 
     it('should handle empty environments object', () => {
       importAssets['environments'] = {};
-      
+
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -984,7 +1060,7 @@ describe('ImportAssets', () => {
     it('should handle assets without parent_uid', () => {
       const apiOptions = {
         entity: 'create-assets' as const,
-        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' }
+        apiData: { uid: 'asset-1', title: 'Asset 1', filename: 'file1.jpg' },
       };
 
       const result = (importAssets as any).serializeAssets(apiOptions);
@@ -993,9 +1069,7 @@ describe('ImportAssets', () => {
     });
 
     it('should handle malformed folder structure', () => {
-      const folders = [
-        { uid: 'folder-1', name: 'Folder 1', parent_uid: 'non-existent', created_at: '2023-01-01' }
-      ];
+      const folders = [{ uid: 'folder-1', name: 'Folder 1', parent_uid: 'non-existent', created_at: '2023-01-01' }];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
 
@@ -1006,7 +1080,7 @@ describe('ImportAssets', () => {
     it('should handle circular folder references', () => {
       const folders = [
         { uid: 'folder-1', name: 'Folder 1', parent_uid: 'folder-2', created_at: '2023-01-01' },
-        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' }
+        { uid: 'folder-2', name: 'Folder 2', parent_uid: 'folder-1', created_at: '2023-01-02' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -1018,21 +1092,21 @@ describe('ImportAssets', () => {
     it('should handle assets with empty publish_details array', async () => {
       Object.defineProperty(FsUtility.prototype, 'indexFileContent', {
         get: sinon.stub().returns({ '0': 'chunk-0' }),
-        configurable: true
+        configurable: true,
       });
       Object.defineProperty(FsUtility.prototype, 'readChunkFiles', {
         get: sinon.stub().returns({
-          next: sinon.stub().resolves([
-            { uid: 'asset-1', title: 'Asset 1', publish_details: [] }
-          ])
+          next: sinon.stub().resolves([{ uid: 'asset-1', title: 'Asset 1', publish_details: [] }]),
         }),
-        configurable: true
+        configurable: true,
       });
 
-      const makeConcurrentStub = sinon.stub(importAssets as any, 'makeConcurrentCall').callsFake(async (options: any) => {
-        // When publish_details is empty, the asset should be filtered out
-        expect(options.apiContent).to.have.lengthOf(0);
-      });
+      const makeConcurrentStub = sinon
+        .stub(importAssets as any, 'makeConcurrentCall')
+        .callsFake(async (options: any) => {
+          // When publish_details is empty, the asset should be filtered out
+          expect(options.apiContent).to.have.lengthOf(0);
+        });
 
       await (importAssets as any).publish();
       expect(makeConcurrentStub.called).to.be.true;
@@ -1040,7 +1114,7 @@ describe('ImportAssets', () => {
 
     it('should handle special characters in folder names', () => {
       const folders = [
-        { uid: 'folder-1', name: 'Folder & Special "Chars"', parent_uid: null as any, created_at: '2023-01-01' }
+        { uid: 'folder-1', name: 'Folder & Special "Chars"', parent_uid: null as any, created_at: '2023-01-01' },
       ];
 
       const result = (importAssets as any).constructFolderImportOrder(folders);
@@ -1055,7 +1129,7 @@ describe('ImportAssets', () => {
           uid: `folder-${i}`,
           name: `Folder ${i}`,
           parent_uid: i === 0 ? null : `folder-${i - 1}`,
-          created_at: `2023-01-${String(i + 1).padStart(2, '0')}`
+          created_at: `2023-01-${String(i + 1).padStart(2, '0')}`,
         });
       }
 
@@ -1063,6 +1137,104 @@ describe('ImportAssets', () => {
 
       expect(result).to.have.lengthOf(100);
       expect(result[99].parent_uid).to.equal('folder-98');
+    });
+  });
+
+  describe('linkImportedAmSpacesToBranch() — duplicate prevention', () => {
+    let branchFetchStub: sinon.SinonStub;
+    let branchUpdateSettingsStub: sinon.SinonStub;
+    let branchStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      branchFetchStub = sinon.stub();
+      branchUpdateSettingsStub = sinon.stub().resolves();
+      branchStub = sinon.stub().returns({
+        fetch: branchFetchStub,
+        updateSettings: branchUpdateSettingsStub,
+      });
+      // stack is a getter-only property on BaseClass; override via defineProperty.
+      Object.defineProperty(importAssets, 'stack', {
+        get: () => ({ branch: branchStub }),
+        configurable: true,
+      });
+    });
+
+    it('should skip space mappings whose newSpaceUid is already linked to the branch', async () => {
+      branchFetchStub.resolves({
+        settings: {
+          am_v2: {
+            linked_workspaces: [
+              { uid: 'ws-3', space_uid: 'target-space-3', is_default: true },
+            ],
+          },
+        },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      expect(branchUpdateSettingsStub.callCount).to.equal(1);
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      // The existing entry stays; no new entry appended for target-space-3.
+      expect(updatedWorkspaces).to.have.lengthOf(1);
+      expect(updatedWorkspaces[0].space_uid).to.equal('target-space-3');
+      expect(updatedWorkspaces[0].uid).to.equal('ws-3');
+    });
+
+    it('should append only the non-default (new) space, not the already-linked default space', async () => {
+      branchFetchStub.resolves({
+        settings: {
+          am_v2: {
+            linked_workspaces: [
+              { uid: 'ws-3', space_uid: 'target-space-3', is_default: true },
+            ],
+          },
+        },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'target-space-3', workspaceUid: 'ws-3', isDefault: true },
+        { oldSpaceUid: 'am-space-2', newSpaceUid: 'brand-new-space', workspaceUid: 'main', isDefault: false },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      // Existing default + one new space = 2 total.
+      expect(updatedWorkspaces).to.have.lengthOf(2);
+      expect(updatedWorkspaces.map((w: any) => w.space_uid)).to.include.members([
+        'target-space-3',
+        'brand-new-space',
+      ]);
+    });
+
+    it('should append all mappings when none are already linked', async () => {
+      branchFetchStub.resolves({
+        settings: { am_v2: { linked_workspaces: [] } },
+      });
+
+      const spaceMappings = [
+        { oldSpaceUid: 'am-space-1', newSpaceUid: 'new-space-1', workspaceUid: 'main', isDefault: true },
+        { oldSpaceUid: 'am-space-2', newSpaceUid: 'new-space-2', workspaceUid: 'main', isDefault: false },
+      ];
+
+      await (importAssets as any).linkImportedAmSpacesToBranch(spaceMappings);
+
+      const updatedWorkspaces =
+        branchUpdateSettingsStub.firstCall.args[0].branch.settings.am_v2.linked_workspaces;
+      expect(updatedWorkspaces).to.have.lengthOf(2);
+    });
+
+    it('should do nothing when spaceMappings is empty', async () => {
+      await (importAssets as any).linkImportedAmSpacesToBranch([]);
+
+      expect(branchFetchStub.callCount).to.equal(0);
+      expect(branchUpdateSettingsStub.callCount).to.equal(0);
     });
   });
 });

@@ -1,32 +1,52 @@
 {
   "name": "@contentstack/cli-cm-regex-validate",
   "description": "Validate Fields with Regex Property of Content Type and Global Field in a Stack",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli-cm-regex-validate/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
+  "scripts": {
+    "build": "pnpm compile && oclif manifest && oclif readme",
+    "prepack": "pnpm compile && oclif manifest && oclif readme",
+    "postpack": "rm -f oclif.manifest.json",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
+    "pretest": "tsc -p test",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
+    "lint": "eslint \"src/**/*.ts\"",
+    "compile": "tsc -b tsconfig.json",
+    "format": "eslint \"src/**/*.ts\" --fix"
+  },
+  "dependencies": {
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
+    "@contentstack/management": "^1.30.4",
+    "cli-table3": "^0.6.5",
+    "inquirer": "12.11.1",
+    "jsonexport": "^3.2.0",
+    "safe-regex": "^2.1.1",
+    "tslib": "^2.8.1"
+  },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.7",
-    "@oclif/plugin-help": "^6.2.52",
-    "@oclif/test": "^3.2.15",
+    "@oclif/plugin-help": "^6.2.53",
+    "@oclif/test": "^4.1.20",
     "@types/chai": "^4.3.20",
-    "@types/jest": "^30.0.0",
     "@types/jsonexport": "^3.0.5",
     "@types/mocha": "^10.0.10",
     "@types/node": "^18.19.130",
+    "@types/proxyquire": "^1.3.31",
     "@types/safe-regex": "^1.1.6",
-    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@types/sinon": "^21.0.1",
     "chai": "^4.5.0",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^4.0.0",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "eslint-config-oclif-typescript": "^3.1.14",
-    "eslint-plugin-unicorn": "^48.0.1",
     "globby": "^11.1.0",
     "husky": "^9.1.7",
-    "jest": "^30.4.2",
     "mocha": "^10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.21",
-    "ts-jest": "^29.4.11",
+    "oclif": "^4.23.27",
+    "proxyquire": "^2.1.3",
+    "sinon": "^21.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
@@ -34,13 +54,12 @@
     "node": ">=22.0.0"
   },
   "files": [
-    "/lib",
     "/bin",
-    "/npm-shrinkwrap.json",
-    "/oclif.manifest.json",
-    "/messages"
+    "/lib",
+    "/messages",
+    "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/contentstack/cli-cm-regex-validate",
+  "homepage": "https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-cli-cm-regex-validate",
   "keywords": [
     "contentstack",
     "cli",
@@ -48,39 +67,23 @@
     "regex"
   ],
   "license": "MIT",
+  "main": "lib/index.js",
   "oclif": {
     "commands": "./lib/commands",
     "bin": "csdx",
     "devPlugins": [
       "@oclif/plugin-help"
-    ]
+    ],
+    "repositoryPrefix": "https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/<%- commandPath %>"
   },
-  "repository": "contentstack/cli-cm-regex-validate",
-  "scripts": {
-    "mocha": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "postpack": "rm -f oclif.manifest.json",
-    "prepack": "rm -rf lib && tsc -b && oclif manifest && oclif readme",
-    "test": "jest --detectOpenHandles --silent",
-    "version": "oclif-dev readme && git add README.md",
-    "lint": "eslint \"src/**/*.ts\""
-  },
-  "dependencies": {
-    "@contentstack/cli-command": "^1.8.5",
-    "@contentstack/cli-utilities": "^1.19.1",
-    "@contentstack/management": "^1.30.4",
-    "cli-table3": "^0.6.5",
-    "cli-ux": "^6.0.9",
-    "inquirer": "12.11.1",
-    "jsonexport": "^3.2.0",
-    "safe-regex": "^2.1.1",
-    "tslib": "^2.8.1"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-cli-cm-regex-validate"
   },
   "csdxConfig": {
     "shortCommandName": {
       "cm:stacks:validate-regex": "RGXVLD"
     }
-  },
-  "overrides": {
-    "tmp": "^0.2.7"
   }
 }

@@ -9,8 +9,6 @@ import { getJsonInputFlags, tableFlags } from '../../../../util';
 const jsonFlag = getJsonInputFlags({ hidden: true });
 
 export default class AuditFix extends AuditBaseCommand {
-  static aliases: string[] = ['audit:fix', 'cm:stacks:audit:fix'];
-
   static description = auditFixMsg.AUDIT_FIX_CMD_DESCRIPTION;
 
   static examples = [
@@ -25,10 +23,6 @@ export default class AuditFix extends AuditBaseCommand {
   static flags: FlagInput = {
     'report-path': Flags.string({
       description: auditMsg.REPORT_PATH,
-    }),
-    'reference-only': Flags.boolean({
-      hidden: true,
-      description: auditMsg.REFERENCE_ONLY,
     }),
     modules: Flags.string({
       multiple: true,

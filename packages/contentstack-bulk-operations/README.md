@@ -1,12 +1,8 @@
+> **Source of truth:** [cli-plugins](https://github.com/contentstack/cli-plugins) — `packages/contentstack-bulk-operations`. Migrated from [cli-bulk-operations](https://github.com/contentstack/cli-bulk-operations). Command migration guide: [BULK-OPERATIONS-MIGRATION.md](../../BULK-OPERATIONS-MIGRATION.md).
+
 # @contentstack/cli-bulk-operations
 
 > Contentstack CLI plugin for performing bulk operations on your content.
-
-<!-- toc -->
-* [@contentstack/cli-bulk-operations](#contentstackcli-bulk-operations)
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
 
 ## Features
 
@@ -24,43 +20,11 @@ $ npm install -g @contentstack/cli-bulk-operations
 $ csdx COMMAND
 running command...
 $ csdx (--version|-v)
-@contentstack/cli-bulk-operations/1.2.0 darwin-arm64 node-v22.21.1
+@contentstack/cli-bulk-operations/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
 ...
-```
-
-**For CLI 1.x (plugin install):**
-
-```sh-session
-# For CLI 1.x:
-
-# Install Contentstack CLI
-$ npm install -g @contentstack/cli
-$ csdx 
-running command...
-$ csdx (--version|-v)
-$ csdx --help [COMMAND]
-
-# Install bulk operations plugin
-csdx plugins:install @contentstack/cli-bulk-operations
-
-# Verify installation
-csdx cm:stacks:bulk-entries --help
-```
-```sh-session
-# For CLI 2.x:
-
-# Install Contentstack CLI
-$ npm install -g @contentstack/cli
-$ csdx 
-running command...
-$ csdx (--version|-v)
-$ csdx --help [COMMAND]
-
-# Verify installation
-csdx cm:stacks:bulk-entries --help
 ```
 <!-- usagestop -->
 
@@ -73,39 +37,48 @@ csdx cm:stacks:bulk-entries --help
 
 ## `csdx cm:stacks:bulk-assets`
 
-Bulk operations for assets (publish/unpublish/cross-publish)
+Bulk operations for assets: publish/unpublish/cross-publish (CMS) and delete/move (CS Assets). Delete/move load asset UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.
 
 ```
 USAGE
-  $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish] [--environments <value>...]
-    [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single] [--branch
-    <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>] [--folder-uid
-    <value>]
+  $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish|delete|move] [--environments
+    <value>...] [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single]
+    [--branch <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>]
+    [--folder-uid <value>] [-d <value>] [--dry-run] [--space-uid <value>] [--org-uid <value>] [--workspace <value>]
+    [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid <value>]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
                                      can only access the branches allowed for that token. This option can be used as an
-                                     alternative to --stack-api-key.
+                                     alternative to` --stack-api-key.`
   -c, --config=<value>               (optional) Specifies the path to a JSON configuration file that defines the options
                                      for the command. Use this file instead of passing multiple CLI flags for a single
                                      run.
+  -d, --data-dir=<value>             Path to exported content folder containing asset publish details.
   -k, --stack-api-key=<value>        API key of the source stack. You must use either the --stack-api-key flag or the
                                      --alias flag.
   -y, --yes                          Skips interactive confirmation prompts and runs the command immediately using the
                                      provided options. Useful for automation and scripts.
+      --asset-uids-file=<value>      Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string
+                                     array, no trimming; large lists: see docs for NODE_OPTIONS)
       --branch=<value>               [default: main] The name of the branch where you want to perform the bulk publish
                                      operation. If you don't mention the branch name, then by default the content from
                                      main branch will be published.
       --bulk-operation-file=<value>  [default: bulk-operation] (optional) Folder path to store operation logs. Creates
                                      separate files for success and failed operations. Default: bulk-operation
+      --dry-run                      Preview the publish plan without making any API calls.
       --environments=<value>...      Specifies one or more environments where the entries or assets should be published.
                                      Separate multiple environments with spaces.
       --folder-uid=<value>           (optional) The UID of the Assets' folder from which the assets need to be
                                      published. The default value is cs_root.
+      --locale=<value>               Locale code for bulk delete only (single locale per run). Not applicable for move —
+                                     move always relocates all locale variants of an asset.
       --locales=<value>...           Specifies one or more locale codes for which the entries or assets should be
                                      published. Separate multiple locales with spaces.
-      --operation=<option>           Specifies whether to `publish` or `unpublish` content.
-                                     <options: publish|unpublish>
+      --operation=<option>           Operation to perform: `publish`/`unpublish` (CMS, requires stack API key or alias)
+                                     or `delete`/`move` (CS Assets, requires OAuth/Token and --space-uid/--org-uid)
+                                     <options: publish|unpublish|delete|move>
+      --org-uid=<value>              Organization UID for CS Assets API (organization_uid header)
       --publish-mode=<option>        [default: bulk] Publish mode: bulk (uses Bulk Publish API) or single (individual
                                      API calls)
                                      <options: bulk|single>
@@ -117,9 +90,14 @@ FLAGS
       --source-alias=<value>         Alias name for source environment delivery token (required for cross-publish). Add
                                      delivery token using: csdx auth:tokens:add
       --source-env=<value>           Source environment for cross-publish
+      --space-uid=<value>            CS Assets space UID
+      --target-folder-uid=<value>    Destination CS Assets folder UID for bulk move. Use "root" to move assets to the
+                                     root folder.
+      --workspace=<value>            [default: main] CS Assets workspace query parameter (default: main)
 
 DESCRIPTION
-  Bulk operations for assets (publish/unpublish/cross-publish)
+  Bulk operations for assets: publish/unpublish/cross-publish (CMS) and delete/move (CS Assets). Delete/move load asset
+  UIDs from a JSON file `{ "uids": [...] }`; pass organization via `--org-uid`.
 
 EXAMPLES
   $ csdx cm:stacks:bulk-assets --operation publish --environments dev,staging --locales en-us -k blt123
@@ -135,6 +113,12 @@ EXAMPLES
   $ csdx cm:stacks:bulk-assets --retry-failed ./bulk-operation -a myAlias
 
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
+
+  $ csdx cm:stacks:bulk-assets --data-dir ./content --operation publish -k blt123
+
+  $ csdx cm:stacks:bulk-assets --operation delete --space-uid am123 --org-uid bltOrg --locale en-us --asset-uids-file ./assets.json
+
+  $ csdx cm:stacks:bulk-assets --operation move --space-uid am123 --org-uid bltOrg --target-folder-uid amFolder --asset-uids-file ./assets.json
 ```
 
 _See code: [src/commands/cm/stacks/bulk-assets.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts)_
@@ -148,13 +132,12 @@ USAGE
   $ csdx cm:stacks:bulk-entries [-a <value>] [-k <value>] [--operation publish|unpublish] [--environments <value>...]
     [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single] [--branch
     <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>]
-    [--content-types <value>...] [--filter draft|modified|non-localized|unpublished] [--include-variants] [--api-version
-    <value>]
+    [--content-types <value>...] [--filter draft|modified|non-localized|unpublished] [--include-variants]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
                                      can only access the branches allowed for that token. This option can be used as an
-                                     alternative to --stack-api-key.
+                                     alternative to` --stack-api-key.`
   -c, --config=<value>               (optional) Specifies the path to a JSON configuration file that defines the options
                                      for the command. Use this file instead of passing multiple CLI flags for a single
                                      run.
@@ -162,8 +145,6 @@ FLAGS
                                      --alias flag.
   -y, --yes                          Skips interactive confirmation prompts and runs the command immediately using the
                                      provided options. Useful for automation and scripts.
-      --api-version=<value>          [default: 3.2] Specifies the Content Management API version used for publishing.
-                                     Use `3.2` (default) for publishing entries with nested references.
       --branch=<value>               [default: main] The name of the branch where you want to perform the bulk publish
                                      operation. If you don't mention the branch name, then by default the content from
                                      main branch will be published.
@@ -233,12 +214,12 @@ USAGE
   $ csdx cm:stacks:bulk-taxonomies [-a <value>] [-k <value>] [--operation publish|unpublish] [--environments <value>...]
     [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single] [--branch
     <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>] [--taxonomies
-    <value>] [--api-version <value>]
+    <value>]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
                                      can only access the branches allowed for that token. This option can be used as an
-                                     alternative to --stack-api-key.
+                                     alternative to` --stack-api-key.`
   -c, --config=<value>               (optional) Specifies the path to a JSON configuration file that defines the options
                                      for the command. Use this file instead of passing multiple CLI flags for a single
                                      run.
@@ -246,9 +227,6 @@ FLAGS
                                      --alias flag.
   -y, --yes                          Skips interactive confirmation prompts and runs the command immediately using the
                                      provided options. Useful for automation and scripts.
-      --api-version=<value>          [default: 3.2] Content Management API version for taxonomy publish (default: `3.2`;
-                                     required for the `items` + locales/environments body on POST
-                                     /v3/taxonomies/publish).
       --branch=<value>               [default: main] The name of the branch where you want to perform the bulk publish
                                      operation. If you don't mention the branch name, then by default the content from
                                      main branch will be published.
@@ -286,8 +264,6 @@ EXAMPLES
 
   $ csdx cm:stacks:bulk-taxonomies --operation publish --environments staging --locales en-us,fr-fr --taxonomies taxonomy_a -a myAlias
 
-  $ csdx cm:stacks:bulk-taxonomies --operation publish --environments development --locales en-us --taxonomies products_tax --api-version 3.2 -k blt123
-
   $ csdx cm:stacks:bulk-taxonomies --operation publish --branch feature --environments development --locales en-us --taxonomies brands_tax -k blt123
 ```
 
@@ -296,7 +272,7 @@ _See code: [src/commands/cm/stacks/bulk-taxonomies.ts](https://github.com/conten
 
 ## Requirements
 
-- Node.js >= 22.21.1
+- Node.js >= 22
 - Contentstack account with API credentials
 
 ## Development
@@ -304,9 +280,15 @@ _See code: [src/commands/cm/stacks/bulk-taxonomies.ts](https://github.com/conten
 ### Setup
 
 ```bash
+# Clone the repository
 git clone https://github.com/contentstack/cli-plugins.git
 cd cli-plugins/packages/contentstack-bulk-operations
-# From monorepo root: pnpm install && pnpm --filter @contentstack/cli-bulk-operations run build
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
 ```
 
 ### Available Scripts

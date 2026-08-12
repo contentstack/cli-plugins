@@ -1,6 +1,4 @@
-# @contentstack/contentstack-cli-content-type
-
-[![npm](https://img.shields.io/npm/v/contentstack-cli-content-type)](https://npmjs.org/package/@contentstack/contentstack-cli-content-type)
+![npm](https://img.shields.io/npm/v/contentstack-cli-content-type)
 
 ## Description
 This is a plugin for [Contentstack's](https://www.contentstack.com/) CLI.
@@ -9,7 +7,7 @@ It allows you to quickly retrieve information about Content Types in a Stack.
 ## Why use this plugin
 1. The `csdx content-type:audit` command lists recent changes to a content type and by whom.
 This is useful when needing to find Content Type versions to compare with `csdx content-type:compare`.
-[Audit logs](https://www.contentstack.com/docs/developers/set-up-stack/monitor-stack-activities-in-audit-log/) are stored for 90 days within Contentstack. 
+[Audit logs](https://www.contentstack.com/docs/headless-cms/set-up-stack/monitor-stack-activities-in-audit-log/) are stored for 90 days within Contentstack. 
 
 1. The `csdx content-type:compare-remote` command allows you to compare the same Content Type between two Stacks.
 This is useful when you have cloned or duplicated a Stack, and want to check what has changed in a child Stack.
@@ -27,7 +25,7 @@ The Content Type's Display Name, UID, Last Modified Date, and Version number is 
     * The full path to a field, useful when using the [include reference endpoint](https://www.contentstack.com/docs/developers/apis/content-delivery-api/#include-reference) or filtering operations, such as the [equality endpoint](https://www.contentstack.com/docs/developers/apis/content-delivery-api/#equals-operator).
 
 1. The `csdx content-type:diagram` command creates a visual representation of a Stack's content model.
-    * The output format can be either `svg` or `dot`. 
+    * The ouput format can be either `svg` or `dot`. 
     * The diagram's orientation can be changed, using the `-d landscape|portrait` flag.
     * [GraphViz](https://graphviz.org/) is the layout engine. You can export the generated DOT Language source, using the `-t dot` flag.
     * ![Diagram Output](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-content-type/screenshots/starter-app.svg)
@@ -44,7 +42,7 @@ $ npm install -g contentstack-cli-content-type
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-contentstack-cli-content-type/1.5.4 darwin-arm64 node-v24.18.0
+contentstack-cli-content-type/2.0.0 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -66,14 +64,12 @@ Display recent changes to a Content Type
 
 ```
 USAGE
-  $ csdx content-type:audit -c <value> [-s <value> | -a <value> | -a <value>] [-k <value> |  | ]
+  $ csdx content-type:audit --content-type <value> [-k <value> | -a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
 
 DESCRIPTION
   Display recent changes to a Content Type
@@ -92,16 +88,14 @@ Compare two Content Type versions
 
 ```
 USAGE
-  $ csdx content-type:compare -c <value> [-s <value> | -a <value>] [-k <value> | ] [-a <value>] [-l <value> -r <value>]
+  $ csdx content-type:compare --content-type <value> [-k <value> | -a <value>] [--left <value> --right <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -l, --left=<value>           Content Type version, i.e. prev version
-  -r, --right=<value>          Content Type version, i.e. later version
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
+      --left=<value>           Content Type version, i.e. prev version
+      --right=<value>          Content Type version, i.e. later version
 
 DESCRIPTION
   Compare two Content Type versions
@@ -122,18 +116,18 @@ compare two Content Types on different Stacks
 
 ```
 USAGE
-  $ csdx content-type:compare-remote (-o <value> -r <value>) -c <value>
+  $ csdx content-type:compare-remote (--origin-stack <value> --remote-stack <value>) --content-type <value>
 
 FLAGS
-  -c, --content-type=<value>  (required) Content Type UID
-  -o, --origin-stack=<value>  (required) Origin Stack API Key
-  -r, --remote-stack=<value>  (required) Remote Stack API Key
+  --content-type=<value>  (required) Content Type UID
+  --origin-stack=<value>  (required) Origin Stack API Key
+  --remote-stack=<value>  (required) Remote Stack API Key
 
 DESCRIPTION
   compare two Content Types on different Stacks
 
 EXAMPLES
-  $ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" -content-type "home_page"
+  $ csdx content-type:compare-remote --origin-stack "xxxxxxxxxxxxxxxxxxx" --remote-stack "xxxxxxxxxxxxxxxxxxx" --content-type "home_page"
 ```
 
 _See code: [src/commands/content-type/compare-remote.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-content-type/src/commands/content-type/compare-remote.ts)_
@@ -144,15 +138,13 @@ Display Content Type details
 
 ```
 USAGE
-  $ csdx content-type:details -c <value> [-s <value> | -a <value>] [-k <value> | ] [-a <value>] [-p]
+  $ csdx content-type:details --content-type <value> [-k <value> | -a <value>] [--path]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -c, --content-type=<value>   (required) Content Type UID
   -k, --stack-api-key=<value>  Stack API Key
-  -p, --[no-]path              show path column
-  -s, --stack=<value>          Stack UID
+      --content-type=<value>   (required) Content Type UID
+      --[no-]path              show path column
 
 DESCRIPTION
   Display Content Type details
@@ -173,18 +165,15 @@ Create a visual diagram of a Stack's Content Types
 
 ```
 USAGE
-  $ csdx content-type:diagram -o <value> -d portrait|landscape -t svg|dot [-s <value> | -a <value> | -a <value>] [-k
-    <value> |  | ]
+  $ csdx content-type:diagram --output <value> --direction portrait|landscape --type svg|dot [-k <value> | -a <value>]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
-  -d, --direction=<option>     (required) [default: portrait] graph orientation
-                               <options: portrait|landscape>
   -k, --stack-api-key=<value>  Stack API Key
-  -o, --output=<value>         (required) full path to output
-  -s, --stack=<value>          Stack UID
-  -t, --type=<option>          (required) [default: svg] graph output file type
+      --direction=<option>     (required) [default: portrait] graph orientation
+                               <options: portrait|landscape>
+      --output=<value>         (required) full path to output
+      --type=<option>          (required) [default: svg] graph output file type
                                <options: svg|dot>
 
 DESCRIPTION
@@ -208,15 +197,13 @@ List all Content Types in a Stack
 
 ```
 USAGE
-  $ csdx content-type:list [-s <value> | -a <value> | -a <value>] [-k <value> |  | ] [-o title|modified]
+  $ csdx content-type:list [-k <value> | -a <value>] [--order title|modified]
 
 FLAGS
   -a, --alias=<value>          Alias of the management token
-  -a, --token-alias=<value>    Management token alias
   -k, --stack-api-key=<value>  Stack API Key
-  -o, --order=<option>         [default: title] order by column
+      --order=<option>         [default: title] order by column
                                <options: title|modified>
-  -s, --stack=<value>          Stack UID
 
 DESCRIPTION
   List all Content Types in a Stack

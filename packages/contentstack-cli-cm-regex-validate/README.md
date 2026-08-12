@@ -18,7 +18,7 @@ and rectify them.
 
 # Usage
 
-<!-- usage -->
+<!-- usage-no-overwrite -->
 
 #### Step 1:
 
@@ -29,7 +29,7 @@ $ csdx plugins:install @contentstack/cli-cm-regex-validate
 
 $ csdx plugins
 running command...
-@contentstack/cli-cm-regex-validate/1.2.1 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-regex-validate/2.0.0 darwin-arm64 node-v22.x
 
 $ csdx --help [COMMAND]
 USAGE
@@ -39,13 +39,13 @@ USAGE
 
 #### Step 2:
 
-[Set the region](https://www.contentstack.com/docs/developers/cli/configure-regions-in-the-cli#set-region)
+[Set the region](https://www.contentstack.com/docs/headless-cms/configure-regions-in-the-cli#set-region)
 
-<!-- usagestop -->
+<!-- usagestop-overwrite -->
 
 #### Step 3:
 
-[Configured management token alias](https://www.contentstack.com/docs/developers/cli/cli-authentication#add-management-token)
+[Configured management token alias](https://www.contentstack.com/docs/headless-cms/cli-authentication#add-management-token)
 
 # Commands
 
@@ -58,15 +58,14 @@ This command is used to find all the invalid regexes present in the content type
 
 ```
 USAGE
-  $ csdx cm:stacks:validate-regex [-h] [-a <value>] [-c] [-g] [-f <value>]
+  $ csdx cm:stacks:validate-regex [-a <value>] [--contentType] [--filePath <value>] [--globalField]
 
 FLAGS
   -a, --alias=<value>     Alias (name) assigned to the management token
-  -c, --contentType       To find invalid regexes within the content types
-  -f, --filePath=<value>  [optional] The path or the location in your file system where the CSV output file should be
+      --contentType       To find invalid regexes within the content types
+      --filePath=<value>  [optional] The path or the location in your file system where the CSV output file should be
                           stored.
-  -g, --globalField       To find invalid regexes within the global fields
-  -h, --help              To show the flags that can be used with this CLI command
+      --globalField       To find invalid regexes within the global fields
 
 DESCRIPTION
   This command is used to find all the invalid regexes present in the content types and global fields of your stack.
@@ -76,15 +75,15 @@ EXAMPLES
 
   $ csdx cm:stacks:validate-regex -a <management_token_alias>
 
-  $ csdx cm:stacks:validate-regex -c
+  $ csdx cm:stacks:validate-regex --contentType
 
-  $ csdx cm:stacks:validate-regex -g
+  $ csdx cm:stacks:validate-regex --globalField
 
-  $ csdx cm:stacks:validate-regex -f <path/to/the/directory>
+  $ csdx cm:stacks:validate-regex --filePath <path/to/the/directory>
 
-  $ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g
+  $ csdx cm:stacks:validate-regex -a <management_token_alias> --contentType --globalField
 
-  $ csdx cm:stacks:validate-regex -a <management_token_alias> -c -g -f <path/to/the/directory>
+  $ csdx cm:stacks:validate-regex -a <management_token_alias> --contentType --globalField --filePath <path/to/the/directory>
 ```
 
 _See code: [src/commands/cm/stacks/validate-regex.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/src/commands/cm/stacks/validate-regex.ts)_

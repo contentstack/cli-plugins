@@ -9,29 +9,11 @@ alwaysApply: true
 ## Monorepo Structure
 
 ### Package Organization
-This **CLI plugins** monorepo has 12 packages under `packages/`:
-
-1. **contentstack-audit** - Stack audit and fix operations
-2. **contentstack-bootstrap** - Seed/bootstrap stacks
-3. **contentstack-branches** - Git-based branch management
-4. **contentstack-bulk-publish** - Bulk publish operations
-5. **contentstack-clone** - Clone/duplicate stacks
-6. **contentstack-export** - Export stack content
-7. **contentstack-export-to-csv** - Export to CSV format
-8. **contentstack-import** - Import content to stacks
-9. **contentstack-import-setup** - Import setup and validation
-10. **contentstack-migration** - Content migration workflows
-11. **contentstack-seed** - Seed stacks with data
-12. **contentstack-variants** - Manage content variants
-
-All plugins depend on `@contentstack/cli-command` and `@contentstack/cli-utilities`. Some plugins also depend on each other.
-
-### pnpm Workspace Configuration
-```json
-{
-  "workspaces": ["packages/*"]
-}
-```
+- **12+ plugin packages** under `packages/`
+- `contentstack-cli-cm-regex-validate` - Regex validation for Content Type/Global Field fields (`cm:stacks:validate-regex`; npm `@contentstack/cli-cm-regex-validate`; Jest tests)
+- **pnpm workspaces** with `workspaces: ["packages/*"]`
+- **Shared dependencies**: `@contentstack/cli-command`, `@contentstack/cli-utilities`
+- **Build artifacts**: `lib/` directory (compiled from `src/`)
 
 ### Development Commands
 ```bash
@@ -39,10 +21,7 @@ All plugins depend on `@contentstack/cli-command` and `@contentstack/cli-utiliti
 pnpm install
 
 # Run command across all packages
-pnpm -r run <command>
-
-# Run command in specific package
-pnpm -r --filter '@contentstack/cli-cm-import' test
+pnpm -r --filter './packages/*' <command>
 
 # Work on specific package
 cd packages/contentstack-import
@@ -58,16 +37,19 @@ pnpm test
 ### Test-First Examples
 ```typescript
 // ✅ GOOD - Write test first
-describe('ConfigService', () => {
-  it('should load configuration', async () => {
+describe('ImportService', () => {
+  it('should import content types', async () => {
     // Arrange - Set up mocks
-    const mockConfig = { region: 'us', alias: 'default' };
-    
+    mockStackClient.contentType.returns({
+      create: sinon.stub().resolves({ uid: 'ct-uid' })
+    });
+
     // Act - Call the method
-    const result = await configService.load();
-    
+    const result = await importService.importContentTypes();
+
     // Assert - Verify behavior
-    expect(result).to.deep.equal(mockConfig);
+    expect(result.success).to.be.true;
+    expect(mockStackClient.contentType).to.have.been.called;
   });
 });
 ```
@@ -76,67 +58,43 @@ describe('ConfigService', () => {
 
 ### Testing Standards
 - **NO implementation before tests** - Test-driven development only
+- **Coverage aspiration**: 80% minimum (not uniformly enforced)
 - **Mock all external dependencies** - No real API calls in tests
-- **Use Mocha + Chai** - Standard testing stack
-- **Coverage aspiration**: 80% minimum
+- **Use Mocha + Chai + Sinon** - Standard testing stack
 
 ### Code Quality
-- **TypeScript configuration**: Varies by package
+- **TypeScript configuration**: Varies by package (strict mode aspirational)
 - **NO test.skip or .only in commits** - Clean test suites only
-- **Proper error handling** - Clear error messages
+- **Proper error handling** - Use `handleAndLogError` from utilities
 
 ### Build Process
 ```bash
-# Standard build process for each package
-pnpm run build    # tsc compilation + oclif manifest
+# Standard build process
+pnpm run build    # tsc compilation
 pnpm run test     # Run test suite
-pnpm run lint     # ESLint checks
+oclif manifest    # Generate OCLIF manifest
 ```
 
 ## Package-Specific Patterns
 
-### Plugin Packages (auth, config)
+### Plugin Packages
 - Have `oclif.commands` in `package.json`
 - Commands in `src/commands/cm/**/*.ts`
 - Built commands in `lib/commands/`
-- Extend `@oclif/core` Command class
-- Script: `build`: compiles TypeScript, generates OCLIF manifest and README
+- Extend `@contentstack/cli-command`
 
-### Library Packages (command, utilities, dev-dependencies)
+### Library Packages (e.g., variants)
 - No OCLIF commands configuration
-- Pure TypeScript/JavaScript libraries
+- Pure TypeScript libraries
 - Consumed by other packages
 - `main` points to `lib/index.js`
 
-### Main CLI Package (contentstack)
-- Entry point through `bin/run.js`
-- Aggregates plugin commands
-- Package dependencies reference plugin packages
-
-## Script Conventions
-
-### Build Scripts
-```json
-{
-  "build": "pnpm compile && oclif manifest && oclif readme",
-  "compile": "tsc -b tsconfig.json",
-  "prepack": "pnpm compile && oclif manifest && oclif readme",
-  "test": "mocha \"test/unit/**/*.test.ts\"",
-  "lint": "eslint src/**/*.ts"
-}
-```
-
-### Key Build Steps
-1. **compile** - TypeScript compilation to `lib/`
-2. **oclif manifest** - Generate command manifest for discovery
-3. **oclif readme** - Generate command documentation
-
 ## Quick Reference
 
-For detailed patterns, see:
-- `@testing` - Mocha, Chai test patterns
-- `@oclif-commands` - Command structure and validation
-- `@dev-workflow` (this document) - Monorepo workflow and TDD
+For detailed patterns, see skills:
+- `@skills/testing` - Mocha, Chai, Sinon patterns and TDD workflow
+- `@skills/contentstack-cli` - API integration, rate limiting, authentication
+- `@skills/oclif-commands` - Command structure, base classes, validation
 
 ## Development Checklist
 
@@ -149,7 +107,8 @@ For detailed patterns, see:
 ### During Development
 - [ ] Write failing test first
 - [ ] Implement minimal code to pass
-- [ ] Mock external dependencies
+- [ ] Mock external dependencies (SDK, file system, etc.)
+- [ ] Use proper error handling patterns
 - [ ] Follow naming conventions (kebab-case files, PascalCase classes)
 
 ### Before Committing
@@ -161,46 +120,30 @@ For detailed patterns, see:
 
 ## Common Patterns
 
-### Service/Class Architecture
+### Service Layer Architecture
 ```typescript
 // ✅ GOOD - Separate concerns
-export default class ConfigCommand extends Command {
-  static description = 'Manage CLI configuration';
-  
+export default class ImportCommand extends Command {
   async run(): Promise<void> {
+    const config = this.buildConfig();
+    const service = new ImportService(config);
+    
     try {
-      const service = new ConfigService();
       await service.execute();
-      this.log('Configuration updated successfully');
+      this.log('Import completed successfully');
     } catch (error) {
-      this.error('Configuration update failed');
+      handleAndLogError(error);
     }
   }
 }
 ```
 
-### Error Handling
+### Rate Limiting Compliance
 ```typescript
-// ✅ GOOD - Clear error messages
-try {
-  await this.performAction();
-} catch (error) {
-  if (error instanceof ValidationError) {
-    this.error(`Invalid input: ${error.message}`);
-  } else {
-    this.error('Operation failed');
-  }
+// ✅ GOOD - Respect API limits
+async processBatch(batch: Item[]): Promise<void> {
+  const start = Date.now();
+  await this.makeConcurrentCall(batch, this.processItem);
+  await this.logMsgAndWaitIfRequired('Processing', start);
 }
 ```
-
-## CI/CD Integration
-
-### GitHub Actions
-- Uses workflow files in `.github/workflows/`
-- Runs linting, tests, and builds on pull requests
-- Enforces code quality standards
-
-### Pre-commit Hooks
-- Husky integration for pre-commit checks
-- Prevents commits with linting errors
-- Located in `.husky/`

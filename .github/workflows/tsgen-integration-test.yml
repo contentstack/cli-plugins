@@ -28,8 +28,8 @@ jobs:
       - name: Build tsgen plugin
         run: pnpm --filter contentstack-cli-tsgen run build
 
-      - name: Install Contentstack CLI (v1)
-        run: npm i -g @contentstack/cli
+      - name: Install Contentstack CLI (v2 beta)
+        run: npm i -g @contentstack/cli@beta
 
       - name: Configure CLI region
         run: csdx config:set:region ${{ secrets.REGION }}

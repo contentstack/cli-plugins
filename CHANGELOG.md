@@ -5,6 +5,14 @@ Please refer to the Contentstack Command-line Interface release notes [here](htt
 
 
 
+## @contentstack/cli-bulk-operations
+### Version: 2.0.0-beta.5
+#### Date: Jul-21-2025
+##### Breaking Change:
+ - Removed the api version flag from `cm:stacks:bulk-entries`. The NRP header value is now hardcoded at the SDK call site, so the flag is no longer needed. Any scripts or CI pipelines that pass this flag must remove it — it will cause an unrecognized-flag error after this release.
+##### Fix:
+ - Force NRP header to version 3.2 on all entry and asset publish/unpublish requests. The header is injected per-call and does not affect other CMA requests.
+
 #### Date:  Feb-09-2025
 ## cli
  - Refactor Endpoints Integration using Utils SDK in cli-cm-config v1.9.0

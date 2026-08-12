@@ -15,8 +15,8 @@ description: Local and CI workflow for cli-cm-regex-validate — commands, layou
 
 ### Validation commands
 
-- `npm test` — Jest (`jest.config.ts`, ts-jest). Canonical test runner; CI runs only this in `.github/workflows/unit-tests.yml` (no ESLint in CI).
-- `npm run posttest` — ESLint on `.ts` files. Run locally before merge; not executed by the unit-test workflow.
+- `pnpm test` — Jest (`jest.config.ts`, ts-jest). Canonical test runner; CI runs only this in `.github/workflows/unit-test.yml` (no ESLint in CI).
+- `pnpm run lint` — ESLint on `.ts` files. Run locally before merge; not executed by the unit-test workflow.
 
 ### Local hooks
 
@@ -45,13 +45,18 @@ If Husky is installed, pre-commit may run Talisman (secrets) and Snyk. Use `SKIP
 
 ### Before merging
 
-- Tests pass (`npm test`).
-- Lint clean (`npm run posttest` or ESLint as configured in `package.json`). CI does not run ESLint; this is a local gate.
+- Tests pass (`pnpm test`).
+- Lint clean (`pnpm run lint` or ESLint as configured in `package.json`). CI does not run ESLint; this is a local gate.
 
 ## References
 
 - [Testing](../testing/SKILL.md) — Jest mocks, fixtures, no live API calls
 - [Contentstack CLI](../contentstack-cli/SKILL.md) — Command flow, Management SDK, `safe-regex`, output
 - [Code review](../code-review/SKILL.md) — PR and release checklist
+
+## CI
+
+- **Unit tests:** `.github/workflows/unit-test.yml` — runs `pnpm test` on push/PR.
+- **Release (production):** `.github/workflows/release-production-plugins.yml` — publishes to npm with tag `latest` on push to `main`.
 
 For workflow and layout questions, open the [`skills/dev-workflow/`](.) folder (or your agent tool’s equivalent to this path).

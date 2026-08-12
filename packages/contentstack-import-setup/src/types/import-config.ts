@@ -40,7 +40,6 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   authtoken?: string;
   destinationStackName?: string;
   org_uid?: string;
-  contentVersion: number;
   stackName?: string;
   branchName: string;
   selectedModules: Modules[];
@@ -48,6 +47,11 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   backupDir: string;
   createBackupDir?: string;
   region: any;
+  authenticationMethod?: string;
+  /** Set when export layout is Asset Management (`spaces/` + stack settings key `am_v2`). */
+  csAssetsEnabled?: boolean;
+  /** AM 2.0 base URL from region / detection (`detectAssetManagementExportFromContentDir`). */
+  csAssetsUrl?: string;
 }
 
 type branch = {

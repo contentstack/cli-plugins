@@ -1,7 +1,5 @@
 import { cliux, validatePath } from '@contentstack/cli-utilities';
 import * as path from 'path';
-import first from 'lodash/first';
-import split from 'lodash/split';
 
 export const askContentDir = async (): Promise<string> => {
   let result = await cliux.inquire<string>({
@@ -32,5 +30,11 @@ export const askAPIKey = async (): Promise<string> => {
     type: 'input',
     message: 'Enter the stack api key',
     name: 'apiKey',
+    validate: (input: string) => {
+      if (!input || !input.trim()) {
+        return 'Stack API key cannot be empty. Please enter a valid stack API key.';
+      }
+      return true;
+    },
   });
 };
