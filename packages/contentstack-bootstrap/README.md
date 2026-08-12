@@ -23,16 +23,6 @@ USAGE
 ```
 <!-- usagestop -->
 
-```sh-session
-$ npm install -g @contentstack/cli-cm-bootstrap
-$ csdx COMMAND
-running command...
-$ csdx --help [COMMAND]
-USAGE
-  $ csdx COMMAND
-...
-```
-
 # Commands
 
 <!-- commands -->

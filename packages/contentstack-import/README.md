@@ -10,7 +10,7 @@ It is Contentstack’s CLI plugin to import content in the stack. To learn how t
 <!-- tocstop -->
 
 Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
-P
+
 # Usage
 
 <!-- usage -->

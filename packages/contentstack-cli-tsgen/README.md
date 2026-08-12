@@ -9,7 +9,7 @@ Source lives in the [contentstack/cli-plugins](https://github.com/contentstack/c
 
 ## How to install this plugin
 
-Requires **Contentstack CLI 2.x beta**:
+Requires **Contentstack CLI 2.x**:
 
 ```shell
 $ csdx plugins:install contentstack-cli-tsgen
