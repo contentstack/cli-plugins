@@ -1,6 +1,6 @@
 {
   "name": "@contentstack/cli-external-migrate",
-  "version": "1.0.0-alpha.7",
+  "version": "1.0.0-alpha.8",
   "description": "Migrate from external source to Contentstack",
   "author": "Contentstack",
   "license": "MIT",
@@ -22,8 +22,8 @@
     "version": "oclif readme && git add README.md"
   },
   "dependencies": {
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.1",
+    "@contentstack/cli-command": "~1.8.7",
+    "@contentstack/cli-utilities": "~1.19.2",
     "@contentstack/json-rte-serializer": "~2.1.0",
     "@contentstack/marketplace-sdk": "~1.5.3",
     "@oclif/core": "^4.8.0",
