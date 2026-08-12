@@ -34,13 +34,13 @@ describe('Extension Helper', () => {
     contentDir: '/test/content',
     data: '/test/content',
     modules: {
+      apiConcurrency: 5,
       'composable-studio': {
         dirName: 'composable_studio',
         fileName: 'composable_studio.json',
         apiBaseUrl: 'https://composable-studio-api.contentstack.com',
         apiVersion: 'v1',
       },
-      apiConcurrency: 1,
       types: [],
       locales: { dirName: 'locales', fileName: 'locales.json', requiredKeys: ['code', 'name'] },
       customRoles: {
@@ -71,6 +71,24 @@ describe('Extension Helper', () => {
         host: 'https://api.contentstack.io',
         folderValidKeys: ['uid', 'name'],
         validKeys: ['uid', 'title'],
+      },
+      'cs-assets': {
+        dirName: 'spaces',
+        fieldsDir: 'fields',
+        assetTypesDir: 'asset_types',
+        fieldsFileName: 'fields.json',
+        assetTypesFileName: 'asset-types.json',
+        foldersFileName: 'folders.json',
+        assetsFileName: 'assets.json',
+        fieldsImportInvalidKeys: [],
+        assetTypesImportInvalidKeys: [],
+        mapperRootDir: 'mapper',
+        mapperAssetsModuleDir: 'assets',
+        mapperUidFileName: 'uid-mapping.json',
+        mapperUrlFileName: 'url-mapping.json',
+        mapperSpaceUidFileName: 'space-uid-mapping.json',
+        uploadAssetsConcurrency: 1,
+        importFoldersConcurrency: 1,
       },
       'assets-old': {
         dirName: 'assets',
@@ -162,7 +180,6 @@ describe('Extension Helper', () => {
     marketplaceAppEncryptionKey: 'test-key',
     getEncryptionKeyMaxRetry: 3,
     overwriteSupportedModules: [],
-    onlyTSModules: [],
     globalModules: [],
     entriesPublish: false,
     cliLogsPath: '/test/logs',
@@ -171,7 +188,6 @@ describe('Extension Helper', () => {
     skipPrivateAppRecreationIfExist: false,
     master_locale: { code: 'en-us' },
     masterLocale: { code: 'en-us' },
-    contentVersion: 1,
     region: 'us' as any,
     'exclude-global-modules': false,
     context: {} as any,
@@ -357,7 +373,7 @@ describe('Extension Helper', () => {
         'global-field-123': 'mapped-global-field-456',
       };
 
-      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/globalfields/uid-mapping.json')).returns(globalFieldsMapping);
+      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/global_fields/uid-mapping.json')).returns(globalFieldsMapping);
 
       lookupExtension(config, schema, preserveStackVersion, installedExtensions);
 
@@ -376,7 +392,7 @@ describe('Extension Helper', () => {
       const preserveStackVersion = false;
       const installedExtensions = {};
 
-      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/globalfields/uid-mapping.json')).returns({});
+      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/global_fields/uid-mapping.json')).returns({});
 
       lookupExtension(config, schema, preserveStackVersion, installedExtensions);
 
@@ -550,7 +566,7 @@ describe('Extension Helper', () => {
         'global-1': 'mapped-global-1',
       };
 
-      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/globalfields/uid-mapping.json')).returns(globalFieldsMapping);
+      fsUtilityStub.withArgs(path.join(tempDir, 'mapper/global_fields/uid-mapping.json')).returns(globalFieldsMapping);
 
       lookupExtension(config, schema, preserveStackVersion, installedExtensions);
 

@@ -1,0 +1,15 @@
+{
+  "uid": "gf_1",
+  "title": "GF - 1",
+  "schema": [
+    {
+      "data_type": "text",
+      "display_name": "Single Line Textbox",
+      "uid": "single_line",
+      "mandatory": false,
+      "multiple": false,
+      "non_localizable": false,
+      "unique": false
+    }
+  ]
+}

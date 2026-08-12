@@ -18,13 +18,13 @@ const config = {
   moduleConfig: {
     'content-types': {
       name: 'content type',
-      fileName: 'schema.json',
+      fileName: 'schema.json', // Not used - reads from individual files
       dirName: 'content_types',
     },
     'global-fields': {
       name: 'global field',
       dirName: 'global_fields',
-      fileName: 'globalfields.json',
+      fileName: 'globalfields.json', // Not used - reads from individual files via readGlobalFieldSchemas
     },
     entries: {
       name: 'entries',
@@ -113,6 +113,7 @@ const config = {
     'publish_locale',
     'publish_environment',
     'asset_uid',
+    'space_id',
     'scan_status',
     'mandatory',
     'selectedValue',
@@ -136,7 +137,7 @@ const config = {
     Entry_Multiple_Fields: 'Entry_Multiple_Fields',
     Entries_Asset_field: 'Entries_Asset_field',
   },
-  feild_level_modules: [
+  field_level_modules: [
     'Entries_Title_field',
     'Entries_Mandatory_field',
     'Entries_Select_field',

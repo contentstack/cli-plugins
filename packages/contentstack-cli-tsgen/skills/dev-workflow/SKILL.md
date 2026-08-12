@@ -1,9 +1,9 @@
 ---
 name: dev-workflow
-description: pnpm, monorepo CI, PR and production release workflow for contentstack-cli-tsgen (v1 line).
+description: pnpm, monorepo CI, PR and release workflow for contentstack-cli-tsgen in cli-plugins.
 ---
 
-# Development workflow – contentstack-cli-tsgen (v1)
+# Development workflow – contentstack-cli-tsgen
 
 ## When to use
 
@@ -21,35 +21,36 @@ description: pnpm, monorepo CI, PR and production release workflow for contentst
 | `pnpm --filter contentstack-cli-tsgen run lint` | ESLint |
 | `pnpm --filter contentstack-cli-tsgen run clean` | Remove `lib/`, `node_modules`, build info |
 
+From the package directory, use `pnpm run build`, `pnpm test`, etc.
+
 ## Local plugin link
 
 ```bash
 cd packages/contentstack-cli-tsgen
 pnpm run build
-npm i -g @contentstack/cli
-csdx plugins:link
+csdx plugins:link   # requires global @contentstack/cli@beta
 csdx tsgen --help
 csdx plugins:unlink
 ```
 
 ## Branches and CI
 
-- Development: **`feat/migrate-external-cli-plugins-v1`** → merge to **`v1-dev`** / **`main`**.
+- Development targets **`feat/migrate-external-cli-plugins-v2`**; releases merge to **`v2-beta`**.
 - Workflows under [`.github/workflows/`](../../../.github/workflows/):
-  - **`tsgen-integration-test.yml`** — live `csdx tsgen` tests (delivery token secrets; global **`@contentstack/cli`**)
-  - **`unit-test.yml`** — workspace build + `npm run test` for this package
-  - **`release-production-plugins.yml`** — npm publish with **`latest`** tag on push to **`main`**
+  - **`tsgen-integration-test.yml`** — live `csdx tsgen` tests (delivery token secrets)
+  - **`unit-test.yml`** — workspace build + ESLint for this package
+  - **`release-v2-beta-plugins.yml`** — npm publish with **`beta`** tag on push to **`v2-beta`**
   - **`sca-scan.yml`**, **`policy-scan.yml`**, **`codeql-analysis.yml`** — monorepo-wide
 
 ## Git hooks
 
-- Root **`prepare`** runs Husky; hooks under [`.husky/`](../../../.husky/) when present.
+- Root **`prepare`** runs Husky; hooks under [`.husky/`](../../../.husky/) (Talisman + Snyk on commit).
 
 ## Pull requests
 
-- Run **`pnpm --filter contentstack-cli-tsgen run build`** before opening a PR.
-- Integration tests run in **`tsgen-integration-test.yml`**; local runs need **`TOKEN_ALIAS`** in `.env`.
+- Run **`pnpm --filter contentstack-cli-tsgen run build`** and **`lint`** when changing source.
+- Integration tests run in CI; local runs need **`TOKEN_ALIAS`** in `.env` (see [testing](../testing/SKILL.md)).
 
 ## Releases
 
-- Version **`4.10.0`**+ in [package.json](../../package.json); published from **`main`** via **`release-production-plugins.yml`**.
+- Version **`5.0.0-beta.0`**+ in [package.json](../../package.json); published from **`v2-beta`** via monorepo release workflow (not standalone autotag on `master`).

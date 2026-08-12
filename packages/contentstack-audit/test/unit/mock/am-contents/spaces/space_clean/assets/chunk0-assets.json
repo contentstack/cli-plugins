@@ -1,0 +1,10 @@
+{
+  "am_asset_clean": {
+    "uid": "am_asset_clean",
+    "title": "Nothing to fix here",
+    "publish_details": [
+      { "locale": "en-us", "environment": "env_own_prod", "api_key": "blt_own_stack" },
+      { "locale": "en-us", "environment": "env_other_prod", "api_key": "blt_other_stack_two" }
+    ]
+  }
+}

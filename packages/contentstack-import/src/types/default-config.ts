@@ -77,6 +77,24 @@ export default interface DefaultConfig {
       uploadAssetsConcurrency: number;
       importFoldersConcurrency: number;
     };
+    'cs-assets': {
+      dirName: string;
+      fieldsDir: string;
+      assetTypesDir: string;
+      fieldsFileName: string;
+      assetTypesFileName: string;
+      foldersFileName: string;
+      assetsFileName: string;
+      fieldsImportInvalidKeys: string[];
+      assetTypesImportInvalidKeys: string[];
+      mapperRootDir: string;
+      mapperAssetsModuleDir: string;
+      mapperUidFileName: string;
+      mapperUrlFileName: string;
+      mapperSpaceUidFileName: string;
+      uploadAssetsConcurrency: number;
+      importFoldersConcurrency: number;
+    };
     content_types: {
       dirName: string;
       fileName: string;
@@ -196,7 +214,6 @@ export default interface DefaultConfig {
   getEncryptionKeyMaxRetry: number;
   createBackupDir?: string;
   overwriteSupportedModules: string[];
-  onlyTSModules: string[];
   auditConfig?: {
     noLog?: boolean; // Skip logs printing on terminal
     skipConfirm?: boolean; // Skip confirmation if any
@@ -210,5 +227,6 @@ export default interface DefaultConfig {
   globalModules: string[];
   skipAssetsPublish?: boolean;
   skipEntriesPublish?: boolean;
+  skipTaxonomyPublish?: boolean;
   entriesPublish: boolean;
 }

@@ -11,12 +11,17 @@ import {
   FeatureCtx,
 } from '@contentstack/cli-utilities';
 import defaultConfig from '../config';
-import { readFile, fileExistsSync } from './file-helper';
+import { readFile, readFileSync } from './file-helper';
 import { askContentDir, askAPIKey } from './interactive';
 import login from './login-handler';
 import { ImportConfig } from '../types';
+import { existsSync } from 'fs';
 
 const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportConfig> => {
+  // Set progress supported module FIRST, before any log calls
+  // This ensures the logger respects the showConsoleLogs setting correctly
+  configHandler.set('log.progressSupportedModule', 'import');
+
   let config: ImportConfig = merge({}, defaultConfig);
   // Track authentication method
   let authenticationMethod = 'unknown';
@@ -24,6 +29,14 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
   // setup the config
   if (importCmdFlags['config']) {
     let externalConfig = await readFile(importCmdFlags['config']);
+
+    const legacyCsAssetsConfig = externalConfig?.modules?.['asset-management'];
+    if (legacyCsAssetsConfig) {
+      externalConfig.modules['cs-assets'] = externalConfig.modules['cs-assets'] || legacyCsAssetsConfig;
+      delete externalConfig.modules['asset-management'];
+      log.warn('Config key "modules.asset-management" is deprecated. Please rename it to "modules.cs-assets".');
+    }
+
     if (isArray(externalConfig['modules'])) {
       config.modules.types = filter(config.modules.types, (module) => includes(externalConfig['modules'], module));
       externalConfig = omit(externalConfig, ['modules']);
@@ -32,7 +45,7 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
   }
 
   config.contentDir = sanitizePath(
-    importCmdFlags['data'] || importCmdFlags['data-dir'] || config.data || (await askContentDir()),
+    importCmdFlags['data'] || importCmdFlags['data-dir'] || config.contentDir || (await askContentDir()),
   );
   const pattern = /[*$%#<>{}!&?]/g;
   if (pattern.test(config.contentDir)) {
@@ -43,8 +56,6 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
   }
   config.contentDir = config.contentDir.replace(/['"]/g, '');
   config.contentDir = path.resolve(config.contentDir);
-  //Note to support the old key
-  config.data = config.contentDir;
 
   const managementTokenAlias = importCmdFlags['management-token-alias'] || importCmdFlags['alias'];
 
@@ -82,9 +93,10 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
         log.debug('User authenticated via auth token');
       }
       config.apiKey =
-        importCmdFlags['stack-uid'] || importCmdFlags['stack-api-key'] || config.target_stack || (await askAPIKey());
-      if (typeof config.apiKey !== 'string') {
-        throw new Error('Invalid API key received');
+        importCmdFlags['stack-uid'] || importCmdFlags['stack-api-key'] || config.apiKey || (await askAPIKey());
+      if (typeof config.apiKey !== 'string' || !config.apiKey || !config.apiKey.trim()) {
+        log.debug('Invalid or empty API key received!', { apiKey: config.apiKey });
+        throw new Error('Invalid or empty API key received. Please provide a valid stack API key.');
       }
     }
   }
@@ -92,13 +104,9 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
   config.isAuthenticated = isAuthenticated();
   config.auth_token = configHandler.get('authtoken'); // TBD handle auth token in httpClient & sdk
 
-  //Note to support the old key
-  config.source_stack = config.apiKey;
-
   config.skipAudit = importCmdFlags['skip-audit'];
   config.forceStopMarketplaceAppsPrompt = importCmdFlags.yes;
   config.importWebhookStatus = importCmdFlags['import-webhook-status'];
-  config.skipPrivateAppRecreationIfExist = !importCmdFlags['skip-app-recreation'];
 
   if (importCmdFlags['branch-alias']) {
     config.branchAlias = importCmdFlags['branch-alias'];
@@ -106,7 +114,6 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
 
   if (importCmdFlags['branch']) {
     config.branchName = importCmdFlags['branch'];
-    config.branchDir = config.contentDir;
   }
   if (importCmdFlags['module']) {
     config.moduleName = importCmdFlags['module'];
@@ -125,8 +132,7 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
     config.skipEntriesPublish = importCmdFlags['skip-entries-publish'];
   }
 
-  // Note to support old modules
-  config.target_stack = config.apiKey;
+  config.skipTaxonomyPublish = importCmdFlags['skip-taxonomy-publish'] ?? false;
 
   config.replaceExisting = importCmdFlags['replace-existing'];
   config.skipExisting = importCmdFlags['skip-existing'];
@@ -135,6 +141,34 @@ const setupConfig = async (importCmdFlags: any, context?: any): Promise<ImportCo
 
   if (importCmdFlags['exclude-global-modules']) {
     config['exclude-global-modules'] = importCmdFlags['exclude-global-modules'];
+  }
+
+  const spacesDir = path.join(config.contentDir, 'spaces');
+  const stackSettingsPath = path.join(config.contentDir, 'stack', 'settings.json');
+  const stackJsonPath = path.join(config.contentDir, 'stack', 'stack.json');
+
+  if (existsSync(spacesDir) && existsSync(stackSettingsPath)) {
+    try {
+      const stackSettings = readFileSync(stackSettingsPath);
+      if (stackSettings?.am_v2) {
+        config.csAssetsEnabled = true;
+        config.csAssetsUrl = configHandler.get('region')?.csAssetsUrl;
+
+        if (existsSync(stackJsonPath)) {
+          try {
+            const stackData = readFileSync(stackJsonPath);
+            const apiKey = stackData?.api_key || stackData?.stackHeaders?.api_key;
+            if (apiKey) {
+              config.source_stack = apiKey;
+            }
+          } catch {
+            // stack.json unreadable — source stack API key will not be set
+          }
+        }
+      }
+    } catch {
+      // stack settings unreadable — not an CS Assets export we can process
+    }
   }
 
   // Add authentication details to config for context tracking

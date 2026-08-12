@@ -54,12 +54,6 @@
       "fileName": "index.json",
       "query": { "locale": "en-us" }
     },
-    "personalize": {
-      "project_id": "PROJ-1",
-      "baseURL": { "NA": "https://personalize-api.contentstack.com" },
-      "dirName": "personalize",
-      "experiences": { "dirName": "experiences" }
-    },
     "taxonomies": {
       "dirName": "taxonomies",
       "fileName": "taxonomies.json"

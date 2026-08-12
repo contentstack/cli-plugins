@@ -18,7 +18,7 @@
 | **Build** | `pnpm run build` → `tsc -b` → `lib/`; OCLIF manifest + readme |
 | **Tests** | **Jest** + **ts-jest** ([jest.config.js](jest.config.js)); integration tests under `tests/integration/` |
 | **Lint / coverage** | ESLint via `lint` and `posttest` |
-| **Other** | OCLIF v4, Node **>= 14**; **v1** `@contentstack/cli-command` ~1.8.2 / `@contentstack/cli-utilities` ~1.18.3 |
+| **Other** | OCLIF v4, Node **>= 18**; v2 `@contentstack/cli-command` / `@contentstack/cli-utilities` |
 
 **Main dependencies:** `@contentstack/cli-command`, `@contentstack/cli-utilities`, `@contentstack/types-generator`.
 
@@ -31,7 +31,7 @@
 | **Integration** | `pnpm run test:integration` |
 | **Lint** | `pnpm run lint` |
 
-CI: [tsgen-integration-test.yml](../../.github/workflows/tsgen-integration-test.yml) (live stack); tests in [unit-test.yml](../../.github/workflows/unit-test.yml); release via [release-production-plugins.yml](../../.github/workflows/release-production-plugins.yml) on **`main`** (`latest` tag).
+CI: [tsgen-integration-test.yml](../../.github/workflows/tsgen-integration-test.yml) (live stack); lint in [unit-test.yml](../../.github/workflows/unit-test.yml); release via [release-v2-beta-plugins.yml](../../.github/workflows/release-v2-beta-plugins.yml) on **`v2-beta`**.
 
 ## Credentials and integration tests
 

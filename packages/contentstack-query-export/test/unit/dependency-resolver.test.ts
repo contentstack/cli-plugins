@@ -1,7 +1,4 @@
 import { expect } from 'chai';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
 import * as sinon from 'sinon';
 import { ContentTypeDependenciesHandler } from '../../src/utils/dependency-resolver';
 import { QueryExportConfig } from '../../src/types';
@@ -25,7 +22,7 @@ describe('Dependency Resolver Utilities', () => {
 
     mockConfig = {
       maxCTReferenceDepth: 20,
-      contentVersion: 1,
+      contentVersion: 2,
       host: 'https://api.contentstack.io/v3',
       exportDir: '/test/export',
       stackApiKey: 'test-api-key',
@@ -598,54 +595,6 @@ describe('Dependency Resolver Utilities', () => {
 
       expect(deps.globalFields.has('seo_gf')).to.be.true;
       expect(deps.globalFields.size).to.equal(1);
-    });
-  });
-
-  describe('extractDependencies — disk fallback (content_types/schema.json)', () => {
-    let tmpDir: string;
-
-    beforeEach(() => {
-      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qe-deptest-'));
-      mockConfig.exportDir = tmpDir;
-      mockConfig.branchName = 'main';
-      (mockConfig as any).context = { command: 'test' };
-      handler = new ContentTypeDependenciesHandler(mockStackAPIClient, mockConfig);
-    });
-
-    afterEach(() => {
-      if (tmpDir && fs.existsSync(tmpDir)) {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
-      }
-    });
-
-    it('loads content types from schema.json when schemas argument is omitted', async () => {
-      const ctDir = path.join(tmpDir, 'main', 'content_types');
-      fs.mkdirSync(ctDir, { recursive: true });
-      fs.writeFileSync(
-        path.join(ctDir, 'schema.json'),
-        JSON.stringify([
-          {
-            uid: 'page',
-            schema: [{ uid: 'seo', data_type: 'global_field', reference_to: 'seo_gf' }],
-          },
-        ]),
-      );
-
-      const deps = await handler.extractDependencies();
-
-      expect(deps.globalFields.has('seo_gf')).to.be.true;
-    });
-
-    it('returns empty dependency sets when schema.json is missing', async () => {
-      const ctDir = path.join(tmpDir, 'main', 'content_types');
-      fs.mkdirSync(ctDir, { recursive: true });
-
-      const deps = await handler.extractDependencies();
-
-      expect(deps.globalFields.size).to.equal(0);
-      expect(deps.extensions.size).to.equal(0);
-      expect(deps.taxonomies.size).to.equal(0);
-      expect(deps.marketplaceApps.size).to.equal(0);
     });
   });
 });

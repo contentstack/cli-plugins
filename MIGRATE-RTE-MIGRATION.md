@@ -17,8 +17,8 @@ The npm package name and command **`csdx cm:entries:migrate-html-rte`** are unch
 
 | CLI line | cli-plugins branch | Plugin notes |
 | --- | --- | --- |
-| **1.x** | `v1-dev` / `v1-beta` | e.g. **1.6.x**; `@contentstack/cli-command` ~1.8.2, `@contentstack/cli-utilities` ~1.18.x; chalk v4 |
-| **2.x beta** | `v2-dev` / `v2-beta` | e.g. **2.0.0-beta.x**; 2.x beta core packages; chalk v5 + `load-chalk` init hook |
+| **1.x** | `v1-dev` / `v1-beta` | 1.x-compatible `cli-command` / `cli-utilities` |
+| **2.x beta** | `v2-dev` / `v2-beta` | e.g. `2.0.0-beta.x`; uses `@contentstack/json-rte-serializer`, jsdom |
 
 ## Install
 
@@ -37,4 +37,4 @@ pnpm --filter @contentstack/cli-cm-migrate-rte run build
 pnpm --filter @contentstack/cli-cm-migrate-rte test
 ```
 
-Core CLI: add `@contentstack/cli-cm-migrate-rte` to `cli/packages/contentstack` dependencies and `oclif.plugins` (use `workspace:*` in cli-dev-workspace until the monorepo package is published).
+Core CLI: add `@contentstack/cli-cm-migrate-rte` to `cli/packages/contentstack` dependencies and `oclif.plugins` (use `workspace:*` in cli-dev-workspace).

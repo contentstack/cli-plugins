@@ -1,0 +1,135 @@
+import { resolve as pResolve } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+
+import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
+import type { ExportContext } from '../types/export-types';
+import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
+import { CS_ASSETS_MAIN_PROCESS_NAME, FALLBACK_AM_API_CONCURRENCY, FALLBACK_AM_API_FETCH_CONCURRENCY, FALLBACK_AM_API_PAGE_SIZE, FALLBACK_AM_CHUNK_FILE_SIZE_MB } from '../constants/index';
+
+export type { ExportContext };
+
+/**
+ * Base class for export modules. Extends the API adapter and adds export context,
+ * internal progress management, and shared write helpers.
+ */
+export class CSAssetsExportAdapter extends CSAssetsAdapter {
+  protected readonly apiConfig: CSAssetsAPIConfig;
+  protected readonly exportContext: ExportContext;
+  protected progressManager: CLIProgressManager | null = null;
+  protected parentProgressManager: CLIProgressManager | null = null;
+  protected processName: string = CS_ASSETS_MAIN_PROCESS_NAME;
+
+  constructor(apiConfig: CSAssetsAPIConfig, exportContext: ExportContext) {
+    super(apiConfig);
+    this.apiConfig = apiConfig;
+    this.exportContext = exportContext;
+  }
+
+  public setParentProgressManager(parent: CLIProgressManager): void {
+    this.parentProgressManager = parent;
+  }
+
+  /**
+   * Override the default progress process name for {@link tick}/{@link updateStatus}
+   * calls. Used by the per-space orchestrator so each module's ticks land on the
+   * row for the space currently being exported.
+   */
+  public setProcessName(name: string): void {
+    this.processName = name;
+  }
+
+  protected get progressOrParent(): CLIProgressManager | null {
+    return this.parentProgressManager ?? this.progressManager;
+  }
+
+  protected createNestedProgress(moduleName: string): CLIProgressManager {
+    if (this.parentProgressManager) {
+      this.progressManager = this.parentProgressManager;
+      return this.parentProgressManager;
+    }
+    const logConfig = configHandler.get('log') || {};
+    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    return this.progressManager;
+  }
+
+  protected tick(success: boolean, itemName: string, error: string | null, processName?: string): void {
+    this.progressOrParent?.tick?.(success, itemName, error, processName ?? this.processName);
+  }
+
+  protected updateStatus(message: string, processName?: string): void {
+    this.progressOrParent?.updateStatus?.(message, processName ?? this.processName);
+  }
+
+  protected completeProcess(processName: string, success: boolean): void {
+    if (!this.parentProgressManager) {
+      this.progressManager?.completeProcess?.(processName, success);
+    }
+  }
+
+  protected get spacesRootPath(): string {
+    return this.exportContext.spacesRootPath;
+  }
+
+  /** Parallel AM export limit for bootstrap and default batch operations. */
+  protected get apiConcurrency(): number {
+    return this.exportContext.apiConcurrency ?? FALLBACK_AM_API_CONCURRENCY;
+  }
+
+  /** Asset download batch size; falls back to {@link apiConcurrency}. */
+  protected get downloadAssetsBatchConcurrency(): number {
+    return this.exportContext.downloadAssetsConcurrency ?? this.apiConcurrency;
+  }
+
+  protected get apiPageSize(): number {
+    return this.exportContext.pageSize ?? FALLBACK_AM_API_PAGE_SIZE;
+  }
+
+  protected get apiFetchConcurrency(): number {
+    return this.exportContext.fetchConcurrency ?? FALLBACK_AM_API_FETCH_CONCURRENCY;
+  }
+
+  protected getAssetTypesDir(): string {
+    return pResolve(this.exportContext.spacesRootPath, 'asset_types');
+  }
+
+  protected getFieldsDir(): string {
+    return pResolve(this.exportContext.spacesRootPath, 'fields');
+  }
+
+  /** Build a chunked-JSON writer for incremental (streaming) writes. Caller must `completeFile(true)`. */
+  protected createChunkedJsonWriter(dir: string, indexFileName: string, moduleName: string, metaPickKeys: string[]): FsUtility {
+    const chunkMb = this.exportContext.chunkFileSizeMb ?? FALLBACK_AM_CHUNK_FILE_SIZE_MB;
+    return new FsUtility({
+      basePath: dir,
+      indexFileName,
+      chunkFileSize: chunkMb,
+      moduleName,
+      fileExt: 'json',
+      metaPickKeys,
+      keepMetadata: true,
+    });
+  }
+
+  /** Write an empty index file (matches FsUtility's layout for a zero-record store). */
+  protected async writeEmptyChunkedJson(dir: string, indexFileName: string): Promise<void> {
+    await writeFile(pResolve(dir, indexFileName), '{}');
+  }
+
+  protected async writeItemsToChunkedJson(
+    dir: string,
+    indexFileName: string,
+    moduleName: string,
+    metaPickKeys: string[],
+    items: unknown[],
+  ): Promise<void> {
+    if (items.length === 0) {
+      await this.writeEmptyChunkedJson(dir, indexFileName);
+      return;
+    }
+    const fs = this.createChunkedJsonWriter(dir, indexFileName, moduleName, metaPickKeys);
+    fs.writeIntoFile(items as Record<string, string>[], { mapKeyVal: true });
+    fs.completeFile(true);
+  }
+}

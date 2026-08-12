@@ -15,6 +15,7 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   authenticationMethod?: string;
   skipAssetsPublish?: boolean;
   skipEntriesPublish?: boolean;
+  skipTaxonomyPublish?: boolean;
   cliLogsPath: string;
   assetScanningEnabled?: boolean;
   canCreatePrivateApp: boolean;
@@ -30,7 +31,6 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   contentTypes?: string[];
   branches?: branch[];
   branchEnabled?: boolean;
-  branchDir?: string;
   branchAlias?: string;
   moduleName?: Modules;
   master_locale: masterLocale;
@@ -52,7 +52,6 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   authtoken?: string;
   destinationStackName?: string;
   org_uid?: string;
-  contentVersion: number;
   replaceExisting?: boolean;
   skipExisting?: boolean;
   skipAudit?: boolean;
@@ -61,6 +60,9 @@ export default interface ImportConfig extends DefaultConfig, ExternalConfig {
   personalizeProjectName?: string;
   'exclude-global-modules': false;
   context: Context;
+  csAssetsUrl?: string;
+  csAssetsEnabled?: boolean;
+
   planStatus?: Record<string, FeatureStatus>;
 }
 

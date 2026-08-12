@@ -1,15 +1,16 @@
 {
   "name": "@contentstack/cli-cm-export-query",
   "description": "Contentstack CLI plugin to export content from stack",
-  "version": "1.0.7",
+  "version": "2.0.0",
   "author": "Contentstack",
-  "bugs": "https://github.com/contentstack/cli/issues",
+  "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-cm-export": "~1.27.0",
-    "@contentstack/cli-command": "~1.8.5",
-    "@contentstack/cli-utilities": "~1.19.1",
-    "@contentstack/cli-variants": "~1.6.2",
-    "@oclif/core": "^4.11.4",
+    "@contentstack/cli-asset-management": "~1.0.0",
+    "@contentstack/cli-cm-export": "~2.0.0",
+    "@contentstack/cli-command": "~2.0.0",
+    "@contentstack/cli-utilities": "~2.0.0",
+    "@contentstack/cli-variants": "~2.0.0",
+    "@oclif/core": "^4.11.14",
     "async": "^3.2.6",
     "big-json": "^3.2.0",
     "bluebird": "^3.7.2",
@@ -22,12 +23,11 @@
     "winston": "^3.19.0"
   },
   "overrides": {
-    "brace-expansion": "^5.0.6"
+    "brace-expansion": "^5.0.8"
   },
   "devDependencies": {
-    "@contentstack/cli-dev-dependencies": "~1.3.1",
-    "@oclif/plugin-help": "^6.2.44",
-    "@oclif/test": "^4.1.18",
+    "@oclif/plugin-help": "^6.2.53",
+    "@oclif/test": "^4.1.20",
     "@types/big-json": "^3.2.5",
     "@types/chai": "^4.3.20",
     "@types/mkdirp": "^1.0.2",
@@ -38,33 +38,28 @@
     "chai": "^4.5.0",
     "dotenv": "^16.6.1",
     "dotenv-expand": "^9.0.0",
-    "eslint": "^10.5.0",
-    "eslint-config-oclif": "^6.0.157",
+    "eslint": "^10.6.0",
+    "eslint-config-oclif": "^6.0.175",
     "husky": "^9.1.7",
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
-    "oclif": "^4.23.8",
+    "oclif": "^4.23.27",
     "sinon": "^17.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5"
   },
   "scripts": {
     "build": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
-    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",
+    "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "postpack": "rm -f oclif.manifest.json",
     "copy-config": "cp -r src/config lib/",
     "prepack": "pnpm compile && pnpm copy-config && oclif manifest && oclif readme",
     "version": "oclif readme && git add README.md",
-    "test:report": "tsc -p test && nyc --reporter=lcov --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "pretest": "tsc -p test",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
     "lint": "eslint \"src/**/*.ts\"",
-    "format": "eslint src/**/*.ts --fix",
-    "test:integration": "INTEGRATION_TEST=true mocha --config ./test/.mocharc.js --forbid-only \"test/run.test.js\"",
-    "test:integration:report": "INTEGRATION_TEST=true nyc --extension .js mocha --forbid-only \"test/run.test.js\"",
-    "test:unit": "mocha --forbid-only \"test/unit/**/*.test.ts\"",
-    "test:unit:report": "nyc --reporter=text --extension .ts mocha --forbid-only \"test/unit/**/*.test.ts\""
+    "format": "eslint \"src/**/*.ts\" --fix"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -97,5 +92,9 @@
       "cm:export:query": "EXPRTQRY"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-query-export"
+  }
 }

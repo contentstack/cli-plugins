@@ -3,7 +3,6 @@ import {
   flags,
   managementSDKClient,
   cliux,
-  printFlagDeprecation,
 } from "@contentstack/cli-utilities";
 import buildOutput from "../../core/content-type/audit";
 import { getStack, getUsers, getContentType } from "../../utils";
@@ -17,24 +16,13 @@ export default class AuditCommand extends Command {
   ];
 
   static flags: any = {
-    stack: flags.string({
-      char: "s",
-      description: "Stack UID",
-      exclusive: ["token-alias", "alias"],
-      parse: printFlagDeprecation(["-s", "--stack"], ["-k", "--stack-api-key"]),
-    }),
 
     "stack-api-key": flags.string({
       char: "k",
       description: "Stack API Key",
-      exclusive: ["token-alias", "alias"],
+      exclusive: ["alias"],
     }),
 
-    "token-alias": flags.string({
-      char: "a",
-      description: "Management token alias",
-      parse: printFlagDeprecation(["--token-alias"], ["-a", "--alias"]),
-    }),
 
     alias: flags.string({
       char: "a",
@@ -42,10 +30,8 @@ export default class AuditCommand extends Command {
     }),
 
     "content-type": flags.string({
-      char: "c",
       description: "Content Type UID",
       required: true,
-      parse: printFlagDeprecation(["-c"], ["--content-type"]),
     }),
   };
 

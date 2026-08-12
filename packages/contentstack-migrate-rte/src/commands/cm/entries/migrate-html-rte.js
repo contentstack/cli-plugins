@@ -1,7 +1,6 @@
 const { Command } = require("@contentstack/cli-command");
-const { flags } = require("@contentstack/cli-utilities");
+const { flags, getChalk } = require("@contentstack/cli-utilities");
 const { isEmpty } = require("lodash");
-const chalk = require("chalk");
 let {
   getStack,
   getConfig,
@@ -47,6 +46,7 @@ class JsonMigrationCommand extends Command {
           config
         );
       }
+      const chalk = getChalk();
       console.log(
         chalk.green(
           `\nUpdated ${config.contentTypeCount} Content Type(s) and ${config.entriesCount} Entrie(s)`

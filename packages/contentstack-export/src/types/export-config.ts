@@ -17,7 +17,6 @@ export default interface ExportConfig extends DefaultConfig {
   contentTypes?: string[];
   branches?: branch[];
   branchEnabled?: boolean;
-  branchDir?: string;
   singleModuleExport?: boolean;
   moduleName?: Modules;
   master_locale: masterLocale;
@@ -37,6 +36,7 @@ export default interface ExportConfig extends DefaultConfig {
   skipStackSettings?: boolean;
   skipDependencies?: boolean;
   authenticationMethod?: string;
+  linkedWorkspaces?: Array<{ uid: string; space_uid: string; is_default: boolean }>;
   planStatus?: Record<string, FeatureStatus>;
 }
 

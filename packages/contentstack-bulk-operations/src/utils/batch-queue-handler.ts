@@ -29,7 +29,13 @@ export function setupBatchQueueListeners(config: BatchQueueConfig) {
 
     (async () => {
       try {
-        const result = await bulkService.executeBulkPublish(batch.items, batch.operation, resourceType);
+        const result = await bulkService.executeBulkPublish(
+          batch.items,
+          batch.operation,
+          resourceType,
+          batch.environments,
+          batch.locales
+        );
 
         batchResults.set(item.id, result);
         queueManager.updateItemStatus(item.id, OperationStatus.SUCCESS);

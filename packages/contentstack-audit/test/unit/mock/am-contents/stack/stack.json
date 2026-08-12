@@ -1,0 +1,9 @@
+{
+  "uid": "blt_own_stack_uid",
+  "name": "AM Mock Stack",
+  "api_key": "blt_own_stack",
+  "master_locale": "en-us",
+  "stackHeaders": {
+    "api_key": "blt_own_stack"
+  }
+}

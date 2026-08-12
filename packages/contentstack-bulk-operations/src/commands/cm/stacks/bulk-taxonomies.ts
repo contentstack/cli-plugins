@@ -1,5 +1,5 @@
 import { Command } from '@contentstack/cli-command';
-import { flags, log, createLogContext, handleAndLogError } from '@contentstack/cli-utilities';
+import { flags, log, createLogContext, handleAndLogError, loadChalk } from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../../../messages';
 import { BaseBulkCommand } from '../../../base-bulk-command';
@@ -30,9 +30,6 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     // Multiple locales with a Management token alias
     '<%= config.bin %> <%= command.id %> --operation publish --environments staging --locales en-us,fr-fr --taxonomies taxonomy_a -a myAlias',
 
-    // Explicit CMA version for taxonomy publish (default is 3.2)
-    '<%= config.bin %> <%= command.id %> --operation publish --environments development --locales en-us --taxonomies products_tax --api-version 3.2 -k blt123',
-
     // Publish taxonomies on a non-main branch
     '<%= config.bin %> <%= command.id %> --operation publish --branch feature --environments development --locales en-us --taxonomies brands_tax -k blt123',
   ];
@@ -41,10 +38,6 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     ...BaseBulkCommand.baseFlags,
     taxonomies: flags.string({
       description: messages.TAXONOMY_ITEMS,
-    }),
-    'api-version': flags.string({
-      default: '3.2',
-      description: messages.TAXONOMY_API_VERSION,
     }),
   } as any;
 
@@ -57,6 +50,10 @@ export default class BulkTaxonomies extends BaseBulkCommand {
   async init(): Promise<void> {
     // Call oclif Command init without running BaseBulkCommand.init (taxonomy uses its own prompts).
     await (Command.prototype as unknown as { init(this: Command): Promise<void> }).init.call(this);
+
+    // Load chalk (ESM) up-front. The progress-module flag is set in buildConfig() (invoked by
+    // buildConfiguration below), before the first log call.
+    await loadChalk();
 
     let { flags: parsed } = await this.parse(BulkTaxonomies);
 
@@ -161,12 +158,14 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     this.logger.debug($t(messages.EXECUTING_OPERATION, { count: items.length }), this.loggerContext);
     const startTime = Date.now();
 
+    // Initialize the run-level summary + header once (inherited from BaseBulkCommand).
+    this.beginOperationSummary(items.length);
+
     const operation = this.bulkOperationConfig.operation;
     if (operation !== OperationType.PUBLISH && operation !== OperationType.UNPUBLISH) {
       throw new Error($t(messages.UNSUPPORTED_OPERATION, { operation: operation ?? 'unknown' }));
     }
 
-    const apiVersion = this.parsedFlags['api-version'] || '3.2';
     const locales = this.bulkOperationConfig.locales || [];
     const environments = this.bulkOperationConfig.environments || [];
 
@@ -178,8 +177,8 @@ export default class BulkTaxonomies extends BaseBulkCommand {
     };
     const response =
       operation === OperationType.UNPUBLISH
-        ? await taxonomyService.unpublish(payload, apiVersion, this.bulkOperationConfig.branch)
-        : await taxonomyService.publish(payload, apiVersion, this.bulkOperationConfig.branch);
+        ? await taxonomyService.unpublish(payload, this.bulkOperationConfig.branch)
+        : await taxonomyService.publish(payload, this.bulkOperationConfig.branch);
 
     const duration = Date.now() - startTime;
     const rawJobId = response.job_id;
@@ -190,12 +189,17 @@ export default class BulkTaxonomies extends BaseBulkCommand {
       this.logger.info(String(response.notice));
     }
 
-    return {
+    const result: BulkOperationResult = {
       success: 0,
       failed: 0,
       total: items.length,
       duration,
       jobIds: jobId ? [jobId] : [],
     };
+
+    // Record the taxonomy module row in the summary (inherited from BaseBulkCommand).
+    this.recordModuleSummary(result, items.length);
+
+    return result;
   }
 }

@@ -1,3 +1,4 @@
+import cloneDeep from 'lodash/cloneDeep';
 import omit from 'lodash/omit';
 import keys from 'lodash/keys';
 import isEmpty from 'lodash/isEmpty';
@@ -5,16 +6,28 @@ import { resolve as pResolve } from 'node:path';
 import { handleAndLogError, messageHandler, log, sanitizePath } from '@contentstack/cli-utilities';
 
 import BaseClass from './base-class';
-import { fsUtil } from '../../utils';
+import {
+  fsUtil,
+  getExportBasePath,
+  PROCESS_NAMES,
+  MODULE_CONTEXTS,
+  PROCESS_STATUS,
+  MODULE_NAMES,
+} from '../../utils';
 import { ModuleClassParams, ExportConfig } from '../../types';
 
 export default class ExportTaxonomies extends BaseClass {
+  private static readonly PUBLISH_DETAILS_DEFAULT_LOCALE = '_default';
+
   private taxonomies: Record<string, Record<string, string>>;
   private taxonomiesByLocale: Record<string, Set<string>>;
+  /** List API `publish_details` keyed by non-localized bucket or locale code, then taxonomy uid */
+  private publishDetailsByLocale: Record<string, Record<string, unknown>>;
   private taxonomiesConfig: ExportConfig['modules']['taxonomies'];
   private isLocaleBasedExportSupported: boolean = true; // Flag to track if locale-based export is supported
   private qs: {
     include_count: boolean;
+    include_publish_details: boolean;
     skip: number;
     asc?: string;
     limit: number;
@@ -22,6 +35,7 @@ export default class ExportTaxonomies extends BaseClass {
     branch?: string;
     include_fallback?: boolean;
     fallback_locale?: string;
+    query?: Record<string, unknown>;
   };
   public taxonomiesFolderPath: string;
   private localesFilePath: string;
@@ -30,72 +44,169 @@ export default class ExportTaxonomies extends BaseClass {
     super({ exportConfig, stackAPIClient });
     this.taxonomies = {};
     this.taxonomiesByLocale = {};
+    this.publishDetailsByLocale = {};
     this.taxonomiesConfig = exportConfig.modules.taxonomies;
-    this.qs = { include_count: true, limit: this.taxonomiesConfig.limit || 100, skip: 0 };
+    this.qs = {
+      include_count: true,
+      include_publish_details: true,
+      limit: this.taxonomiesConfig.limit || 100,
+      skip: 0,
+    };
 
     this.applyQueryFilters(this.qs, 'taxonomies');
-    this.exportConfig.context.module = 'taxonomies';
+    this.exportConfig.context.module = MODULE_CONTEXTS.TAXONOMIES;
+    this.currentModuleName = MODULE_NAMES[MODULE_CONTEXTS.TAXONOMIES];
     this.localesFilePath = pResolve(
-      sanitizePath(exportConfig.data),
-      sanitizePath(exportConfig.branchName || ''),
+      sanitizePath(getExportBasePath(exportConfig)),
       sanitizePath(exportConfig.modules.locales.dirName),
       sanitizePath(exportConfig.modules.locales.fileName),
     );
   }
 
   async start(): Promise<void> {
-    log.debug('Starting export process for taxonomies...', this.exportConfig.context);
-    
-    //create taxonomies folder
-    this.taxonomiesFolderPath = pResolve(
-      this.exportConfig.data,
-      this.exportConfig.branchName || '',
-      this.taxonomiesConfig.dirName,
-    );
-    log.debug(`Taxonomies folder path: '${this.taxonomiesFolderPath}'`, this.exportConfig.context);
-    
-    await fsUtil.makeDirectory(this.taxonomiesFolderPath);
-    log.debug('Created taxonomies directory.', this.exportConfig.context);
+    try {
+      log.debug('Starting export process for taxonomies...', this.exportConfig.context);
 
-    const localesToExport = this.getLocalesToExport();
-    log.debug(
-      `Will attempt to export taxonomies for ${localesToExport.length} locale(s): ${localesToExport.join(', ')}`,
-      this.exportConfig.context,
-    );
-
-    if (localesToExport.length === 0) {
-      log.warn('No locales found to export', this.exportConfig.context);
-      return;
-    }
-
-    // Test locale-based export support with master locale
-    const masterLocale = this.exportConfig.master_locale?.code;
-    await this.fetchTaxonomies(masterLocale, true);
-
-    if (!this.isLocaleBasedExportSupported) {
-      this.taxonomies = {};
-      this.taxonomiesByLocale = {};
-
-      // Fetch taxonomies without locale parameter
-      await this.fetchTaxonomies();
-      await this.exportTaxonomies();
-      await this.writeTaxonomiesMetadata();
-    } else {
-      // Process all locales with locale-based export
-      log.debug('Localization enabled, proceeding with locale-based export', this.exportConfig.context);
-
-      for (const localeCode of localesToExport) {
-        await this.fetchTaxonomies(localeCode);
-        await this.processLocaleExport(localeCode);
+      const totalCount = await this.initializeExport();
+      if (totalCount === 0) {
+        log.info(messageHandler.parse('TAXONOMY_NOT_FOUND'), this.exportConfig.context);
+        return;
       }
 
-      await this.writeTaxonomiesMetadata();
-    }
+      const progress = this.setupProgress(totalCount);
+      const localesToExport = this.getLocalesToExport();
 
-    log.success(
-      messageHandler.parse('TAXONOMY_EXPORT_COMPLETE', keys(this.taxonomies || {}).length),
+      if (localesToExport.length === 0) {
+        log.warn('No locales found to export', this.exportConfig.context);
+        this.completeProgress(true);
+        return;
+      }
+
+      // Start fetch process
+      progress
+        .startProcess(PROCESS_NAMES.FETCH_TAXONOMIES)
+        .updateStatus(PROCESS_STATUS[PROCESS_NAMES.FETCH_TAXONOMIES].FETCHING, PROCESS_NAMES.FETCH_TAXONOMIES);
+
+      // Determine export strategy and fetch taxonomies
+      await this.determineExportStrategy(this.exportConfig.master_locale?.code);
+      await this.fetchAllTaxonomies(localesToExport);
+      progress.completeProcess(PROCESS_NAMES.FETCH_TAXONOMIES, true);
+
+      // Export taxonomies with detailed information
+      const actualCount = await this.exportAllTaxonomies(progress, localesToExport, totalCount);
+
+      // Write metadata and complete
+      await this.writeTaxonomiesMetadata();
+      log.success(messageHandler.parse('TAXONOMY_EXPORT_COMPLETE', actualCount), this.exportConfig.context);
+      this.completeProgress(true);
+    } catch (error) {
+      handleAndLogError(error, { ...this.exportConfig.context });
+      this.completeProgress(false, error?.message || 'Taxonomies export failed');
+    }
+  }
+
+  /**
+   * Initialize export setup (create directories, get initial count)
+   */
+  private async initializeExport(): Promise<number> {
+    return this.withLoadingSpinner('TAXONOMIES: Analyzing taxonomy structure...', async () => {
+      this.taxonomiesFolderPath = pResolve(
+        getExportBasePath(this.exportConfig),
+        this.taxonomiesConfig.dirName,
+      );
+      log.debug(`Taxonomies folder path: '${this.taxonomiesFolderPath}'`, this.exportConfig.context);
+
+      await fsUtil.makeDirectory(this.taxonomiesFolderPath);
+      log.debug('Created taxonomies directory.', this.exportConfig.context);
+
+      // Get count first for progress tracking
+      const countResponse = await this.stack
+        .taxonomy()
+        .query({ ...this.qs, include_count: true, limit: 1 })
+        .find();
+      return countResponse.count || 0;
+    });
+  }
+
+  /**
+   * Setup progress manager with processes
+   */
+  private setupProgress(totalCount: number): any {
+    const progress = this.createNestedProgress(this.currentModuleName);
+    // For fetch: count API calls, not individual taxonomies
+    const fetchApiCallsCount = Math.ceil(totalCount / (this.qs.limit || 100));
+    progress.addProcess(PROCESS_NAMES.FETCH_TAXONOMIES, fetchApiCallsCount);
+    progress.addProcess(PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS, totalCount);
+    return progress;
+  }
+
+  /**
+   * Determine if locale-based export is supported
+   */
+  private async determineExportStrategy(masterLocale?: string): Promise<void> {
+    await this.fetchTaxonomies(masterLocale, true);
+    if (!this.isLocaleBasedExportSupported) {
+      log.debug('Falling back to legacy export (non-localized)', this.exportConfig.context);
+      this.taxonomies = {};
+      this.taxonomiesByLocale = {};
+      this.publishDetailsByLocale = {};
+    } else {
+      log.debug('Localization enabled, proceeding with locale-based export', this.exportConfig.context);
+    }
+  }
+
+  /**
+   * Fetch all taxonomies based on export strategy
+   */
+  private async fetchAllTaxonomies(localesToExport: string[]): Promise<void> {
+    if (!this.isLocaleBasedExportSupported) {
+      await this.fetchTaxonomies();
+    } else {
+      for (const localeCode of localesToExport) {
+        await this.fetchTaxonomies(localeCode);
+      }
+    }
+  }
+
+  /**
+   * Export all taxonomies with detailed information
+   */
+  private async exportAllTaxonomies(progress: any, localesToExport: string[], totalCount: number): Promise<number> {
+    const actualCount = Object.keys(this.taxonomies || {})?.length;
+    log.debug(
+      `Found ${actualCount} taxonomies to export (API reported ${totalCount})`,
       this.exportConfig.context,
     );
+
+    if (actualCount === 0) {
+      log.info('No taxonomies found to export detailed information', this.exportConfig.context);
+      return 0;
+    }
+
+    // Update progress total if needed
+    if (actualCount !== totalCount) {
+      progress.updateProcessTotal(PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS, actualCount);
+    }
+
+    // Start export process
+    progress
+      .startProcess(PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS)
+      .updateStatus(
+        PROCESS_STATUS[PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS].EXPORTING,
+        PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS,
+      );
+
+    // Export based on strategy
+    if (!this.isLocaleBasedExportSupported) {
+      await this.exportTaxonomies();
+    } else {
+      for (const localeCode of localesToExport) {
+        await this.processLocaleExport(localeCode);
+      }
+    }
+
+    progress.completeProcess(PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS, true);
+    return actualCount;
   }
 
   /**
@@ -121,7 +232,7 @@ export default class ExportTaxonomies extends BaseClass {
       return;
     }
 
-    const taxonomiesFilePath = pResolve(this.taxonomiesFolderPath, 'taxonomies.json');
+    const taxonomiesFilePath = pResolve(this.taxonomiesFolderPath, this.taxonomiesConfig.fileName);
     log.debug(`Writing taxonomies metadata to: ${taxonomiesFilePath}`, this.exportConfig.context);
     fsUtil.writeFile(taxonomiesFilePath, this.taxonomies);
   }
@@ -172,6 +283,17 @@ export default class ExportTaxonomies extends BaseClass {
         }
 
         this.sanitizeTaxonomiesAttribs(items, localeCode);
+
+        // Track progress per API call (only for actual fetch, not locale support check)
+        if (!checkLocaleSupport) {
+          this.progressManager?.tick(
+            true,
+            `fetched ${items.length} taxonomies${localeInfo}`,
+            null,
+            PROCESS_NAMES.FETCH_TAXONOMIES,
+          );
+        }
+
         skip += this.qs.limit || 100;
 
         if (skip >= taxonomiesCount) {
@@ -215,10 +337,20 @@ export default class ExportTaxonomies extends BaseClass {
     log.debug(`Processing ${taxonomies.length} taxonomies${localeInfo}`, this.exportConfig.context);
 
     for (const taxonomy of taxonomies) {
+      const taxonomyRow = taxonomy as Record<string, unknown>;
       const taxonomyUID = taxonomy.uid;
       const taxonomyName = taxonomy.name;
 
       log.debug(`Processing taxonomy: ${taxonomyName} (${taxonomyUID})${localeInfo}`, this.exportConfig.context);
+
+      // Store list API publish_details for merge into per-uid export files (per locale or default bucket)
+      if (taxonomyRow.publish_details != null) {
+        const bucket = localeCode ?? ExportTaxonomies.PUBLISH_DETAILS_DEFAULT_LOCALE;
+        if (!this.publishDetailsByLocale[bucket]) {
+          this.publishDetailsByLocale[bucket] = {};
+        }
+        this.publishDetailsByLocale[bucket][taxonomyUID] = taxonomyRow.publish_details;
+      }
 
       // Store taxonomy metadata (only once per taxonomy)
       if (!this.taxonomies[taxonomyUID]) {
@@ -257,14 +389,35 @@ export default class ExportTaxonomies extends BaseClass {
     }
 
     const onSuccess = ({ response, uid }: any) => {
+      const taxonomyName = this.taxonomies[uid]?.name;
       const filePath = pResolve(exportFolderPath, `${uid}.json`);
+      const merged = this.mergeListPublishDetailsIntoExportPayload(response, uid, localeCode);
       log.debug(`Writing detailed taxonomy data to: ${filePath}`, this.exportConfig.context);
-      fsUtil.writeFile(filePath, response);
-      log.success(messageHandler.parse('TAXONOMY_EXPORT_SUCCESS', uid), this.exportConfig.context);
+      fsUtil.writeFile(filePath, merged);
+
+      // Track progress for each exported taxonomy
+      this.progressManager?.tick(
+        true,
+        `taxonomy: ${taxonomyName || uid}`,
+        null,
+        PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS,
+      );
+
+      log.success(messageHandler.parse('TAXONOMY_EXPORT_SUCCESS', taxonomyName || uid), this.exportConfig.context);
     };
 
     const onReject = ({ error, uid }: any) => {
+      const taxonomyName = this.taxonomies[uid]?.name;
       log.debug(`Failed to export detailed data for taxonomy: ${uid}${localeInfo}`, this.exportConfig.context);
+
+      // Track failure
+      this.progressManager?.tick(
+        false,
+        `taxonomy: ${taxonomyName || uid}`,
+        error?.message || PROCESS_STATUS[PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS].FAILED,
+        PROCESS_NAMES.EXPORT_TAXONOMIES_TERMS,
+      );
+
       handleAndLogError(error, { ...this.exportConfig.context, uid, ...(localeCode && { locale: localeCode }) });
     };
 
@@ -326,6 +479,60 @@ export default class ExportTaxonomies extends BaseClass {
     log.debug(`Total unique locales to export: ${localesToExport.length}`, this.exportConfig.context);
 
     return localesToExport;
+  }
+
+  /**
+   * List `find` may include `publish_details` while `export` may not; we copy list data into the
+   * written file when export omits or has an empty `taxonomy.publish_details`.
+   */
+  private getListPublishDetailsForExport(taxonomyUid: string, localeCode?: string): unknown | undefined {
+    const bucket = localeCode ?? ExportTaxonomies.PUBLISH_DETAILS_DEFAULT_LOCALE;
+    return this.publishDetailsByLocale[bucket]?.[taxonomyUid];
+  }
+
+  private isPublishDetailsValueEmpty(publishDetails: unknown): boolean {
+    if (publishDetails == null) {
+      return true;
+    }
+    if (Array.isArray(publishDetails)) {
+      return publishDetails.length === 0;
+    }
+    if (typeof publishDetails === 'object') {
+      return Object.keys(publishDetails as object).length === 0;
+    }
+    return false;
+  }
+
+  private mergeListPublishDetailsIntoExportPayload(
+    response: any,
+    taxonomyUid: string,
+    localeCode?: string,
+  ): any {
+    const fromList = this.getListPublishDetailsForExport(taxonomyUid, localeCode);
+    if (fromList == null) {
+      return response;
+    }
+
+    const merged = cloneDeep(response);
+    const applyToTaxonomyObject = (tax: Record<string, unknown> | undefined | null) => {
+      if (!tax || typeof tax !== 'object') {
+        return;
+      }
+      if (this.isPublishDetailsValueEmpty(tax.publish_details)) {
+        tax.publish_details = fromList;
+      }
+    };
+
+    if (merged && typeof merged === 'object' && 'taxonomy' in merged && (merged as any).taxonomy) {
+      applyToTaxonomyObject((merged as any).taxonomy);
+      return merged;
+    }
+
+    log.debug(
+      'Taxonomy export response has no taxonomy object; skipping publish_details merge from list',
+      this.exportConfig.context,
+    );
+    return merged;
   }
 
   private isLocalePlanLimitationError(error: any): boolean {

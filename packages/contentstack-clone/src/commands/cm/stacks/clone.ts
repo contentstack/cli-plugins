@@ -15,8 +15,10 @@ import { readFileSync, promises as fsPromises } from 'fs';
 import { CloneConfig } from '../../../types/clone-config';
 import { CloneContext } from '../../../types/clone-context';
 
-// Resolve path to package root (works in both src and lib contexts)
-const packageRoot = __dirname.includes('/src/') ? __dirname.split('/src/')[0] : __dirname.split('/lib/')[0];
+// Resolve path to package root by directory depth (commands/cm/stacks is 3 levels below src|lib),
+// matching the pattern used in clone-handler.ts. Avoids breaking when the install path itself
+// contains '/lib/' (e.g. Node's own lib/node_modules), which substring-splitting did not handle.
+const packageRoot = path.resolve(__dirname, '../../../..');
 const pathdir = path.join(packageRoot, 'contents');
 let config: CloneConfig = {};
 
@@ -157,6 +159,10 @@ Use this plugin to automate the process of cloning a stack in few steps.
   async run(): Promise<void> {
     try {
       const self = this;
+      // Clear any stale progressSupportedModule persisted from a previous run so that
+      // auth/pre-flight errors always reach the console regardless of showConsoleLogs setting.
+      // It will be re-set inside handleClone() once authentication passes.
+      configHandler.set('log.progressSupportedModule', null);
       const { flags: cloneCommandFlags } = await self.parse(StackCloneCommand);
       const {
         yes,
@@ -175,6 +181,7 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } = cloneCommandFlags;
 
       const handleClone = async (): Promise<void> => {
+        configHandler.set('log.progressSupportedModule', 'clone');
         const listOfTokens = configHandler.get('tokens');
         const authenticationMethod = this.determineAuthenticationMethod(
           sourceManagementTokenAlias,
@@ -227,7 +234,10 @@ Use this plugin to automate the process of cloning a stack in few steps.
           config.source_stack = listOfTokens[sourceManagementTokenAlias].apiKey;
           log.debug(`Using source token alias: ${sourceManagementTokenAlias}`, cloneContext);
         } else if (sourceManagementTokenAlias) {
-          log.warn(`Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`, cloneContext);
+          log.warn(
+            `Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`,
+            cloneContext,
+          );
         }
         if (destinationManagementTokenAlias && listOfTokens?.[destinationManagementTokenAlias]) {
           config.destination_alias = destinationManagementTokenAlias;
@@ -284,7 +294,10 @@ Use this plugin to automate the process of cloning a stack in few steps.
     } catch (error: any) {
       if (error) {
         await this.cleanUp(pathdir, null, this.createCloneContext('unknown'));
-        log.error('Stack clone command failed', { ...this.createCloneContext('unknown'), error: error?.message || error });
+        log.error('Stack clone command failed', {
+          ...this.createCloneContext('unknown'),
+          error: error?.message || error,
+        });
       }
     }
   }

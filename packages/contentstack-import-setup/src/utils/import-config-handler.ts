@@ -1,15 +1,18 @@
 import merge from 'merge';
 import * as path from 'path';
-import { omit, filter, includes, isArray } from 'lodash';
 import { configHandler, isAuthenticated, cliux, sanitizePath } from '@contentstack/cli-utilities';
+import { detectAssetManagementExportFromContentDir } from '@contentstack/cli-asset-management';
 import defaultConfig from '../config';
-import { readFile, fileExistsSync } from './file-helper';
 import { askContentDir, askAPIKey, askSelectedModules } from './interactive';
 import login from './login-handler';
 import { ImportConfig } from '../types';
 
 const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
-  let config: ImportConfig = merge({}, defaultConfig);
+  // Set progress supported module FIRST, before any log calls
+  // This ensures the logger respects the showConsoleLogs setting correctly
+  configHandler.set('log.progressSupportedModule', 'import-setup');
+
+  const config: ImportConfig = merge({}, defaultConfig);
   // setup the config
   // if (importCmdFlags['config']) {
   //   let externalConfig = await readFile(importCmdFlags['config']);
@@ -20,7 +23,9 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   //   config = merge.recursive(config, externalConfig);
   // }
 
-  config.contentDir = sanitizePath(importCmdFlags['data'] || importCmdFlags['data-dir'] || config.data || (await askContentDir()));
+  config.contentDir = sanitizePath(
+    importCmdFlags['data'] || importCmdFlags['data-dir'] || config.data || (await askContentDir()),
+  );
   const pattern = /[*$%#<>{}!&?]/g;
   if (pattern.test(config.contentDir)) {
     cliux.print(`\nPlease enter a directory path without special characters: (*,&,{,},[,],$,%,<,>,?,!)`, {
@@ -32,12 +37,6 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   config.contentDir = path.resolve(config.contentDir);
   //Note to support the old key
   config.data = config.contentDir;
-  if (fileExistsSync(path.join(config.contentDir, 'export-info.json'))) {
-    config.contentVersion =
-      ((await readFile(path.join(config.contentDir, 'export-info.json'))) || {}).contentVersion || 2;
-  } else {
-    config.contentVersion = 1;
-  }
 
   const managementTokenAlias = importCmdFlags['management-token-alias'] || importCmdFlags['alias'];
 
@@ -60,8 +59,8 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
     } else {
       config.apiKey =
         importCmdFlags['stack-uid'] || importCmdFlags['stack-api-key'] || config.target_stack || (await askAPIKey());
-      if (typeof config.apiKey !== 'string') {
-        throw new Error('Invalid API key received');
+      if (typeof config.apiKey !== 'string' || !config.apiKey || !config.apiKey.trim()) {
+        throw new Error('Invalid or empty API key received. Please provide a valid stack API key.');
       }
     }
   }
@@ -71,6 +70,15 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
   //Note to support the old key
   config.source_stack = config.apiKey;
 
+  const assetManagementExport = detectAssetManagementExportFromContentDir(config.contentDir);
+  if (assetManagementExport.assetManagementEnabled) {
+    config.csAssetsEnabled = true;
+    config.csAssetsUrl = assetManagementExport.assetManagementUrl;
+    if (assetManagementExport.source_stack) {
+      config.source_stack = assetManagementExport.source_stack;
+    }
+  }
+
   // config.skipAudit = importCmdFlags['skip-audit'];
   // config.forceStopMarketplaceAppsPrompt = importCmdFlags.yes;
   // config.importWebhookStatus = importCmdFlags['import-webhook-status'];
@@ -78,10 +86,12 @@ const setupConfig = async (importCmdFlags: any): Promise<ImportConfig> => {
 
   if (importCmdFlags['branch']) {
     config.branchName = importCmdFlags['branch'];
+    config.branchDir = config.contentDir;
   }
 
   if (importCmdFlags['branch-alias']) {
     config.branchAlias = importCmdFlags['branch-alias'];
+    config.branchDir = config.contentDir;
   }
 
   config.selectedModules = importCmdFlags['module'] || [await askSelectedModules()];

@@ -17,6 +17,7 @@ import {
   getEnvironments,
   getAllTeams,
   exportOrgTeams,
+  getRoleData,
   getAllTaxonomies,
   getAllTermsOfTaxonomy,
   getTaxonomy,
@@ -97,6 +98,7 @@ describe('api-client', () => {
       expect(getEnvironments).to.be.a('function');
       expect(getAllTeams).to.be.a('function');
       expect(exportOrgTeams).to.be.a('function');
+      expect(getRoleData).to.be.a('function');
       expect(getAllTaxonomies).to.be.a('function');
       expect(getAllTermsOfTaxonomy).to.be.a('function');
       expect(getTaxonomy).to.be.a('function');
@@ -159,7 +161,7 @@ describe('api-client', () => {
         expect((error as Error).message).to.equal(messages.ERROR_ADMIN_ACCESS_DENIED);
       }
 
-      expect(getInvitations.callCount).to.equal(0);
+      expect(getInvitations.called).to.equal(false);
     });
   });
 });

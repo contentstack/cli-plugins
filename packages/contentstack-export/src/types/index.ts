@@ -32,6 +32,7 @@ export interface Region {
   cma: string;
   cda: string;
   uiHost: string;
+  csAssetsUrl?: string;
 }
 
 export type Modules =
@@ -136,6 +137,7 @@ export interface CustomRoleConfig {
 export interface StackConfig {
   dirName: string;
   fileName: string;
+  invalidKeys: string[];
   dependencies?: Modules[];
   limit?: number;
 }
@@ -168,7 +170,29 @@ export interface ComposableStudioProject {
   uid: string;
 }
 export interface Context {
+  command: string;
   module: string;
+  userId: string | undefined;
+  sessionId: string | undefined;
+  clientId?: string | undefined;
+  apiKey: string;
+  orgId: string;
+  authenticationMethod?: string;
+}
+
+export interface SummaryModule {
+  status: string;
+  successCount: number;
+  failureCount: number;
+  failures: Array<{ item: string; error: string }>;
+  endTime?: number;
+}
+
+export interface GlobalSummary {
+  getModules(): Map<string, SummaryModule>;
+  registerModule(name: string, totalItems?: number): void;
+  startModule(name: string): void;
+  completeModule(name: string, success?: boolean): void;
 }
 
 export { default as DefaultConfig } from './default-config';

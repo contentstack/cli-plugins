@@ -47,13 +47,15 @@ export class BulkOperationService {
   async executeBulkPublish(
     items: Array<EntryPublishData | AssetPublishData>,
     operation: OperationType,
-    resourceType: ResourceType
+    resourceType: ResourceType,
+    environments?: string[],
+    locales?: string[]
   ): Promise<BulkJobResult> {
     this.logger.info($t(messages.SUBMITTING_BULK_JOB, { operation, count: items.length }));
 
     try {
       // Step 1: Submit bulk job
-      const jobId = await this.submitBulkJob(items, operation, resourceType);
+      const jobId = await this.submitBulkJob(items, operation, resourceType, environments, locales);
       this.logger.debug($t(messages.BULK_JOB_CREATED, { jobId }));
 
       // Return immediate result after job submission
@@ -78,10 +80,12 @@ export class BulkOperationService {
   private async submitBulkJob(
     items: Array<EntryPublishData | AssetPublishData>,
     operation: OperationType,
-    resourceType: ResourceType
+    resourceType: ResourceType,
+    environments?: string[],
+    locales?: string[]
   ): Promise<any> {
     try {
-      const payload = this.prepareBulkPayload(items, operation, resourceType);
+      const payload = this.prepareBulkPayload(items, operation, resourceType, environments, locales);
       let response: any;
       switch (operation) {
         case OperationType.PUBLISH:
@@ -203,16 +207,23 @@ export class BulkOperationService {
   private prepareBulkPayload(
     items: Array<EntryPublishData | AssetPublishData>,
     operation: OperationType,
-    resourceType: ResourceType
+    resourceType: ResourceType,
+    environments?: string[],
+    locales?: string[]
   ): any {
     if (resourceType === ResourceType.ENTRY) {
-      return this.prepareEntryBulkPayload(items as EntryPublishData[], operation);
+      return this.prepareEntryBulkPayload(items as EntryPublishData[], operation, environments, locales);
     } else {
-      return this.prepareAssetBulkPayload(items as AssetPublishData[], operation);
+      return this.prepareAssetBulkPayload(items as AssetPublishData[], operation, environments, locales);
     }
   }
 
-  private prepareEntryBulkPayload(items: EntryPublishData[], operation: OperationType): any {
+  private prepareEntryBulkPayload(
+    items: EntryPublishData[],
+    operation: OperationType,
+    batchEnvironments?: string[],
+    batchLocales?: string[]
+  ): any {
     const entries = items.map((item) => {
       const entry: any = {
         uid: item.uid,
@@ -233,8 +244,17 @@ export class BulkOperationService {
       return entry;
     });
 
-    const environments = items[0]?.publish_details?.map((pd) => pd.environment) || [];
-    const locales = Array.from(new Set(items.map((item) => item.locale)));
+    const environments = batchEnvironments?.length
+      ? batchEnvironments
+      : items[0]?.publish_details?.map((pd) => pd.environment) || [];
+    const locales = batchLocales?.length ? batchLocales : Array.from(new Set(items.map((item) => item.locale)));
+
+    if (!environments.length) {
+      throw new Error('No environments for bulk publish. Ensure entries have publish_details with environment data.');
+    }
+    if (!locales.length) {
+      throw new Error('No locales for bulk publish. Ensure entries have a locale field.');
+    }
 
     return {
       entries,
@@ -244,14 +264,34 @@ export class BulkOperationService {
     };
   }
 
-  private prepareAssetBulkPayload(items: AssetPublishData[], operation: OperationType): any {
-    const assets = items.map((item) => ({
-      uid: item.uid,
-      version: item.version,
-    }));
+  private prepareAssetBulkPayload(
+    items: AssetPublishData[],
+    operation: OperationType,
+    batchEnvironments?: string[],
+    batchLocales?: string[]
+  ): any {
+    // One item per (uid, locale) reaches here, but the bulk payload keys assets by uid
+    // and lists locales separately — dedupe so a multi-locale asset is sent once.
+    const seen = new Set<string>();
+    const assets = items.reduce<Array<{ uid: string; version: number | undefined }>>((acc, item) => {
+      if (!seen.has(item.uid)) {
+        seen.add(item.uid);
+        acc.push({ uid: item.uid, version: item.version });
+      }
+      return acc;
+    }, []);
 
-    const environments = items[0]?.publish_details?.map((pd) => pd.environment) || [];
-    const locales = items[0]?.publish_details?.map((pd) => pd.locale) || [];
+    const environments = batchEnvironments?.length
+      ? batchEnvironments
+      : items[0]?.publish_details?.map((pd) => pd.environment) || [];
+    const locales = batchLocales?.length ? batchLocales : Array.from(new Set(items.map((item) => item.locale)));
+
+    if (!environments.length) {
+      throw new Error('No environments for bulk publish. Ensure assets have publish_details with environment data.');
+    }
+    if (!locales.length) {
+      throw new Error('No locales for bulk publish. Ensure assets have a locale field.');
+    }
 
     return {
       assets,

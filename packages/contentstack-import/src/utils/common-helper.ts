@@ -7,10 +7,17 @@
 
 import * as _ from 'lodash';
 import * as path from 'path';
-import { HttpClient, managementSDKClient, isAuthenticated, sanitizePath, log, handleAndLogError } from '@contentstack/cli-utilities';
+import {
+  HttpClient,
+  managementSDKClient,
+  isAuthenticated,
+  sanitizePath,
+  log,
+  handleAndLogError,
+} from '@contentstack/cli-utilities';
+import { PATH_CONSTANTS } from '../constants';
 import { readFileSync, readdirSync, readFile, fileExistsSync } from './file-helper';
 
-import chalk from 'chalk';
 import defaultConfig from '../config';
 import promiseLimit from 'promise-limit';
 import { ImportConfig } from '../types';
@@ -28,14 +35,14 @@ export const initialization = (configData: ImportConfig) => {
 export const validateConfig = (importConfig: ImportConfig) => {
   log.debug('Validating import configuration');
 
-  if (importConfig.email && importConfig.password && !importConfig.target_stack) {
+  if (importConfig.email && importConfig.password && !importConfig.apiKey) {
     log.debug('Target stack API token is required when using email/password authentication');
     return 'error';
   } else if (
     !importConfig.email &&
     !importConfig.password &&
     !importConfig.management_token &&
-    importConfig.target_stack &&
+    importConfig.apiKey &&
     !isAuthenticated()
   ) {
     log.debug('Authentication credentials missing - either management token or email/password required');
@@ -78,7 +85,7 @@ export const sanitizeStack = (importConfig: ImportConfig) => {
         log.debug(`New stack version: ${newStackVersion} (${newStackDate})`);
 
         const stackFilePath = path.join(
-          sanitizePath(importConfig.data),
+          sanitizePath(importConfig.contentDir),
           sanitizePath(importConfig.modules.stack.dirName),
           sanitizePath(importConfig.modules.stack.fileName),
         );
@@ -161,8 +168,12 @@ export const field_rules_update = (importConfig: ImportConfig, ctPath: string) =
                   if (schema.field_rules[k].conditions[i].operand_field === 'reference') {
                     log.debug(`Processing reference field rule condition`);
 
-                    let entryMapperPath = path.resolve(importConfig.data, 'mapper', 'entries');
-                    let entryUidMapperPath = path.join(entryMapperPath, 'uid-mapping.json');
+                    let entryMapperPath = path.resolve(
+                      importConfig.contentDir,
+                      PATH_CONSTANTS.MAPPER,
+                      PATH_CONSTANTS.MAPPER_MODULES.ENTRIES,
+                    );
+                    let entryUidMapperPath = path.join(entryMapperPath, PATH_CONSTANTS.FILES.UID_MAPPING);
                     let fieldRulesValue = schema.field_rules[k].conditions[i].value;
                     let fieldRulesArray = fieldRulesValue.split('.');
                     let updatedValue = [];
@@ -184,7 +195,7 @@ export const field_rules_update = (importConfig: ImportConfig, ctPath: string) =
                 }
 
                 const stackAPIClient = client.stack({
-                  api_key: importConfig.target_stack,
+                  api_key: importConfig.apiKey,
                   management_token: importConfig.management_token,
                 });
                 let ctObj = stackAPIClient.contentType(schema.uid);
