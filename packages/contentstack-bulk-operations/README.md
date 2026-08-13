@@ -1,4 +1,4 @@
-> **Source of truth:** [cli-plugins](https://github.com/contentstack/cli-plugins) — `packages/contentstack-bulk-operations`. Migrated from [cli-bulk-operations](https://github.com/contentstack/cli-bulk-operations). Command migration guide: [BULK-OPERATIONS-MIGRATION.md](../../BULK-OPERATIONS-MIGRATION.md).
+> **Migrated from the standalone [`contentstack/cli-bulk-operations`](https://github.com/contentstack/cli-bulk-operations) repository, which is now archived.** Development continues here in [`packages/contentstack-bulk-operations`](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-bulk-operations). Issues: [cli-plugins/issues](https://github.com/contentstack/cli-plugins/issues) · [Migration guide](../../BULK-OPERATIONS-MIGRATION.md)
 
 # @contentstack/cli-bulk-operations
 
