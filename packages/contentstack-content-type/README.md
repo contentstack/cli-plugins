@@ -1,6 +1,6 @@
-# @contentstack/contentstack-cli-content-type
+# contentstack-cli-content-type
 
-[![npm](https://img.shields.io/npm/v/contentstack-cli-content-type)](https://npmjs.org/package/@contentstack/contentstack-cli-content-type)
+[![npm](https://img.shields.io/npm/v/contentstack-cli-content-type)](https://npmjs.org/package/contentstack-cli-content-type)
 
 ## Description
 This is a plugin for [Contentstack's](https://www.contentstack.com/) CLI.
@@ -44,7 +44,7 @@ $ npm install -g contentstack-cli-content-type
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-contentstack-cli-content-type/1.5.4 darwin-arm64 node-v24.18.0
+contentstack-cli-content-type/1.5.5 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

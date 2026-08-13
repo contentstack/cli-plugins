@@ -151,5 +151,5 @@ EXAMPLES
   $ csdx cm:stacks:export-query --query '{"modules":{"assets":{"title":{"$regex":"image"}}}}'
 ```
 
-_See code: [src/commands/cm/stacks/export-query.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-query-export/src/commands/cm/stacks/export-query.ts)_
+_See code: [src/commands/cm/stacks/export-query.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-query-export/src/commands/cm/stacks/export-query.ts)_
 <!-- commandsstop -->
