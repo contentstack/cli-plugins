@@ -1,3 +1,5 @@
+> **Migrated from the standalone [`contentstack/cli-bulk-operations`](https://github.com/contentstack/cli-bulk-operations) repository, which is now archived.** Development continues here in [`packages/contentstack-bulk-operations`](https://github.com/contentstack/cli-plugins/tree/main/packages/contentstack-bulk-operations). Issues: [cli-plugins/issues](https://github.com/contentstack/cli-plugins/issues) · [Migration guide](../../BULK-OPERATIONS-MIGRATION.md)
+
 # @contentstack/cli-bulk-operations
 
 > Contentstack CLI plugin for performing bulk operations on your content.
