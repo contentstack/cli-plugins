@@ -8,7 +8,7 @@ To be able to export the content of a stack, you need to have access to it. Like
 
 Refer to the [Export Content to .CSV](https://www.contentstack.com/docs/developers/cli/export-content-to-csv-file/) file guide to learn more.
 
-[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli-plugins/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-export-to-csv](#contentstackcli-cm-export-to-csv)
@@ -23,7 +23,7 @@ $ npm install -g @contentstack/cli-cm-export-to-csv
 $ csdx COMMAND
 running command...
 $ csdx (--version)
-@contentstack/cli-cm-export-to-csv/1.12.8 darwin-arm64 node-v24.18.0
+@contentstack/cli-cm-export-to-csv/1.12.9 darwin-arm64 node-v22.21.1
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
@@ -126,5 +126,5 @@ EXAMPLES
   $ csdx cm:export-to-csv --action taxonomies --alias <management-token-alias> --locale <locale> --include-fallback --fallback-locale <fallback-locale>
 ```
 
-_See code: [src/commands/cm/export-to-csv.ts](https://github.com/contentstack/cli/blob/main/packages/contentstack-export-to-csv/src/commands/cm/export-to-csv.ts)_
+_See code: [src/commands/cm/export-to-csv.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-export-to-csv/src/commands/cm/export-to-csv.ts)_
 <!-- commandsstop -->

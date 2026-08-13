@@ -1,6 +1,6 @@
-# @contentstack/contentstack-cli-tsgen
+# contentstack-cli-tsgen
 
-[![npm](https://img.shields.io/npm/v/contentstack-cli-tsgen)](https://npmjs.org/package/@contentstack/contentstack-cli-tsgen)
+[![npm](https://img.shields.io/npm/v/contentstack-cli-tsgen)](https://npmjs.org/package/contentstack-cli-tsgen)
 
 ## Description
 

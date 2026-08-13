@@ -1,8 +1,8 @@
-name: Release CLI Plugins (Production)
+name: Release CLI Plugins v1-Legacy
 
 on:
   push:
-    branches: [main]
+    branches: [v1-legacy]
   workflow_dispatch: # manually trigger the workflow
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-variants/package.json
-          tag: latest
+          tag: v1-x
 
       # Export
       - name: Publishing export (Production)
@@ -53,7 +53,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export/package.json
-          tag: latest
+          tag: v1-x
 
       # Audit
       - name: Publishing audit (Production)
@@ -61,7 +61,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-audit/package.json
-          tag: latest
+          tag: v1-x
 
       # Import
       - name: Publishing import (Production)
@@ -69,7 +69,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import/package.json
-          tag: latest
+          tag: v1-x
 
       # Clone
       - name: Publishing clone (Production)
@@ -77,7 +77,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-clone/package.json
-          tag: latest
+          tag: v1-x
 
       # Import Setup
       - name: Publishing import-setup (Production)
@@ -85,7 +85,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import-setup/package.json
-          tag: latest
+          tag: v1-x
 
       # Export to CSV
       - name: Publishing export to csv (Production)
@@ -93,7 +93,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export-to-csv/package.json
-          tag: latest
+          tag: v1-x
 
       # Migration
       - name: Publishing migration (Production)
@@ -101,7 +101,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-migration/package.json
-          tag: latest
+          tag: v1-x
 
       # Migrate RTE
       - name: Publishing migrate RTE (Production)
@@ -109,7 +109,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-migrate-rte/package.json
-          tag: latest
+          tag: v1-x
 
       # Seed
       - name: Publishing seed (Production)
@@ -117,7 +117,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-seed/package.json
-          tag: latest
+          tag: v1-x
 
       # Bootstrap
       - name: Publishing bootstrap (Production)
@@ -125,7 +125,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bootstrap/package.json
-          tag: latest
+          tag: v1-x
 
       # Bulk Publish
       - name: Publishing bulk publish (Production)
@@ -133,7 +133,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bulk-publish/package.json
-          tag: latest
+          tag: v1-x
 
       # Bulk Operations
       - name: Publishing bulk operations (Production)
@@ -141,7 +141,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bulk-operations/package.json
-          tag: latest
+          tag: v1-x
 
       # Branches
       - name: Publishing branches (Production)
@@ -149,7 +149,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-branches/package.json
-          tag: latest
+          tag: v1-x
 
       # Apps CLI
       - name: Publishing apps-cli (Production)
@@ -157,7 +157,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-apps-cli/package.json
-          tag: latest
+          tag: v1-x
 
       # Query Export
       - name: Publishing query export (Production)
@@ -165,7 +165,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-query-export/package.json
-          tag: latest
+          tag: v1-x
 
       # Content Type
       - name: Publishing content-type (Production)
@@ -173,7 +173,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-content-type/package.json
-          tag: latest
+          tag: v1-x
 
       # Regex Validate
       - name: Publishing regex-validate (Production)
@@ -181,7 +181,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-cli-cm-regex-validate/package.json
-          tag: latest
+          tag: v1-x
 
       # Tsgen
       - name: Publishing tsgen (Production)
@@ -189,7 +189,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-cli-tsgen/package.json
-          tag: latest
+          tag: v1-x
 
       # External Migrate
       - name: Publishing external-migrate (Production)
@@ -197,7 +197,7 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-external-migrate/package.json
-          tag: latest
+          tag: v1-x
 
       - name: Create Production Release
         id: create_release
@@ -209,7 +209,7 @@ jobs:
           PREVIOUS_PROD=$(gh release list --limit 10 | grep -v 'prerelease' | head -1 | cut -f1)
 
           if [ -n "$PREVIOUS_PROD" ]; then
-            gh release create "v${VERSION}" --title "Production Release $VERSION" --notes-from-tag "$PREVIOUS_PROD"
+            gh release create "v${VERSION}" --title "v1-Legacy Release $VERSION" --notes-from-tag "$PREVIOUS_PROD" --latest=false
           else
-            gh release create "v${VERSION}" --title "Production Release $VERSION" --generate-notes
+            gh release create "v${VERSION}" --title "v1-Legacy Release $VERSION" --generate-notes --latest=false
           fi

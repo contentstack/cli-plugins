@@ -29,7 +29,7 @@ $ csdx plugins:install @contentstack/cli-cm-regex-validate
 
 $ csdx plugins
 running command...
-@contentstack/cli-cm-regex-validate/1.2.1 darwin-arm64 node-v22.21.1
+@contentstack/cli-cm-regex-validate/1.0.4 darwin-arm64 node-v22.21.1
 
 $ csdx --help [COMMAND]
 USAGE
