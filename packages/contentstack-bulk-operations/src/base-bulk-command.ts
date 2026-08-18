@@ -5,6 +5,8 @@ import {
   createLogContext,
   getLogPath,
   handleAndLogError,
+  cliErrorHandler,
+  cliux,
   FlagInput,
   getChalk,
   loadChalk,
@@ -663,13 +665,19 @@ export abstract class BaseBulkCommand extends Command {
    * This includes errors during init, run, and other phases
    */
   async catch(error: Error): Promise<void> {
-    // Check if this is a DisplayedError (should be shown to user)
-    // if (error.name === 'DisplayedError') {
-    //   process.exit(1);
-    // }
-
     // For other errors, use the CLI utilities error handler
     handleAndLogError(error);
+
+    // handleAndLogError only reaches the console when log.showConsoleLogs is enabled
+    // (the winston error transport is silenced otherwise), so a failure would leave the
+    // terminal completely silent when the user has console logs turned off. Print a
+    // user-facing error line here to fill that gap, guarded so we don't double-print when
+    // console logs are on and handleAndLogError already emitted the error.
+    const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
+    if (!showConsoleLogs) {
+      const friendlyMessage = cliErrorHandler.classifyError(error)?.message || error?.message || 'Unknown error';
+      cliux.print(`Error: ${friendlyMessage}`, { color: 'red' });
+    }
   }
 
   abstract run(): Promise<void>;
