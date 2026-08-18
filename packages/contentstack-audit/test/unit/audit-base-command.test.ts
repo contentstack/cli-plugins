@@ -5,7 +5,11 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { PassThrough } from 'stream';
 import { expect } from 'chai';
-import { ux, cliux, CLIProgressManager, configHandler, clearProgressModuleSetting } from '@contentstack/cli-utilities';
+import { ux, cliux, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import {
+  setConsoleLogPolicy,
+  resetConsoleLogPolicy,
+} from '@contentstack/cli-utilities/lib/logger/console-policy';
 
 import { AuditBaseCommand } from '../../src/audit-base-command';
 import {
@@ -437,7 +441,6 @@ describe('AuditBaseCommand class', () => {
       
       try {
         CLIProgressManager.clearGlobalSummary();
-        clearProgressModuleSetting();
       } catch (e) {
         // Ignore
       }
@@ -529,10 +532,12 @@ describe('AuditBaseCommand class', () => {
       // Import print function from the correct path
       const logModule = require('../../src/util/log');
       printSpy = sinon.spy(logModule, 'print');
-      configHandlerGetStub = sinon.stub(configHandler, 'get');
+      configHandlerGetStub = sinon.stub(configHandler, 'get').returns({});
     });
 
     afterEach(() => {
+      resetConsoleLogPolicy();
+
       try {
         // Clear global summary first
         CLIProgressManager.clearGlobalSummary();
@@ -584,15 +589,15 @@ describe('AuditBaseCommand class', () => {
       .stub(FieldRule.prototype, 'run', () => ({ fr_1: {} }))
       .stub(AuditBaseCommand.prototype, 'showOutputOnScreenWorkflowsAndExtension', () => {})
       .stub(fs, 'createWriteStream', () => new PassThrough())
-      .it('should hide spinner messages when showConsoleLogs is false', async function() {
+      .it('should hide spinner messages when the console-log policy is off', async function() {
         this.timeout(5000); // Set timeout to 5 seconds
         if (!configHandlerGetStub || !printSpy) {
           throw new Error('Spies not initialized');
         }
-        configHandlerGetStub.returns({ showConsoleLogs: false });
+        setConsoleLogPolicy(false);
         await AuditCMD.run(['--data-dir', resolve(__dirname, 'mock', 'contents')]);
-        
-        // Print should not be called for spinner messages when showConsoleLogs is false
+
+        // Print should not be called for spinner messages when the console-log policy is off
         const printCalls = printSpy.getCalls();
         const spinnerCalls = printCalls.filter((call: any) => 
           call.args[0]?.[0]?.message?.includes('scanning')
@@ -620,15 +625,15 @@ describe('AuditBaseCommand class', () => {
       .stub(FieldRule.prototype, 'run', () => ({ fr_1: {} }))
       .stub(AuditBaseCommand.prototype, 'showOutputOnScreenWorkflowsAndExtension', () => {})
       .stub(fs, 'createWriteStream', () => new PassThrough())
-      .it('should show spinner messages when showConsoleLogs is true', async function() {
+      .it('should show spinner messages when the console-log policy is on', async function() {
         this.timeout(5000); // Set timeout to 5 seconds
         if (!configHandlerGetStub || !printSpy) {
           throw new Error('Spies not initialized');
         }
-        configHandlerGetStub.returns({ showConsoleLogs: true });
+        setConsoleLogPolicy(true);
         await AuditCMD.run(['--data-dir', resolve(__dirname, 'mock', 'contents')]);
-        
-        // Print should be called for spinner messages when showConsoleLogs is true
+
+        // Print should be called for spinner messages when the console-log policy is on
         const printCalls = printSpy.getCalls();
         const spinnerCalls = printCalls.filter((call: any) => 
           call.args[0]?.[0]?.message?.includes('scanning')

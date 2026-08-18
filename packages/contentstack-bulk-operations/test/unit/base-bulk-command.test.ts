@@ -532,9 +532,7 @@ describe('BaseBulkCommand', () => {
       sandbox.stub(cliUtils.CLIProgressManager, 'initializeGlobalSummary').returns({} as any);
       sandbox.stub(cliUtils.CLIProgressManager, 'printGlobalSummary').callsFake(() => {});
       sandbox.stub(cliUtils.CLIProgressManager, 'clearGlobalSummary').callsFake(() => {});
-      // clearProgressModuleSetting is a frozen re-export (not stubbable); let the real one run
-      // and drive/assert it through configHandler instead.
-      sandbox.stub(cliUtils.configHandler, 'get').returns({ showConsoleLogs: false });
+      sandbox.stub(cliUtils.configHandler, 'get').returns({});
       sandbox.stub(cliUtils.configHandler, 'set').callsFake(() => {});
     });
 
@@ -636,16 +634,6 @@ describe('BaseBulkCommand', () => {
 
         expect(cliUtils.CLIProgressManager.printGlobalSummary.calledOnce).to.be.true;
         expect(cliUtils.CLIProgressManager.clearGlobalSummary.calledOnce).to.be.true;
-      });
-
-      it('clears the persisted progress-module flag', () => {
-        // Simulate the flag being set, then verify clearProgressModuleSetting removes it.
-        cliUtils.configHandler.get.returns({ progressSupportedModule: 'bulk-operations', showConsoleLogs: false });
-
-        (command as any).finalizeProgressSummary();
-
-        expect(cliUtils.configHandler.set.calledWith('log', sinon.match((v: any) => !('progressSupportedModule' in v)))).to
-          .be.true;
       });
     });
   });

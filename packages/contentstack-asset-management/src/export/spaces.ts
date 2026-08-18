@@ -1,6 +1,6 @@
 import { resolve as pResolve } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
+import { log, CLIProgressManager, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type { AssetManagementExportOptions, CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
@@ -193,9 +193,7 @@ export class ExportSpaces {
       this.progressManager = this.parentProgressManager;
       return this.parentProgressManager;
     }
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME);
     return this.progressManager;
   }
 }

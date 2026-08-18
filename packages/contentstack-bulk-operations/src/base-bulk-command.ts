@@ -8,9 +8,7 @@ import {
   FlagInput,
   getChalk,
   loadChalk,
-  configHandler,
   CLIProgressManager,
-  clearProgressModuleSetting,
 } from '@contentstack/cli-utilities';
 
 import config from './config';
@@ -306,13 +304,6 @@ export abstract class BaseBulkCommand extends Command {
    * Build operation configuration
    */
   protected async buildConfiguration(flags: any): Promise<void> {
-    // Enable the progress-bar UI + suppress the timestamped console logs for the whole command.
-    // Set here (command lifecycle, runs before the first log call) rather than in the pure
-    // buildConfig() util so it isn't triggered by direct/unit-test callers of buildConfig.
-    // Cleared on every exit path: finally() on normal runs, and finalizeProgressSummary() before
-    // the validation exit(1) below and the revert/retry exit(0).
-    configHandler.set('log.progressSupportedModule', 'bulk-operations');
-
     this.bulkOperationConfig = buildConfig(flags);
 
     // buildConfig splits comma-separated oclif `multiple` values; mirror onto flags so
@@ -463,7 +454,6 @@ export abstract class BaseBulkCommand extends Command {
    * success. The printed status URL remains the source of truth for the real publish outcome.
    */
   protected recordModuleSummary(result: BulkOperationResult, submittedCount: number): void {
-    const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
     const publishMode = this.bulkOperationConfig?.publishMode || PublishMode.BULK;
     const total = result?.total || submittedCount || 0;
 
@@ -482,7 +472,7 @@ export abstract class BaseBulkCommand extends Command {
     failed = Math.min(Math.max(failed, 0), total);
     success = Math.min(Math.max(success, 0), total - failed);
 
-    const progress = CLIProgressManager.createSimple(this.resourceType, total, showConsoleLogs);
+    const progress = CLIProgressManager.createSimple(this.resourceType, total);
     for (let i = 0; i < success; i++) progress.tick(true);
     for (let i = 0; i < failed; i++) progress.tick(false);
     progress.complete(failed === 0);
@@ -491,13 +481,11 @@ export abstract class BaseBulkCommand extends Command {
   /**
    * Print the run-level summary once and clear progress state. Idempotent: subclasses call
    * finally() explicitly AND oclif calls it again, so clearing the summary after printing makes
-   * the second invocation a no-op. Also clears the progress-module flag so it never leaks into
-   * a later command in the same process (mirrors export/import/clone).
+   * the second invocation a no-op.
    */
   protected finalizeProgressSummary(): void {
     CLIProgressManager.printGlobalSummary();
     CLIProgressManager.clearGlobalSummary();
-    clearProgressModuleSetting();
   }
 
   /**

@@ -105,8 +105,7 @@ describe('CSAssetsExportAdapter (base)', () => {
   });
 
   describe('createNestedProgress', () => {
-    it('should create a new CLIProgressManager with the given name and showConsoleLogs flag', () => {
-      sinon.stub(configHandler, 'get').returns({ showConsoleLogs: true });
+    it('should create a new CLIProgressManager with the given name', () => {
       const fakeProgress = { tick: sinon.stub() } as any;
       const createNestedStub = sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress);
 
@@ -126,15 +125,14 @@ describe('CSAssetsExportAdapter (base)', () => {
       expect(result).to.equal(fakeParent);
     });
 
-    it('should default showConsoleLogs to false when log config is missing', () => {
-      sinon.stub(configHandler, 'get').returns(null);
+    it('should not pass a showConsoleLogs argument — the manager resolves the policy itself', () => {
       const fakeProgress = { tick: sinon.stub() } as any;
       const createNestedStub = sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress);
 
       const adapter = new TestAdapter(apiConfig, exportContext);
       adapter.callCreateNestedProgress('test');
 
-      expect(createNestedStub.firstCall.args[1]).to.be.false;
+      expect(createNestedStub.firstCall.args).to.deep.equal(['test']);
     });
   });
 
