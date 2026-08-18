@@ -675,8 +675,8 @@ export abstract class BaseBulkCommand extends Command {
     // console logs are on and handleAndLogError already emitted the error.
     const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
     if (!showConsoleLogs) {
-      const friendlyMessage = cliErrorHandler.classifyError(error)?.message || error?.message || 'Unknown error';
-      cliux.print(`Error: ${friendlyMessage}`, { color: 'red' });
+      const errorMessage = cliErrorHandler.classifyError(error)?.message || error?.message || 'Unknown error';
+      cliux.print(`Error: ${errorMessage}`, { color: 'red' });
     }
   }
 
