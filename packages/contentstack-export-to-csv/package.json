@@ -54,6 +54,7 @@
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-export-to-csv/<%- commandPath %>"
   },
   "csdxConfig": {
+    "showConsoleLogs": true,
     "shortCommandName": {
       "cm:export-to-csv": "EXPRTCSV"
     }
