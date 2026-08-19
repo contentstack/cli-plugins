@@ -1,5 +1,6 @@
 import { Command } from '@contentstack/cli-command';
 import {
+  cliux,
   configHandler,
   flags,
   isAuthenticated,
@@ -159,10 +160,6 @@ Use this plugin to automate the process of cloning a stack in few steps.
   async run(): Promise<void> {
     try {
       const self = this;
-      // Clear any stale progressSupportedModule persisted from a previous run so that
-      // auth/pre-flight errors always reach the console regardless of showConsoleLogs setting.
-      // It will be re-set inside handleClone() once authentication passes.
-      configHandler.set('log.progressSupportedModule', null);
       const { flags: cloneCommandFlags } = await self.parse(StackCloneCommand);
       const {
         yes,
@@ -181,7 +178,6 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } = cloneCommandFlags;
 
       const handleClone = async (): Promise<void> => {
-        configHandler.set('log.progressSupportedModule', 'clone');
         const listOfTokens = configHandler.get('tokens');
         const authenticationMethod = this.determineAuthenticationMethod(
           sourceManagementTokenAlias,
@@ -234,20 +230,18 @@ Use this plugin to automate the process of cloning a stack in few steps.
           config.source_stack = listOfTokens[sourceManagementTokenAlias].apiKey;
           log.debug(`Using source token alias: ${sourceManagementTokenAlias}`, cloneContext);
         } else if (sourceManagementTokenAlias) {
-          log.warn(
-            `Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`,
-            cloneContext,
-          );
+          const msg = `Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`;
+          log.warn(msg, cloneContext);
+          cliux.print(msg, { color: 'yellow' });
         }
         if (destinationManagementTokenAlias && listOfTokens?.[destinationManagementTokenAlias]) {
           config.destination_alias = destinationManagementTokenAlias;
           config.target_stack = listOfTokens[destinationManagementTokenAlias].apiKey;
           log.debug(`Using destination token alias: ${destinationManagementTokenAlias}`, cloneContext);
         } else if (destinationManagementTokenAlias) {
-          log.warn(
-            `Provided destination token alias (${destinationManagementTokenAlias}) not found in your config.!`,
-            cloneContext,
-          );
+          const msg = `Provided destination token alias (${destinationManagementTokenAlias}) not found in your config.!`;
+          log.warn(msg, cloneContext);
+          cliux.print(msg, { color: 'yellow' });
         }
         if (importWebhookStatus) {
           config.importWebhookStatus = importWebhookStatus;

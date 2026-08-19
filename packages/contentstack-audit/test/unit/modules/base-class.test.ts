@@ -3,6 +3,10 @@ import { fancy } from 'fancy-test';
 import sinon from 'sinon';
 import { resolve } from 'node:path';
 import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import {
+  setConsoleLogPolicy,
+  resetConsoleLogPolicy,
+} from '@contentstack/cli-utilities/lib/logger/console-policy';
 
 import config from '../../../src/config';
 import BaseClass from '../../../src/modules/base-class';
@@ -99,6 +103,8 @@ describe('BaseClass Progress Manager', () => {
   });
 
   afterEach(() => {
+    resetConsoleLogPolicy();
+
     try {
       // Complete any running progress managers
       if (testInstance && testInstance['progressManager']) {
@@ -165,12 +171,12 @@ describe('BaseClass Progress Manager', () => {
       }
     });
 
-    fancy.it('should respect showConsoleLogs setting from config', () => {
-      configHandler.set('log.showConsoleLogs', true);
+    fancy.it('should create a manager under either console-log policy', () => {
+      setConsoleLogPolicy(true);
       const progress1 = testInstance.testCreateSimpleProgress('test-module', 100);
       expect(progress1).to.be.instanceOf(CLIProgressManager);
 
-      configHandler.set('log.showConsoleLogs', false);
+      setConsoleLogPolicy(false);
       const progress2 = testInstance.testCreateSimpleProgress('test-module-2', 100);
       expect(progress2).to.be.instanceOf(CLIProgressManager);
       
@@ -184,8 +190,7 @@ describe('BaseClass Progress Manager', () => {
       }
     });
 
-    fancy.it('should default showConsoleLogs to false when not set', () => {
-      configHandler.set('log', {});
+    fancy.it('should create a manager under the default (files-only) policy', () => {
       const progress = testInstance.testCreateSimpleProgress('test-module', 100);
       expect(progress).to.be.instanceOf(CLIProgressManager);
       
@@ -215,8 +220,8 @@ describe('BaseClass Progress Manager', () => {
       }
     });
 
-    fancy.it('should respect showConsoleLogs setting from config', () => {
-      configHandler.set('log.showConsoleLogs', false);
+    fancy.it('should create a nested manager when the console-log policy is off', () => {
+      setConsoleLogPolicy(false);
       const progress = testInstance.testCreateNestedProgress('test-module');
       expect(progress).to.be.instanceOf(CLIProgressManager);
       
@@ -231,8 +236,8 @@ describe('BaseClass Progress Manager', () => {
   });
 
   describe('withLoadingSpinner', () => {
-    fancy.it('should execute action directly when showConsoleLogs is true', async () => {
-      configHandler.set('log.showConsoleLogs', true);
+    fancy.it('should not start a spinner when the console-log policy is on', async () => {
+      setConsoleLogPolicy(true);
       const action = sinon.stub().resolves('result');
       
       const result = await testInstance.testWithLoadingSpinner('Loading...', action);
@@ -242,8 +247,8 @@ describe('BaseClass Progress Manager', () => {
       expect(mockOra.called).to.be.false;
     });
 
-    fancy.it('should use spinner when showConsoleLogs is false', async () => {
-      configHandler.set('log.showConsoleLogs', false);
+    fancy.it('should use the spinner when the console-log policy is off', async () => {
+      setConsoleLogPolicy(false);
       const action = sinon.stub().resolves('result');
       
       const result = await testInstance.testWithLoadingSpinner('Loading...', action);
@@ -253,7 +258,7 @@ describe('BaseClass Progress Manager', () => {
     });
 
     fancy.it('should handle errors in action', async () => {
-      configHandler.set('log.showConsoleLogs', true);
+      setConsoleLogPolicy(true);
       const error = new Error('Test error');
       const action = sinon.stub().rejects(error);
       

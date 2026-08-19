@@ -9,11 +9,11 @@ import {
   pathValidator,
   sanitizePath,
   configHandler,
+  isConsoleLogEnabled,
   log,
   handleAndLogError,
   getSessionLogPath,
   CLIProgressManager,
-  clearProgressModuleSetting,
   loadChalk,
 } from '@contentstack/cli-utilities';
 
@@ -130,17 +130,13 @@ export default class ExportCommand extends Command {
 
       // Print comprehensive summary at the end
       if (!exportConfig.branches) CLIProgressManager.printGlobalSummary();
-      if (!configHandler.get('log')?.showConsoleLogs) {
+      if (!isConsoleLogEnabled()) {
         cliux.print(`The log has been stored at '${sessionLogPath}'`, { color: 'green' });
       }
-      // Clear progress module setting now that export is complete
-      clearProgressModuleSetting();
     } catch (error) {
-      // Clear progress module setting even on error
-      clearProgressModuleSetting();
       handleAndLogError(error);
       const sessionLogPath = getSessionLogPath();
-      if (!configHandler.get('log')?.showConsoleLogs) {
+      if (!isConsoleLogEnabled()) {
         cliux.print(`Error: ${error}`, { color: 'red' });
         cliux.print(`The log has been stored at '${sessionLogPath}'`, { color: 'green' });
       }

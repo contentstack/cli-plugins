@@ -1,6 +1,6 @@
 import { join, resolve } from 'path';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
-import { FsUtility, sanitizePath, cliux, log, configHandler } from '@contentstack/cli-utilities';
+import { FsUtility, sanitizePath, cliux, log, isConsoleLogEnabled } from '@contentstack/cli-utilities';
 import { ContentTypeStruct, CtConstructorParam, ModuleConstructorParam, EntryStruct } from '../types';
 import auditConfig from '../config';
 import { $t, auditFixMsg, auditMsg, commonMsg } from '../messages';
@@ -298,8 +298,7 @@ export default class Assets extends BaseClass {
    */
   async lookForReference(): Promise<void> {
     log.debug('Starting asset reference validation', this.config.auditContext);
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+    const showConsoleLogs = isConsoleLogEnabled();
 
     if (!this.resolvedBasePaths.length) {
       this.resolvedBasePaths = this.resolveAssetBasePaths();

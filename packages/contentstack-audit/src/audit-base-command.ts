@@ -10,9 +10,8 @@ import {
   TableFlags,
   TableHeader,
   log,
-  configHandler,
+  isConsoleLogEnabled,
   CLIProgressManager,
-  clearProgressModuleSetting,
   readContentTypeSchemas,
   readGlobalFieldSchemas,
   generateUid,
@@ -72,15 +71,6 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
    */
   async start(command: CommandNames): Promise<boolean> {
     this.currentCommand = command;
-
-    // Set progress supported module and console logs setting BEFORE any log calls
-    // This ensures the logger respects the setting when it's initialized
-    const logConfig = configHandler.get('log') || {};
-    // Default to false so progress bars are shown instead of console logs
-    if (logConfig.showConsoleLogs === undefined) {
-      configHandler.set('log.showConsoleLogs', false);
-    }
-    configHandler.set('log.progressSupportedModule', 'audit');
 
     // Initialize global summary for progress tracking
     CLIProgressManager.initializeGlobalSummary('AUDIT', '', 'Auditing content...');
@@ -190,9 +180,6 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
     // Print comprehensive summary at the end (commented out - Summary table above has the counts; progress bars show completion)
     // CLIProgressManager.printGlobalSummary();
 
-    // Clear progress module setting now that audit is complete
-    clearProgressModuleSetting();
-
     return (
       !isEmpty(missingCtRefs) ||
       !isEmpty(missingGfRefs) ||
@@ -263,9 +250,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
     let dataModuleWise: Record<string, any> = await new ModuleDataReader(cloneDeep(constructorParam)).run();
     log.debug(`Data module wise: ${JSON.stringify(dataModuleWise)}`, this.auditContext);
 
-    // Extract logConfig and showConsoleLogs once before the loop to reuse throughout
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+    // Resolve the console-log policy once before the loop to reuse throughout
+    const showConsoleLogs = isConsoleLogEnabled();
 
     for (const module of this.sharedConfig.flags.modules || this.sharedConfig.modules) {
       // Update audit context with current module

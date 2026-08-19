@@ -67,6 +67,7 @@
     "format": "eslint \"src/**/*.ts\" --fix"
   },
   "csdxConfig": {
+    "showConsoleLogs": true,
     "shortCommandName": {
       "tsgen": "TSGEN"
     }

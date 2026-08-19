@@ -1,6 +1,6 @@
 import { resolve as pResolve } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { FsUtility, log, CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { FsUtility, log, CLIProgressManager } from '@contentstack/cli-utilities';
 
 import type { CSAssetsAPIConfig } from '../types/cs-assets-api';
 import type { ExportContext } from '../types/export-types';
@@ -48,9 +48,7 @@ export class CSAssetsExportAdapter extends CSAssetsAdapter {
       this.progressManager = this.parentProgressManager;
       return this.parentProgressManager;
     }
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(moduleName);
     return this.progressManager;
   }
 

@@ -1,7 +1,7 @@
 import { log, fsUtil } from '../../utils';
 import { ApiOptions, CustomPromiseHandler, EnvType, ImportConfig, ModuleClassParams } from '../../types';
 import { chunk, entries, isEmpty, isEqual, last } from 'lodash';
-import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager } from '@contentstack/cli-utilities';
 
 export default class BaseImportSetup {
   public config: ImportConfig;
@@ -214,9 +214,7 @@ export default class BaseImportSetup {
    */
   protected createSimpleProgress(moduleName: string, total?: number): CLIProgressManager {
     this.currentModuleName = moduleName;
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createSimple(moduleName, total, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createSimple(moduleName, total);
     return this.progressManager;
   }
 
@@ -225,9 +223,7 @@ export default class BaseImportSetup {
    */
   protected createNestedProgress(moduleName: string): CLIProgressManager {
     this.currentModuleName = moduleName;
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(moduleName);
     return this.progressManager;
   }
 
@@ -243,13 +239,6 @@ export default class BaseImportSetup {
    * Show a loading spinner before initializing progress
    */
   protected async withLoadingSpinner<T>(message: string, action: () => Promise<T>): Promise<T> {
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-
-    if (showConsoleLogs) {
-      // If console logs are enabled, don't show spinner, just execute the action
-      return await action();
-    }
     return await CLIProgressManager.withLoadingSpinner(message, action);
   }
 }

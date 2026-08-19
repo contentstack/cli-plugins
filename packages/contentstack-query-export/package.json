@@ -87,6 +87,7 @@
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-query-export/<%- commandPath %>"
   },
   "csdxConfig": {
+    "showConsoleLogs": true,
     "shortCommandName": {
       "cm:stacks:export-query": "EXPRTQRY",
       "cm:export:query": "EXPRTQRY"

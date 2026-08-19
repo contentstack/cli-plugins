@@ -1,7 +1,7 @@
 import { join, resolve as pResolve } from 'node:path';
 import { mkdirSync, readdirSync, statSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
-import { log, CLIProgressManager, configHandler, handleAndLogError } from '@contentstack/cli-utilities';
+import { log, CLIProgressManager, handleAndLogError } from '@contentstack/cli-utilities';
 
 import type {
   CSAssetsAPIConfig,
@@ -231,9 +231,7 @@ export class ImportSpaces {
       this.progressManager = this.parentProgressManager;
       return this.parentProgressManager;
     }
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(CS_ASSETS_MAIN_PROCESS_NAME);
     return this.progressManager;
   }
 }
