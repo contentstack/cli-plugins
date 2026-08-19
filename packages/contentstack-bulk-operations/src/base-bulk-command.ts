@@ -11,6 +11,7 @@ import {
   getChalk,
   loadChalk,
   CLIProgressManager,
+  isConsoleLogEnabled,
 } from '@contentstack/cli-utilities';
 
 import config from './config';
@@ -656,13 +657,12 @@ export abstract class BaseBulkCommand extends Command {
     // For other errors, use the CLI utilities error handler
     handleAndLogError(error);
 
-    // handleAndLogError only reaches the console when log.showConsoleLogs is enabled
+    // handleAndLogError only reaches the console when the console-log policy is enabled
     // (the winston error transport is silenced otherwise), so a failure would leave the
     // terminal completely silent when the user has console logs turned off. Print a
     // user-facing error line here to fill that gap, guarded so we don't double-print when
     // console logs are on and handleAndLogError already emitted the error.
-    const showConsoleLogs = Boolean(configHandler.get('log')?.showConsoleLogs);
-    if (!showConsoleLogs) {
+    if (!isConsoleLogEnabled()) {
       const errorMessage = cliErrorHandler.classifyError(error)?.message || error?.message || 'Unknown error';
       cliux.print(`Error: ${errorMessage}`, { color: 'red' });
     }
