@@ -1,7 +1,7 @@
 import Bluebird from 'bluebird';
 import * as url from 'url';
 import * as path from 'path';
-import { ContentstackClient, managementSDKClient, validateRegex, log } from '@contentstack/cli-utilities';
+import { ContentstackClient, managementSDKClient, log } from '@contentstack/cli-utilities';
 import { ImportConfig } from '../types';
 const debug = require('debug')('util:requests');
 let _ = require('lodash');
@@ -10,7 +10,8 @@ let helper = require('./file-helper');
 
 const MAX_RETRY_LIMIT = 5;
 
-const escapeRegExp = (str: string) => str.replace(/[*+?^${}()|[\]\\]/g, '\\$&');
+// escapes a value the way it appears inside a JSON string, without the surrounding quotes
+const jsonEscape = (str: string) => JSON.stringify(str).slice(1, -1);
 
 function validate(req: any) {
   if (typeof req !== 'object') {
@@ -293,9 +294,17 @@ export const lookupAssets = function (
   assetUids.forEach(function (assetUid: any) {
     let uid = mappedAssetUids[assetUid];
     if (typeof uid !== 'undefined') {
-      const escapedAssetUid = assetUid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      entry = entry.split(escapedAssetUid).join(uid);
-      matchedUids.push(assetUid);
+      // split() matches literally, so the UID must not be regex-escaped. It does need JSON
+      // escaping though, since the search runs on the serialized entry (a UID containing a
+      // backslash or a quote appears escaped there).
+      const updatedEntry = entry.split(jsonEscape(assetUid)).join(jsonEscape(uid));
+      if (updatedEntry !== entry) {
+        entry = updatedEntry;
+        matchedUids.push(assetUid);
+      } else {
+        log.debug(`Asset UID ${assetUid} had a mapping but no occurrence in entry ${data.entry?.uid}`);
+        unmatchedUids.push(assetUid);
+      }
     } else {
       unmatchedUids.push(assetUid);
     }
