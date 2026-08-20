@@ -74,10 +74,8 @@ export default class Bootstrap {
       cliux.loader();
     } catch (error) {
       cliux.loader();
-      if (error instanceof GithubError) {
-        if (error.status === 404) {
-          cliux.error(messageHandler.parse('CLI_BOOTSTRAP_REPO_NOT_FOUND', this.appConfig.source));
-        }
+      if (error instanceof GithubError && error.status === 404) {
+        throw new Error(messageHandler.parse('CLI_BOOTSTRAP_APP_UNAVAILABLE', this.appConfig.source));
       }
       throw error;
     }
