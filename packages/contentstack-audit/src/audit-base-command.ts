@@ -155,16 +155,26 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       !isEmpty(missingScanStatusAssets) ||
       !isEmpty(missingAssetRefsInEntries)
     ) {
-      if (this.currentCommand === 'cm:stacks:audit') {
-        log.warn(this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath }), this.auditContext);
-      } else {
-        log.warn(
-          this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath }),
-          this.auditContext,
-        );
+      const pathMessage =
+        this.currentCommand === 'cm:stacks:audit'
+          ? this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath })
+          : this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath });
+
+      log.warn(pathMessage, this.auditContext);
+
+      // The Console transport is suppressed for every level when the console-log policy
+      // is off, so this warn never reaches the terminal. The report / fixed-content path
+      // is the command's deliverable, so print it directly when the policy is off.
+      if (!isConsoleLogEnabled()) {
+        cliux.print(pathMessage);
       }
     } else {
       log.info(this.messages.NO_MISSING_REF_FOUND, this.auditContext);
+
+      // Same reason as above: without this a clean audit prints nothing but a blank line.
+      if (!isConsoleLogEnabled()) {
+        cliux.print(this.messages.NO_MISSING_REF_FOUND);
+      }
       cliux.print('');
 
       if (

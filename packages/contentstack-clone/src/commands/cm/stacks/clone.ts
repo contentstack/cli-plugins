@@ -4,6 +4,7 @@ import {
   configHandler,
   flags,
   isAuthenticated,
+  isConsoleLogEnabled,
   managementSDKClient,
   log,
   handleAndLogError,
@@ -265,6 +266,13 @@ Use this plugin to automate the process of cloning a stack in few steps.
         log.debug('Starting clone operation', cloneContext);
         cloneHandler.execute().catch((error: any) => {
           handleAndLogError(error, cloneContext as any);
+          // Fire-and-forget: this rejection never reaches the outer try/catch below, so with
+          // no console surface a failed clone ends with the nested export/import bars still
+          // reading as success. Every ora spinner is stopped before its promise rejects, so
+          // nothing is rendering here.
+          if (!isConsoleLogEnabled()) {
+            cliux.error(`Stack clone command failed: ${error?.message || String(error)}`);
+          }
         });
       };
 
@@ -273,7 +281,11 @@ Use this plugin to automate the process of cloning a stack in few steps.
           if (isAuthenticated()) {
             handleClone();
           } else {
-            log.error('Log in to execute this command,csdx auth:login', this.createCloneContext('unknown'));
+            const loginMessage = 'Log in to execute this command,csdx auth:login';
+            log.error(loginMessage, this.createCloneContext('unknown'));
+            // The Console transport is suppressed for every level when the console-log policy
+            // is off, so this exits with nothing on screen at all.
+            if (!isConsoleLogEnabled()) cliux.error(loginMessage);
             this.exit(1);
           }
         } else {
@@ -282,7 +294,9 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } else if (isAuthenticated()) {
         handleClone();
       } else {
-        log.error('Please login to execute this command, csdx auth:login', this.createCloneContext('unknown'));
+        const loginMessage = 'Please login to execute this command, csdx auth:login';
+        log.error(loginMessage, this.createCloneContext('unknown'));
+        if (!isConsoleLogEnabled()) cliux.error(loginMessage);
         this.exit(1);
       }
     } catch (error: any) {
@@ -292,6 +306,18 @@ Use this plugin to automate the process of cloning a stack in few steps.
           ...this.createCloneContext('unknown'),
           error: error?.message || error,
         });
+
+        // `this.exit(1)` above throws an oclif ExitError straight into this catch, so a
+        // deliberate exit must not stack a failure banner on top of the message that caused
+        // it — the not-logged-in paths already said what is wrong. Still recorded in the log.
+        const isDeliberateExit = error?.code === 'EEXIT' || error?.oclif?.exit !== undefined;
+
+        // The reason lives in the log context, not the message, so print both or the user
+        // gets a failure with nothing diagnostic.
+        if (!isConsoleLogEnabled() && !isDeliberateExit) {
+          const reason = error?.message || String(error);
+          cliux.error(reason ? `Stack clone command failed: ${reason}` : 'Stack clone command failed');
+        }
       }
     }
   }

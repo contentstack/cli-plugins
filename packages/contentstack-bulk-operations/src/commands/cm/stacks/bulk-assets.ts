@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { flags, handleAndLogError, log, FlagInput } from '@contentstack/cli-utilities';
+import { flags, handleAndLogError, log, FlagInput, cliux, isConsoleLogEnabled } from '@contentstack/cli-utilities';
 
 import { AssetPublishData, BulkOperationResult, ResourceType, OperationType, CsAssetsFlags } from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
@@ -225,7 +225,11 @@ export default class BulkAssets extends BaseBulkCommand {
         });
 
         if (publishable.length === 0) {
-          this.logger.warn($t(messages.NO_PUBLISHABLE_ASSETS));
+          // The dashboard above now reaches the terminal, so without this the user reads
+          // "will publish: 0" and gets no explanation before the command exits 0.
+          const noPublishable = $t(messages.NO_PUBLISHABLE_ASSETS);
+          this.logger.warn(noPublishable);
+          if (!isConsoleLogEnabled()) cliux.print(noPublishable);
           return;
         }
       } else {
@@ -293,19 +297,29 @@ export default class BulkAssets extends BaseBulkCommand {
     });
 
     if (cleanCount === 0) {
-      this.logger.warn($t(messages.NO_PUBLISHABLE_ASSETS));
+      const noPublishable = $t(messages.NO_PUBLISHABLE_ASSETS);
+      this.logger.warn(noPublishable);
+      // The Console transport is suppressed for every level when the console-log policy is
+      // off, so log.* alone leaves the user with no acknowledgement at all. No bar is live
+      // here — this is pre-flight, bars start in recordModuleSummary.
+      if (!isConsoleLogEnabled()) cliux.print(noPublishable);
       return;
     }
 
     // new Array(n) has .length === n but allocates no elements — just for the count.
     const confirmed = await this.confirmOperation(new Array(cleanCount));
     if (!confirmed) {
-      this.logger.warn($t(messages.OPERATION_CANCELLED));
+      const cancelled = $t(messages.OPERATION_CANCELLED);
+      this.logger.warn(cancelled);
+      if (!isConsoleLogEnabled()) cliux.print(cancelled);
       return;
     }
 
     if (dryRun) {
-      log.info($t(messages.DATA_DIR_DRY_RUN));
+      const dryRunMessage = $t(messages.DATA_DIR_DRY_RUN);
+      log.info(dryRunMessage);
+      // Without this, --dry-run prints nothing at all and exits 0.
+      if (!isConsoleLogEnabled()) cliux.print(dryRunMessage);
       return;
     }
 
@@ -442,23 +456,38 @@ export default class BulkAssets extends BaseBulkCommand {
     const { total, clean, pending, quarantined, localSkipped, unmapped } = opts;
     const SEP = '─'.repeat(42);
 
-    log.info('');
-    log.info(`  ${messages.DATA_DIR_ASSET_SCANNING_HEADER}`);
-    log.info('  ' + SEP);
-    log.info(`  ${messages.DATA_DIR_TOTAL.padEnd(38)} ${total}`);
+    // Built as (level, text) pairs rather than emitted inline: this report is the command's
+    // pre-flight deliverable, and the Console transport is suppressed for every level when
+    // the console-log policy is off, so the whole table would render nowhere. The file record
+    // keeps its per-line levels; stdout gets the same lines in the same order.
+    const rows: Array<{ level: 'info' | 'warn'; text: string }> = [];
+    rows.push({ level: 'info', text: '' });
+    rows.push({ level: 'info', text: `  ${messages.DATA_DIR_ASSET_SCANNING_HEADER}` });
+    rows.push({ level: 'info', text: '  ' + SEP });
+    rows.push({ level: 'info', text: `  ${messages.DATA_DIR_TOTAL.padEnd(38)} ${total}` });
     if (localSkipped !== undefined) {
-      log.warn(`  ${messages.DATA_DIR_NO_PUBLISH_DETAILS.padEnd(38)} ${localSkipped}`);
+      rows.push({ level: 'warn', text: `  ${messages.DATA_DIR_NO_PUBLISH_DETAILS.padEnd(38)} ${localSkipped}` });
     }
     if (unmapped !== undefined) {
-      log.warn(`  ${messages.DATA_DIR_UNMAPPED.padEnd(38)} ${unmapped}`);
+      rows.push({ level: 'warn', text: `  ${messages.DATA_DIR_UNMAPPED.padEnd(38)} ${unmapped}` });
     }
-    log.info('  ' + SEP);
-    log.info(`  ${messages.SCAN_STATUS_CLEAN.padEnd(38)} ${clean}`);
-    if (pending > 0) log.warn(`  ${messages.SCAN_STATUS_PENDING.padEnd(38)} ${pending}`);
-    if (quarantined > 0) log.warn(`  ${messages.SCAN_STATUS_QUARANTINED.padEnd(38)} ${quarantined}`);
-    log.info('  ' + SEP);
-    log.info(`  ${messages.DATA_DIR_WILL_PUBLISH.padEnd(38)} ${clean}`);
-    log.info('');
+    rows.push({ level: 'info', text: '  ' + SEP });
+    rows.push({ level: 'info', text: `  ${messages.SCAN_STATUS_CLEAN.padEnd(38)} ${clean}` });
+    if (pending > 0) rows.push({ level: 'warn', text: `  ${messages.SCAN_STATUS_PENDING.padEnd(38)} ${pending}` });
+    if (quarantined > 0) {
+      rows.push({ level: 'warn', text: `  ${messages.SCAN_STATUS_QUARANTINED.padEnd(38)} ${quarantined}` });
+    }
+    rows.push({ level: 'info', text: '  ' + SEP });
+    rows.push({ level: 'info', text: `  ${messages.DATA_DIR_WILL_PUBLISH.padEnd(38)} ${clean}` });
+    rows.push({ level: 'info', text: '' });
+
+    for (const row of rows) log[row.level](row.text);
+
+    // Safe here: both call sites are pre-flight (before confirmOperation / streamAndPublish),
+    // so no CLIProgressManager bar is live.
+    if (!isConsoleLogEnabled()) {
+      for (const row of rows) cliux.print(row.text);
+    }
   }
 
   protected async fetchItems(): Promise<any[]> {

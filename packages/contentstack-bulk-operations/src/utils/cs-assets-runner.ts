@@ -1,7 +1,14 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
-import { log, createLogContext, cliux, handleAndLogError, authenticationHandler } from '@contentstack/cli-utilities';
+import {
+  log,
+  createLogContext,
+  cliux,
+  handleAndLogError,
+  authenticationHandler,
+  isConsoleLogEnabled,
+} from '@contentstack/cli-utilities';
 
 import messages, { $t } from '../messages';
 import { CsAssetsService } from '../services';
@@ -51,43 +58,57 @@ function printCsAssetsSummary(
   loggerContext: { module: string }
 ): void {
   if (opts.error) {
-    log.error($t(messages.CS_ASSETS_OPERATION_FAILED, { operation: op }), loggerContext);
-    log.error(opts.error, loggerContext);
+    const failureLines = [$t(messages.CS_ASSETS_OPERATION_FAILED, { operation: op }), opts.error];
+    for (const line of failureLines) log.error(line, loggerContext);
+    // A total failure exits 1; without this it does so against a blank terminal.
+    if (!isConsoleLogEnabled()) {
+      for (const line of failureLines) cliux.error(line);
+    }
     return;
   }
 
+  // This report is the command's entire result — the job IDs and status URL are the only
+  // way to follow an async delete. The Console transport is suppressed for every level when
+  // the console-log policy is off, so the lines are collected and mirrored to stdout below.
+  // Safe here: nothing in the CS Assets path touches CLIProgressManager, so no bar is live.
+  const lines: string[] = [];
+
   if (op === 'delete') {
     const jobIds = opts.jobIds?.length ? opts.jobIds : opts.jobId ? [opts.jobId] : [];
-    log.success($t(messages.CS_ASSETS_DELETE_SUCCESS), loggerContext);
+    lines.push($t(messages.CS_ASSETS_DELETE_SUCCESS));
     // Delete is async: a submitted job is not a completed deletion. Say so, and point at the status URL.
-    log.info($t(messages.CS_ASSETS_DELETE_JOBS_SUBMITTED, { count: jobIds.length }), loggerContext);
+    lines.push($t(messages.CS_ASSETS_DELETE_JOBS_SUBMITTED, { count: jobIds.length }));
     for (const jobId of jobIds) {
-      log.info($t(messages.CS_ASSETS_DELETE_JOB_ID, { jobId }), loggerContext);
+      lines.push($t(messages.CS_ASSETS_DELETE_JOB_ID, { jobId }));
     }
   } else {
-    log.success($t(messages.CS_ASSETS_MOVE_SUCCESS), loggerContext);
+    lines.push($t(messages.CS_ASSETS_MOVE_SUCCESS));
     if (opts.count !== undefined && opts.folderUid) {
-      log.info(
-        $t(messages.CS_ASSETS_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }),
-        loggerContext
-      );
+      lines.push($t(messages.CS_ASSETS_MOVE_ASSETS_COUNT, { count: opts.count, folderUid: opts.folderUid }));
     }
   }
 
   const batchesTotal = opts.batchesTotal ?? 0;
   if (batchesTotal > 1) {
-    log.info(
+    lines.push(
       $t(messages.CS_ASSETS_BATCH_SUMMARY, {
         batchesTotal,
         batchesSucceeded: opts.batchesSucceeded ?? batchesTotal,
-      }),
-      loggerContext
+      })
     );
   }
 
   const statusUrl = generateCsAssetsJobStatusUrl(opts.spaceUid);
-  if (statusUrl) log.info(statusUrl, loggerContext);
-  if (opts.notice) log.info(opts.notice, loggerContext);
+  if (statusUrl) lines.push(statusUrl);
+  if (opts.notice) lines.push(opts.notice);
+
+  // The first line is the operation's outcome, the rest are detail — same levels as before.
+  log.success(lines[0], loggerContext);
+  for (const line of lines.slice(1)) log.info(line, loggerContext);
+
+  if (!isConsoleLogEnabled()) {
+    for (const line of lines) cliux.print(line);
+  }
 }
 
 /**
@@ -132,25 +153,32 @@ function printCsAssetsPartialFailure(
   result: CsAssetsBulkOperationResult,
   loggerContext: { module: string }
 ): void {
-  log.warn(
-    $t(messages.CS_ASSETS_PARTIAL_FAILURE, {
-      operation: op,
-      batchesFailed: result.batchesFailed ?? result.failures?.length ?? 0,
-      batchesTotal: result.batchesTotal ?? 0,
-    }),
-    loggerContext
+  const partialFailure = $t(messages.CS_ASSETS_PARTIAL_FAILURE, {
+    operation: op,
+    batchesFailed: result.batchesFailed ?? result.failures?.length ?? 0,
+    batchesTotal: result.batchesTotal ?? 0,
+  });
+  log.warn(partialFailure, loggerContext);
+
+  const failedBatches = (result.failures ?? []).map((f) =>
+    $t(messages.CS_ASSETS_FAILED_BATCH, { batchIndex: f.batchIndex, count: f.count, error: f.error })
   );
-  for (const f of result.failures ?? []) {
-    log.error(
-      $t(messages.CS_ASSETS_FAILED_BATCH, { batchIndex: f.batchIndex, count: f.count, error: f.error }),
-      loggerContext
-    );
-  }
+  for (const line of failedBatches) log.error(line, loggerContext);
 
   const failedFile = writeFailedUidsFile(op, result, loggerContext);
+  const recoveryLines: string[] = [];
   if (failedFile) {
-    log.info($t(messages.CS_ASSETS_FAILED_UIDS_WRITTEN, { operation: op, path: failedFile }), loggerContext);
-    log.info($t(messages.CS_ASSETS_RETRY_HINT, { operation: op, path: failedFile }), loggerContext);
+    recoveryLines.push($t(messages.CS_ASSETS_FAILED_UIDS_WRITTEN, { operation: op, path: failedFile }));
+    recoveryLines.push($t(messages.CS_ASSETS_RETRY_HINT, { operation: op, path: failedFile }));
+  }
+  for (const line of recoveryLines) log.info(line, loggerContext);
+
+  // Same reason as printCsAssetsSummary: these are the recovery instructions, and without a
+  // console surface the user is told neither that batches failed nor where the retry file is.
+  if (!isConsoleLogEnabled()) {
+    cliux.print(partialFailure);
+    for (const line of failedBatches) cliux.error(line);
+    for (const line of recoveryLines) cliux.print(line);
   }
 }
 
