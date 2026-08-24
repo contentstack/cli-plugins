@@ -4,7 +4,7 @@
   "CLI_BOOTSTRAP_GITHUB_ACCESS_NOT_FOUND": "No Github access token found",
   "CLI_BOOTSTRAP_START_CLONE_APP": "Cloning the selected app",
   "CLI_BOOTSTRAP_REPO_NOT_FOUND": "Unable to find a repo for \"%s\"",
-  "CLI_BOOTSTRAP_APP_UNAVAILABLE": "Unable to download \"%s\": branch \"cli-use\" not found. Ensure the branch exists on the GitHub repository.",
+  "CLI_BOOTSTRAP_APP_UNAVAILABLE": "Unable to download \"%s\": the repository or branch \"cli-use\" was not found. Ensure both exist on GitHub.",
   "CLI_BOOTSTRAP_GITHUB_SERVER_ERROR": "Failed to download \"%s\": GitHub returned HTTP %s. Please try again later.",
   "CLI_BOOTSTRAP_NO_API_KEY_FOUND": "No API key generated for the stack",
   "CLI_BOOTSTRAP_STACK_CREATION_FAILED": "Unable to create stack for content \"%s\"",

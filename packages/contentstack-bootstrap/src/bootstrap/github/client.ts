@@ -75,7 +75,7 @@ export default class GitHubClient {
 
     const response = await HttpClient.create().options(options).get(url);
 
-    if (response.status >= 400) {
+    if (response.status < 200 || response.status >= 400) {
       const message = response.status === 404
         ? messageHandler.parse('CLI_BOOTSTRAP_REPO_NOT_FOUND', `${this.repo.user}/${this.repo.name}`)
         : messageHandler.parse('CLI_BOOTSTRAP_GITHUB_SERVER_ERROR', `${this.repo.user}/${this.repo.name}`, response.status);
