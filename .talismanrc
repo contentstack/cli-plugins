@@ -1,4 +1,6 @@
 fileignoreconfig:
+- filename: packages/contentstack-cli-tsgen/src/lib/helper.ts
+  checksum: cc2f88294ca026c29ca44ee7f9994ebc64e56d9a7a015c64070aaf271f1c3ba2
 - filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/environments/environments.json
   checksum: fe82c708f5f4d0b05694a601855fb7950661048eef8d7f9f794713e3a665064e
 - filename: packages/contentstack-audit/test/unit/mock/am-contents/environments/environments.json
