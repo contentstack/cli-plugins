@@ -149,25 +149,62 @@ export const lookupAssets = function (
 
   function findAssetIdsFromJsonCustomFields(entryObj: any, ctSchema: any) {
     log.debug('Processing JSON custom fields for asset references');
-    ctSchema.map((row: any) => {
-      if (row.data_type === 'json') {
-        if (entryObj[row.uid] && row.field_metadata.extension && row.field_metadata.is_asset) {
-          if (installedExtensions && installedExtensions[row.extension_uid]) {
-            log.debug(`Mapping extension UID in custom field: ${row.extension_uid}`);
-            row.extension_uid = installedExtensions[row.extension_uid];
-          }
+    // NOTE: image-preset (and other is_asset custom-field) values carry a stack-scoped
+    // `metadata.extension_uid` inside the entry DATA. This must be remapped to the destination
+    // app's extension_uid, otherwise the reference is orphaned in the destination (and a later
+    // audit strips it as a missing reference -> silent data loss). These fields can be nested
+    // inside group / global_field / blocks, so walk the schema and entry data recursively rather
+    // than only the top level.
+    remapJsonCustomFieldExtensionUids(ctSchema, entryObj);
+  }
 
-          if (entryObj[row.uid].metadata && entryObj[row.uid].metadata.extension_uid) {
-            if (installedExtensions && installedExtensions[entryObj[row.uid].metadata.extension_uid]) {
-              log.debug(`Mapping metadata extension UID: ${entryObj[row.uid].metadata.extension_uid}`);
-              entryObj[row.uid].metadata.extension_uid = installedExtensions[entryObj[row.uid].metadata.extension_uid];
+  // Recursively remap `metadata.extension_uid` (and the schema field's extension_uid) for
+  // is_asset JSON custom fields, following the entry-data shape through group / global_field /
+  // blocks and multiple-valued fields.
+  function remapJsonCustomFieldExtensionUids(schema: any[], dataNode: any) {
+    if (!Array.isArray(schema) || !dataNode || typeof dataNode !== 'object') return;
+    // A `multiple: true` group/field is stored as an array of nodes.
+    const dataNodes = Array.isArray(dataNode) ? dataNode : [dataNode];
+
+    for (const node of dataNodes) {
+      if (!node || typeof node !== 'object') continue;
+
+      for (const field of schema) {
+        const { uid, data_type } = field || {};
+        if (!uid) continue;
+        const value = node[uid];
+        if (value === undefined || value === null) continue;
+
+        if (data_type === 'json' && field.field_metadata?.extension && field.field_metadata?.is_asset) {
+          // Remap the schema field's extension_uid (parity with previous behavior).
+          if (installedExtensions && installedExtensions[field.extension_uid]) {
+            log.debug(`Mapping extension UID in custom field: ${field.extension_uid}`);
+            field.extension_uid = installedExtensions[field.extension_uid];
+          }
+          // Remap the entry-data metadata.extension_uid for each value (single or multiple).
+          const values = Array.isArray(value) ? value : [value];
+          for (const val of values) {
+            const currentUid = val?.metadata?.extension_uid;
+            if (currentUid && installedExtensions && installedExtensions[currentUid]) {
+              log.debug(`Mapping metadata extension UID: ${currentUid} -> ${installedExtensions[currentUid]}`);
+              val.metadata.extension_uid = installedExtensions[currentUid];
+            }
+          }
+        } else if (data_type === 'group' || data_type === 'global_field') {
+          remapJsonCustomFieldExtensionUids(field.schema, value);
+        } else if (data_type === 'blocks' && Array.isArray(field.blocks)) {
+          const blockInstances = Array.isArray(value) ? value : [value];
+          for (const blockInstance of blockInstances) {
+            if (!blockInstance || typeof blockInstance !== 'object') continue;
+            for (const blockDef of field.blocks) {
+              if (blockDef?.uid && blockInstance[blockDef.uid] && blockDef.schema) {
+                remapJsonCustomFieldExtensionUids(blockDef.schema, blockInstance[blockDef.uid]);
+              }
             }
           }
         }
       }
-
-      return row;
-    });
+    }
   }
 
   function findAssetIdsFromHtmlRte(entryObj: any, ctSchema: any) {
