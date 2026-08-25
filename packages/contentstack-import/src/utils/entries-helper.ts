@@ -603,13 +603,9 @@ export const restoreJsonRteEntryRefs = (
             if (sourceStackEntry[element.uid].indexOf(uid) !== -1) return uid;
           });
           if (element.multiple && Array.isArray(entry[element.uid])) {
-            for (let i = 0; i < matches.length; i++) {
-              entry[element.uid] = entry[element.uid].map((el: string) => updateUids(el, matches[i], uidMapper));
-            }
+            entry[element.uid] = entry[element.uid].map((el: string) => updateUids(el, matches, uidMapper));
           } else {
-            for (let i = 0; i < matches.length; i++) {
-              entry[element.uid] = updateUids(entry[element.uid], matches[i], uidMapper);
-            }
+            entry[element.uid] = updateUids(entry[element.uid], matches, uidMapper);
           }
         }
         break;
@@ -619,10 +615,12 @@ export const restoreJsonRteEntryRefs = (
   return entry;
 };
 
-function updateUids(str: string, match: string, uidMapper: Record<string, string>) {
-  const sanitizedMatch = escapeRegExp(match);
-  const replacement = uidMapper[match] ?? sanitizedMatch;
-  return str.split(sanitizedMatch).join(replacement);
+function updateUids(str: string, matches: string[], uidMapper: Record<string, string>) {
+  if (!matches.length) return str;
+  // longest-first so a UID that's a prefix of another (entry.1 vs entry.10) never wins the match;
+  // single regex pass so a replacement value can never itself get re-scanned/re-replaced
+  const pattern = [...matches].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|');
+  return str.replace(new RegExp(pattern, 'g'), (match) => uidMapper[match] ?? match);
 }
 
 function setDirtyTrue(jsonRteChild: any) {

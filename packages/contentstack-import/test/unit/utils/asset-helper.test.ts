@@ -426,6 +426,117 @@ describe('Asset Helper', () => {
       expect(result).to.exist;
     });
 
+    it('should remap JSON RTE asset UIDs containing regex special characters', () => {
+      const data = {
+        entry: {
+          uid: 'entry1',
+          json_rte: {
+            children: [
+              {
+                type: 'reference',
+                attrs: {
+                  type: 'asset',
+                  'asset-uid': 'safe_6.0_big_picture_sorrento_web',
+                  'asset-link': '/assets/safe_6.0_big_picture_sorrento_web'
+                },
+                children: [] as any
+              }
+            ]
+          }
+        },
+        content_type: {
+          uid: 'ct1',
+          schema: [
+            {
+              uid: 'json_rte',
+              data_type: 'json',
+              field_metadata: { rich_text_type: true }
+            }
+          ]
+        }
+      };
+      const mappedAssetUids = { 'safe_6.0_big_picture_sorrento_web': 'bltNewAssetUid' };
+
+      const result = lookupAssets(data, mappedAssetUids, {}, '/test/mapper', []);
+
+      expect(JSON.stringify(result)).to.not.include('safe_6.0_big_picture_sorrento_web');
+      expect(JSON.stringify(result)).to.include('bltNewAssetUid');
+    });
+
+    it('should remap asset UIDs for every regex special character', () => {
+      const specialCharUids = [
+        'asset.1',
+        'asset*1',
+        'asset+1',
+        'asset?1',
+        'asset^1',
+        'asset$1',
+        'asset{1}',
+        'asset(1)',
+        'asset|1',
+        'asset[1]',
+        'asset\\1'
+      ];
+
+      specialCharUids.forEach((assetUid, index) => {
+        const mappedUid = `bltMapped${index}`;
+        const data = {
+          entry: {
+            uid: 'entry1',
+            json_rte: {
+              children: [
+                {
+                  type: 'reference',
+                  attrs: { type: 'asset', 'asset-uid': assetUid },
+                  children: [] as any
+                }
+              ]
+            }
+          },
+          content_type: {
+            uid: 'ct1',
+            schema: [
+              { uid: 'json_rte', data_type: 'json', field_metadata: { rich_text_type: true } }
+            ]
+          }
+        };
+
+        const result = lookupAssets(data, { [assetUid]: mappedUid }, {}, '/test/mapper', []);
+
+        expect(result.json_rte.children[0].attrs['asset-uid'], `failed for UID: ${assetUid}`).to.equal(mappedUid);
+      });
+    });
+
+    it('should record a special character asset UID as matched', () => {
+      const writeFileStub = fileHelper.writeFile as unknown as sinon.SinonStub;
+      const data = {
+        entry: {
+          uid: 'entry1',
+          json_rte: {
+            children: [
+              {
+                type: 'reference',
+                attrs: { type: 'asset', 'asset-uid': 'asset.with.dots' },
+                children: [] as any
+              }
+            ]
+          }
+        },
+        content_type: {
+          uid: 'ct1',
+          schema: [
+            { uid: 'json_rte', data_type: 'json', field_metadata: { rich_text_type: true } }
+          ]
+        }
+      };
+
+      lookupAssets(data, { 'asset.with.dots': 'bltNewAssetUid' }, {}, '/test/mapper', []);
+
+      const writtenPaths = writeFileStub.getCalls().map((call: any) => call.args[0]);
+      expect(writtenPaths.some((p: string) => p.includes('matched-asset-uids.json'))).to.be.true;
+      expect(writtenPaths.some((p: string) => p.includes('unmatched-asset-uids.json'))).to.be.false;
+    });
+
     it('should handle JSON custom fields with extensions', () => {
       const data = {
         entry: {

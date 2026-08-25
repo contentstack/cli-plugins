@@ -384,6 +384,110 @@ describe('Entries Helper', () => {
       expect(restoreJsonRteEntryRefs).to.be.a('function');
     });
 
+    it('should remap entry UIDs containing regex special characters in HTML RTE', () => {
+      const sourceUid = 'source.entry.1';
+      const ctSchema = [
+        { uid: 'html_rte_field', data_type: 'text', field_metadata: { rich_text_type: true } }
+      ];
+      const sourceStackEntry = {
+        html_rte_field: `<p>ref</p><span data-uid="${sourceUid}"></span>`
+      };
+      // non-empty: restoreJsonRteEntryRefs skips falsy fields before restoring from source
+      const entry = { html_rte_field: '<p></p>' };
+
+      const result = restoreJsonRteEntryRefs(entry, sourceStackEntry, ctSchema, {
+        uidMapper: { [sourceUid]: 'bltTargetEntry1' },
+        mappedAssetUids: {},
+        mappedAssetUrls: {}
+      });
+
+      expect(result.html_rte_field).to.not.include(sourceUid);
+      expect(result.html_rte_field).to.include('bltTargetEntry1');
+    });
+
+    it('should leave an unmapped special character entry UID untouched in HTML RTE', () => {
+      const sourceUid = 'source.entry.1';
+      const ctSchema = [
+        { uid: 'html_rte_field', data_type: 'text', field_metadata: { rich_text_type: true } }
+      ];
+      const sourceStackEntry = {
+        html_rte_field: `<span data-uid="${sourceUid}"></span>`
+      };
+      // non-empty: restoreJsonRteEntryRefs skips falsy fields before restoring from source
+      const entry = { html_rte_field: '<p></p>' };
+
+      const result = restoreJsonRteEntryRefs(entry, sourceStackEntry, ctSchema, {
+        uidMapper: { 'other.entry': 'bltOther' },
+        mappedAssetUids: {},
+        mappedAssetUrls: {}
+      });
+
+      // no mapping applies, so the field must come through byte-for-byte, with no escape characters injected
+      expect(result.html_rte_field).to.equal(sourceStackEntry.html_rte_field);
+    });
+
+    it('should not let a UID that is a prefix of another UID clobber the longer one in HTML RTE', () => {
+      const ctSchema = [
+        { uid: 'html_rte_field', data_type: 'text', field_metadata: { rich_text_type: true } }
+      ];
+      const sourceStackEntry = {
+        html_rte_field: '<span data-uid="entry.10"></span><span data-uid="entry.1"></span>'
+      };
+      const entry = { html_rte_field: '<p></p>' };
+
+      const result = restoreJsonRteEntryRefs(entry, sourceStackEntry, ctSchema, {
+        uidMapper: { 'entry.1': 'bltShort', 'entry.10': 'bltLong' },
+        mappedAssetUids: {},
+        mappedAssetUrls: {}
+      });
+
+      expect(result.html_rte_field).to.equal('<span data-uid="bltLong"></span><span data-uid="bltShort"></span>');
+    });
+
+    it('should remap regex-special-character entry UIDs in a multiple HTML RTE field', () => {
+      const sourceUid = 'source.entry.1';
+      const ctSchema = [
+        { uid: 'html_rte_field', data_type: 'text', field_metadata: { rich_text_type: true }, multiple: true }
+      ];
+      // array-branch matching is exact-element (Array.indexOf), not substring, so the mapped
+      // UID must be a whole array element here to be found
+      const sourceStackEntry = {
+        html_rte_field: [sourceUid, 'unrelated value']
+      };
+      const entry = { html_rte_field: ['placeholder'] };
+
+      const result = restoreJsonRteEntryRefs(entry, sourceStackEntry, ctSchema, {
+        uidMapper: { [sourceUid]: 'bltTargetEntry1' },
+        mappedAssetUids: {},
+        mappedAssetUrls: {}
+      });
+
+      expect(result.html_rte_field[0]).to.equal('bltTargetEntry1');
+      expect(result.html_rte_field[1]).to.equal('unrelated value');
+    });
+
+    it('should leave a UID embedded inside a larger string untouched in a multiple HTML RTE field', () => {
+      const sourceUid = 'source.entry.1';
+      const ctSchema = [
+        { uid: 'html_rte_field', data_type: 'text', field_metadata: { rich_text_type: true }, multiple: true }
+      ];
+      const sourceStackEntry = {
+        html_rte_field: [`<span data-uid="${sourceUid}"></span>`]
+      };
+      const entry = { html_rte_field: ['placeholder'] };
+
+      const result = restoreJsonRteEntryRefs(entry, sourceStackEntry, ctSchema, {
+        uidMapper: { [sourceUid]: 'bltTargetEntry1' },
+        mappedAssetUids: {},
+        mappedAssetUrls: {}
+      });
+
+      // known limitation, not touched by this fix: the multiple branch matches with
+      // Array.prototype.indexOf (exact element equality), so a UID embedded inside a larger
+      // string element is never found and the field passes through unchanged
+      expect(result.html_rte_field[0]).to.equal(sourceStackEntry.html_rte_field[0]);
+    });
+
     it('should restore entry references in JSON RTE', () => {
       const entry = JSON.parse(JSON.stringify(mockEntries.entryWithJsonRteReference));
       const sourceStackEntry = mockEntries.sourceStackEntryWithJsonRte;

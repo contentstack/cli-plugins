@@ -39,4 +39,6 @@ fileignoreconfig:
   checksum: a64a4d396eddd936a63b799eff58c5c6660b5dcaa3a310fd8b09a027932f1789
 - filename: packages/contentstack-migration/README.md
   checksum: e96006c1a948f766c88ae972b29582fa58eaf8184606bf011eebddc5a06cd7b6
+- filename: packages/contentstack-import/test/unit/utils/asset-helper.test.ts
+  checksum: da1d476d0a7aaaaee8a355571d85facc5f4de081ede40c13fd263df3bfb5c521
 version: ""
