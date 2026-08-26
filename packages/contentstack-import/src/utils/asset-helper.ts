@@ -153,23 +153,25 @@ export const lookupAssets = function (
 
   function findAssetIdsFromJsonCustomFields(entryObj: any, ctSchema: any) {
     log.debug('Processing JSON custom fields for asset references');
-    // Parity with previous behavior: remap the schema field's extension_uid for is_asset
-    // JSON custom fields present at this schema level. (Entry-data remap is handled
-    // schema-independently by remapEntryMetadataExtensionUids — see below.)
-    if (!Array.isArray(ctSchema)) return;
-    for (const row of ctSchema) {
-      if (
-        row?.data_type === 'json' &&
-        row?.field_metadata?.extension &&
-        row?.field_metadata?.is_asset &&
-        entryObj?.[row.uid] &&
-        installedExtensions &&
-        installedExtensions[row.extension_uid]
-      ) {
-        log.debug(`Mapping extension UID in custom field: ${row.extension_uid}`);
-        row.extension_uid = installedExtensions[row.extension_uid];
+    ctSchema.map((row: any) => {
+      if (row.data_type === 'json') {
+        if (entryObj[row.uid] && row.field_metadata.extension && row.field_metadata.is_asset) {
+          if (installedExtensions && installedExtensions[row.extension_uid]) {
+            log.debug(`Mapping extension UID in custom field: ${row.extension_uid}`);
+            row.extension_uid = installedExtensions[row.extension_uid];
+          }
+
+          if (entryObj[row.uid].metadata && entryObj[row.uid].metadata.extension_uid) {
+            if (installedExtensions && installedExtensions[entryObj[row.uid].metadata.extension_uid]) {
+              log.debug(`Mapping metadata extension UID: ${entryObj[row.uid].metadata.extension_uid}`);
+              entryObj[row.uid].metadata.extension_uid = installedExtensions[entryObj[row.uid].metadata.extension_uid];
+            }
+          }
+        }
       }
-    }
+
+      return row;
+    });
   }
 
   // Remap `metadata.extension_uid` anywhere in the entry DATA to the destination app's
