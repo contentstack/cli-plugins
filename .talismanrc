@@ -1,4 +1,5 @@
 fileignoreconfig:
+
 - filename: packages/contentstack-audit/test/unit/mock/am-contents-no-stack/environments/environments.json
   checksum: fe82c708f5f4d0b05694a601855fb7950661048eef8d7f9f794713e3a665064e
 - filename: packages/contentstack-audit/test/unit/mock/am-contents/environments/environments.json
@@ -39,4 +40,6 @@ fileignoreconfig:
   checksum: a64a4d396eddd936a63b799eff58c5c6660b5dcaa3a310fd8b09a027932f1789
 - filename: packages/contentstack-migration/README.md
   checksum: e96006c1a948f766c88ae972b29582fa58eaf8184606bf011eebddc5a06cd7b6
-version: ""
+- filename: packages/contentstack-import/src/import/modules/entries.ts
+  checksum: 53e8dfde4a9d434445c286ee294c5f5ea7c533e5c26539d6efd4c04293375e65
+  version: ""
