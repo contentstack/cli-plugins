@@ -543,7 +543,7 @@ describe('StackCloneCommand', () => {
         flags: mockFlags,
       });
       const configHandlerGetStub = sandbox.stub(cliUtilities.configHandler, 'get').returns(undefined);
-      const configHandlerSetStub = sandbox.stub(cliUtilities.configHandler, 'set');
+      sandbox.stub(cliUtilities.configHandler, 'set');
       const logStub = { error: sandbox.stub(), warn: sandbox.stub(), debug: sandbox.stub(), info: sandbox.stub() };
       sandbox.stub(cliUtilities, 'log').value(logStub);
       // exit(1) throws inside run()'s own try/catch which swallows it — stub cleanUp to
@@ -557,8 +557,6 @@ describe('StackCloneCommand', () => {
       expect(exitStub.calledOnce).to.be.true;
       expect(logStub.error.called).to.be.true;
       expect(logStub.error.firstCall.args[0]).to.include('Please login');
-      // progressSupportedModule must NOT be set when auth fails
-      expect(configHandlerSetStub.calledWith('log.progressSupportedModule', 'clone')).to.be.false;
     });
 
     it('should exit when management token aliases provided but not authenticated and branches provided', async () => {
@@ -571,7 +569,7 @@ describe('StackCloneCommand', () => {
         },
       });
       const configHandlerGetStub = sandbox.stub(cliUtilities.configHandler, 'get').returns(undefined);
-      const configHandlerSetStub = sandbox.stub(cliUtilities.configHandler, 'set');
+      sandbox.stub(cliUtilities.configHandler, 'set');
       const logStub = { error: sandbox.stub(), warn: sandbox.stub(), debug: sandbox.stub(), info: sandbox.stub() };
       sandbox.stub(cliUtilities, 'log').value(logStub);
       const cleanUpStub = sandbox.stub(command, 'cleanUp').resolves();
@@ -583,8 +581,6 @@ describe('StackCloneCommand', () => {
       expect(exitStub.calledOnce).to.be.true;
       expect(logStub.error.called).to.be.true;
       expect(logStub.error.firstCall.args[0]).to.include('Log in');
-      // progressSupportedModule must NOT be set when auth fails
-      expect(configHandlerSetStub.calledWith('log.progressSupportedModule', 'clone')).to.be.false;
     });
 
     it('should handle run error and cleanup', async () => {
@@ -794,7 +790,7 @@ describe('StackCloneCommand', () => {
           'destination-management-token-alias': 'dest-alias',
         },
       });
-      const configHandlerSetStub = sandbox.stub(cliUtilities.configHandler, 'set');
+      sandbox.stub(cliUtilities.configHandler, 'set');
       const configHandlerStub = sandbox.stub(cliUtilities.configHandler, 'get');
       // Stub authorisationType to 'OAUTH' to make isAuthenticated() return true
       configHandlerStub.callsFake((key: string) => {
@@ -836,8 +832,6 @@ describe('StackCloneCommand', () => {
       expect(cloneHandlerExecuteStub.calledOnce).to.be.true;
       // Verify all config flags were set
       expect(logStub.debug.called).to.be.true;
-      // progressSupportedModule must be set inside handleClone (after auth passes)
-      expect(configHandlerSetStub.calledWith('log.progressSupportedModule', 'clone')).to.be.true;
     });
 
     it('should handle CloneHandler.execute error (covers line 263)', async () => {

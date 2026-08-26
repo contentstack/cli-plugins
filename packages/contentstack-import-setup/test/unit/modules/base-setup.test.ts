@@ -3,7 +3,11 @@ import { stub, restore, SinonStub } from 'sinon';
 import BaseImportSetup from '../../../src/import/modules/base-setup';
 import * as loggerModule from '../../../src/utils/logger';
 import { ImportConfig } from '../../../src/types';
-import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager } from '@contentstack/cli-utilities';
+import {
+  setConsoleLogPolicy,
+  resetConsoleLogPolicy,
+} from '@contentstack/cli-utilities/lib/logger/console-policy';
 
 describe('BaseImportSetup', () => {
   let baseSetup: BaseImportSetup;
@@ -122,7 +126,6 @@ describe('BaseImportSetup', () => {
   });
 
   describe('Progress Manager', () => {
-    let configHandlerGetStub: SinonStub;
     let createSimpleStub: SinonStub;
     let createNestedStub: SinonStub;
     let withLoadingSpinnerStub: SinonStub;
@@ -138,45 +141,40 @@ describe('BaseImportSetup', () => {
         completeProcess: stub().returnsThis(),
       };
 
-      configHandlerGetStub = stub(configHandler, 'get');
       createSimpleStub = stub(CLIProgressManager, 'createSimple');
       createNestedStub = stub(CLIProgressManager, 'createNested');
       withLoadingSpinnerStub = stub(CLIProgressManager, 'withLoadingSpinner');
     });
 
     afterEach(() => {
+      resetConsoleLogPolicy();
       restore();
     });
 
     describe('createSimpleProgress', () => {
-      it('should create a simple progress manager with default showConsoleLogs', () => {
-        configHandlerGetStub.returns({});
+      it('should create a simple progress manager', () => {
         createSimpleStub.returns(mockProgressManager);
 
         const result = (baseSetup as any).createSimpleProgress('test-module', 100);
 
-        expect(configHandlerGetStub.calledWith('log')).to.be.true;
         expect(createSimpleStub.calledOnce).to.be.true;
-        expect(createSimpleStub.firstCall.args[0]).to.equal('test-module');
-        expect(createSimpleStub.firstCall.args[1]).to.equal(100);
-        expect(createSimpleStub.firstCall.args[2]).to.equal(false);
+        expect(createSimpleStub.firstCall.args).to.deep.equal(['test-module', 100]);
         expect(result).to.equal(mockProgressManager);
         expect((baseSetup as any).currentModuleName).to.equal('test-module');
         expect((baseSetup as any).progressManager).to.equal(mockProgressManager);
       });
 
-      it('should create a simple progress manager with showConsoleLogs enabled', () => {
-        configHandlerGetStub.returns({ showConsoleLogs: true });
+      it('should not forward a policy argument when the console-log policy is on', () => {
+        setConsoleLogPolicy(true);
         createSimpleStub.returns(mockProgressManager);
 
         const result = (baseSetup as any).createSimpleProgress('test-module', 50);
 
-        expect(createSimpleStub.firstCall.args[2]).to.equal(true);
+        expect(createSimpleStub.firstCall.args).to.deep.equal(['test-module', 50]);
         expect(result).to.equal(mockProgressManager);
       });
 
       it('should create a simple progress manager without total count', () => {
-        configHandlerGetStub.returns({});
         createSimpleStub.returns(mockProgressManager);
 
         (baseSetup as any).createSimpleProgress('test-module');
@@ -186,28 +184,25 @@ describe('BaseImportSetup', () => {
     });
 
     describe('createNestedProgress', () => {
-      it('should create a nested progress manager with default showConsoleLogs', () => {
-        configHandlerGetStub.returns({});
+      it('should create a nested progress manager', () => {
         createNestedStub.returns(mockProgressManager);
 
         const result = (baseSetup as any).createNestedProgress('test-module');
 
-        expect(configHandlerGetStub.calledWith('log')).to.be.true;
         expect(createNestedStub.calledOnce).to.be.true;
-        expect(createNestedStub.firstCall.args[0]).to.equal('test-module');
-        expect(createNestedStub.firstCall.args[1]).to.equal(false);
+        expect(createNestedStub.firstCall.args).to.deep.equal(['test-module']);
         expect(result).to.equal(mockProgressManager);
         expect((baseSetup as any).currentModuleName).to.equal('test-module');
         expect((baseSetup as any).progressManager).to.equal(mockProgressManager);
       });
 
-      it('should create a nested progress manager with showConsoleLogs enabled', () => {
-        configHandlerGetStub.returns({ showConsoleLogs: true });
+      it('should not forward a policy argument when the console-log policy is on', () => {
+        setConsoleLogPolicy(true);
         createNestedStub.returns(mockProgressManager);
 
         const result = (baseSetup as any).createNestedProgress('test-module');
 
-        expect(createNestedStub.firstCall.args[1]).to.equal(true);
+        expect(createNestedStub.firstCall.args).to.deep.equal(['test-module']);
         expect(result).to.equal(mockProgressManager);
       });
     });
@@ -244,19 +239,19 @@ describe('BaseImportSetup', () => {
     });
 
     describe('withLoadingSpinner', () => {
-      it('should execute action directly when showConsoleLogs is enabled', async () => {
-        configHandlerGetStub.returns({ showConsoleLogs: true });
+      it('should delegate to CLIProgressManager.withLoadingSpinner even when the policy is on', async () => {
+        setConsoleLogPolicy(true);
         const action = stub().resolves('result');
+        withLoadingSpinnerStub.resolves('result');
 
         const result = await (baseSetup as any).withLoadingSpinner('Loading...', action);
 
-        expect(action.calledOnce).to.be.true;
-        expect(withLoadingSpinnerStub.called).to.be.false;
+        expect(withLoadingSpinnerStub.calledOnce).to.be.true;
+        expect(withLoadingSpinnerStub.firstCall.args[1]).to.equal(action);
         expect(result).to.equal('result');
       });
 
-      it('should use CLIProgressManager.withLoadingSpinner when showConsoleLogs is disabled', async () => {
-        configHandlerGetStub.returns({ showConsoleLogs: false });
+      it('should use CLIProgressManager.withLoadingSpinner when the policy is off', async () => {
         const action = stub().resolves('result');
         withLoadingSpinnerStub.resolves('result');
 
@@ -268,21 +263,11 @@ describe('BaseImportSetup', () => {
         expect(result).to.equal('result');
       });
 
-      it('should use CLIProgressManager.withLoadingSpinner when log config is empty', async () => {
-        configHandlerGetStub.returns({});
-        const action = stub().resolves('result');
-        withLoadingSpinnerStub.resolves('result');
-
-        const result = await (baseSetup as any).withLoadingSpinner('Loading...', action);
-
-        expect(withLoadingSpinnerStub.calledOnce).to.be.true;
-        expect(result).to.equal('result');
-      });
-
-      it('should handle errors in action when showConsoleLogs is enabled', async () => {
-        configHandlerGetStub.returns({ showConsoleLogs: true });
+      it('should handle errors in action when the policy is on', async () => {
+        setConsoleLogPolicy(true);
         const error = new Error('Action failed');
         const action = stub().rejects(error);
+        withLoadingSpinnerStub.rejects(error);
 
         try {
           await (baseSetup as any).withLoadingSpinner('Loading...', action);
@@ -292,8 +277,7 @@ describe('BaseImportSetup', () => {
         }
       });
 
-      it('should handle errors in action when showConsoleLogs is disabled', async () => {
-        configHandlerGetStub.returns({ showConsoleLogs: false });
+      it('should handle errors in action when the policy is off', async () => {
         const error = new Error('Action failed');
         const action = stub().rejects(error);
         withLoadingSpinnerStub.rejects(error);

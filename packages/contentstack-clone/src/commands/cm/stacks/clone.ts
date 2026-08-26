@@ -1,8 +1,10 @@
 import { Command } from '@contentstack/cli-command';
 import {
+  cliux,
   configHandler,
   flags,
   isAuthenticated,
+  isConsoleLogEnabled,
   managementSDKClient,
   log,
   handleAndLogError,
@@ -159,10 +161,6 @@ Use this plugin to automate the process of cloning a stack in few steps.
   async run(): Promise<void> {
     try {
       const self = this;
-      // Clear any stale progressSupportedModule persisted from a previous run so that
-      // auth/pre-flight errors always reach the console regardless of showConsoleLogs setting.
-      // It will be re-set inside handleClone() once authentication passes.
-      configHandler.set('log.progressSupportedModule', null);
       const { flags: cloneCommandFlags } = await self.parse(StackCloneCommand);
       const {
         yes,
@@ -181,7 +179,6 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } = cloneCommandFlags;
 
       const handleClone = async (): Promise<void> => {
-        configHandler.set('log.progressSupportedModule', 'clone');
         const listOfTokens = configHandler.get('tokens');
         const authenticationMethod = this.determineAuthenticationMethod(
           sourceManagementTokenAlias,
@@ -234,20 +231,18 @@ Use this plugin to automate the process of cloning a stack in few steps.
           config.source_stack = listOfTokens[sourceManagementTokenAlias].apiKey;
           log.debug(`Using source token alias: ${sourceManagementTokenAlias}`, cloneContext);
         } else if (sourceManagementTokenAlias) {
-          log.warn(
-            `Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`,
-            cloneContext,
-          );
+          const msg = `Provided source token alias (${sourceManagementTokenAlias}) not found in your config.!`;
+          log.warn(msg, cloneContext);
+          cliux.print(msg, { color: 'yellow' });
         }
         if (destinationManagementTokenAlias && listOfTokens?.[destinationManagementTokenAlias]) {
           config.destination_alias = destinationManagementTokenAlias;
           config.target_stack = listOfTokens[destinationManagementTokenAlias].apiKey;
           log.debug(`Using destination token alias: ${destinationManagementTokenAlias}`, cloneContext);
         } else if (destinationManagementTokenAlias) {
-          log.warn(
-            `Provided destination token alias (${destinationManagementTokenAlias}) not found in your config.!`,
-            cloneContext,
-          );
+          const msg = `Provided destination token alias (${destinationManagementTokenAlias}) not found in your config.!`;
+          log.warn(msg, cloneContext);
+          cliux.print(msg, { color: 'yellow' });
         }
         if (importWebhookStatus) {
           config.importWebhookStatus = importWebhookStatus;
@@ -271,6 +266,13 @@ Use this plugin to automate the process of cloning a stack in few steps.
         log.debug('Starting clone operation', cloneContext);
         cloneHandler.execute().catch((error: any) => {
           handleAndLogError(error, cloneContext as any);
+          // Fire-and-forget: this rejection never reaches the outer try/catch below, so with
+          // no console surface a failed clone ends with the nested export/import bars still
+          // reading as success. Every ora spinner is stopped before its promise rejects, so
+          // nothing is rendering here.
+          if (!isConsoleLogEnabled()) {
+            cliux.error(`Stack clone command failed: ${error?.message || String(error)}`);
+          }
         });
       };
 
@@ -279,7 +281,11 @@ Use this plugin to automate the process of cloning a stack in few steps.
           if (isAuthenticated()) {
             handleClone();
           } else {
-            log.error('Log in to execute this command,csdx auth:login', this.createCloneContext('unknown'));
+            const loginMessage = 'Log in to execute this command,csdx auth:login';
+            log.error(loginMessage, this.createCloneContext('unknown'));
+            // The Console transport is suppressed for every level when the console-log policy
+            // is off, so this exits with nothing on screen at all.
+            if (!isConsoleLogEnabled()) cliux.error(loginMessage);
             this.exit(1);
           }
         } else {
@@ -288,7 +294,9 @@ Use this plugin to automate the process of cloning a stack in few steps.
       } else if (isAuthenticated()) {
         handleClone();
       } else {
-        log.error('Please login to execute this command, csdx auth:login', this.createCloneContext('unknown'));
+        const loginMessage = 'Please login to execute this command, csdx auth:login';
+        log.error(loginMessage, this.createCloneContext('unknown'));
+        if (!isConsoleLogEnabled()) cliux.error(loginMessage);
         this.exit(1);
       }
     } catch (error: any) {
@@ -298,6 +306,18 @@ Use this plugin to automate the process of cloning a stack in few steps.
           ...this.createCloneContext('unknown'),
           error: error?.message || error,
         });
+
+        // `this.exit(1)` above throws an oclif ExitError straight into this catch, so a
+        // deliberate exit must not stack a failure banner on top of the message that caused
+        // it — the not-logged-in paths already said what is wrong. Still recorded in the log.
+        const isDeliberateExit = error?.code === 'EEXIT' || error?.oclif?.exit !== undefined;
+
+        // The reason lives in the log context, not the message, so print both or the user
+        // gets a failure with nothing diagnostic.
+        if (!isConsoleLogEnabled() && !isDeliberateExit) {
+          const reason = error?.message || String(error);
+          cliux.error(reason ? `Stack clone command failed: ${reason}` : 'Stack clone command failed');
+        }
       }
     }
   }

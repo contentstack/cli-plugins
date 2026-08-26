@@ -10,9 +10,8 @@ import {
   TableFlags,
   TableHeader,
   log,
-  configHandler,
+  isConsoleLogEnabled,
   CLIProgressManager,
-  clearProgressModuleSetting,
   readContentTypeSchemas,
   readGlobalFieldSchemas,
   generateUid,
@@ -72,15 +71,6 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
    */
   async start(command: CommandNames): Promise<boolean> {
     this.currentCommand = command;
-
-    // Set progress supported module and console logs setting BEFORE any log calls
-    // This ensures the logger respects the setting when it's initialized
-    const logConfig = configHandler.get('log') || {};
-    // Default to false so progress bars are shown instead of console logs
-    if (logConfig.showConsoleLogs === undefined) {
-      configHandler.set('log.showConsoleLogs', false);
-    }
-    configHandler.set('log.progressSupportedModule', 'audit');
 
     // Initialize global summary for progress tracking
     CLIProgressManager.initializeGlobalSummary('AUDIT', '', 'Auditing content...');
@@ -165,16 +155,26 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
       !isEmpty(missingScanStatusAssets) ||
       !isEmpty(missingAssetRefsInEntries)
     ) {
-      if (this.currentCommand === 'cm:stacks:audit') {
-        log.warn(this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath }), this.auditContext);
-      } else {
-        log.warn(
-          this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath }),
-          this.auditContext,
-        );
+      const pathMessage =
+        this.currentCommand === 'cm:stacks:audit'
+          ? this.$t(auditMsg.FINAL_REPORT_PATH, { path: this.sharedConfig.reportPath })
+          : this.$t(this.messages.FIXED_CONTENT_PATH_MAG, { path: this.sharedConfig.basePath });
+
+      log.warn(pathMessage, this.auditContext);
+
+      // The Console transport is suppressed for every level when the console-log policy
+      // is off, so this warn never reaches the terminal. The report / fixed-content path
+      // is the command's deliverable, so print it directly when the policy is off.
+      if (!isConsoleLogEnabled()) {
+        cliux.print(pathMessage);
       }
     } else {
       log.info(this.messages.NO_MISSING_REF_FOUND, this.auditContext);
+
+      // Same reason as above: without this a clean audit prints nothing but a blank line.
+      if (!isConsoleLogEnabled()) {
+        cliux.print(this.messages.NO_MISSING_REF_FOUND);
+      }
       cliux.print('');
 
       if (
@@ -189,9 +189,6 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
 
     // Print comprehensive summary at the end (commented out - Summary table above has the counts; progress bars show completion)
     // CLIProgressManager.printGlobalSummary();
-
-    // Clear progress module setting now that audit is complete
-    clearProgressModuleSetting();
 
     return (
       !isEmpty(missingCtRefs) ||
@@ -263,9 +260,8 @@ export abstract class AuditBaseCommand extends BaseCommand<typeof AuditBaseComma
     let dataModuleWise: Record<string, any> = await new ModuleDataReader(cloneDeep(constructorParam)).run();
     log.debug(`Data module wise: ${JSON.stringify(dataModuleWise)}`, this.auditContext);
 
-    // Extract logConfig and showConsoleLogs once before the loop to reuse throughout
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
+    // Resolve the console-log policy once before the loop to reuse throughout
+    const showConsoleLogs = isConsoleLogEnabled();
 
     for (const module of this.sharedConfig.flags.modules || this.sharedConfig.modules) {
       // Update audit context with current module

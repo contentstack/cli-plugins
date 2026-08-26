@@ -12,6 +12,7 @@ import {
   log,
   handleAndLogError,
   configHandler,
+  isConsoleLogEnabled,
   createLogContext,
   cliux,
   loadChalk
@@ -107,11 +108,10 @@ export default class ImportSetupCommand extends Command {
       log.success(successMessage, importSetupConfig.context);
       log.success(backupPathMessage, importSetupConfig.context);
 
-      // log.success maps to the info level, which is suppressed on the console for
-      // progress-supported modules when showConsoleLogs is false. Print the backup
-      // folder path directly so it is always visible, regardless of that setting.
-      const showConsoleLogs = configHandler.get('log')?.showConsoleLogs ?? false;
-      if (!showConsoleLogs) {
+      // log.success maps to the info level, which only reaches the console when the
+      // console-log policy is on. Print the backup folder path directly so it is
+      // always visible when it is off.
+      if (!isConsoleLogEnabled()) {
         cliux.print(successMessage);
         cliux.print(backupPathMessage);
       }

@@ -1,4 +1,4 @@
-import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager } from '@contentstack/cli-utilities';
 import { ConfigType, ModuleConstructorParam } from '../types';
 
 export default abstract class BaseClass {
@@ -15,9 +15,7 @@ export default abstract class BaseClass {
    */
   protected createSimpleProgress(moduleName: string, total?: number): CLIProgressManager {
     this.currentModuleName = moduleName;
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createSimple(moduleName, total, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createSimple(moduleName, total);
     return this.progressManager;
   }
 
@@ -26,9 +24,7 @@ export default abstract class BaseClass {
    */
   protected createNestedProgress(moduleName: string): CLIProgressManager {
     this.currentModuleName = moduleName;
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(moduleName);
     return this.progressManager;
   }
 
@@ -44,13 +40,6 @@ export default abstract class BaseClass {
    * Execute action with loading spinner (if console logs are disabled)
    */
   protected async withLoadingSpinner<T>(message: string, action: () => Promise<T>): Promise<T> {
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-
-    if (showConsoleLogs) {
-      // If console logs are enabled, don't show spinner, just execute the action
-      return await action();
-    }
     return await CLIProgressManager.withLoadingSpinner(message, action);
   }
 }

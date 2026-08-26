@@ -280,6 +280,7 @@ export default class ExportToCsvCommand extends BaseCommand {
       }
 
       log.success('Export completed successfully', this.commandContext);
+      cliux.print('Export completed successfully', { color: 'green' });
     } catch (error) {
       log.debug('Export failed', { ...this.commandContext, error });
       handleAndLogError(error, this.commandContext);
@@ -408,6 +409,7 @@ export default class ExportToCsvCommand extends BaseCommand {
       }
 
       log.success('Entries exported successfully', this.commandContext);
+      cliux.print('Entries exported successfully', { color: 'green' });
     } catch (error) {
       log.debug('Entries export failed', { ...this.commandContext, error });
       handleAndLogError(error, this.commandContext, 'Failed to export entries');
@@ -460,6 +462,7 @@ export default class ExportToCsvCommand extends BaseCommand {
 
       write(this, listOfUsers, fileName, 'organization details', delimiter);
       log.success('Users exported successfully', this.commandContext);
+      cliux.print('Users exported successfully', { color: 'green' });
     } catch (error) {
       log.debug('Users export failed', { ...this.commandContext, error });
       handleAndLogError(error, this.commandContext, 'Failed to export users');
@@ -498,6 +501,7 @@ export default class ExportToCsvCommand extends BaseCommand {
 
       await exportTeams(managementAPIClient, organization, teamUid, delimiter);
       log.success('Teams exported successfully', this.commandContext);
+      cliux.print('Teams exported successfully', { color: 'green' });
     } catch (error) {
       log.debug('Teams export failed', { ...this.commandContext, error });
       handleAndLogError(error, this.commandContext, 'Failed to export teams');
@@ -573,6 +577,7 @@ export default class ExportToCsvCommand extends BaseCommand {
       });
 
       log.success('Taxonomies exported successfully', this.commandContext);
+      cliux.print('Taxonomies exported successfully', { color: 'green' });
     } catch (error) {
       log.debug('Taxonomies export failed', { ...this.commandContext, error });
       handleAndLogError(error, this.commandContext, 'Failed to export taxonomies');

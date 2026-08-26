@@ -96,6 +96,7 @@ export async function exportTeams(
   await exportRoleMappings(managementAPIClient, allTeamsData, teamUid, delimiter);
 
   log.success('Teams export completed', logContext);
+  cliux.print('Teams export completed', { color: 'green' });
 }
 
 /**

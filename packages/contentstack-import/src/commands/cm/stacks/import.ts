@@ -8,10 +8,10 @@ import {
   log,
   handleAndLogError,
   configHandler,
+  isConsoleLogEnabled,
   getSessionLogPath,
   CLIProgressManager,
   cliux,
-  clearProgressModuleSetting,
   createLogContext,
 } from '@contentstack/cli-utilities';
 
@@ -195,12 +195,7 @@ export default class ImportCommand extends Command {
         );
       }
       this.logSuccessAndBackupMessages(backupDir, importConfig);
-      // Clear progress module setting now that import is complete
-      clearProgressModuleSetting();
     } catch (error) {
-      // Clear progress module setting even on error
-      clearProgressModuleSetting();
-
       handleAndLogError(error);
       this.logAndPrintErrorDetails(error, importConfig);
     }
@@ -219,8 +214,7 @@ export default class ImportCommand extends Command {
     log.info(logMsg);
     log.info(backupDirMsg);
 
-    const showConsoleLogs = configHandler.get('log')?.showConsoleLogs;
-    if (!showConsoleLogs) {
+    if (!isConsoleLogEnabled()) {
       cliux.print(`Error: ${error}`, { color: 'red' });
       cliux.print(logMsg, { color: 'blue' });
       cliux.print(backupDirMsg, { color: 'blue' });
@@ -236,8 +230,7 @@ export default class ImportCommand extends Command {
     log.success(logMsg, importConfig.context);
     log.info(backupDirMsg, importConfig.context);
 
-    const showConsoleLogs = configHandler.get('log')?.showConsoleLogs;
-    if (!showConsoleLogs) {
+    if (!isConsoleLogEnabled()) {
       cliux.print(logMsg, { color: 'blue' });
       cliux.print(backupDirMsg, { color: 'blue' });
     }

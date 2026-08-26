@@ -75,7 +75,6 @@ describe('CSAssetsImportAdapter (base)', () => {
 
   describe('createNestedProgress', () => {
     it('creates a CLIProgressManager when no parent is set', () => {
-      sinon.stub(configHandler, 'get').returns({ showConsoleLogs: true });
       const fakeProgress = { tick: sinon.stub() } as any;
       const createNestedStub = sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress);
       const adapter = new TestImportAdapter(apiConfig, importContext);
@@ -92,13 +91,12 @@ describe('CSAssetsImportAdapter (base)', () => {
       expect(result).to.equal(fakeParent);
     });
 
-    it('defaults showConsoleLogs to false when log config is missing', () => {
-      sinon.stub(configHandler, 'get').returns(null);
+    it('passes no showConsoleLogs argument — the manager resolves the policy itself', () => {
       const fakeProgress = { tick: sinon.stub() } as any;
       const createNestedStub = sinon.stub(CLIProgressManager, 'createNested').returns(fakeProgress);
       const adapter = new TestImportAdapter(apiConfig, importContext);
       adapter.callCreateNestedProgress('test');
-      expect(createNestedStub.firstCall.args[1]).to.be.false;
+      expect(createNestedStub.firstCall.args).to.deep.equal(['test']);
     });
   });
 

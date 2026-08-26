@@ -10,7 +10,6 @@ import {
   authenticationHandler,
   log,
   CLIProgressManager,
-  configHandler,
 } from '@contentstack/cli-utilities';
 
 import {
@@ -439,9 +438,7 @@ export class VariantAdapter<T> {
       return this.progressManager;
     }
     
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createSimple(moduleName, total, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createSimple(moduleName, total);
     return this.progressManager;
   }
 
@@ -457,9 +454,7 @@ export class VariantAdapter<T> {
       return this.progressManager;
     }
     
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(moduleName);
     return this.progressManager;
   }
 
@@ -478,13 +473,6 @@ export class VariantAdapter<T> {
    * Execute action with loading spinner for initial setup tasks
    */
   protected async withLoadingSpinner<T>(message: string, action: () => Promise<T>): Promise<T> {
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-
-    if (showConsoleLogs) {
-      // If console logs are enabled, don't show spinner, just execute the action
-      return await action();
-    }
     return await CLIProgressManager.withLoadingSpinner(message, action);
   }
 

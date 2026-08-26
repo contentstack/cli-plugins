@@ -9,11 +9,11 @@ import {
   pathValidator,
   sanitizePath,
   configHandler,
+  isConsoleLogEnabled,
   log,
   handleAndLogError,
   getSessionLogPath,
   CLIProgressManager,
-  clearProgressModuleSetting,
   loadChalk,
 } from '@contentstack/cli-utilities';
 
@@ -124,23 +124,23 @@ export default class ExportCommand extends Command {
       const moduleExporter = new ModuleExporter(managementAPIClient, exportConfig);
       await moduleExporter.start();
       const sessionLogPath = getSessionLogPath();
-      log.success(`The content of the stack ${exportConfig.apiKey} has been exported successfully!`);
-      log.info(`The exported content has been stored at '${exportDir}'`, exportConfig.context);
+      const successMessage = `The content of the stack ${exportConfig.apiKey} has been exported successfully!`;
+      const exportPathMessage = `The exported content has been stored at '${exportDir}'`;
+      log.success(successMessage);
+      log.info(exportPathMessage, exportConfig.context);
       log.success(`The log has been stored at '${sessionLogPath}'`, exportConfig.context);
 
       // Print comprehensive summary at the end
       if (!exportConfig.branches) CLIProgressManager.printGlobalSummary();
-      if (!configHandler.get('log')?.showConsoleLogs) {
+      if (!isConsoleLogEnabled()) {
+        cliux.print(successMessage, { color: 'green' });
+        cliux.print(exportPathMessage, { color: 'green' });
         cliux.print(`The log has been stored at '${sessionLogPath}'`, { color: 'green' });
       }
-      // Clear progress module setting now that export is complete
-      clearProgressModuleSetting();
     } catch (error) {
-      // Clear progress module setting even on error
-      clearProgressModuleSetting();
       handleAndLogError(error);
       const sessionLogPath = getSessionLogPath();
-      if (!configHandler.get('log')?.showConsoleLogs) {
+      if (!isConsoleLogEnabled()) {
         cliux.print(`Error: ${error}`, { color: 'red' });
         cliux.print(`The log has been stored at '${sessionLogPath}'`, { color: 'green' });
       }

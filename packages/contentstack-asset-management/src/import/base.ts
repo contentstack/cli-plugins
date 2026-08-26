@@ -1,5 +1,5 @@
 import { resolve as pResolve } from 'node:path';
-import { CLIProgressManager, configHandler } from '@contentstack/cli-utilities';
+import { CLIProgressManager } from '@contentstack/cli-utilities';
 
 import type { CSAssetsAPIConfig, ImportContext } from '../types/cs-assets-api';
 import { CSAssetsAdapter } from '../utils/cs-assets-api-adapter';
@@ -46,9 +46,7 @@ export class CSAssetsImportAdapter extends CSAssetsAdapter {
       this.progressManager = this.parentProgressManager;
       return this.parentProgressManager;
     }
-    const logConfig = configHandler.get('log') || {};
-    const showConsoleLogs = logConfig.showConsoleLogs ?? false;
-    this.progressManager = CLIProgressManager.createNested(moduleName, showConsoleLogs);
+    this.progressManager = CLIProgressManager.createNested(moduleName);
     return this.progressManager;
   }
 
