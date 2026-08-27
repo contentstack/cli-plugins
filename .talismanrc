@@ -40,5 +40,5 @@ fileignoreconfig:
 - filename: packages/contentstack-migration/README.md
   checksum: e96006c1a948f766c88ae972b29582fa58eaf8184606bf011eebddc5a06cd7b6
 - filename: packages/contentstack-bootstrap/test/github.test.js
-  checksum: b7badfcd3bbad0cb876364542bba26cdfd854f1b138be2896b5f84c219767040
+  checksum: f17e1760322ac4b38020d14099121d48ae3e803259756d04e7003e88e983b01b
 version: ""

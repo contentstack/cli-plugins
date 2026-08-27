@@ -70,6 +70,24 @@ describe('Github Client', function () {
       }
     });
 
+    it('should throw GithubError with status 302 on unexpected redirect', async () => {
+      const redirectStream = new Readable({ read() {} });
+      redirectStream.push(null);
+
+      const httpStub = { get: sandbox.stub().resolves({ status: 302, data: redirectStream }), options: sandbox.stub().returnsThis() };
+      sandbox.stub(HttpClient, 'create').returns(httpStub);
+
+      const client = new GitHubClient(GitHubClient.parsePath('contentstack/kickstart-next'));
+
+      try {
+        await client.streamRelease(client.gitTarBallUrl);
+        throw new Error('Expected GithubError to be thrown');
+      } catch (err) {
+        expect(err).to.be.instanceOf(GithubError);
+        expect(err.status).to.equal(302);
+      }
+    });
+
     it('should return the response stream when status is 200', async () => {
       const mockStream = new Readable({ read() {} });
       const httpStub = { get: sandbox.stub().resolves({ status: 200, data: mockStream }), options: sandbox.stub().returnsThis() };
