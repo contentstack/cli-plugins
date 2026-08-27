@@ -213,17 +213,18 @@ const bulkAssetsMsg = {
   SYNCED_ASSETS: 'Synced {count} assets from {sourceEnv}',
   ASSETS_READY_FOR_CROSS_PUBLISH: '{count} assets ready for cross-publish',
 
-  // Data-dir / scanning dashboard
-  DATA_DIR_ASSET_SCANNING_HEADER: 'Asset Scan Status',
-  DATA_DIR_TOTAL: 'Total assets found',
-  DATA_DIR_VALID: 'Clean (will publish)',
-  DATA_DIR_NO_PUBLISH_DETAILS: 'No publish details (skipped)',
-  DATA_DIR_UNMAPPED: 'Not imported / UID unmapped (skipped)',
-  DATA_DIR_WILL_PUBLISH: 'Will publish',
-  DATA_DIR_DRY_RUN: 'Dry run — no publish API calls will be made.',
-  DATA_DIR_FLAG_DESC: 'Path to exported content folder containing asset publish details.',
+  // Backup-dir / scanning dashboard
+  BACKUP_DIR_ASSET_SCANNING_HEADER: 'Asset Scan Status',
+  BACKUP_DIR_TOTAL: 'Total assets found',
+  BACKUP_DIR_VALID: 'Clean (will publish)',
+  BACKUP_DIR_NO_PUBLISH_DETAILS: 'No publish details (skipped)',
+  BACKUP_DIR_UNMAPPED: 'Not imported / UID unmapped (skipped)',
+  BACKUP_DIR_WILL_PUBLISH: 'Will publish',
+  BACKUP_DIR_DRY_RUN: 'Dry run — no publish API calls will be made.',
+  BACKUP_DIR_FLAG_DESC:
+    'Path to the import backup directory. Each imported asset is published only to the environments and locales it was published to in the source stack (read from the backup publish details and asset UID mapping), with asset-scan gating applied. Intended for the post-import publish flow.',
   DRY_RUN_FLAG_DESC: 'Preview the publish plan without making any API calls.',
-  DATA_DIR_READ_ERROR: 'Failed to read data directory at {path}: {error}',
+  BACKUP_DIR_READ_ERROR: 'Failed to read backup directory at {path}: {error}',
   SCAN_STATUS_CLEAN: 'Clean (will publish)',
   SCAN_STATUS_PENDING: 'Still scanning (skipped)',
   SCAN_STATUS_QUARANTINED: 'Quarantined (skipped)',

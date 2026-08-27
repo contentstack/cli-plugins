@@ -480,6 +480,55 @@ describe('BulkOperationService', () => {
       expect(payload.environments).to.deep.equal(['beta', 'beta2', 'beta3']);
     });
 
+    it('should union environments across items rather than trusting the first item', () => {
+      // Guards the fallback only — batches are single-target by construction.
+      const mockItems: AssetPublishData[] = [
+        { uid: 'asset1', version: 1, locale: 'en-us', publish_details: [{ environment: 'beta', locale: 'en-us' }] },
+        {
+          uid: 'asset2',
+          version: 1,
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'beta', locale: 'en-us' },
+            { environment: 'prod', locale: 'en-us' },
+          ],
+        },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.PUBLISH,
+        ResourceType.ASSET
+      );
+
+      expect(payload.environments).to.have.members(['beta', 'prod']);
+    });
+
+    it('should prefer the batch environments over anything the items carry', () => {
+      const mockItems: AssetPublishData[] = [
+        {
+          uid: 'asset1',
+          version: 1,
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'beta', locale: 'en-us' },
+            { environment: 'prod', locale: 'en-us' },
+          ],
+        },
+      ];
+
+      const payload = (bulkOperationService as any).prepareBulkPayload(
+        mockItems,
+        OperationType.PUBLISH,
+        ResourceType.ASSET,
+        ['beta'],
+        ['en-us']
+      );
+
+      expect(payload.environments).to.deep.equal(['beta']);
+      expect(payload.locales).to.deep.equal(['en-us']);
+    });
+
     it('should include all locales and deduplicated assets together for unpublish', () => {
       const mockItems: AssetPublishData[] = [
         { uid: 'asset1', version: 1, locale: 'en-us', publish_details: [{ environment: 'beta', locale: 'en-us' }] },
