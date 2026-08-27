@@ -59,7 +59,7 @@ export interface BulkOperationConfig {
 
   // Asset-specific options
   folderUid?: string;
-  dataDir?: string;
+  backupDir?: string;
   dryRun?: boolean;
 
   // Cross-publish
@@ -199,7 +199,7 @@ export interface CommandFlags {
 
   // Asset-specific flags
   'folder-uid'?: string;
-  'data-dir'?: string;
+  'backup-dir'?: string;
   'dry-run'?: boolean;
 
   /** CS Assets bulk delete/move */

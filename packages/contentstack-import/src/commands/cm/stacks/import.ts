@@ -190,7 +190,7 @@ export default class ImportCommand extends Command {
         cliux.print('\nAsset Scanning is enabled — assets were not published.', { color: 'yellow' });
         cliux.print('  Once scanning completes, publish your assets using:', { color: 'yellow' });
         cliux.print(
-          `  csdx cm:stacks:bulk-assets --data-dir ${backupDir} --stack-api-key ${importConfig.apiKey} --operation publish`,
+          `  csdx cm:stacks:bulk-assets --backup-dir ${backupDir} --stack-api-key ${importConfig.apiKey} --operation publish`,
           { color: 'cyan' },
         );
       }

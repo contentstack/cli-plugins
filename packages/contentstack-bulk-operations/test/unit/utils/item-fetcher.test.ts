@@ -621,7 +621,7 @@ describe('Item Fetcher Utilities', () => {
         expect(result[0].publish_details?.[1]).to.deep.equal({ environment: 'staging', locale: 'fr-fr' });
       });
 
-      it('should use entry locale in publish_details', async () => {
+      it('should keep the entry locale as the hint and publish to the requested locale', async () => {
         const config: BulkOperationConfig = {
           contentTypes: ['blog'],
           locales: ['en-us'],
@@ -643,7 +643,7 @@ describe('Item Fetcher Utilities', () => {
         const result = await fetchEntries(config, mockManagementStack, mockDeliveryStack, mockLogger);
 
         expect(result[0].locale).to.equal('fr-fr');
-        expect(result[0].publish_details?.[0].locale).to.equal('fr-fr');
+        expect(result[0].publish_details?.[0].locale).to.equal('en-us');
       });
     });
 

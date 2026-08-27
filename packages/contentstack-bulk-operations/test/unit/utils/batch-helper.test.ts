@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { batchItems, validateBatch, DEFAULT_BATCH_CONFIG } from '../../../src/utils/batch-helper';
+import { batchItems, validateBatch, hasPublishTargets, DEFAULT_BATCH_CONFIG } from '../../../src/utils/batch-helper';
 import { getUniqueEnvironments, getUniqueLocales } from '../../../src/utils/helpers';
 import { EntryPublishData, AssetPublishData } from '../../../src/interfaces';
 
@@ -89,7 +89,7 @@ describe('Batch Helper', () => {
         },
       ];
 
-      const batches = batchItems(items, ['dev'], ['en-us']);
+      const batches = batchItems(items);
       expect(batches).to.have.lengthOf(1);
       expect(batches[0].items).to.have.lengthOf(2);
       expect(batches[0].environments).to.deep.equal(['dev']);
@@ -104,15 +104,14 @@ describe('Batch Helper', () => {
         publish_details: [{ environment: 'dev', locale: 'en-us', version: 1 }],
       }));
 
-      const batches = batchItems(items, ['dev'], ['en-us']);
+      const batches = batchItems(items);
       expect(batches.length).to.be.greaterThan(1);
       expect(batches[0].items.length).to.be.at.most(50);
       expect(batches[0].totalBatches).to.equal(batches.length);
     });
 
-    it('should split into multiple batches when locales exceed limit', () => {
+    it('should give every locale its own batch', () => {
       const locales = Array.from({ length: 15 }, (_, i) => `locale-${i}`);
-      // Create items for each locale
       const items: EntryPublishData[] = locales.map((loc) => ({
         uid: `entry-${loc}`,
         content_type: 'blog',
@@ -120,40 +119,40 @@ describe('Batch Helper', () => {
         publish_details: [{ environment: 'dev', locale: loc, version: 1 }],
       }));
 
-      const batches = batchItems(items, ['dev'], locales);
-      // With 15 items and maxItems=50, should fit in 1 item batch
-      expect(batches.length).to.be.greaterThan(0);
-      // Each batch should have items matching its locale set
+      const batches = batchItems(items);
+      expect(batches).to.have.lengthOf(15);
+
       batches.forEach((batch) => {
-        expect(batch.items.length).to.be.at.most(50);
+        expect(batch.locales).to.have.lengthOf(1);
         batch.items.forEach((item) => {
-          expect(batch.locales).to.include(item.locale);
+          expect(batch.locales).to.deep.equal([item.locale]);
         });
       });
     });
 
-    it('should split into multiple batches when environments exceed limit', () => {
-      // To force environment batching, we need more than maxLocales * maxEnvironments targets
-      // With 15 envs × 15 locales = 225 targets > 100 (targetBatchSize), will create multiple batches
+    it('should split an environment set larger than the API cap, staying single-locale', () => {
       const environments = Array.from({ length: 15 }, (_, i) => `env-${i}`);
-      const locales = Array.from({ length: 15 }, (_, i) => `locale-${i}`);
       const items: EntryPublishData[] = [
         {
           uid: 'entry1',
           content_type: 'blog',
           locale: 'en-us',
-          publish_details: environments.flatMap((env) =>
-            locales.map((loc) => ({ environment: env, locale: loc, version: 1 }))
-          ),
+          publish_details: environments.map((env) => ({ environment: env, locale: 'en-us', version: 1 })),
         },
       ];
 
-      const batches = batchItems(items, environments, locales);
-      // With 225 targets and targetBatchSize = 100, should create multiple batches
-      expect(batches.length).to.be.greaterThan(1);
+      const batches = batchItems(items);
+      // 15 environments, cap of 10 -> 2 batches, both for the one locale.
+      expect(batches).to.have.lengthOf(2);
+      batches.forEach((batch) => {
+        expect(batch.locales).to.deep.equal(['en-us']);
+        expect(batch.environments.length).to.be.at.most(DEFAULT_BATCH_CONFIG.maxEnvironments);
+      });
+      const batched = batches.flatMap((b) => b.environments);
+      expect(batched).to.have.members(environments);
     });
 
-    it('should include all items in a single batch when locales fit within limit', () => {
+    it('should never mix locales in one batch', () => {
       const items: EntryPublishData[] = [
         {
           uid: 'entry1',
@@ -169,23 +168,18 @@ describe('Batch Helper', () => {
         },
       ];
 
-      const batches = batchItems(items, ['dev'], ['en-us', 'fr-fr']);
+      const batches = batchItems(items);
 
-      // Should have 1 batch since locales and items are within limits
-      expect(batches).to.have.lengthOf(1);
+      // One batch per locale — a shared batch would publish entry1 in fr-fr and entry2 in en-us.
+      expect(batches).to.have.lengthOf(2);
 
-      // Batch should include both items
-      expect(batches[0].items).to.have.lengthOf(2);
-      expect(batches[0].locales).to.have.members(['en-us', 'fr-fr']);
-
-      // Verify each item has correct locale
-      const enItem = batches[0].items.find((i) => i.locale === 'en-us');
-      const frItem = batches[0].items.find((i) => i.locale === 'fr-fr');
-      expect(enItem).to.exist;
-      expect(frItem).to.exist;
+      const enBatch = batches.find((b) => b.locales[0] === 'en-us');
+      const frBatch = batches.find((b) => b.locales[0] === 'fr-fr');
+      expect(enBatch?.items.map((i) => i.uid)).to.deep.equal(['entry1']);
+      expect(frBatch?.items.map((i) => i.uid)).to.deep.equal(['entry2']);
     });
 
-    it('should handle assets correctly', () => {
+    it('should not widen an item to another item environments', () => {
       const items: AssetPublishData[] = [
         {
           uid: 'asset1',
@@ -202,9 +196,82 @@ describe('Batch Helper', () => {
         },
       ];
 
-      const batches = batchItems(items, ['dev', 'staging'], ['en-us']);
+      const batches = batchItems(items);
+
+      // Different environment sets cannot share a batch.
+      expect(batches).to.have.lengthOf(2);
+
+      const devOnly = batches.find((b) => b.environments.length === 1);
+      expect(devOnly?.environments).to.deep.equal(['dev']);
+      expect(devOnly?.items.map((i) => i.uid)).to.deep.equal(['asset2']);
+
+      const both = batches.find((b) => b.environments.length === 2);
+      expect(both?.environments).to.deep.equal(['dev', 'staging']);
+      expect(both?.items.map((i) => i.uid)).to.deep.equal(['asset1']);
+    });
+
+    it('should batch a per-locale environment split separately', () => {
+      const items: AssetPublishData[] = [
+        {
+          uid: 'asset1',
+          locale: 'en-us',
+          publish_details: [
+            { environment: 'dev', locale: 'en-us', version: 1 },
+            { environment: 'prod', locale: 'fr-fr', version: 1 },
+          ],
+        },
+      ];
+
+      const batches = batchItems(items);
+      expect(batches).to.have.lengthOf(2);
+
+      const en = batches.find((b) => b.locales[0] === 'en-us');
+      const fr = batches.find((b) => b.locales[0] === 'fr-fr');
+      expect(en?.environments).to.deep.equal(['dev']);
+      expect(fr?.environments).to.deep.equal(['prod']);
+      expect(en?.items[0].publish_details).to.deep.equal([{ environment: 'dev', locale: 'en-us', version: undefined }]);
+    });
+
+    it('should group on the requested locale without rewriting the entry locale', () => {
+      // A non-localized entry resolves to its fallback locale, so item.locale legitimately differs
+      // from the locale being published to. Grouping must follow publish_details, and the entry's
+      // own locale must survive as the hint sent in entries[].
+      const items: EntryPublishData[] = [
+        {
+          uid: 'localized',
+          content_type: 'blog',
+          locale: 'fr-fr',
+          publish_details: [{ environment: 'dev', locale: 'fr-fr' }],
+        },
+        {
+          uid: 'fallback',
+          content_type: 'blog',
+          locale: 'en-us', // no fr-fr document; resolved to master
+          publish_details: [{ environment: 'dev', locale: 'fr-fr' }],
+        },
+      ];
+
+      const batches = batchItems(items);
+
+      // Both publish to fr-fr, so both belong to the same batch despite differing item locales.
       expect(batches).to.have.lengthOf(1);
-      expect(batches[0].items).to.have.lengthOf(2);
+      expect(batches[0].locales).to.deep.equal(['fr-fr']);
+      expect(batches[0].items.map((i) => i.uid)).to.have.members(['localized', 'fallback']);
+
+      const fallback = batches[0].items.find((i) => i.uid === 'fallback');
+      expect(fallback?.locale).to.equal('en-us');
+      expect(fallback?.publish_details?.[0].locale).to.equal('fr-fr');
+    });
+
+    it('should drop items with no usable publish target', () => {
+      const items: EntryPublishData[] = [
+        { uid: 'entry1', content_type: 'blog', locale: 'en-us', publish_details: [] },
+        { uid: 'entry2', content_type: 'blog', locale: 'en-us' },
+      ];
+
+      expect(hasPublishTargets(items[0])).to.equal(false);
+      expect(hasPublishTargets(items[1])).to.equal(false);
+      expect(batchItems(items)).to.have.lengthOf(0);
     });
 
     it('should correctly set batch numbers', () => {
@@ -215,7 +282,7 @@ describe('Batch Helper', () => {
         publish_details: [{ environment: 'dev', locale: 'en-us', version: 1 }],
       }));
 
-      const batches = batchItems(items, ['dev'], ['en-us']);
+      const batches = batchItems(items);
 
       expect(batches[0].batchNumber).to.equal(1);
       expect(batches[1].batchNumber).to.equal(2);
