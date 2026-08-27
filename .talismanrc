@@ -4,7 +4,7 @@ fileignoreconfig:
 - filename: packages/contentstack-audit/test/unit/mock/am-contents/environments/environments.json
   checksum: ffaaee9269a6e833cd3dbe337ddc5c060cce948519873c7a2777754519a31b52
 - filename: pnpm-lock.yaml
-  checksum: fda8964d238e0d30577ce8f5bf879a2102c69a7f9e83067ab1627b9b1db9d066
+  checksum: e30ba8d900da7d25a0fd49c71d8e893104070cd3a6379aad11d7edab1bde43c2
 - filename: packages/contentstack-audit/src/types/content-types.ts
   checksum: d16a65415c3184f15a807d58e5858310aeb5633794fc9075e36f89c94da636c3
 - filename: packages/contentstack-audit/src/audit-base-command.ts
