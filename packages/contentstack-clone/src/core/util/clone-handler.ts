@@ -11,7 +11,7 @@ import importCmd from '@contentstack/cli-cm-import';
 const prompt = require('prompt');
 import colors from '@colors/colors/safe';
 import cloneDeep from 'lodash/cloneDeep';
-import { configHandler, getBranchFromAlias, log } from '@contentstack/cli-utilities';
+import { cliux, configHandler, getBranchFromAlias, isConsoleLogEnabled, log } from '@contentstack/cli-utilities';
 
 import {
   HandleOrgCommand,
@@ -245,7 +245,18 @@ export class CloneHandler {
       } else {
         log.error('Branch not found', this.config.cloneContext);
         completeSpinner(`${isSource ? 'Source' : 'Target'} branch not found.!`, 'fail');
-        process.exit();
+
+        // log.error reaches the log files only when the console-log policy is off, and the
+        // spinner line above doesn't say which branch failed. Name it, so the user can fix it.
+        if (!isConsoleLogEnabled()) {
+          cliux.print(
+            `Error: ${isSource ? 'Source' : 'Target'} branch '${branch}' not found. Verify the branch name and try again.`,
+            { color: 'red' },
+          );
+        }
+
+        // Exit non-zero — a bare process.exit() reported success for a failed clone.
+        process.exit(1);
       }
     } catch (e) {
       completeSpinner(`${isSource ? 'Source' : 'Target'} branch not found.!`, 'fail');
