@@ -41,11 +41,12 @@ Bulk operations for assets: publish/unpublish/cross-publish (CMS) and delete/mov
 
 ```
 USAGE
-  $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish|delete|move] [--environments
-    <value>...] [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single]
-    [--branch <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>]
-    [--folder-uid <value>] [-d <value>] [--dry-run] [--retry-pending <value>] [--space-uid <value>] [--org-uid <value>]
-    [--workspace <value>] [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid <value>]
+  $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish|delete|move] [--source-alias
+    <value>] [--publish-mode bulk|single] [--branch <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert
+    <value>] [--bulk-operation-file <value>] [--backup-dir <value> | --source-env <value> | --folder-uid <value> |
+    --environments <value>... | --locales <value>...] [--dry-run] [--retry-pending <value>] [--space-uid <value>]
+    [--org-uid <value>] [--workspace <value>] [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid
+    <value>]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
@@ -54,13 +55,16 @@ FLAGS
   -c, --config=<value>               (optional) Specifies the path to a JSON configuration file that defines the options
                                      for the command. Use this file instead of passing multiple CLI flags for a single
                                      run.
-  -d, --data-dir=<value>             Path to exported content folder containing asset publish details.
   -k, --stack-api-key=<value>        API key of the source stack. You must use either the --stack-api-key flag or the
                                      --alias flag.
   -y, --yes                          Skips interactive confirmation prompts and runs the command immediately using the
                                      provided options. Useful for automation and scripts.
       --asset-uids-file=<value>      Path to UTF-8 JSON file: exactly `{ "uids": ["uid1", "uid2"] }` (non-empty string
                                      array, no trimming; large lists: see docs for NODE_OPTIONS)
+      --backup-dir=<value>           Path to the import backup directory. Each imported asset is published only to the
+                                     environments and locales it was published to in the source stack (read from the
+                                     backup publish details and asset UID mapping), with asset-scan gating applied.
+                                     Intended for the post-import publish flow.
       --branch=<value>               [default: main] The name of the branch where you want to perform the bulk publish
                                      operation. If you don't mention the branch name, then by default the content from
                                      main branch will be published.
@@ -120,7 +124,7 @@ EXAMPLES
 
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
 
-  $ csdx cm:stacks:bulk-assets --data-dir ./content --operation publish -k blt123
+  $ csdx cm:stacks:bulk-assets --backup-dir ./content --operation publish -k blt123
 
   $ csdx cm:stacks:bulk-assets --operation delete --space-uid am123 --org-uid bltOrg --locale en-us --asset-uids-file ./assets.json
 

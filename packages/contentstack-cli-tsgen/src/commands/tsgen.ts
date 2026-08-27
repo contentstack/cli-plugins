@@ -4,7 +4,11 @@ import * as path from "path";
 import * as fs from "fs";
 import { cliux } from "@contentstack/cli-utilities";
 import { generateTS, graphqlTS } from "@contentstack/types-generator";
-import { sanitizePath, printFormattedError } from "../lib/helper";
+import {
+  sanitizePath,
+  printFormattedError,
+  resolveGraphqlHost,
+} from "../lib/helper";
 import { StackConnectionConfig } from "../types";
 
 function createOutputPath(outputFile: string) {
@@ -30,20 +34,6 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
     '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql',
     '$ csdx tsgen -a "delivery token alias" --output "contentstack/generated.d.ts" --api-type graphql --namespace "GraphQL" ',
   ];
-
-  // Check if a region is a default Contentstack region
-  private isDefaultRegion(region: string): boolean {
-    const defaultRegions = [
-      "US",
-      "EU",
-      "AU",
-      "AZURE_NA",
-      "AZURE_EU",
-      "GCP_NA",
-      "GCP_EU",
-    ];
-    return defaultRegions.includes(region.toUpperCase());
-  }
 
   static flags: FlagInput = {
     alias: flags.string({
@@ -150,10 +140,6 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
       // Generate the GraphQL schema TypeScript definitions
       if (flags["api-type"] === "graphql") {
         try {
-          if (config.region === "us") {
-            config.region = "US";
-          }
-
           // Check if token has delivery type (required for GraphQL)
           if (token.type !== "delivery") {
             throw new Error(
@@ -161,24 +147,29 @@ export default class TypeScriptCodeGeneratorCommand extends Command {
             );
           }
 
-          // Prepare GraphQL config - only include host for custom regions
-          const graphqlConfig: any = {
+          // GraphQL has its own host per region; config.host is the CDA (REST)
+          // host and answers a GraphQL query with a 403.
+          const graphqlHost = resolveGraphqlHost(this.region);
+
+          if (!graphqlHost) {
+            throw new Error(
+              `No GraphQL delivery endpoint is configured for the '${this.region.name}' region.`,
+            );
+          }
+
+          const graphqlConfig: StackConnectionConfig & {
+            namespace?: string;
+            logger?: any;
+          } = {
             apiKey: config.apiKey,
             token: config.token,
             environment: config.environment,
-            namespace: namespace,
+            region: this.region.name,
+            host: graphqlHost,
+            branch: config.branch,
+            namespace,
             logger: log,
           };
-
-          // Add region or host based on whether it's a custom region
-          if (config.host && !this.isDefaultRegion(config.region)) {
-            // Custom region - include both region and host
-            graphqlConfig.region = config.region;
-            graphqlConfig.host = config.host;
-          } else {
-            // Default region - only include region
-            graphqlConfig.region = config.region;
-          }
 
           const result = await graphqlTS(graphqlConfig);
 

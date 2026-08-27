@@ -27,9 +27,8 @@ import {
   setupStackConfig,
   setupBatchQueueListeners,
   confirmOperation as confirmOperationUtil,
-  getUniqueEnvironments,
-  getUniqueLocales,
   batchItems,
+  hasPublishTargets,
   handleCrossPublishOperation,
   logOperationInfo,
   validateBatch,
@@ -537,9 +536,12 @@ export abstract class BaseBulkCommand extends Command {
    * Execute operation in BULK mode - processes items in batches
    */
   private async executeBulkMode(items: any[], startTime: number): Promise<BulkOperationResult> {
-    const environments = getUniqueEnvironments(items);
-    const locales = getUniqueLocales(items);
-    const batches = batchItems(items, environments, locales);
+    const untargeted = items.filter((item) => !hasPublishTargets(item)).length;
+    if (untargeted > 0) {
+      this.logger.warn(`Skipping ${untargeted} item(s) with no publish target (missing publish_details).`);
+    }
+
+    const batches = batchItems(items);
 
     batches.forEach((batch) => validateBatch(batch));
     this.logger.debug(`Created ${batches.length} batches for processing`, this.loggerContext);
