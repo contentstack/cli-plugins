@@ -3,7 +3,14 @@ import * as path from 'path';
 
 import { flags, handleAndLogError, log, FlagInput } from '@contentstack/cli-utilities';
 
-import { BulkOperationResult, ResourceType, OperationType, CsAssetsFlags } from '../../../interfaces';
+import {
+  AssetPublishData,
+  BulkOperationResult,
+  ResourceType,
+  OperationType,
+  CsAssetsFlags,
+  PendingScanLogEntry,
+} from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
 import {
   $t,
@@ -21,6 +28,12 @@ import {
   OperationFlagMatrixError,
   RETRY_REVERT_CONTEXT,
 } from '../../../utils';
+import {
+  appendPendingScanLog,
+  getLogPaths,
+  readPendingScanLog,
+  writePendingScanLog,
+} from '../../../utils/bulk-operation-log-handler';
 import type { BackupDirScanStats } from '../../../utils';
 import { AssetService } from '../../../services';
 
@@ -66,6 +79,9 @@ export default class BulkAssets extends BaseBulkCommand {
     // Retry failed assets from a log file
     '<%= config.bin %> <%= command.id %> --retry-failed ./bulk-operation -a myAlias',
 
+    // Re-check scan status and publish assets a previous run skipped as still scanning
+    '<%= config.bin %> <%= command.id %> --retry-pending ./bulk-operation -a myAlias',
+
     // Revert (unpublish) previously published assets using success log
     '<%= config.bin %> <%= command.id %> --revert ./bulk-operation -a myAlias',
 
@@ -97,6 +113,9 @@ export default class BulkAssets extends BaseBulkCommand {
     'dry-run': flags.boolean({
       description: messages.DRY_RUN_FLAG_DESC,
       default: false,
+    }),
+    'retry-pending': flags.string({
+      description: messages.RETRY_PENDING,
     }),
 
     // CS Assets delete/move flags
@@ -142,7 +161,9 @@ export default class BulkAssets extends BaseBulkCommand {
         token === '--retry-failed' ||
         token.startsWith('--retry-failed=') ||
         token === '--revert' ||
-        token.startsWith('--revert=')
+        token.startsWith('--revert=') ||
+        token === '--retry-pending' ||
+        token.startsWith('--retry-pending=')
     );
 
     if (!operation && !isRevertOrRetry) {
@@ -218,6 +239,20 @@ export default class BulkAssets extends BaseBulkCommand {
         // Log individual skipped assets
         pending.forEach((a) => this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_PENDING, { uid: a.uid })));
         quarantined.forEach((a) => this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_QUARANTINED, { uid: a.uid })));
+
+        // Persist the pending ones so --retry-pending can publish them once the scan clears.
+        // fetchAssets() builds one row per uid x locale, so each carries its own locale/version.
+        appendPendingScanLog(
+          pending.map((a) =>
+            this.buildPendingScanEntry({
+              uid: a.uid,
+              locale: a.locale,
+              version: a.version ?? a._version,
+              environments: (a.publish_details || []).map((pd: any) => pd.environment),
+            })
+          ),
+          this.bulkOperationConfig.bulkOperationFolder
+        );
 
         this.printScanningDashboard({
           total: assets.length,
@@ -340,6 +375,9 @@ export default class BulkAssets extends BaseBulkCommand {
     }
 
     let totalSubmitted = 0;
+    // Collected across the whole stream and written once at the end — a per-asset
+    // write would defeat the one-chunk-at-a-time design of this pass.
+    const pendingScanEntries: PendingScanLogEntry[] = [];
 
     this.batchResults.clear();
 
@@ -372,12 +410,19 @@ export default class BulkAssets extends BaseBulkCommand {
           this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_QUARANTINED, { uid: targetUid }));
           continue;
         }
-        if (scanStatus === 'pending') {
-          this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_PENDING, { uid: targetUid }));
-          continue;
-        }
 
         const targets = assetPublishTargets(asset, environmentsMap);
+
+        if (scanStatus === 'pending') {
+          this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_PENDING, { uid: targetUid }));
+          // Record per target so --retry-pending republishes exactly the rows this run would have.
+          for (const [locale, environments] of targets) {
+            pendingScanEntries.push(
+              this.buildPendingScanEntry({ uid: targetUid, locale, version: asset._version, environments })
+            );
+          }
+          continue;
+        }
 
         for (const [locale, environments] of targets) {
           batcher.add({
@@ -393,6 +438,9 @@ export default class BulkAssets extends BaseBulkCommand {
     }
 
     batcher.end();
+
+    // One write for the whole streamed run.
+    appendPendingScanLog(pendingScanEntries, this.bulkOperationConfig.bulkOperationFolder);
 
     if (batcher.skippedCount > 0) {
       this.logger.warn(`Skipped ${batcher.skippedCount} asset item(s) with no resolvable publish target.`);
@@ -446,5 +494,133 @@ export default class BulkAssets extends BaseBulkCommand {
 
   protected async fetchItems(): Promise<any[]> {
     return await fetchAssets(this.bulkOperationConfig, this.managementStack, this.deliveryStack, this.logger);
+  }
+
+  protected async handleResourceSpecificRetryFlow(flags: any): Promise<boolean> {
+    if (!flags['retry-pending']) {
+      return false;
+    }
+    await this.initForRetryPendingScan(flags);
+    return true;
+  }
+
+  /**
+   * Initialize the --retry-pending run. Mirrors initForRevertOrRetry: everything
+   * needed comes from the pending-scan log, with any CLI flag overriding it.
+   */
+  private async initForRetryPendingScan(flags: any): Promise<void> {
+    const logPath = flags['retry-pending'];
+    const pendingEntries = readPendingScanLog(logPath);
+
+    if (pendingEntries.length === 0) {
+      log.warn($t(messages.NO_PENDING_SCAN_ITEMS_IN_LOG, { path: getLogPaths(logPath).pendingScan }));
+      this.finalizeProgressSummary();
+      process.exit(0);
+    }
+
+    const [first] = pendingEntries;
+    const mergedFlags = {
+      ...flags,
+      'stack-api-key': flags['stack-api-key'] || first.apiKey,
+      environments:
+        flags.environments?.length > 0
+          ? flags.environments
+          : [...new Set(pendingEntries.flatMap((entry) => entry.environments))],
+      locales: flags.locales?.length > 0 ? flags.locales : [...new Set(pendingEntries.map((entry) => entry.locale))],
+      branch: flags.branch !== 'main' ? flags.branch : first.branch || 'main',
+      // Scan status only ever gates publish.
+      operation: OperationType.PUBLISH,
+      'publish-mode': flags['publish-mode'] || 'bulk',
+    };
+
+    this.parsedFlags = mergedFlags;
+    await this.buildConfiguration(mergedFlags);
+    await this.setupStack();
+    await this.initializeComponents();
+
+    await this.retryPendingScan(logPath, pendingEntries);
+
+    // Mirrors initForRevertOrRetry: this early exit bypasses finally().
+    this.finalizeProgressSummary();
+    process.exit(0);
+  }
+
+  /**
+   * Stamp a pending-scan skip with the run metadata --retry-pending needs to
+   * rebuild the publish call later without re-fetching the asset.
+   */
+  private buildPendingScanEntry(item: {
+    uid: string;
+    locale: string;
+    version?: number;
+    environments: string[];
+  }): PendingScanLogEntry {
+    return {
+      ...item,
+      operation: 'publish',
+      timestamp: new Date().toISOString(),
+      apiKey: this.bulkOperationConfig.apiKey || this.bulkOperationConfig.stackApiKey || '',
+      branch: this.bulkOperationConfig.branch,
+    };
+  }
+
+  /**
+   * Re-check the scan status of assets a previous run skipped as still scanning,
+   * publish the ones now clean, and prune the log down to those still pending.
+   */
+  private async retryPendingScan(logPath: string, pendingEntries: PendingScanLogEntry[]): Promise<void> {
+    const uids = [...new Set(pendingEntries.map((entry) => entry.uid))];
+    const assetService = new AssetService(this.managementStack, this.deliveryStack, this.logger);
+    const scanStatusMap = await assetService.fetchScanStatusByUIDs(uids);
+
+    const nowClean: PendingScanLogEntry[] = [];
+    const stillPending: PendingScanLogEntry[] = [];
+    const nowQuarantined: PendingScanLogEntry[] = [];
+
+    for (const entry of pendingEntries) {
+      const status = scanStatusMap.get(entry.uid);
+      if (status === 'pending') stillPending.push(entry);
+      else if (status === 'quarantined') nowQuarantined.push(entry);
+      else nowClean.push(entry); // clean, or undefined when scanning is disabled
+    }
+
+    log.info(
+      $t(messages.SCAN_RECHECK_SUMMARY, {
+        total: pendingEntries.length,
+        clean: nowClean.length,
+        pending: stillPending.length,
+        quarantined: nowQuarantined.length,
+      })
+    );
+    nowQuarantined.forEach((entry) =>
+      this.logger.warn($t(messages.SCAN_STATUS_SKIPPED_QUARANTINED, { uid: entry.uid }))
+    );
+
+    if (nowClean.length === 0) {
+      this.logger.warn($t(messages.NO_PUBLISHABLE_ASSETS));
+      // Still prune: the quarantined ones will never become publishable.
+      writePendingScanLog(stillPending, logPath);
+      return;
+    }
+
+    const items: AssetPublishData[] = nowClean.map((entry) => ({
+      type: 'asset',
+      uid: entry.uid,
+      locale: entry.locale,
+      version: entry.version,
+      publish_details: entry.environments.map((environment) => ({ environment, locale: entry.locale })),
+    }));
+
+    const confirmed = await this.confirmOperation(items);
+    if (!confirmed) {
+      this.logger.warn($t(messages.OPERATION_CANCELLED));
+      // Leave the log untouched so the next run sees the same set.
+      return;
+    }
+
+    const result = await this.executeBulkOperation(items);
+    this.printOperationSummary(result);
+
+    writePendingScanLog(stillPending, logPath);
   }
 }

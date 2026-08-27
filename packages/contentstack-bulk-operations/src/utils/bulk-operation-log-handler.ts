@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LogPaths, LogEntry, BulkModeLogEntry, SingleModeLogEntry } from '../interfaces';
+import { LogPaths, LogEntry, BulkModeLogEntry, SingleModeLogEntry, PendingScanLogEntry } from '../interfaces';
 import { $t, messages } from './index';
 
 const DEFAULT_LOG_FOLDER = 'bulk-operation';
@@ -31,6 +31,8 @@ export function getLogPaths(folderPath?: string): LogPaths {
     // Single mode logs (individual items)
     singleSuccess: path.join(folder, 'single-success.json'),
     singleFailed: path.join(folder, 'single-failed.json'),
+    // Assets skipped for a pending malware scan (retried via --retry-pending)
+    pendingScan: path.join(folder, 'pending-scan.json'),
   };
 }
 
@@ -259,6 +261,65 @@ export function writeSingleFailedLog(entry: SingleModeLogEntry, folderPath?: str
   } catch (error) {
     console.error($t(messages.ERROR_WRITING_LOG, { logType: 'single failed', path: paths.singleFailed }), error);
   }
+}
+
+/**
+ * Read the pending-scan log
+ * @param folderPath - The base folder path for logs (optional)
+ * @returns Array of assets skipped for a pending malware scan
+ */
+export function readPendingScanLog(folderPath?: string): PendingScanLogEntry[] {
+  const paths = getLogPaths(folderPath);
+
+  if (!fs.existsSync(paths.pendingScan)) {
+    return [];
+  }
+
+  try {
+    const content = fs.readFileSync(paths.pendingScan, 'utf-8');
+    return JSON.parse(content) as PendingScanLogEntry[];
+  } catch (error) {
+    console.error($t(messages.ERROR_READING_LOG, { logType: 'pending scan', path: paths.pendingScan }), error);
+    return [];
+  }
+}
+
+/**
+ * Overwrite the pending-scan log with the given entries.
+ * Used by the --retry-pending flow to prune entries that are no longer pending.
+ * @param entries - The full set of entries to persist
+ * @param folderPath - The base folder path for logs (optional)
+ */
+export function writePendingScanLog(entries: PendingScanLogEntry[], folderPath?: string): void {
+  ensureLogFolder(folderPath);
+  const paths = getLogPaths(folderPath);
+
+  try {
+    fs.writeFileSync(paths.pendingScan, JSON.stringify(entries, null, 2), 'utf-8');
+  } catch (error) {
+    console.error($t(messages.ERROR_WRITING_LOG, { logType: 'pending scan', path: paths.pendingScan }), error);
+  }
+}
+
+/**
+ * Merge new entries into the pending-scan log, deduped by uid + locale so an asset
+ * skipped again on a later run replaces its stale entry instead of piling up.
+ *
+ * One read + one write per call — callers batch a whole run's skips into a single
+ * invocation rather than writing per asset.
+ * @param newEntries - Entries to merge in (no-op when empty)
+ * @param folderPath - The base folder path for logs (optional)
+ */
+export function appendPendingScanLog(newEntries: PendingScanLogEntry[], folderPath?: string): void {
+  if (newEntries.length === 0) return;
+
+  const key = (entry: PendingScanLogEntry) => `${entry.uid}::${entry.locale}`;
+  const merged = new Map(readPendingScanLog(folderPath).map((entry) => [key(entry), entry]));
+  for (const entry of newEntries) {
+    merged.set(key(entry), entry);
+  }
+
+  writePendingScanLog([...merged.values()], folderPath);
 }
 
 /**

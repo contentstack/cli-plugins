@@ -15,9 +15,25 @@ import {
   writeBulkFailedLog,
   writeSingleSuccessLog,
   writeSingleFailedLog,
+  readPendingScanLog,
+  writePendingScanLog,
+  appendPendingScanLog,
   clearLogs,
 } from '../../../src/utils/bulk-operation-log-handler';
-import { BulkModeLogEntry, SingleModeLogEntry } from '../../../src/interfaces';
+import { BulkModeLogEntry, SingleModeLogEntry, PendingScanLogEntry } from '../../../src/interfaces';
+
+const pendingEntry = (overrides: Partial<PendingScanLogEntry> = {}): PendingScanLogEntry => ({
+  uid: 'asset1',
+  locale: 'en-us',
+  version: 1,
+  environments: ['prod'],
+  operation: 'publish',
+  timestamp: '2026-01-09T10:00:00Z',
+  // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+  apiKey: 'test-key',
+  branch: 'main',
+  ...overrides,
+});
 
 describe('Bulk Operation Log Handler', () => {
   let sandbox: sinon.SinonSandbox;
@@ -71,6 +87,7 @@ describe('Bulk Operation Log Handler', () => {
         bulkFailed: '/home/user/project/bulk-operation/bulk-failed.json',
         singleSuccess: '/home/user/project/bulk-operation/single-success.json',
         singleFailed: '/home/user/project/bulk-operation/single-failed.json',
+        pendingScan: '/home/user/project/bulk-operation/pending-scan.json',
       });
     });
 
@@ -84,6 +101,7 @@ describe('Bulk Operation Log Handler', () => {
         bulkFailed: '/home/user/project/custom-logs/bulk-failed.json',
         singleSuccess: '/home/user/project/custom-logs/single-success.json',
         singleFailed: '/home/user/project/custom-logs/single-failed.json',
+        pendingScan: '/home/user/project/custom-logs/pending-scan.json',
       });
     });
 
@@ -97,6 +115,7 @@ describe('Bulk Operation Log Handler', () => {
         bulkFailed: path.join(absoluteFolder, 'bulk-failed.json'),
         singleSuccess: path.join(absoluteFolder, 'single-success.json'),
         singleFailed: path.join(absoluteFolder, 'single-failed.json'),
+        pendingScan: path.join(absoluteFolder, 'pending-scan.json'),
       });
     });
 
@@ -666,6 +685,146 @@ describe('Bulk Operation Log Handler', () => {
     });
   });
 
+  describe('readPendingScanLog', () => {
+    let existsSyncStub: sinon.SinonStub;
+    let readFileSyncStub: sinon.SinonStub;
+    let consoleErrorStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      const fs = require('fs');
+      existsSyncStub = sandbox.stub(fs, 'existsSync');
+      readFileSyncStub = sandbox.stub(fs, 'readFileSync');
+      consoleErrorStub = sandbox.stub(console, 'error');
+    });
+
+    it('should return empty array if pending scan log file does not exist', () => {
+      existsSyncStub.returns(false);
+
+      expect(readPendingScanLog()).to.deep.equal([]);
+    });
+
+    it('should return empty array and log error if JSON parsing fails', () => {
+      existsSyncStub.returns(true);
+      readFileSyncStub.returns('invalid json');
+
+      expect(readPendingScanLog()).to.deep.equal([]);
+      expect(consoleErrorStub.called).to.be.true;
+    });
+
+    it('should return parsed entries when valid JSON exists', () => {
+      const entries = [pendingEntry()];
+      existsSyncStub.returns(true);
+      readFileSyncStub.returns(JSON.stringify(entries));
+
+      expect(readPendingScanLog()).to.deep.equal(entries);
+    });
+  });
+
+  describe('writePendingScanLog', () => {
+    let existsSyncStub: sinon.SinonStub;
+    let writeFileSyncStub: sinon.SinonStub;
+    let consoleErrorStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      const fs = require('fs');
+      existsSyncStub = sandbox.stub(fs, 'existsSync');
+      writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
+      sandbox.stub(fs, 'mkdirSync');
+      consoleErrorStub = sandbox.stub(console, 'error');
+    });
+
+    it('should overwrite the log with exactly the given entries', () => {
+      existsSyncStub.returns(true);
+      const entries = [pendingEntry(), pendingEntry({ uid: 'asset2' })];
+
+      writePendingScanLog(entries, './test-logs');
+
+      expect(writeFileSyncStub.calledOnce).to.be.true;
+      expect(writeFileSyncStub.firstCall.args[0]).to.equal(path.join('/home/user/project/test-logs', 'pending-scan.json'));
+      expect(JSON.parse(writeFileSyncStub.firstCall.args[1])).to.deep.equal(entries);
+    });
+
+    it('should write an empty array when pruning every entry', () => {
+      existsSyncStub.returns(true);
+
+      writePendingScanLog([], './test-logs');
+
+      expect(JSON.parse(writeFileSyncStub.firstCall.args[1])).to.deep.equal([]);
+    });
+
+    it('should handle write errors gracefully', () => {
+      existsSyncStub.returns(true);
+      writeFileSyncStub.throws(new Error('Write error'));
+
+      writePendingScanLog([pendingEntry()], './test-logs');
+      expect(consoleErrorStub.called).to.be.true;
+    });
+  });
+
+  describe('appendPendingScanLog', () => {
+    let existsSyncStub: sinon.SinonStub;
+    let readFileSyncStub: sinon.SinonStub;
+    let writeFileSyncStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      const fs = require('fs');
+      existsSyncStub = sandbox.stub(fs, 'existsSync');
+      readFileSyncStub = sandbox.stub(fs, 'readFileSync');
+      writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
+      sandbox.stub(fs, 'mkdirSync');
+      sandbox.stub(console, 'error');
+    });
+
+    it('should not touch the log when there is nothing to append', () => {
+      appendPendingScanLog([], './test-logs');
+
+      expect(writeFileSyncStub.called).to.be.false;
+      expect(readFileSyncStub.called).to.be.false;
+    });
+
+    it('should merge new entries with existing ones', () => {
+      existsSyncStub.returns(true);
+      readFileSyncStub.returns(JSON.stringify([pendingEntry({ uid: 'asset1' })]));
+
+      appendPendingScanLog([pendingEntry({ uid: 'asset2' })], './test-logs');
+
+      const written = JSON.parse(writeFileSyncStub.firstCall.args[1]);
+      expect(written.map((e: PendingScanLogEntry) => e.uid)).to.deep.equal(['asset1', 'asset2']);
+    });
+
+    it('should dedupe by uid and locale, keeping the newest entry', () => {
+      existsSyncStub.returns(true);
+      readFileSyncStub.returns(JSON.stringify([pendingEntry({ version: 1, timestamp: 'old' })]));
+
+      appendPendingScanLog([pendingEntry({ version: 2, timestamp: 'new' })], './test-logs');
+
+      const written = JSON.parse(writeFileSyncStub.firstCall.args[1]);
+      expect(written).to.have.lengthOf(1);
+      expect(written[0].version).to.equal(2);
+      expect(written[0].timestamp).to.equal('new');
+    });
+
+    it('should treat the same uid in different locales as separate entries', () => {
+      existsSyncStub.returns(true);
+      readFileSyncStub.returns(JSON.stringify([pendingEntry({ locale: 'en-us' })]));
+
+      appendPendingScanLog([pendingEntry({ locale: 'fr-fr' })], './test-logs');
+
+      expect(JSON.parse(writeFileSyncStub.firstCall.args[1])).to.have.lengthOf(2);
+    });
+
+    it('should write a single file for a whole batch of entries', () => {
+      existsSyncStub.returns(false);
+
+      appendPendingScanLog(
+        [pendingEntry({ uid: 'a' }), pendingEntry({ uid: 'b' }), pendingEntry({ uid: 'c' })],
+        './test-logs'
+      );
+
+      expect(writeFileSyncStub.callCount).to.equal(1);
+    });
+  });
+
   describe('clearLogs', () => {
     let existsSyncStub: sinon.SinonStub;
     let writeFileSyncStub: sinon.SinonStub;
@@ -692,6 +851,16 @@ describe('Bulk Operation Log Handler', () => {
       writeFileSyncStub.getCalls().forEach((call) => {
         expect(call.args[1]).to.equal('[]');
       });
+    });
+
+    it('should NOT clear the pending scan log', () => {
+      existsSyncStub.returns(false);
+
+      clearLogs('./test-logs');
+
+      // Pending assets outlive a single run — only --retry-pending prunes them.
+      const clearedPaths = writeFileSyncStub.getCalls().map((call) => call.args[0]);
+      expect(clearedPaths.some((p: string) => p.includes('pending-scan.json'))).to.be.false;
     });
 
     it('should use default folder path when none provided', () => {

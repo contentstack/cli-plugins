@@ -232,6 +232,10 @@ const bulkAssetsMsg = {
   SCAN_STATUS_SKIPPED_QUARANTINED: 'Skipped (quarantined): {uid}',
   SCAN_STATUS_FETCHING: 'Checking asset scan status for {count} assets...',
   NO_PUBLISHABLE_ASSETS: 'No publishable assets — all assets are either still scanning or quarantined.',
+  SCAN_RECHECK_SUMMARY:
+    'Re-checked {total} pending asset(s): {clean} now clean (will publish), {pending} still scanning, {quarantined} now quarantined (skipped permanently).',
+  NO_PENDING_SCAN_ITEMS_IN_LOG:
+    'No pending-scan assets found in {path} — nothing to retry. Assets are recorded there when a publish run skips them for a scan still in progress.',
 };
 
 /**
@@ -424,6 +428,8 @@ const flagDescriptions = {
   YES: 'Skips interactive confirmation prompts and runs the command immediately using the provided options. Useful for automation and scripts.',
   RETRY_FAILED:
     '(optional) Use this option to retry publishing the failed entries/assets from the logfile. Specify the name of the logfile that lists failed publish calls. If this option is used, it will override all other flags.',
+  RETRY_PENDING:
+    '(optional) Re-checks the malware scan status of assets a previous run skipped because scanning was still in progress, and publishes the ones that are now clean. Specify the bulk operation folder used by that run. Quarantined assets are never retried.',
 
   // Entry-specific flags
   CONTENT_TYPES: 'Content type UIDs to perform operation on. If not provided, operates on all content types.',

@@ -156,6 +156,18 @@ export abstract class BaseBulkCommand extends Command {
   }
 
   /**
+   * Hook for a resource-specific retry flow that loads its config from a log file
+   * rather than the usual flags — like --retry-failed/--revert, but with its own
+   * pre-publish checks (see BulkAssets and --retry-pending).
+   *
+   * Return true when the flow handled the run: init() then returns immediately,
+   * skipping interactive prompts, the normal pipeline, and clearLogs().
+   */
+  protected async handleResourceSpecificRetryFlow(_flags: any): Promise<boolean> {
+    return false;
+  }
+
+  /**
    * Initialize common components
    */
   protected async init(): Promise<void> {
@@ -180,6 +192,12 @@ export abstract class BaseBulkCommand extends Command {
 
     this.logger = log;
     this.loggerContext = { module: this.id };
+
+    // Resource-specific retry flows (e.g. asset scan-status retry) run their own
+    // init and must bypass clearLogs() for the same reason revert/retry does.
+    if (await this.handleResourceSpecificRetryFlow(flags)) {
+      return;
+    }
 
     // Check for revert/retry EARLY - all config comes from log file
     const isRevertOrRetry = flags.revert || flags['retry-failed'];

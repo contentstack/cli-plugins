@@ -1,17 +1,19 @@
 fileignoreconfig:
 
-- filename: pnpm-lock.yaml
-  checksum: 98236e2588d5cffcbdda3464179d91e9540fd8ddb4d4fb5251cf0f7379876f42
+- filename: packages/contentstack-cli-tsgen/src/lib/helper.ts
+  checksum: cc2f88294ca026c29ca44ee7f9994ebc64e56d9a7a015c64070aaf271f1c3ba2
+- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
+  checksum: 083c6c40fa91a55a34e658b6f9b7229f304de306d8a3e7853664d32c4e34097c
 - filename: packages/contentstack-bulk-operations/src/utils/backup-dir-asset-fetcher.ts
   checksum: fbf1ef882bf4ea8f06a7a28b9248a07e01f5a5d2d4da98dbb9ee52bc16ce318a
 - filename: packages/contentstack-bulk-operations/test/unit/utils/backup-dir-asset-fetcher.test.ts
   checksum: b905524c952aff0f089fa5347e0db18479b75a438cd9ae77e2dfe1cb203d7e59
+- filename: pnpm-lock.yaml
+  checksum: 98236e2588d5cffcbdda3464179d91e9540fd8ddb4d4fb5251cf0f7379876f42
 - filename: packages/contentstack-import/src/import/modules/assets.ts
   checksum: 014f612c3e8db21c891da0c17a1a3b4cd340c026c58034791d86cd5f73aa9f90
-- filename: packages/contentstack-bulk-operations/test/unit/utils/revert-retry-handler.test.ts
-  checksum: 142e7b67a06bc13b6b4191b17f2ea8ae31a3bce20086ea35a92f3e3671eb603d
-- filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
-  checksum: 9392511b337c361b86c36eb2431d8fea9129a61f6b7d70dcb4a633fea339ca61
 - filename: packages/contentstack-bulk-operations/src/utils/batch-helper.ts
   checksum: ddcd8ef7c56d1122df88075883a2768a28813147e8fdef5b8e72a1ec118c045a
+- filename: packages/contentstack-bulk-operations/test/unit/utils/revert-retry-handler.test.ts
+  checksum: 142e7b67a06bc13b6b4191b17f2ea8ae31a3bce20086ea35a92f3e3671eb603d
   version: ""
