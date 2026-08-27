@@ -77,6 +77,11 @@ describe('operation-flag-matrix', () => {
         expect(violations).to.have.lengthOf(1);
         expect(violations[0]).to.include('--locale');
       });
+
+      it('rejects --retry-pending with delete and move', () => {
+        expect(validateOperationFlagMatrix('delete', ['--retry-pending', './log'])).to.have.lengthOf(1);
+        expect(validateOperationFlagMatrix('move', ['--retry-pending', './log'])).to.have.lengthOf(1);
+      });
     });
 
     describe('publish/unpublish reject CS Assets flags', () => {
@@ -103,6 +108,22 @@ describe('operation-flag-matrix', () => {
           '-k',
           'blt123',
         ]);
+        expect(violations).to.be.empty;
+      });
+
+      it('rejects --retry-pending with unpublish (scan status only gates publish)', () => {
+        const violations = validateOperationFlagMatrix('unpublish', ['--retry-pending', './log']);
+        expect(violations).to.have.lengthOf(1);
+        expect(violations[0]).to.include('--retry-pending');
+      });
+
+      it('accepts --retry-pending with publish', () => {
+        const violations = validateOperationFlagMatrix('publish', ['--retry-pending', './log']);
+        expect(violations).to.be.empty;
+      });
+
+      it('accepts --retry-pending on the retry/revert path (no operation given)', () => {
+        const violations = validateOperationFlagMatrix(RETRY_REVERT_CONTEXT, ['--retry-pending', './log']);
         expect(violations).to.be.empty;
       });
 

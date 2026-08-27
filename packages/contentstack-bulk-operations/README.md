@@ -44,8 +44,8 @@ USAGE
   $ csdx cm:stacks:bulk-assets [-a <value>] [-k <value>] [--operation publish|unpublish|delete|move] [--environments
     <value>...] [--locales <value>...] [--source-env <value>] [--source-alias <value>] [--publish-mode bulk|single]
     [--branch <value>] [-c <value>] [-y] [--retry-failed <value>] [--revert <value>] [--bulk-operation-file <value>]
-    [--folder-uid <value>] [-d <value>] [--dry-run] [--space-uid <value>] [--org-uid <value>] [--workspace <value>]
-    [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid <value>]
+    [--folder-uid <value>] [-d <value>] [--dry-run] [--retry-pending <value>] [--space-uid <value>] [--org-uid <value>]
+    [--workspace <value>] [--asset-uids-file <value>] [--locale <value>] [--target-folder-uid <value>]
 
 FLAGS
   -a, --alias=<value>                Uses the name of a saved Management Token to authenticate the command. The command
@@ -85,6 +85,10 @@ FLAGS
       --retry-failed=<value>         (optional) Use this option to retry publishing the failed entries/assets from the
                                      logfile. Specify the name of the logfile that lists failed publish calls. If this
                                      option is used, it will override all other flags.
+      --retry-pending=<value>        (optional) Re-checks the malware scan status of assets a previous run skipped
+                                     because scanning was still in progress, and publishes the ones that are now clean.
+                                     Specify the bulk operation folder used by that run. Quarantined assets are never
+                                     retried.
       --revert=<value>               (optional) Revert publish operations from a log folder. Specify the folder path
                                      containing success logs. Works similar to retry-failed.
       --source-alias=<value>         Alias name for source environment delivery token (required for cross-publish). Add
@@ -111,6 +115,8 @@ EXAMPLES
   $ csdx cm:stacks:bulk-assets --operation publish --source-env production --source-alias prod-delivery --environments staging,dev --locales en-us -a myAlias
 
   $ csdx cm:stacks:bulk-assets --retry-failed ./bulk-operation -a myAlias
+
+  $ csdx cm:stacks:bulk-assets --retry-pending ./bulk-operation -a myAlias
 
   $ csdx cm:stacks:bulk-assets --revert ./bulk-operation -a myAlias
 

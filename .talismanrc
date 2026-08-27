@@ -32,11 +32,17 @@ fileignoreconfig:
 - filename: packages/contentstack-audit/test/unit/mock/am-contents/stack/stack.json
   checksum: c4ac3ff80eb38b1c58eb0db21a232bd84f856d4647093542296199036945083c
 - filename: packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-assets.ts
-  checksum: 60f33657cc6e2664c17397a2f6b4b54a3f7bf71618931d63cd2811822bd4837e
+  checksum: 0b07ebebd0aaf3c1cb2dedd74801c93ed4a083864c96b8457d7e612c5736d0da
 - filename: packages/contentstack-bulk-operations/src/utils/data-dir-asset-fetcher.ts
   checksum: ddcf4601ac47be300eba0eb901e4d45d748c2c4eab676c56677cb9a802fe3db0
 - filename: packages/contentstack-migration/src/commands/cm/stacks/migration.ts
   checksum: a64a4d396eddd936a63b799eff58c5c6660b5dcaa3a310fd8b09a027932f1789
 - filename: packages/contentstack-migration/README.md
   checksum: e96006c1a948f766c88ae972b29582fa58eaf8184606bf011eebddc5a06cd7b6
+- filename: packages/contentstack-bulk-operations/src/utils/bulk-operation-log-handler.ts
+  checksum: e67a7a16a395be315c7464c8a24b142cbd259c59d31b17e1cdd32f613060c2b4
+- filename: packages/contentstack-bulk-operations/test/unit/commands/bulk-assets.test.ts
+  checksum: 92e0ba427283573dd629ca96e5d2c4286bfd90cf6f36af65b404c09bb32d856f
+- filename: packages/contentstack-bulk-operations/test/unit/utils/bulk-operation-log-handler.test.ts
+  checksum: a660f8caac1418746ef6ec7ef9b69d04065ce0a8c0e7568bcbbd6e5287841304
 version: ""

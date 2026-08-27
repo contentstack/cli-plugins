@@ -32,6 +32,7 @@ const CMS_ONLY_FLAGS: FlagSpec[] = [
   { name: 'branch' },
   { name: 'config', char: 'c' },
   { name: 'retry-failed' },
+  { name: 'retry-pending' },
   { name: 'revert' },
   { name: 'bulk-operation-file' },
   { name: 'folder-uid' },
@@ -117,6 +118,12 @@ export function validateOperationFlagMatrix(operation: string, argv: string[]): 
   // move additionally rejects --locale (delete-only within the CS Assets pair)
   if (operation === OperationType.MOVE && isFlagInArgv(argv, { name: 'locale' })) {
     violations.push(messages.CS_ASSETS_LOCALE_NOT_ALLOWED_FOR_MOVE);
+  }
+
+  // Scan status only gates publish, so --retry-pending is meaningless for unpublish.
+  // CMS_ONLY_FLAGS cannot express this: publish and unpublish share one rejected list.
+  if (operation === OperationType.UNPUBLISH && isFlagInArgv(argv, { name: 'retry-pending' })) {
+    violations.push($t(messages.FLAG_NOT_ALLOWED_FOR_OPERATION, { flag: '--retry-pending', operation, hint: '' }));
   }
 
   return violations;

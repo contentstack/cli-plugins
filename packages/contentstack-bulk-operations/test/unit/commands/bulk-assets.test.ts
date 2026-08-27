@@ -543,12 +543,140 @@ describe('BulkAssets Command', () => {
     });
   });
 
+  describe('retryPendingScan', () => {
+    let logHandler: any;
+    let writePendingScanLogStub: sinon.SinonStub;
+    let fetchScanStatusStub: sinon.SinonStub;
+    let executeBulkOperationStub: sinon.SinonStub;
+    let confirmOperationStub: sinon.SinonStub;
+
+    const entry = (uid: string, locale = 'en-us') => ({
+      uid,
+      locale,
+      version: 1,
+      environments: ['dev'],
+      operation: 'publish' as const,
+      timestamp: '2026-01-09T10:00:00Z',
+      apiKey: 'test-api-key',
+      branch: 'main',
+    });
+
+    /** Drives retryPendingScan with a stubbed status response for the given entries. */
+    const runRetry = async (entries: any[], statuses: Record<string, string | undefined>) => {
+      fetchScanStatusStub.resolves(new Map(Object.entries(statuses)));
+      await (command as any).retryPendingScan('/mock/bulk-operation', entries);
+    };
+
+    beforeEach(() => {
+      logHandler = require('../../../src/utils/bulk-operation-log-handler');
+      writePendingScanLogStub = sandbox.stub(logHandler, 'writePendingScanLog').returns(undefined);
+
+      const { AssetService } = require('../../../src/services');
+      fetchScanStatusStub = sandbox.stub(AssetService.prototype, 'fetchScanStatusByUIDs');
+
+      (command as any).managementStack = {};
+      (command as any).deliveryStack = null;
+      confirmOperationStub = sandbox.stub(command as any, 'confirmOperation').resolves(true);
+      executeBulkOperationStub = sandbox
+        .stub(command as any, 'executeBulkOperation')
+        .resolves({ success: 1, failed: 0, total: 1 } as BulkOperationResult);
+      sandbox.stub(command as any, 'printOperationSummary').returns(undefined);
+    });
+
+    it('should publish only the assets whose scan is now clean', async () => {
+      await runRetry([entry('clean1'), entry('pending1'), entry('quarantined1')], {
+        clean1: 'clean',
+        pending1: 'pending',
+        quarantined1: 'quarantined',
+      });
+
+      expect(executeBulkOperationStub.calledOnce).to.be.true;
+      const published = executeBulkOperationStub.firstCall.args[0];
+      expect(published.map((i: any) => i.uid)).to.deep.equal(['clean1']);
+    });
+
+    it('should treat an unknown status as publishable (scanning disabled on the stack)', async () => {
+      await runRetry([entry('noStatus1')], {});
+
+      expect(executeBulkOperationStub.firstCall.args[0].map((i: any) => i.uid)).to.deep.equal(['noStatus1']);
+    });
+
+    it('should rebuild publish details from the logged environments', async () => {
+      await runRetry([{ ...entry('clean1'), environments: ['dev', 'prod'] }], { clean1: 'clean' });
+
+      const [item] = executeBulkOperationStub.firstCall.args[0];
+      expect(item).to.deep.include({ type: 'asset', uid: 'clean1', locale: 'en-us', version: 1 });
+      expect(item.publish_details).to.deep.equal([
+        { environment: 'dev', locale: 'en-us' },
+        { environment: 'prod', locale: 'en-us' },
+      ]);
+    });
+
+    it('should prune published and quarantined entries, keeping only those still pending', async () => {
+      await runRetry([entry('clean1'), entry('pending1'), entry('quarantined1')], {
+        clean1: 'clean',
+        pending1: 'pending',
+        quarantined1: 'quarantined',
+      });
+
+      expect(writePendingScanLogStub.calledOnce).to.be.true;
+      const remaining = writePendingScanLogStub.firstCall.args[0];
+      expect(remaining.map((e: any) => e.uid)).to.deep.equal(['pending1']);
+    });
+
+    it('should skip publishing but still drop quarantined entries when nothing is clean', async () => {
+      await runRetry([entry('pending1'), entry('quarantined1')], {
+        pending1: 'pending',
+        quarantined1: 'quarantined',
+      });
+
+      expect(executeBulkOperationStub.called).to.be.false;
+      expect(logStub.warn.calledWith($t(messages.NO_PUBLISHABLE_ASSETS))).to.be.true;
+      expect(writePendingScanLogStub.firstCall.args[0].map((e: any) => e.uid)).to.deep.equal(['pending1']);
+    });
+
+    it('should leave the log untouched when the user declines confirmation', async () => {
+      confirmOperationStub.resolves(false);
+
+      await runRetry([entry('clean1'), entry('pending1')], { clean1: 'clean', pending1: 'pending' });
+
+      expect(executeBulkOperationStub.called).to.be.false;
+      expect(writePendingScanLogStub.called).to.be.false;
+    });
+
+    it('should report the recheck counts', async () => {
+      await runRetry([entry('clean1'), entry('pending1'), entry('quarantined1')], {
+        clean1: 'clean',
+        pending1: 'pending',
+        quarantined1: 'quarantined',
+      });
+
+      expect(
+        logStub.info.calledWith(
+          $t(messages.SCAN_RECHECK_SUMMARY, { total: 3, clean: 1, pending: 1, quarantined: 1 })
+        )
+      ).to.be.true;
+    });
+
+    it('should query scan status once per unique uid', async () => {
+      await runRetry([entry('asset1', 'en-us'), entry('asset1', 'fr-fr')], { asset1: 'clean' });
+
+      expect(fetchScanStatusStub.firstCall.args[0]).to.deep.equal(['asset1']);
+      // Both locale rows still get published.
+      expect(executeBulkOperationStub.firstCall.args[0]).to.have.lengthOf(2);
+    });
+  });
+
   describe('flag configurations', () => {
     it('should have folder-uid flag', () => {
       const flags = BulkAssets.flags;
 
       expect(flags['folder-uid']).to.exist;
       expect(flags['folder-uid'].description).to.include('folder');
+    });
+
+    it('should have retry-pending flag', () => {
+      expect(BulkAssets.flags['retry-pending']).to.exist;
     });
 
     it('should inherit base flags', () => {

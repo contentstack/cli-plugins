@@ -400,6 +400,25 @@ export interface SingleModeLogEntry {
  */
 export type LogEntry = BulkModeLogEntry | SingleModeLogEntry;
 
+/**
+ * Log entry for an asset skipped because its malware scan was still pending.
+ *
+ * Flat (no bulk/single split) — the skip happens before the publish mode matters.
+ * Self-sufficient by design: a later --retry-pending run rebuilds the publish
+ * payload straight from this record without re-fetching the asset.
+ */
+export interface PendingScanLogEntry {
+  uid: string;
+  locale: string;
+  version?: number;
+  environments: string[];
+  operation: 'publish'; // scan status only gates publish
+  timestamp: string;
+  // Metadata
+  apiKey: string;
+  branch?: string;
+}
+
 export interface LogPaths {
   folder: string;
   // Bulk mode logs
@@ -408,6 +427,8 @@ export interface LogPaths {
   // Single mode logs
   singleSuccess: string;
   singleFailed: string;
+  // Assets skipped for a pending scan, retried via --retry-pending
+  pendingScan: string;
 }
 
 /**

@@ -240,5 +240,53 @@ describe('BulkAssets command — init() dispatch', () => {
       expect(thrown).to.be.instanceOf(OperationFlagMatrixError);
       expect(logStub.error.firstCall.args[0]).to.include('--retry-failed/--revert');
     });
+
+    it('does not prompt for an operation on the --retry-pending path', async () => {
+      command = makeCommand(['--retry-pending', './bulk-operation']);
+      const promptStub = sandbox.stub(interactiveModule, 'promptForOperation');
+      sandbox.stub(command as any, 'parse').resolves({ flags: { 'retry-pending': './bulk-operation' } });
+      // Stop before the flow itself runs — this asserts only that init() skipped the prompt.
+      sandbox.stub(command as any, 'initForRetryPendingScan').resolves(undefined);
+
+      await (command as any).init();
+
+      expect(promptStub.called).to.be.false;
+    });
+  });
+
+  describe('--retry-pending short circuit', () => {
+    it('runs the pending-scan flow and skips the normal pipeline and clearLogs', async () => {
+      command = makeCommand(['--retry-pending', './bulk-operation']);
+      sandbox.stub(command as any, 'parse').resolves({ flags: { 'retry-pending': './bulk-operation' } });
+
+      const clearLogsStub = sandbox.stub(logHandlerModule, 'clearLogs').returns(undefined);
+      const retryFlowStub = sandbox.stub(command as any, 'initForRetryPendingScan').resolves(undefined);
+      const setupStackStub = sandbox.stub(command as any, 'setupStack').resolves(undefined);
+
+      await (command as any).init();
+
+      expect(retryFlowStub.calledOnce).to.be.true;
+      // A retry run must not wipe the sibling logs of the run being retried.
+      expect(clearLogsStub.called).to.be.false;
+      expect(setupStackStub.called).to.be.false;
+    });
+
+    it('leaves the normal pipeline alone when --retry-pending is absent', async () => {
+      command = makeCommand(['--operation', 'publish']);
+      sandbox.stub(command as any, 'parse').resolves({ flags: { operation: 'publish' } });
+      sandbox.stub(logHandlerModule, 'clearLogs').returns(undefined);
+
+      const retryFlowStub = sandbox.stub(command as any, 'initForRetryPendingScan').resolves(undefined);
+      sandbox.stub(command as any, 'resolveFlagsInteractively').resolvesArg(0);
+      sandbox.stub(command as any, 'buildConfiguration').callsFake(async () => {
+        (command as any).bulkOperationConfig = { bulkOperationFolder: './bulk-operation' };
+      });
+      sandbox.stub(command as any, 'setupStack').resolves(undefined);
+      sandbox.stub(command as any, 'initializeComponents').resolves(undefined);
+
+      await (command as any).init();
+
+      expect(retryFlowStub.called).to.be.false;
+    });
   });
 });
