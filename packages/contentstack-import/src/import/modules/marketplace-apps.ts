@@ -697,26 +697,14 @@ export default class ImportMarketplaceApps extends BaseClass {
 
     if (!isEmpty(configuration)) {
       log.debug(`Updating app configuration for: ${appName}`, this.importConfig.context);
-      // NOTE: decrypt synchronously in a guard. A bad-decrypt (e.g. ERR_OSSL_BAD_DECRYPT when the
-      // export was encrypted with a different key) would otherwise throw here — outside the promise
-      // chain's .catch — abort the whole marketplace-apps module, and skip writing the
-      // marketplace_apps uid-mapping, which starves the downstream GF/CT/entry extension remap.
-      // Instead: warn and skip only this app's configuration; the app stays installed and its
-      // extension mappings are still recorded.
-      let decryptedConfiguration: any;
+      // NOTE: decrypt inside the try. A bad-decrypt (e.g. ERR_OSSL_BAD_DECRYPT when the export was
+      // encrypted with a different key) would otherwise throw — outside the promise chain's .catch —
+      // and abort the whole marketplace-apps module before the marketplace_apps uid-mapping is
+      // written, which starves the downstream GF/CT/entry extension remap. We warn and skip only
+      // this app's configuration; the app stays installed and its extension mappings are preserved.
+      // (Skip, not return — the server_configuration block below is independent and must still run.)
       try {
-        decryptedConfiguration = this.nodeCrypto.decrypt(configuration);
-      } catch (error: any) {
-        log.warn(
-          `Failed to decrypt configuration for '${appName}'; skipping its configuration update. The app is installed and its extension mappings are preserved. (${
-            error?.message || error
-          })`,
-          this.importConfig.context,
-        );
-        decryptedConfiguration = undefined;
-      }
-
-      if (decryptedConfiguration !== undefined) {
+        const decryptedConfiguration = this.nodeCrypto.decrypt(configuration);
         await this.appSdk
           .marketplace(this.importConfig.org_uid)
           .installation(installation_uid)
@@ -735,27 +723,22 @@ export default class ImportMarketplaceApps extends BaseClass {
             log.error(formatError(error), this.importConfig.context);
             log.debug(`Configuration update failed for: ${appName}`, this.importConfig.context);
           });
+      } catch (error: any) {
+        log.warn(
+          `Failed to decrypt configuration for '${appName}'; skipping its configuration update. The app is installed and its extension mappings are preserved. (${
+            error?.message || error
+          })`,
+          this.importConfig.context,
+        );
       }
     }
 
     if (!isEmpty(server_configuration)) {
       log.debug(`Updating server configuration for: ${appName}`, this.importConfig.context);
-      // NOTE: guard the decrypt for the same reason as `configuration` above — a bad-decrypt must
-      // not abort the module or skip the uid-mapping write.
-      let decryptedServerConfiguration: any;
+      // Same rationale as `configuration` above — a bad-decrypt must not abort the module or skip
+      // the uid-mapping write.
       try {
-        decryptedServerConfiguration = this.nodeCrypto.decrypt(server_configuration);
-      } catch (error: any) {
-        log.warn(
-          `Failed to decrypt server configuration for '${appName}'; skipping its server configuration update. The app is installed and its extension mappings are preserved. (${
-            error?.message || error
-          })`,
-          this.importConfig.context,
-        );
-        decryptedServerConfiguration = undefined;
-      }
-
-      if (decryptedServerConfiguration !== undefined) {
+        const decryptedServerConfiguration = this.nodeCrypto.decrypt(server_configuration);
         await this.appSdk
           .marketplace(this.importConfig.org_uid)
           .installation(installation_uid)
@@ -774,6 +757,13 @@ export default class ImportMarketplaceApps extends BaseClass {
             log.error(formatError(error), this.importConfig.context);
             log.debug(`Server configuration update failed for: ${appName}`, this.importConfig.context);
           });
+      } catch (error: any) {
+        log.warn(
+          `Failed to decrypt server configuration for '${appName}'; skipping its server configuration update. The app is installed and its extension mappings are preserved. (${
+            error?.message || error
+          })`,
+          this.importConfig.context,
+        );
       }
     }
   }
