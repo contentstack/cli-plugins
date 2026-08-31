@@ -93,6 +93,10 @@ export const lookupAssets = function (
   let matchedUrls: string[] = [];
 
   let find = function (schema: any, entryToFind: any) {
+    // Guard against a missing schema — e.g. a reference-only global_field stub
+    // (data_type: 'global_field', reference_to, no expanded `schema`) as produced by
+    // query-export. Without this, recursing into an undefined schema throws.
+    if (!Array.isArray(schema)) return;
     for (let i = 0, _i = schema.length; i < _i; i++) {
       if (
         schema[i].data_type === 'text' &&
@@ -168,6 +172,32 @@ export const lookupAssets = function (
 
       return row;
     });
+  }
+
+  // Remap `metadata.extension_uid` anywhere in the entry DATA to the destination app's
+  // extension_uid via the marketplace_apps mapping (`installedExtensions`).
+  //
+  // is_asset custom-field values (e.g. `image_presets`) carry a stack-scoped
+  // `metadata.extension_uid` in the entry data. Left unmapped, the reference is orphaned on
+  // the destination and a later audit strips it as a missing reference (silent data loss).
+  // These fields can be nested inside group / global_field / blocks, and an imported
+  // content-type schema may represent a global field as a reference-only stub (no expanded
+  // `schema`) — so this walks the entry DATA directly instead of relying on the schema shape.
+  // Only known source->destination app UIDs are remapped, so unrelated values are untouched.
+  function remapEntryMetadataExtensionUids(node: any) {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) {
+      for (const item of node) remapEntryMetadataExtensionUids(item);
+      return;
+    }
+    const currentUid = node.metadata?.extension_uid;
+    if (currentUid && installedExtensions && installedExtensions[currentUid]) {
+      log.debug(`Mapping metadata extension UID: ${currentUid} -> ${installedExtensions[currentUid]}`);
+      node.metadata.extension_uid = installedExtensions[currentUid];
+    }
+    for (const key of Object.keys(node)) {
+      remapEntryMetadataExtensionUids(node[key]);
+    }
   }
 
   function findAssetIdsFromHtmlRte(entryObj: any, ctSchema: any) {
@@ -266,6 +296,11 @@ export const lookupAssets = function (
   }
 
   find(data.content_type.schema, data.entry);
+  // Remap marketplace-app extension UIDs in entry data (e.g. image_presets' metadata.extension_uid)
+  // once, unconditionally. find() only reaches the is_asset branch when it can descend the schema,
+  // so a reference-only global_field stub (no expanded schema) would otherwise be missed. This pass
+  // is schema-independent and idempotent (already-mapped UIDs are no-ops on re-run).
+  remapEntryMetadataExtensionUids(data.entry);
   // findFileUrls scans the whole entry object, but is only triggered inside find() when a
   // text field has markdown/rich_text_type metadata. Content types with no such fields
   // (e.g. those storing asset URLs in plain text fields) never call findFileUrls, so URLs
