@@ -1,7 +1,7 @@
 {
   "name": "@contentstack/cli-cm-bootstrap",
   "description": "Bootstrap contentstack apps",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "scripts": {
@@ -37,6 +37,7 @@
     "mocha": "10.8.2",
     "nyc": "^15.1.0",
     "oclif": "^4.23.27",
+    "sinon": "^21.1.2",
     "tmp": "^0.2.7",
     "ts-node": "^8.10.2",
     "typescript": "^5.9.3"

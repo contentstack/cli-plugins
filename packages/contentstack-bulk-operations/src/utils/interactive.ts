@@ -166,18 +166,18 @@ export async function fillMissingFlags(flags: any): Promise<any> {
   // Track if we prompted for anything
   let didPrompt = false;
 
-  // The presence of --data-dir is what selects the import-backup publish flow:
+  // The presence of --backup-dir is what selects the import-backup publish flow:
   // environments and locales are then derived per-asset from the backup, so we
-  // neither prompt for the data-dir path nor for environments/locales here.
-  const hasDataDir = !!updatedFlags['data-dir'];
+  // neither prompt for the backup-dir path nor for environments/locales here.
+  const hasBackupDir = !!updatedFlags['backup-dir'];
 
   // Check if any required fields are missing
   const needsCredentials = !updatedFlags.alias && !updatedFlags['stack-api-key'];
   const needsOperation = !updatedFlags.operation;
   // Check if non-localized filter is used
   const isNonLocalized = updatedFlags.filter === FilterType.NON_LOCALIZED;
-  const needsEnvironments = !hasDataDir && (!updatedFlags.environments || updatedFlags.environments.length === 0);
-  const needsLocales = !hasDataDir && !isNonLocalized && (!updatedFlags.locales || updatedFlags.locales.length === 0);
+  const needsEnvironments = !hasBackupDir && (!updatedFlags.environments || updatedFlags.environments.length === 0);
+  const needsLocales = !hasBackupDir && !isNonLocalized && (!updatedFlags.locales || updatedFlags.locales.length === 0);
 
   // Only show interactive mode header if we need to prompt
   if (needsCredentials || needsOperation || needsEnvironments || needsLocales) {

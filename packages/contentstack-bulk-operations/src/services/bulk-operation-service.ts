@@ -1,5 +1,5 @@
 import config from '../config';
-import { $t, messages, sleep } from '../utils';
+import { $t, messages, sleep, getUniqueEnvironments } from '../utils';
 import {
   EntryPublishData,
   AssetPublishData,
@@ -244,9 +244,9 @@ export class BulkOperationService {
       return entry;
     });
 
-    const environments = batchEnvironments?.length
-      ? batchEnvironments
-      : items[0]?.publish_details?.map((pd) => pd.environment) || [];
+    // Union across all items, never items[0] — one item's environments must not apply to the
+    // whole batch. Batches are single-target by construction, so the union is exact.
+    const environments = batchEnvironments?.length ? batchEnvironments : getUniqueEnvironments(items);
     const locales = batchLocales?.length ? batchLocales : Array.from(new Set(items.map((item) => item.locale)));
 
     if (!environments.length) {
@@ -281,9 +281,8 @@ export class BulkOperationService {
       return acc;
     }, []);
 
-    const environments = batchEnvironments?.length
-      ? batchEnvironments
-      : items[0]?.publish_details?.map((pd) => pd.environment) || [];
+    // Union across all items, never items[0] — see prepareEntryBulkPayload.
+    const environments = batchEnvironments?.length ? batchEnvironments : getUniqueEnvironments(items);
     const locales = batchLocales?.length ? batchLocales : Array.from(new Set(items.map((item) => item.locale)));
 
     if (!environments.length) {

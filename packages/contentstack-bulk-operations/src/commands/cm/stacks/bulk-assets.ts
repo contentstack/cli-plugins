@@ -3,14 +3,15 @@ import * as path from 'path';
 
 import { flags, handleAndLogError, log, FlagInput } from '@contentstack/cli-utilities';
 
-import { AssetPublishData, BulkOperationResult, ResourceType, OperationType, CsAssetsFlags } from '../../../interfaces';
+import { BulkOperationResult, ResourceType, OperationType, CsAssetsFlags } from '../../../interfaces';
 import { BaseBulkCommand } from '../../../base-bulk-command';
 import {
   $t,
   messages,
   fetchAssets,
-  scanDataDirStats,
-  BATCH_CONSTANTS,
+  scanBackupDirStats,
+  assetPublishTargets,
+  TargetBatcher,
   categorizeByScanStatus,
   fillMissingCsAssetsFlags,
   promptForOperation,
@@ -20,7 +21,7 @@ import {
   OperationFlagMatrixError,
   RETRY_REVERT_CONTEXT,
 } from '../../../utils';
-import type { DataDirScanStats } from '../../../utils';
+import type { BackupDirScanStats } from '../../../utils';
 import { AssetService } from '../../../services';
 
 type RegionWithOptionalCsAssetsUrl = { csAssetsUrl?: string };
@@ -34,7 +35,7 @@ const ALL_OPERATION_CHOICES = [
 
 /**
  * Bulk operations command for assets
- * Supports publish, unpublish, cross publish, and data-dir publish operations (CMS),
+ * Supports publish, unpublish, cross publish, and backup-dir publish operations (CMS),
  * plus delete and move operations (CS Assets).
  *
  * The two families use fully separate execution paths:
@@ -68,8 +69,8 @@ export default class BulkAssets extends BaseBulkCommand {
     // Revert (unpublish) previously published assets using success log
     '<%= config.bin %> <%= command.id %> --revert ./bulk-operation -a myAlias',
 
-    // Publish assets from exported content folder (e.g. after asset scanning clears)
-    '<%= config.bin %> <%= command.id %> --data-dir ./content --operation publish -k blt123',
+    // Publish imported assets to their original environments (e.g. after asset scanning clears)
+    '<%= config.bin %> <%= command.id %> --backup-dir ./content --operation publish -k blt123',
 
     // CS Assets bulk delete (asset UIDs from a JSON file `{ "uids": [...] }`)
     '<%= config.bin %> <%= command.id %> --operation delete --space-uid am123 --org-uid bltOrg --locale en-us --asset-uids-file ./assets.json',
@@ -88,9 +89,10 @@ export default class BulkAssets extends BaseBulkCommand {
     'folder-uid': flags.string({
       description: messages.FOLDER_UID,
     }),
-    'data-dir': flags.string({
-      char: 'd',
-      description: messages.DATA_DIR_FLAG_DESC,
+    'backup-dir': flags.string({
+      description: messages.BACKUP_DIR_FLAG_DESC,
+      // Environments and locales are always derived per-asset from the backup.
+      exclusive: ['source-env', 'folder-uid', 'environments', 'locales'],
     }),
     'dry-run': flags.boolean({
       description: messages.DRY_RUN_FLAG_DESC,
@@ -196,8 +198,8 @@ export default class BulkAssets extends BaseBulkCommand {
         return;
       }
 
-      if (this.bulkOperationConfig.dataDir) {
-        await this.runDataDirFlow();
+      if (this.bulkOperationConfig.backupDir) {
+        await this.runBackupDirFlow();
         return;
       }
 
@@ -249,22 +251,19 @@ export default class BulkAssets extends BaseBulkCommand {
     }
   }
 
-  private async runDataDirFlow(): Promise<void> {
-    const { dataDir, dryRun } = this.bulkOperationConfig;
-
-    // Capture original CLI locales/envs before pass 1 overwrites them on the config.
-    const cliLocales = [...(this.bulkOperationConfig.locales || [])];
-    const cliEnvs = [...(this.bulkOperationConfig.environments || [])];
+  private async runBackupDirFlow(): Promise<void> {
+    const { backupDir, dryRun } = this.bulkOperationConfig;
 
     // Pass 1 — count-only scan: no AssetPublishData objects built, one chunk in memory at a time.
-    let stats: DataDirScanStats;
+    let stats: BackupDirScanStats;
     try {
-      stats = await scanDataDirStats(dataDir!, cliEnvs, cliLocales, this.logger);
+      stats = await scanBackupDirStats(backupDir!, this.logger);
     } catch (err: any) {
-      this.logger.error($t(messages.DATA_DIR_READ_ERROR, { path: dataDir!, error: err.message || String(err) }));
+      this.logger.error($t(messages.BACKUP_DIR_READ_ERROR, { path: backupDir!, error: err.message || String(err) }));
       return;
     }
 
+    // Unions for the dashboard and confirmation prompt only — pass 2 derives each asset's own targets.
     this.bulkOperationConfig.environments = stats.environments;
     this.bulkOperationConfig.locales = stats.locales;
 
@@ -305,43 +304,31 @@ export default class BulkAssets extends BaseBulkCommand {
     }
 
     if (dryRun) {
-      log.info($t(messages.DATA_DIR_DRY_RUN));
+      log.info($t(messages.BACKUP_DIR_DRY_RUN));
       return;
     }
 
     // Pass 2 — stream and publish: one chunk at a time, batches of ≤50 items enqueued directly.
     // stats.assetUidMapper and stats.assetsIndex are reused from pass 1 — no second disk read.
-    const result = await this.streamAndPublish(
-      dataDir!,
-      cliLocales,
-      stats.totalItems,
-      stats.assetUidMapper,
-      stats.assetsIndex,
-      scanStatusMap
-    );
+    const result = await this.streamAndPublish(backupDir!, stats, scanStatusMap);
     this.printOperationSummary(result);
   }
 
   /**
-   * Pass 2 of the data-dir flow.
-   * Reads chunk files one at a time, fills a working batch of ≤50 AssetPublishData items,
-   * and enqueues each batch directly into the queue manager without ever holding the full
-   * asset list in memory. Peak memory: one chunk file + one batch of ≤50 items.
+   * Pass 2 of the backup-dir flow.
+   * Reads chunk files one at a time, feeding each asset's own publish targets into a
+   * TargetBatcher that enqueues batches directly, without ever holding the full asset list in
+   * memory. Peak memory: one chunk file + one open bucket per distinct (locale, environment set).
    *
    * assetUidMapper and assetsIndex are passed in from pass 1 to avoid re-reading those files.
    * scanStatusMap filters out non-clean assets before enqueueing.
    */
   private async streamAndPublish(
-    dataDir: string,
-    cliLocales: string[],
-    totalItemCount: number,
-    assetUidMapper: Record<string, string>,
-    assetsIndex: Record<string, string>,
+    backupDir: string,
+    stats: BackupDirScanStats,
     scanStatusMap: Map<string, string | undefined>
   ): Promise<BulkOperationResult> {
-    // Snapshot both arrays so in-flight mutations to bulkOperationConfig can't corrupt payloads.
-    const environments = [...this.bulkOperationConfig.environments!];
-    const locales = [...this.bulkOperationConfig.locales!];
+    const { assetUidMapper, assetsIndex, environmentsMap, totalBatches } = stats;
     const operation = this.bulkOperationConfig.operation as OperationType;
     const startTime = Date.now();
 
@@ -352,35 +339,26 @@ export default class BulkAssets extends BaseBulkCommand {
       );
     }
 
-    const useOverrideLocales = cliLocales.length > 0;
-    const BATCH_SIZE = BATCH_CONSTANTS.maxItems;
-    // totalItemCount comes from pass 1 using identical counting logic — used as upper bound for totalBatches.
-    // Scan status filtering may reduce the actual count; the invariant check below will log any mismatch.
-    const totalBatches = Math.ceil(totalItemCount / BATCH_SIZE);
-
-    let workingBatch: AssetPublishData[] = [];
-    let batchNumber = 0;
     let totalSubmitted = 0;
 
     this.batchResults.clear();
 
-    const flushBatch = (): void => {
-      if (workingBatch.length === 0) return;
-      batchNumber++;
+    // Batches are keyed on their publish target, so each asset reaches only its own
+    // environments and locales.
+    const batcher = new TargetBatcher((batch) => {
       this.queueManager.enqueue(ResourceType.ASSET, operation, {
-        items: [...workingBatch],
-        environments,
-        locales,
-        batchNumber,
+        items: batch.items,
+        environments: batch.environments,
+        locales: batch.locales,
+        batchNumber: batch.batchNumber,
         totalBatches,
         operation,
       });
-      totalSubmitted += workingBatch.length;
-      workingBatch = [];
-    };
+      totalSubmitted += batch.items.length;
+    });
 
     for (const chunkFilename of Object.values(assetsIndex)) {
-      const chunkPath = path.join(dataDir, 'assets', chunkFilename);
+      const chunkPath = path.join(backupDir, 'assets', chunkFilename);
       const chunkData: Record<string, any> = JSON.parse(fs.readFileSync(chunkPath, 'utf-8'));
 
       for (const asset of Object.values(chunkData)) {
@@ -399,27 +377,32 @@ export default class BulkAssets extends BaseBulkCommand {
           continue;
         }
 
-        const assetLocales: string[] = useOverrideLocales
-          ? cliLocales
-          : [...new Set<string>(asset.publish_details.map((pd: any) => pd.locale as string))];
+        const targets = assetPublishTargets(asset, environmentsMap);
 
-        for (const locale of assetLocales) {
-          workingBatch.push({ type: 'asset', uid: targetUid, locale, version: asset._version });
-          if (workingBatch.length >= BATCH_SIZE) {
-            flushBatch();
-          }
+        for (const [locale, environments] of targets) {
+          batcher.add({
+            type: 'asset',
+            uid: targetUid,
+            locale,
+            version: asset._version,
+            publish_details: environments.map((environment) => ({ environment, locale })),
+          });
         }
       }
       // chunkData falls out of scope here — GC can reclaim it before the next chunk is read.
     }
 
-    flushBatch();
+    batcher.end();
 
-    // Invariant: pass 1 and pass 2 use identical counting logic (excluding scan status filtering).
-    // If batchNumber < totalBatches, scan status filtering reduced the published count — expected.
-    if (batchNumber !== totalBatches) {
+    if (batcher.skippedCount > 0) {
+      this.logger.warn(`Skipped ${batcher.skippedCount} asset item(s) with no resolvable publish target.`);
+    }
+
+    // Invariant: pass 1 and pass 2 use identical target logic (excluding scan status filtering).
+    // If fewer batches were emitted, scan status filtering reduced the published count — expected.
+    if (batcher.emittedCount !== totalBatches) {
       this.logger.debug(
-        `Batch count: predicted ${totalBatches}, actual ${batchNumber}. Difference is expected when assets are skipped due to scan status.`
+        `Batch count: predicted ${totalBatches}, actual ${batcher.emittedCount}. Difference is expected when assets are skipped due to scan status.`
       );
     }
 
@@ -443,21 +426,21 @@ export default class BulkAssets extends BaseBulkCommand {
     const SEP = '─'.repeat(42);
 
     log.info('');
-    log.info(`  ${messages.DATA_DIR_ASSET_SCANNING_HEADER}`);
+    log.info(`  ${messages.BACKUP_DIR_ASSET_SCANNING_HEADER}`);
     log.info('  ' + SEP);
-    log.info(`  ${messages.DATA_DIR_TOTAL.padEnd(38)} ${total}`);
+    log.info(`  ${messages.BACKUP_DIR_TOTAL.padEnd(38)} ${total}`);
     if (localSkipped !== undefined) {
-      log.warn(`  ${messages.DATA_DIR_NO_PUBLISH_DETAILS.padEnd(38)} ${localSkipped}`);
+      log.warn(`  ${messages.BACKUP_DIR_NO_PUBLISH_DETAILS.padEnd(38)} ${localSkipped}`);
     }
     if (unmapped !== undefined) {
-      log.warn(`  ${messages.DATA_DIR_UNMAPPED.padEnd(38)} ${unmapped}`);
+      log.warn(`  ${messages.BACKUP_DIR_UNMAPPED.padEnd(38)} ${unmapped}`);
     }
     log.info('  ' + SEP);
     log.info(`  ${messages.SCAN_STATUS_CLEAN.padEnd(38)} ${clean}`);
     if (pending > 0) log.warn(`  ${messages.SCAN_STATUS_PENDING.padEnd(38)} ${pending}`);
     if (quarantined > 0) log.warn(`  ${messages.SCAN_STATUS_QUARANTINED.padEnd(38)} ${quarantined}`);
     log.info('  ' + SEP);
-    log.info(`  ${messages.DATA_DIR_WILL_PUBLISH.padEnd(38)} ${clean}`);
+    log.info(`  ${messages.BACKUP_DIR_WILL_PUBLISH.padEnd(38)} ${clean}`);
     log.info('');
   }
 

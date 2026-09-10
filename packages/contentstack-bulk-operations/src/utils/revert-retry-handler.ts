@@ -17,6 +17,9 @@ import {
 import { confirmOperation } from './operation-confirmation';
 import { $t, messages } from './index';
 
+/** A log item paired with the environments of the log entry it came from. */
+type TargetedLogItem = { item: LogItem; environments: string[] };
+
 /**
  * Load log entries and extract configuration
  */
@@ -77,18 +80,25 @@ export function loadConfigFromLogFile(
     return null;
   }
 
-  // Extract items from bulk logs
-  const bulkItems: LogItem[] = bulkLogEntries.flatMap((entry) => entry.items);
+  // Pair every item with its own log entry's environments. Using the first entry's would revert
+  // items out of environments they were never published to.
+  const bulkTargets: TargetedLogItem[] = bulkLogEntries.flatMap((entry) =>
+    entry.items.map((item) => ({ item, environments: entry.environments || [] }))
+  );
+  const singleTargets: TargetedLogItem[] = singleLogEntries.map((entry) => ({
+    item: entry.item,
+    environments: entry.environments || [],
+  }));
 
-  // Extract items from single logs
-  const singleItems: LogItem[] = singleLogEntries.map((entry) => entry.item);
+  const singleItems: LogItem[] = singleTargets.map((t) => t.item);
 
   // Get config from first available log entry
   const firstBulk = bulkLogEntries[0];
   const firstSingle = singleLogEntries[0];
 
   const operation = (firstBulk?.operation || firstSingle?.operation || 'publish') as OperationType;
-  const environments = firstBulk?.environments || firstSingle?.environments || [];
+  // Display/confirmation only — the per-item environments above are what get sent.
+  const environments = [...new Set([...bulkTargets, ...singleTargets].flatMap((t) => t.environments))];
   // For single mode, extract locales from items; for bulk mode, use log entry locales
   const locales =
     firstBulk?.locales || (singleItems.length > 0 ? Array.from(new Set(singleItems.map((i) => i.locale))) : []);
@@ -98,13 +108,10 @@ export function loadConfigFromLogFile(
   // Determine publish mode based on which log has entries
   const publishMode = singleLogEntries.length > 0 ? 'single' : 'bulk';
 
-  // Combine all items
-  const allItems = [...bulkItems, ...singleItems];
+  // Combine all items, each keeping its own environments
+  const allTargets = [...bulkTargets, ...singleTargets];
 
-  const items =
-    resourceType === ResourceType.ENTRY
-      ? convertToEntryData(allItems, environments)
-      : convertToAssetData(allItems, environments);
+  const items = resourceType === ResourceType.ENTRY ? convertToEntryData(allTargets) : convertToAssetData(allTargets);
 
   return {
     operation,
@@ -132,10 +139,10 @@ export function loadItemsFromLog(
 /**
  * Convert log items to entry publish data
  */
-function convertToEntryData(logItems: LogItem[], environments: string[]): EntryPublishData[] {
-  return logItems
-    .filter((item) => item.type === 'entry')
-    .map((item) => ({
+function convertToEntryData(targets: TargetedLogItem[]): EntryPublishData[] {
+  return targets
+    .filter(({ item }) => item.type === 'entry')
+    .map(({ item, environments }) => ({
       type: 'entry' as const,
       uid: item.uid,
       locale: item.locale,
@@ -153,10 +160,10 @@ function convertToEntryData(logItems: LogItem[], environments: string[]): EntryP
 /**
  * Convert log items to asset publish data
  */
-function convertToAssetData(logItems: LogItem[], environments: string[]): AssetPublishData[] {
-  return logItems
-    .filter((item) => item.type === 'asset')
-    .map((item) => ({
+function convertToAssetData(targets: TargetedLogItem[]): AssetPublishData[] {
+  return targets
+    .filter(({ item }) => item.type === 'asset')
+    .map(({ item, environments }) => ({
       type: 'asset' as const,
       uid: item.uid,
       locale: item.locale,
