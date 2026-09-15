@@ -17,57 +17,127 @@ export const DEFAULT_BATCH_CONFIG: BatchConfig = {
   maxEnvironments: BATCH_CONSTANTS.maxEnvironments,
 };
 
-export function batchItems(
-  items: Array<EntryPublishData | AssetPublishData>,
-  environments: string[],
-  locales: string[],
-  config: BatchConfig = DEFAULT_BATCH_CONFIG
-): BatchedItems[] {
-  const batches: BatchedItems[] = [];
+type PublishItem = EntryPublishData | AssetPublishData;
 
-  const itemBatches = chunkArray(items, config.maxItems);
+/** A batch as emitted by TargetBatcher — totalBatches is only known once batching finishes. */
+export type PendingBatch = Omit<BatchedItems, 'totalBatches'>;
 
-  // Combine locale + environment into publish targets
-  const publishTargets = locales.flatMap((locale) => environments.map((environment) => ({ locale, environment })));
+/**
+ * Group an item's own publish_details into locale -> sorted environments.
+ * A publish_details entry without an environment is unusable; one without a locale uses the item's.
+ */
+function targetsOf(item: PublishItem): Map<string, string[]> {
+  const byLocale = new Map<string, Set<string>>();
 
-  const targetBatchSize = config.maxLocales * config.maxEnvironments;
-  const targetBatches = chunkArray(publishTargets, targetBatchSize);
+  for (const pd of item.publish_details ?? []) {
+    if (!pd?.environment) continue;
+    const locale = pd.locale || item.locale;
+    if (!locale) continue;
 
-  let batchNumber = 0;
-  const totalBatches = itemBatches.length * targetBatches.length;
+    let envs = byLocale.get(locale);
+    if (!envs) {
+      envs = new Set<string>();
+      byLocale.set(locale, envs);
+    }
+    envs.add(pd.environment);
+  }
 
-  for (const itemBatch of itemBatches) {
-    for (const targetBatch of targetBatches) {
-      batchNumber++;
+  return new Map([...byLocale].map(([locale, envs]) => [locale, [...envs].sort()]));
+}
 
-      const targetSet = new Set(targetBatch.map((t) => `${t.locale}:${t.environment}`));
+/** True when an item carries at least one usable (locale, environment) publish target. */
+export function hasPublishTargets(item: PublishItem): boolean {
+  return targetsOf(item).size > 0;
+}
 
-      const filteredItems = itemBatch
-        .map((item) => {
-          const publish_details = item.publish_details?.filter((pd) => targetSet.has(`${pd.locale}:${pd.environment}`));
+/**
+ * Batches items by publish target: one locale and one environment set per batch.
+ *
+ * The API expands `{ items[], environments[], locales[] }` into one record per
+ * (item x locale x environment), so mixing targets in a batch publishes each item to the union.
+ *
+ * Buckets are bounded by the number of distinct targets, not by item count, so this also works
+ * for streaming callers.
+ */
+export class TargetBatcher {
+  private readonly buckets = new Map<string, { locale: string; environments: string[]; items: PublishItem[] }>();
+  private batchCount = 0;
+  private skipped = 0;
 
-          if (!publish_details || publish_details.length === 0) return null;
+  constructor(
+    private readonly emit: (batch: PendingBatch) => void,
+    private readonly config: BatchConfig = DEFAULT_BATCH_CONFIG
+  ) {}
 
-          return {
-            ...item,
-            publish_details,
-          };
-        })
-        .filter(Boolean) as Array<EntryPublishData | AssetPublishData>;
+  /** Items dropped for carrying no usable publish target. */
+  get skippedCount(): number {
+    return this.skipped;
+  }
 
-      if (filteredItems.length > 0) {
-        batches.push({
-          items: filteredItems,
-          locales: [...new Set(targetBatch.map((t) => t.locale))],
-          environments: [...new Set(targetBatch.map((t) => t.environment))],
-          batchNumber,
-          totalBatches,
+  /** Batches emitted so far. */
+  get emittedCount(): number {
+    return this.batchCount;
+  }
+
+  add(item: PublishItem): void {
+    const targets = targetsOf(item);
+    if (targets.size === 0) {
+      this.skipped++;
+      return;
+    }
+
+    for (const [locale, environments] of targets) {
+      // An environment set past the API cap becomes several batches, each still single-locale.
+      for (const envChunk of chunkArray(environments, this.config.maxEnvironments)) {
+        const key = JSON.stringify([locale, envChunk]);
+
+        let bucket = this.buckets.get(key);
+        if (!bucket) {
+          bucket = { locale, environments: envChunk, items: [] };
+          this.buckets.set(key, bucket);
+        }
+
+        // Narrow publish_details to this batch's target so payload building cannot re-widen it.
+        // `item.locale` is left alone: for entries it is the resolution hint, which can legitimately
+        // differ from the requested locale this batch publishes to.
+        bucket.items.push({
+          ...item,
+          publish_details: envChunk.map((environment) => ({ environment, locale, version: item.version })),
         });
+
+        if (bucket.items.length >= this.config.maxItems) this.flush(key, bucket);
       }
     }
   }
 
-  return batches;
+  /** Emit every partially filled bucket. */
+  end(): void {
+    for (const [key, bucket] of this.buckets) this.flush(key, bucket);
+  }
+
+  private flush(key: string, bucket: { locale: string; environments: string[]; items: PublishItem[] }): void {
+    if (bucket.items.length === 0) return;
+
+    this.batchCount++;
+    this.emit({
+      items: bucket.items,
+      locales: [bucket.locale],
+      environments: bucket.environments,
+      batchNumber: this.batchCount,
+    });
+
+    this.buckets.delete(key);
+  }
+}
+
+export function batchItems(items: PublishItem[], config: BatchConfig = DEFAULT_BATCH_CONFIG): BatchedItems[] {
+  const pending: PendingBatch[] = [];
+  const batcher = new TargetBatcher((batch) => pending.push(batch), config);
+
+  for (const item of items) batcher.add(item);
+  batcher.end();
+
+  return pending.map((batch) => ({ ...batch, totalBatches: pending.length }));
 }
 
 /**

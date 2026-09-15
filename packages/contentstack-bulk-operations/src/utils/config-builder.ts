@@ -69,8 +69,8 @@ function validateConfig(config: BulkOperationConfig): string[] {
     errors.push(`Invalid operation type: ${config.operation}. Must be 'publish' or 'unpublish'`);
   }
 
-  // Environments validation — skipped when assets are read from a data directory
-  if (!config.dataDir) {
+  // Environments validation — skipped when assets are read from a backup directory
+  if (!config.backupDir) {
     if (
       (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
       (!config.environments || config.environments.length === 0)
@@ -82,9 +82,9 @@ function validateConfig(config: BulkOperationConfig): string[] {
     }
   }
 
-  // Locales validation — skipped when assets are read from a data directory
+  // Locales validation — skipped when assets are read from a backup directory
   const isNonLocalized = config.filter === FilterType.NON_LOCALIZED;
-  if (!config.dataDir) {
+  if (!config.backupDir) {
     if (!isNonLocalized && (!config.locales || config.locales.length === 0)) {
       errors.push('Locales are required');
     }
@@ -143,8 +143,8 @@ function validateCommandFlags(flags: CommandFlags): string[] {
 
   const operation = flags.operation as OperationType;
 
-  // Environment validation — skipped when assets are read from a data directory
-  if (!flags['data-dir']) {
+  // Environment validation — skipped when assets are read from a backup directory
+  if (!flags['backup-dir']) {
     if (
       (operation === OperationType.PUBLISH || operation === OperationType.UNPUBLISH) &&
       (!flags.environments || flags.environments.length === 0)
@@ -156,9 +156,9 @@ function validateCommandFlags(flags: CommandFlags): string[] {
     }
   }
 
-  // Locale validation — skipped when assets are read from a data directory
+  // Locale validation — skipped when assets are read from a backup directory
   const isNonLocalized = flags.filter === FilterType.NON_LOCALIZED;
-  if (!flags['data-dir']) {
+  if (!flags['backup-dir']) {
     if (!isNonLocalized && (!flags.locales || flags.locales.length === 0)) {
       errors.push('Locales are required');
     }
@@ -236,7 +236,7 @@ export function buildConfig(flags: CommandFlags): BulkOperationConfig {
     contentTypes: flags['content-types'] !== undefined ? expandFlagStringList(flags['content-types']) : undefined,
     includeVariants: flags['include-variants'],
     folderUid: flags['folder-uid'],
-    dataDir: flags['data-dir'],
+    backupDir: flags['backup-dir'],
     dryRun: flags['dry-run'],
     sourceEnv: flags['source-env'],
     publishMode: (flags['publish-mode'] as PublishMode) || PublishMode.BULK,

@@ -25,7 +25,7 @@ import {
 } from './helpers';
 import { setupBatchQueueListeners } from './batch-queue-handler';
 import { confirmOperation } from './operation-confirmation';
-import { batchItems, validateBatch } from './batch-helper';
+import { batchItems, validateBatch, hasPublishTargets, TargetBatcher } from './batch-helper';
 import { handleCrossPublishOperation } from './cross-publish-handler';
 import { fetchAssets, fetchEntries, fetchTaxonomyList } from './item-fetcher';
 import {
@@ -60,8 +60,8 @@ import {
   validateAndBuildBulkDeleteItems,
   LoadAssetUidsError,
 } from './asset-uids-from-file';
-import { scanDataDirStats } from './data-dir-asset-fetcher';
-import type { DataDirScanStats } from './data-dir-asset-fetcher';
+import { scanBackupDirStats, assetPublishTargets } from './backup-dir-asset-fetcher';
+import type { BackupDirScanStats } from './backup-dir-asset-fetcher';
 import {
   compareFieldValues,
   compareNonLocalizedFields,
@@ -97,6 +97,8 @@ export {
   setupBatchQueueListeners,
   confirmOperation,
   batchItems,
+  hasPublishTargets,
+  TargetBatcher,
   handleCrossPublishOperation,
   fetchAssets,
   fetchEntries,
@@ -137,6 +139,7 @@ export {
   loadBulkDeleteItemsFromFile,
   validateAndBuildBulkDeleteItems,
   LoadAssetUidsError,
-  scanDataDirStats,
+  scanBackupDirStats,
+  assetPublishTargets,
 };
-export type { DataDirScanStats };
+export type { BackupDirScanStats };

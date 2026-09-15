@@ -102,6 +102,52 @@ describe('Revert Retry Handler', () => {
       expect(result[0].type).to.equal('asset');
     });
 
+    it('should keep each log entry own environments instead of the first entry', () => {
+      // Revert forces unpublish, so borrowing the first entry's environments would unpublish
+      // items from environments they were never published to.
+      const mockBulkLogs = [
+        {
+          mode: 'bulk',
+          jobId: 'job-1',
+          batchNumber: 1,
+          operation: 'publish',
+          timestamp: '2024-01-09T10:00:00Z',
+          environments: ['prod'],
+          locales: ['en-us'],
+          items: [{ uid: 'entry1', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' }],
+          status: 'failed',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+          apiKey: 'test-key',
+          branch: 'main',
+        },
+        {
+          mode: 'bulk',
+          jobId: 'job-2',
+          batchNumber: 2,
+          operation: 'publish',
+          timestamp: '2024-01-09T10:00:00Z',
+          environments: ['dev'],
+          locales: ['en-us'],
+          items: [{ uid: 'entry2', locale: 'en-us', contentType: 'blog', version: 1, type: 'entry' }],
+          status: 'failed',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+          apiKey: 'test-key',
+          branch: 'main',
+        },
+      ];
+
+      readBulkFailedLogStub.returns(mockBulkLogs);
+
+      const result = loadItemsFromLog('test-logs', true, ResourceType.ENTRY);
+
+      expect(result).to.have.length(2);
+
+      const entry1 = result.find((i) => i.uid === 'entry1');
+      const entry2 = result.find((i) => i.uid === 'entry2');
+      expect(entry1?.publish_details?.map((pd) => pd.environment)).to.deep.equal(['prod']);
+      expect(entry2?.publish_details?.map((pd) => pd.environment)).to.deep.equal(['dev']);
+    });
+
     it('should return empty array when no logs found', () => {
       readBulkFailedLogStub.returns([]);
       readSingleFailedLogStub.returns([]);

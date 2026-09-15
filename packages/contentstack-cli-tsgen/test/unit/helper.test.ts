@@ -2,10 +2,18 @@
 // printFormattedError writes to spies instead of the real logger.
 jest.mock("@contentstack/cli-utilities", () => ({
   log: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
+  // Real lookup - the region-name-to-endpoint mapping is what these tests check.
+  resolveCanonicalEndpoints: jest.requireActual(
+    "@contentstack/cli-utilities/lib/region-endpoints",
+  ).resolveCanonicalEndpoints,
 }));
 
 import { log } from "@contentstack/cli-utilities";
-import { sanitizePath, printFormattedError } from "../../src/lib/helper";
+import {
+  sanitizePath,
+  printFormattedError,
+  resolveGraphqlHost,
+} from "../../src/lib/helper";
 
 const errorMock = log.error as jest.Mock;
 const warnMock = log.warn as jest.Mock;
@@ -207,5 +215,45 @@ describe("helper", () => {
       const value = String(timestampCall![0]).replace("Timestamp: ", "");
       expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
+  });
+});
+
+describe("resolveGraphqlHost", () => {
+  // The regression: region names are stored as "AWS-NA"/"AZURE-EU"/..., so a
+  // lookup keyed on "US"/"AZURE_NA" misses and the CDA host gets used instead,
+  // which answers a GraphQL query with a 403.
+  it.each([
+    ["AWS-NA", "graphql.contentstack.com"],
+    ["AWS-EU", "eu-graphql.contentstack.com"],
+    ["AWS-AU", "au-graphql.contentstack.com"],
+    ["AZURE-NA", "azure-na-graphql.contentstack.com"],
+    ["AZURE-EU", "azure-eu-graphql.contentstack.com"],
+    ["GCP-NA", "gcp-na-graphql.contentstack.com"],
+    ["GCP-EU", "gcp-eu-graphql.contentstack.com"],
+  ])("resolves %s by name to %s", (name, expected) => {
+    expect(resolveGraphqlHost({ name })).toBe(expected);
+  });
+
+  it.each(["AWS-NA", "AWS-EU", "AZURE-EU", "GCP-NA"])(
+    "never returns a CDA host for %s",
+    (name) => {
+      const host = resolveGraphqlHost({ name });
+
+      expect(host).toContain("graphql");
+      expect(host).not.toContain("cdn.");
+    },
+  );
+
+  it("prefers the endpoints already on the region object", () => {
+    expect(
+      resolveGraphqlHost({
+        name: "AWS-NA",
+        endpoints: { graphqlDelivery: "https://custom-graphql.example.com/" },
+      }),
+    ).toBe("custom-graphql.example.com");
+  });
+
+  it("returns undefined for a custom region with no GraphQL endpoint", () => {
+    expect(resolveGraphqlHost({ name: "my-pilot-region" })).toBeUndefined();
   });
 });
