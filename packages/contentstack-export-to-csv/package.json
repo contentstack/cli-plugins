@@ -1,12 +1,12 @@
 {
   "name": "@contentstack/cli-cm-export-to-csv",
   "description": "Export entries, taxonomies, terms, or organization users to CSV",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-command": "~2.0.0",
-    "@contentstack/cli-utilities": "~2.0.0",
+    "@contentstack/cli-command": "~2.0.1",
+    "@contentstack/cli-utilities": "~2.0.1",
     "@oclif/core": "^4.11.14",
     "@inquirer/prompts": "^7.10.1",
     "fast-csv": "^4.3.6"

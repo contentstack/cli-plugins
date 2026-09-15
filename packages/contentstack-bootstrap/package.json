@@ -17,10 +17,10 @@
     "format": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
-    "@contentstack/cli-cm-seed": "~2.0.0",
-    "@contentstack/cli-command": "~2.0.0",
-    "@contentstack/cli-utilities": "~2.0.0",
-    "@contentstack/cli-config": "~2.0.0",
+    "@contentstack/cli-cm-seed": "~2.0.1",
+    "@contentstack/cli-command": "~2.0.1",
+    "@contentstack/cli-utilities": "~2.0.1",
+    "@contentstack/cli-config": "~2.0.1",
     "@oclif/core": "^4.11.14",
     "inquirer": "12.11.1",
     "mkdirp": "^2.1.6",
