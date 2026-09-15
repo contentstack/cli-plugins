@@ -1,0 +1,96 @@
+name: Publish to npmjs registry
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required so GitHub can mint the OIDC token for npm trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: https://registry.npmjs.org/
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install pnpm
+        run: corepack prepare pnpm@10.28.0 --activate
+      - name: Clean the repository
+        run: pnpm run clean:all
+      - name: Install root dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Build all plugins
+        run: pnpm -r --sort run build
+      # OIDC trusted publishing requires npm CLI >= 11.5.1; bump it explicitly
+      # since Node 22's bundled npm version may lag behind that.
+      - name: Update npm
+        run: npm install -g npm@latest
+      # Asset Management
+      - name: Publishing asset-management (Production)
+        run: npm publish ./packages/contentstack-asset-management --access public --tag latest
+      # Variants
+      - name: Publishing variants (Production)
+        run: npm publish ./packages/contentstack-variants --tag latest
+      # Export
+      - name: Publishing export (Production)
+        run: npm publish ./packages/contentstack-export --tag latest
+      # Audit
+      - name: Publishing audit (Production)
+        run: npm publish ./packages/contentstack-audit --tag latest
+      # Import
+      - name: Publishing import (Production)
+        run: npm publish ./packages/contentstack-import --tag latest
+      # Clone
+      - name: Publishing clone (Production)
+        run: npm publish ./packages/contentstack-clone --tag latest
+      # Import Setup
+      - name: Publishing import-setup (Production)
+        run: npm publish ./packages/contentstack-import-setup --tag latest
+      # Export to CSV
+      - name: Publishing export-to-csv (Production)
+        run: npm publish ./packages/contentstack-export-to-csv --tag latest
+      # Migration
+      - name: Publishing migration (Production)
+        run: npm publish ./packages/contentstack-migration --tag latest
+      # Migrate RTE
+      - name: Publishing migrate-rte (Production)
+        run: npm publish ./packages/contentstack-migrate-rte --access public --tag latest
+      # Seed
+      - name: Publishing seed (Production)
+        run: npm publish ./packages/contentstack-seed --tag latest
+      # Bootstrap
+      - name: Publishing bootstrap (Production)
+        run: npm publish ./packages/contentstack-bootstrap --tag latest
+      # Branches
+      - name: Publishing branches (Production)
+        run: npm publish ./packages/contentstack-branches --tag latest
+      # Apps CLI
+      - name: Publishing apps-cli (Production)
+        run: npm publish ./packages/contentstack-apps-cli --tag latest
+      # Query Export
+      - name: Publishing query-export (Production)
+        run: npm publish ./packages/contentstack-query-export --tag latest
+      # Content Type
+      - name: Publishing content-type (Production)
+        run: npm publish ./packages/contentstack-content-type --tag latest
+      # Regex Validate
+      - name: Publishing regex-validate (Production)
+        run: npm publish ./packages/contentstack-cli-cm-regex-validate --access public --tag latest
+      # Tsgen
+      - name: Publishing tsgen (Production)
+        run: npm publish ./packages/contentstack-cli-tsgen --tag latest
+      # External Migrate
+      - name: Publishing external-migrate (Production)
+        run: npm publish ./packages/contentstack-external-migrate --access public --tag latest
+      # Bulk Operations
+      - name: Publishing bulk-operations (Production)
+        run: npm publish ./packages/contentstack-bulk-operations --access public --tag latest
