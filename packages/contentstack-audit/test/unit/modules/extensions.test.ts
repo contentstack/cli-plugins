@@ -6,7 +6,7 @@ import { ux, cliux } from '@contentstack/cli-utilities';
 
 import config from '../../../src/config';
 import { Extensions } from '../../../src/modules';
-import { $t, auditMsg } from '../../../src/messages';
+import { $t, auditMsg, commonMsg } from '../../../src/messages';
 import sinon from 'sinon';
 import { Extension } from '../../../src/types';
 import { mockLogger } from '../mock-logger';
@@ -386,5 +386,68 @@ describe('Extensions scope containing content_types uids', () => {
           expect(fixExt.callCount).to.be.equals(0);
         },
       );
+  });
+
+  describe('fixExtensionsScope confirmation before removing an extension', () => {
+    class ExtensionsWithCapturedFix extends Extensions {
+      public fixedExtensions: Record<string, Extension> = {};
+
+      async writeFixContent(fixedExtensions: Record<string, Extension>) {
+        this.fixedExtensions = fixedExtensions;
+      }
+    }
+
+    // ext1 and ext2 are scoped only to missing content types, so the fix removes them.
+    const createExtensions = (flags: Record<string, unknown>) =>
+      new ExtensionsWithCapturedFix({
+        moduleName: 'extensions',
+        ctSchema: cloneDeep(require('./../mock/contents/extensions/ctSchema.json')),
+        config: Object.assign(cloneDeep(config), {
+          basePath: resolve(`./test/unit/mock/contents/extensions/invalidExtensions/`),
+          flags,
+        }),
+        fix: true,
+      });
+
+    it('should remove the extensions without prompting when external-config skipConfirm is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const ext = createExtensions({ 'external-config': { skipConfirm: true } });
+
+      await ext.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(ext.fixedExtensions).to.not.have.any.keys('ext1', 'ext2');
+    });
+
+    it('should remove the extensions without prompting when copy-dir is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const ext = createExtensions({ 'copy-dir': true });
+
+      await ext.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(ext.fixedExtensions).to.not.have.any.keys('ext1', 'ext2');
+    });
+
+    it('should remove the extensions without prompting when yes is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const ext = createExtensions({ yes: true });
+
+      await ext.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(ext.fixedExtensions).to.not.have.any.keys('ext1', 'ext2');
+    });
+
+    it('should ask once per extension to remove and keep them when the user declines', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const ext = createExtensions({});
+
+      await ext.run();
+
+      expect(confirm.callCount).to.equal(2);
+      expect(confirm.alwaysCalledWithExactly(commonMsg.EXTENSION_FIX_CONFIRMATION)).to.be.true;
+      expect(ext.fixedExtensions).to.include.all.keys('ext1', 'ext2');
+    });
   });
 });
