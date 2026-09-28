@@ -3,12 +3,13 @@ import { resolve } from 'path';
 import { fancy } from 'fancy-test';
 import { expect } from 'chai';
 import cloneDeep from 'lodash/cloneDeep';
-import { ux } from '@contentstack/cli-utilities';
+import { ux, cliux } from '@contentstack/cli-utilities';
 import sinon from 'sinon';
 
 import config from '../../../src/config';
 import { Workflows } from '../../../src/modules';
-import { $t, auditMsg } from '../../../src/messages';
+import { $t, auditMsg, commonMsg } from '../../../src/messages';
+import { Workflow } from '../../../src/types';
 import { values } from 'lodash';
 import { mockLogger } from '../mock-logger';
 
@@ -146,5 +147,70 @@ describe('Workflows', () => {
           },
         ]);
       });
+  });
+
+  describe('fixWorkflowSchema confirmation before removing a workflow', () => {
+    class WorkflowsWithCapturedFix extends Workflows {
+      public fixedWorkflows: Record<string, Workflow> = {};
+
+      async writeFixContent(newWorkflowSchema: Record<string, Workflow>) {
+        this.fixedWorkflows = newWorkflowSchema;
+      }
+    }
+
+    const createWorkflows = (flags: Record<string, unknown>) =>
+      new WorkflowsWithCapturedFix({
+        moduleName: 'workflows',
+        // Without ct2, every content type on wf3 is missing, so the fix removes wf3.
+        ctSchema: cloneDeep(require('./../mock/contents/workflows/ctSchema.json')).filter(
+          (ct: { uid: string }) => ct.uid !== 'ct2',
+        ),
+        config: Object.assign(cloneDeep(config), {
+          basePath: resolve(`./test/unit/mock/contents/`),
+          branch: undefined,
+          flags,
+        }),
+        fix: true,
+      });
+
+    it('should remove the workflow without prompting when external-config skipConfirm is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const wf = createWorkflows({ 'external-config': { skipConfirm: true } });
+
+      await wf.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(wf.fixedWorkflows).to.not.have.property('wf3');
+    });
+
+    it('should remove the workflow without prompting when copy-dir is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const wf = createWorkflows({ 'copy-dir': true });
+
+      await wf.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(wf.fixedWorkflows).to.not.have.property('wf3');
+    });
+
+    it('should remove the workflow without prompting when yes is set', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const wf = createWorkflows({ yes: true });
+
+      await wf.run();
+
+      expect(confirm.notCalled).to.be.true;
+      expect(wf.fixedWorkflows).to.not.have.property('wf3');
+    });
+
+    it('should ask once per workflow to remove and keep it when the user declines', async () => {
+      const confirm = sinon.stub(cliux, 'confirm').resolves(false);
+      const wf = createWorkflows({});
+
+      await wf.run();
+
+      expect(confirm.calledOnceWithExactly(commonMsg.WORKFLOW_FIX_CONFIRMATION)).to.be.true;
+      expect(wf.fixedWorkflows).to.have.property('wf3');
+    });
   });
 });
