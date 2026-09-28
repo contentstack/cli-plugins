@@ -122,6 +122,9 @@ export async function fetchEntries(
 
       // Convert to publish data format
       for (const entry of processedEntries) {
+        // `locale` on the entry is the hint the API resolves from (it may be a fallback locale
+        // when the entry has no document in the requested one); `publish_details` carries the
+        // requested locale, which is the scope the publish was asked for.
         const entryLocale = entry.locale || locale;
         const publishData: EntryPublishData = {
           type: 'entry',
@@ -131,7 +134,7 @@ export async function fetchEntries(
           version: entry._version,
           publish_details: validEnvironments.map((env) => ({
             environment: env,
-            locale: entryLocale,
+            locale,
           })),
         };
 
