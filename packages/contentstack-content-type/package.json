@@ -7,7 +7,7 @@
   "dependencies": {
     "@contentstack/cli-command": "^1.8.7",
     "@contentstack/cli-utilities": "^1.19.2",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "cli-ux": "^6.0.9",
     "diff": "^9.0.0",
     "diff2html": "^3.4.56",
