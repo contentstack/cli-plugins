@@ -167,7 +167,11 @@ export default class Extensions {
       } else {
         log.debug(`Extension ${title} has no valid content types or scope not found`, this.config.auditContext);
         cliux.print($t(commonMsg.EXTENSION_FIX_WARN, { title: title, uid }), { color: 'yellow' });
-        const shouldDelete = this.config.flags.yes || (await cliux.confirm(commonMsg.EXTENSION_FIX_CONFIRMATION));
+        const shouldDelete =
+          this.config.flags['copy-dir'] ||
+          this.config.flags['external-config']?.skipConfirm ||
+          this.config.flags.yes ||
+          (await cliux.confirm(commonMsg.EXTENSION_FIX_CONFIRMATION));
         if (shouldDelete) {
           log.debug(`Deleting extension: ${title} (${uid})`, this.config.auditContext);
           delete newExtensionSchema[uid];

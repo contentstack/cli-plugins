@@ -1,6 +1,6 @@
 fileignoreconfig:
-  - filename: pnpm-lock.yaml
-    ignore_detectors:
-      - filecontent
-      - base64content
+- filename: pnpm-lock.yaml
+  checksum: 35bd025f9eb7818f84064c14832819fa45c25b7f81748bee911d60618baf5dd0
+- filename: packages/contentstack-audit/test/unit/modules/extensions.test.ts
+  checksum: 548b6e10241eb38df4b92f2dec90987b555ed6b7c582846d539828854eb1dadc
 version: '1.0'
