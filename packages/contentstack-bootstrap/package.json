@@ -24,7 +24,8 @@
     "@oclif/core": "^4.11.14",
     "inquirer": "12.11.1",
     "mkdirp": "^2.1.6",
-    "tar": "^7.5.22"
+    "tar": "^7.5.22",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.20",

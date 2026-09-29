@@ -10,7 +10,8 @@
     "@oclif/core": "^4.11.14",
     "chalk": "^5.6.2",
     "just-diff": "^6.0.2",
-    "lodash": "^4.18.1"
+    "lodash": "^4.18.1",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "chai": "^4.5.0",
