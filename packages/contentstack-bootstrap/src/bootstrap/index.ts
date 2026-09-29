@@ -71,15 +71,13 @@ export default class Bootstrap {
 
     try {
       await this.ghClient.getLatest(this.cloneDirectory);
+      cliux.loader();
     } catch (error) {
-      if (error instanceof GithubError) {
-        if (error.status === 404) {
-          cliux.error(messageHandler.parse('CLI_BOOTSTRAP_REPO_NOT_FOUND', this.appConfig.source));
-        }
+      cliux.loader();
+      if (error instanceof GithubError && error.status === 404) {
+        throw new Error(messageHandler.parse('CLI_BOOTSTRAP_APP_UNAVAILABLE', this.appConfig.source));
       }
       throw error;
-    } finally {
-      cliux.loader();
     }
 
     // seed plugin start

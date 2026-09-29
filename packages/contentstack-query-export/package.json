@@ -1,15 +1,15 @@
 {
   "name": "@contentstack/cli-cm-export-query",
   "description": "Contentstack CLI plugin to export content from stack",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Contentstack",
   "bugs": "https://github.com/contentstack/cli-plugins/issues",
   "dependencies": {
-    "@contentstack/cli-asset-management": "~1.0.0",
-    "@contentstack/cli-cm-export": "~2.0.0",
-    "@contentstack/cli-command": "~2.0.0",
-    "@contentstack/cli-utilities": "~2.0.0",
-    "@contentstack/cli-variants": "~2.0.0",
+    "@contentstack/cli-asset-management": "~1.0.1",
+    "@contentstack/cli-cm-export": "~2.0.1",
+    "@contentstack/cli-command": "~2.0.1",
+    "@contentstack/cli-utilities": "~2.0.1",
+    "@contentstack/cli-variants": "~2.0.1",
     "@oclif/core": "^4.11.14",
     "async": "^3.2.6",
     "big-json": "^3.2.0",
@@ -23,7 +23,7 @@
     "winston": "^3.19.0"
   },
   "overrides": {
-    "brace-expansion": "^5.0.8"
+    "brace-expansion": "^5.0.12"
   },
   "devDependencies": {
     "@oclif/plugin-help": "^6.2.53",
