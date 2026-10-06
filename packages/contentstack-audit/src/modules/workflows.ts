@@ -223,7 +223,12 @@ export default class Workflows {
 
           cliux.print(warningMessage, { color: 'yellow' });
 
-          if (this.config.flags.yes || (await cliux.confirm(commonMsg.WORKFLOW_FIX_CONFIRMATION))) {
+          if (
+            this.config.flags['copy-dir'] ||
+            this.config.flags['external-config']?.skipConfirm ||
+            this.config.flags.yes ||
+            (await cliux.confirm(commonMsg.WORKFLOW_FIX_CONFIRMATION))
+          ) {
             log.debug(`Deleting workflow ${name} (${uid})`, this.config.auditContext);
             delete newWorkflowSchema[workflow.uid];
           } else {
