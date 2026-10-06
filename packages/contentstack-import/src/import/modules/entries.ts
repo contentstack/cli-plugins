@@ -47,6 +47,10 @@ export default class EntriesImport extends BaseClass {
   private cTs: Record<string, any>[];
   private modifiedCTs: Record<string, any>[];
   private refCTs: string[];
+  // NOTE Number of entries written into the reference-update mapper dir, keyed by `${cTUid}:${locale}`.
+  // Incremented by both the create and the replace path, then compared against what the
+  // reference-update step actually reads back, so an unflushed mapper chunk cannot be skipped silently.
+  private refUpdateExpected: Record<string, number>;
   private jsonRteCTs: Record<string, any>;
   private jsonRteCTsWithRef: Record<string, any>;
   private jsonRteEntries: Record<string, any>;
@@ -142,6 +146,7 @@ export default class EntriesImport extends BaseClass {
     this.entriesUidMapper = {};
     this.modifiedCTs = [];
     this.refCTs = [];
+    this.refUpdateExpected = {};
     this.jsonRteCTs = [];
     this.jsonRteCTsWithRef = [];
     this.envs = {};
@@ -347,6 +352,17 @@ export default class EntriesImport extends BaseClass {
     log.debug(`Initialized progress tracking for ${contentTypesCount} content types`, this.importConfig.context);
   }
 
+  /**
+   * @method trackRefUpdateExpected
+   * @description Records that one more entry has been written into the reference-update mapper dir
+   * for this content type / locale. Used by `updateEntriesWithReferences` to verify that every
+   * entry it was handed actually gets a reference update.
+   */
+  private trackRefUpdateExpected(cTUid: string, locale: string): void {
+    const key = `${cTUid}:${locale}`;
+    this.refUpdateExpected[key] = (this.refUpdateExpected[key] || 0) + 1;
+  }
+
   private async processEntryCreation(): Promise<void> {
     log.info('Starting entry creation process', this.importConfig.context);
     const entryRequestOptions = this.populateEntryCreatePayload();
@@ -381,6 +397,12 @@ export default class EntriesImport extends BaseClass {
         );
       });
     }
+
+    // NOTE `completeFile` writes the index synchronously but ends the chunk write stream
+    // asynchronously, so chunk bytes can still be in flight. The reference-update step reads those
+    // chunks next, so give the streams a moment to flush. Carried over from v1; the proper fix is to
+    // make FsUtility.completeFile await the stream 'finish' event in @contentstack/cli-utilities.
+    await this.delay(200);
   }
 
   private async processEntryReferenceUpdates(): Promise<void> {
@@ -637,6 +659,7 @@ export default class EntriesImport extends BaseClass {
         entry.entryOldUid = oldUid;
         entry.sourceEntryFilePath = path.join(sanitizePath(basePath), sanitizePath(additionalInfo.entryFileName));
         entriesCreateFileHelper.writeIntoFile({ [oldUid]: entry } as any, { mapKeyVal: true });
+        this.trackRefUpdateExpected(cTUid, locale);
       } else {
         log.info(
           `Created entry: '${entry.title}' of content type ${cTUid} in locale ${locale}`,
@@ -656,6 +679,7 @@ export default class EntriesImport extends BaseClass {
         entry.sourceEntryFilePath = path.join(sanitizePath(basePath), sanitizePath(additionalInfo.entryFileName));
         entry.entryOldUid = entry.uid;
         entriesCreateFileHelper.writeIntoFile({ [entry.uid]: entry } as any, { mapKeyVal: true });
+        this.trackRefUpdateExpected(cTUid, locale);
       }
     };
 
@@ -838,6 +862,7 @@ export default class EntriesImport extends BaseClass {
       log.debug(`Replaced entry UID mapping: ${entry.uid} → ${response.uid}`, this.importConfig.context);
       this.entriesUidMapper[entry.uid] = response.uid;
       entriesReplaceFileHelper.writeIntoFile({ [entry.uid]: entry } as any, { mapKeyVal: true });
+      this.trackRefUpdateExpected(cTUid, locale);
     };
     const onReject = ({ error, apiData: { uid, title } }: any) => {
       // NOTE Remove from list if any entry import failed
@@ -890,6 +915,26 @@ export default class EntriesImport extends BaseClass {
           this.replaceEntriesHandler.bind(this),
         );
       }
+    }
+
+    // NOTE Must flush before `updateEntriesWithReferences` runs. `completeFile` is the only path to
+    // `closeFile`, which is the only place the mapper `index.json` is written. Without this the
+    // replaced entries stay absent from the index, the reference-update step never sees them, and
+    // their cross-entry references are silently never written. Also note that a chunk-size rollover
+    // does NOT save us: `writeIntoExistingFile` calls `closeFile(options?.closeFile === true)`, and
+    // we pass only `{ mapKeyVal: true }`, so the index is never written on rollover either.
+    // A failure here IS the reference-loss condition, so report it loudly rather than throwing:
+    // throwing would surface as a generic "Error while replacing existing entries" in the caller
+    // and hide the fact that references are about to go missing.
+    try {
+      entriesReplaceFileHelper?.completeFile(true);
+      log.success(`Replaced entries for content type ${cTUid} in locale ${locale}`, this.importConfig.context);
+    } catch (error) {
+      handleAndLogError(
+        error,
+        { ...this.importConfig.context, cTUid, locale },
+        `Failed to flush the reference-update mapper for ${cTUid} in locale ${locale}. Cross-entry references for its replaced entries will be missing.`,
+      );
     }
   }
 
@@ -969,8 +1014,18 @@ export default class EntriesImport extends BaseClass {
     const fs = new FsUtility({ basePath, indexFileName });
     const indexer = fs.indexFileContent;
     const indexerCount = values(indexer).length;
+    const expectedCount = this.refUpdateExpected[`${cTUid}:${locale}`] || 0;
     if (indexerCount === 0) {
-      log.debug(`No entries found for reference updates in ${cTUid} - ${locale}`, this.importConfig.context);
+      // NOTE `expectedCount > 0` here means entries WERE written into this mapper dir but the index
+      // is empty, i.e. a chunk was never flushed. That is silent reference loss, not an empty set.
+      if (expectedCount > 0) {
+        log.warn(
+          `Skipping reference updates for ${cTUid} in locale ${locale}: ${expectedCount} entries were written to the mapper but its index is empty. Their cross-entry references will be missing.`,
+          { ...this.importConfig.context, cTUid, locale },
+        );
+      } else {
+        log.debug(`No entries found for reference updates in ${cTUid} - ${locale}`, this.importConfig.context);
+      }
       return Promise.resolve();
     }
     log.debug(
@@ -1008,6 +1063,8 @@ export default class EntriesImport extends BaseClass {
       );
     };
 
+    let processedCount = 0;
+
     for (const index in indexer) {
       log.debug(
         `Processing reference update chunk ${index} of ${indexerCount} for ${cTUid} in ${locale}`,
@@ -1024,6 +1081,7 @@ export default class EntriesImport extends BaseClass {
 
       if (chunk) {
         let apiContent = values(chunk as Record<string, any>[]);
+        processedCount += apiContent.length;
         log.debug(
           `Processing ${apiContent.length} entries for reference updates in chunk ${index}`,
           this.importConfig.context,
@@ -1045,6 +1103,18 @@ export default class EntriesImport extends BaseClass {
           concurrencyLimit: this.importConcurrency,
         });
       }
+    }
+
+    // NOTE Catches the mixed case that the indexerCount === 0 guard above cannot: when the create
+    // path flushed its chunk but the replace path did not, the index is non-empty so we do not bail
+    // early, we just silently process fewer entries than were written. Compare the two.
+    if (processedCount < expectedCount) {
+      log.warn(
+        `Reference updates for ${cTUid} in locale ${locale} covered only ${processedCount} of ${expectedCount} entries written to the mapper. Cross-entry references for the remaining ${
+          expectedCount - processedCount
+        } entries will be missing.`,
+        { ...this.importConfig.context, cTUid, locale },
+      );
     }
   }
 
