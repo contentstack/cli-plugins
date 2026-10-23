@@ -51,7 +51,11 @@
     "bin": "csdx",
     "repositoryPrefix": "<%- repo %>/blob/main/packages/contentstack-migration/<%- commandPath %>"
   },
-  "repository": "contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-migration"
+  },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "postpack": "rm -f oclif.manifest.json",

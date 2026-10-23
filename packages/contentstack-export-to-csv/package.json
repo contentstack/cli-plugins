@@ -60,7 +60,11 @@
       "cm:export-to-csv": "EXPRTCSV"
     }
   },
-  "repository": "https://github.com/contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-export-to-csv"
+  },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo",

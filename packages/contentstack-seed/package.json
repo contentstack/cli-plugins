@@ -60,7 +60,11 @@
       "cm:seed": "O-SEED"
     }
   },
-  "repository": "contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-seed"
+  },
   "scripts": {
     "test": "jest",
     "pack": "npm pack --dry-run",

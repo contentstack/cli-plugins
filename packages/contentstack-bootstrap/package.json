@@ -69,5 +69,9 @@
       "cm:bootstrap": "BTSTRP"
     }
   },
-  "repository": "contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-bootstrap"
+  }
 }

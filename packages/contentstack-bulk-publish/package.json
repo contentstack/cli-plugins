@@ -87,7 +87,11 @@
       "cm:bulk-publish:configure": "O-BP-CNF"
     }
   },
-  "repository": "https://github.com/contentstack/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-bulk-publish"
+  },
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "prepack": "oclif manifest && oclif readme",
