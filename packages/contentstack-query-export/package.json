@@ -97,5 +97,9 @@
       "cm:export:query": "EXPRTQRY"
     }
   },
-  "repository": "https://github.com/contentstack/cli"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-query-export"
+  }
 }

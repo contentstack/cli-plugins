@@ -55,7 +55,11 @@
       "@oclif/plugin-help"
     ]
   },
-  "repository": "contentstack/cli-cm-regex-validate",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentstack/cli-plugins.git",
+    "directory": "packages/contentstack-cli-cm-regex-validate"
+  },
   "scripts": {
     "mocha": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "postpack": "rm -f oclif.manifest.json",
