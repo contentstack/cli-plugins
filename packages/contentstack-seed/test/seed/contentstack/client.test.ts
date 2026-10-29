@@ -208,7 +208,7 @@ describe('ContentstackClient', () => {
     it('should fetch stack by UID', async () => {
       const stackUid = 'STACK_API_KEY';
       const mockStack = {
-        uid: 'STACK_API_KEY',
+        uid: 'stack-123',
         name: 'Test Stack',
         master_locale: 'en-us',
         api_key: 'API_KEY',
@@ -225,7 +225,7 @@ describe('ContentstackClient', () => {
 
       expect(mockClient.stack).toHaveBeenCalledWith({ api_key: stackUid });
       expect(result).toEqual({
-        uid: 'STACK_API_KEY',
+        uid: 'stack-123',
         name: 'Test Stack',
         master_locale: 'en-us',
         api_key: 'API_KEY',
@@ -635,7 +635,7 @@ describe('ContentstackClient', () => {
 
       mockClient.stack.mockReturnValue(mockStackInstance);
 
-      return expect(contentstackClient.getStack('STACK_API_KEY')).rejects.toThrow('Test error');
+      return expect(contentstackClient.getStack('stack-123')).rejects.toThrow('Test error');
     });
 
     it('should build error from response.data.errorMessage', () => {
@@ -654,7 +654,7 @@ describe('ContentstackClient', () => {
 
       mockClient.stack.mockReturnValue(mockStackInstance);
 
-      return expect(contentstackClient.getStack('STACK_API_KEY')).rejects.toThrow('Response error');
+      return expect(contentstackClient.getStack('stack-123')).rejects.toThrow('Response error');
     });
 
     it('should build error from response.statusText', () => {
@@ -671,7 +671,7 @@ describe('ContentstackClient', () => {
 
       mockClient.stack.mockReturnValue(mockStackInstance);
 
-      return expect(contentstackClient.getStack('STACK_API_KEY')).rejects.toThrow('Not Found');
+      return expect(contentstackClient.getStack('stack-123')).rejects.toThrow('Not Found');
     });
   });
 });

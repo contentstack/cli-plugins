@@ -187,7 +187,7 @@ describe('ExportMarketplaceApps', () => {
       const setupPathsStub = sinon.stub(exportMarketplaceApps, 'setupPaths').callsFake(async () => {
         exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
         exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
-        exportMarketplaceApps.query = { target_uids: 'API_KEY' };
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
         exportMarketplaceApps.appSdk = mockAppSdk;
         exportMarketplaceApps.marketplaceAppPath = require('node:path').resolve(
           exportMarketplaceApps.exportConfig.exportDir,
@@ -208,7 +208,7 @@ describe('ExportMarketplaceApps', () => {
       expect(exportMarketplaceApps.marketplaceAppPath).to.exist;
       expect(exportMarketplaceApps.developerHubBaseUrl).to.equal('https://developer-api.contentstack.io');
       expect(exportMarketplaceApps.exportConfig.org_uid).to.equal('test-org-uid');
-      expect(exportMarketplaceApps.query).to.deep.equal({ target_uids: 'API_KEY' });
+      expect(exportMarketplaceApps.query).to.deep.equal({ target_uids: 'test-stack-uid' });
       expect(exportMarketplaceApps.appSdk).to.equal(mockAppSdk);
 
       setupPathsStub.restore();
@@ -236,7 +236,7 @@ describe('ExportMarketplaceApps', () => {
         );
         exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
         exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
-        exportMarketplaceApps.query = { target_uids: 'API_KEY' };
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
         exportMarketplaceApps.appSdk = mockAppSdk;
         await (FsUtility.prototype.makeDirectory as sinon.SinonStub)(exportMarketplaceApps.marketplaceAppPath);
       });
@@ -331,7 +331,7 @@ describe('ExportMarketplaceApps', () => {
         );
         exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
         exportMarketplaceApps.developerHubBaseUrl = 'https://developer-api.contentstack.io';
-        exportMarketplaceApps.query = { target_uids: 'API_KEY' };
+        exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
         exportMarketplaceApps.appSdk = mockAppSdk;
         await (FsUtility.prototype.makeDirectory as sinon.SinonStub)(exportMarketplaceApps.marketplaceAppPath);
       });
@@ -367,7 +367,7 @@ describe('ExportMarketplaceApps', () => {
   describe('exportApps() method', () => {
     beforeEach(() => {
       exportMarketplaceApps.appSdk = mockAppSdk;
-      exportMarketplaceApps.query = { target_uids: 'API_KEY' };
+      exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
       exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
     });
 
@@ -473,7 +473,7 @@ describe('ExportMarketplaceApps', () => {
     beforeEach(() => {
       exportMarketplaceApps.appSdk = mockAppSdk;
       exportMarketplaceApps.exportConfig.org_uid = 'test-org-uid';
-      exportMarketplaceApps.query = { target_uids: 'API_KEY' };
+      exportMarketplaceApps.query = { target_uids: 'test-stack-uid' };
     });
 
     it('should fetch and process stack-specific apps', async () => {
