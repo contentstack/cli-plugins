@@ -24,7 +24,7 @@ describe('ModuleExporter exportByBranches', () => {
       exportDir,
       branches,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-key',
+      apiKey: 'API_KEY',
       management_token: 'token',
       context: {} as any,
       modules: { types: ['stack'] } as any,
@@ -56,7 +56,7 @@ describe('ModuleExporter exportByBranches', () => {
       branchName: 'dev',
       branches,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-key',
+      apiKey: 'API_KEY',
       management_token: 'token',
       context: {} as any,
       modules: { types: ['stack'] } as any,
@@ -85,7 +85,7 @@ describe('ModuleExporter exportByBranches', () => {
       branchName: 'nonexistent',
       branches,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-key',
+      apiKey: 'API_KEY',
       management_token: 'token',
       context: {} as any,
       modules: { types: [] } as any,
@@ -111,7 +111,7 @@ describe('ModuleExporter exportByBranches', () => {
       exportDir,
       branches,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-key',
+      apiKey: 'API_KEY',
       management_token: 'token',
       context: {} as any,
       modules: { types: [] } as any,

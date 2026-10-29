@@ -79,7 +79,7 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'YOUR_PWD',
+        password: 'PASSWORD',
         source_stack: 'test-stack-key',
       } as ImportConfig;
 
@@ -97,7 +97,7 @@ describe('Login Handler', () => {
         clientLoginStub.calledWith({
           email: 'test@example.com',
           // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-          password: 'YOUR_PWD',
+          password: 'PASSWORD',
         }),
       ).to.be.true;
 
@@ -108,7 +108,7 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'YOUR_PWD_WRONG',
+        password: 'PASSWORD',
       } as ImportConfig;
 
       mockClient.login.resolves({
@@ -131,7 +131,7 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
+        password: 'PASSWORD',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
         data: '/test/content',
@@ -153,7 +153,7 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
+        password: 'PASSWORD',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
         data: '/test/content',
@@ -173,7 +173,7 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
+        password: 'PASSWORD',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
         data: '/test/content',
@@ -407,11 +407,11 @@ describe('Login Handler', () => {
       const config: ImportConfig = {
         email: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'testpassword',
+        password: 'PASSWORD',
         apiKey: 'test-api-key',
         source_stack: 'test-api-key',
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        access_token: 'test-access-token',
+        access_token: 'ACCESS_TOKEN',
         authtoken: 'test-auth-token',
         contentDir: '/test/content',
         data: '/test/content',

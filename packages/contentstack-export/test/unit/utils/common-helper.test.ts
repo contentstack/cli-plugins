@@ -110,13 +110,13 @@ describe('Common Helper Utils', () => {
         errors: {
           authorization: 'Invalid token',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'Invalid key'
+          api_key: 'API_KEY'
         }
       };
       const result = formatError(error);
       expect(result).to.include('Main error');
       expect(result).to.include('Management Token Invalid token');
-      expect(result).to.include('Stack API key Invalid key');
+      expect(result).to.include('Stack API key API_KEY');
     });
 
     it('should map entity names correctly', () => {
