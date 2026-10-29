@@ -247,8 +247,7 @@ describe('Interactive Utils', () => {
 
   describe('askAPIKey', () => {
     it('should prompt for stack API key', async () => {
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      const mockAPIKey = 'blt1234567890abcdef';
+      const mockAPIKey = 'API_KEY';
       inquireStub.resolves(mockAPIKey);
 
       const result = await askAPIKey();

@@ -518,15 +518,14 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-from-alias',
+        apiKey: 'API_KEY',
         token: 'cs-token-123',
       });
 
       const stackConfig = setupStackConfig(flags);
 
       expect(stackConfig.alias).to.equal('test-alias');
-      expect(stackConfig.apiKey).to.equal('stack-from-alias');
+      expect(stackConfig.apiKey).to.equal('API_KEY');
       expect(configHandlerGetStub.calledWith('tokens.test-alias')).to.be.true;
     });
 
@@ -541,8 +540,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'changeme',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -551,8 +549,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'dummy',
       });
 
       const stackConfig = setupStackConfig(flags);
@@ -573,8 +570,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'changeme',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -595,8 +591,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'changeme',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -604,8 +599,7 @@ describe('Config Builder Utilities', () => {
       configHandlerGetStub.withArgs('tokens.mgmt-alias').returns({
         type: 'management',
         token: 'cs-mgmt-token',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'dummy',
       });
 
       expect(() => setupStackConfig(flags)).to.throw(/is not a delivery token/);
@@ -622,8 +616,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'changeme',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -632,8 +625,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production', // Different from source-env
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'dummy',
       });
 
       const stackConfig = setupStackConfig(flags);
@@ -644,7 +636,7 @@ describe('Config Builder Utilities', () => {
 
     it('should set custom CMA host', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'stack123',
+        'stack-api-key': 'dummy',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -657,7 +649,7 @@ describe('Config Builder Utilities', () => {
 
     it('should set custom CDA host', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'stack123',
+        'stack-api-key': 'dummy',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -671,7 +663,7 @@ describe('Config Builder Utilities', () => {
 
     it('should use default CDA host if not provided', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'stack123',
+        'stack-api-key': 'dummy',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -684,7 +676,7 @@ describe('Config Builder Utilities', () => {
 
     it('should pass branch to stack config', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'stack123',
+        'stack-api-key': 'dummy',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -698,7 +690,7 @@ describe('Config Builder Utilities', () => {
 
     it('should handle source-env without source-alias', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'stack123',
+        'stack-api-key': 'dummy',
         operation: 'publish',
         'source-env': 'production',
         environments: ['dev'],

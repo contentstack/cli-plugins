@@ -51,8 +51,7 @@ describe('detectAssetManagementExportFromContentDir', () => {
     );
     fs.writeFileSync(
       path.join(tmpRoot, 'branches.json'),
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      JSON.stringify([{ stackHeaders: { api_key: 'source-stack-key' } }]),
+      JSON.stringify([{ stackHeaders: { api_key: 'API_KEY' } }]),
     );
 
     stub(utilities.configHandler, 'get').withArgs('region').returns({
@@ -62,6 +61,6 @@ describe('detectAssetManagementExportFromContentDir', () => {
     const flags = detectAssetManagementExportFromContentDir(tmpRoot);
     expect(flags.assetManagementEnabled).to.equal(true);
     expect(flags.assetManagementUrl).to.equal('https://am.example.com');
-    expect(flags.source_stack).to.equal('source-stack-key');
+    expect(flags.source_stack).to.equal('API_KEY');
   });
 });

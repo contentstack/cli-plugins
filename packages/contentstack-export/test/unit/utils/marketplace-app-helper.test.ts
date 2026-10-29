@@ -15,8 +15,7 @@ describe('Marketplace App Helper Utils', () => {
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-stack-uid',
+      apiKey: 'API_KEY',
       exportDir: '/test/export',
       data: '/test/data',
       branchName: '',
@@ -48,7 +47,7 @@ describe('Marketplace App Helper Utils', () => {
       fetchConcurrency: 5,
       writeConcurrency: 5,
       developerHubBaseUrl: '',
-      marketplaceAppEncryptionKey: 'test-encryption-key',
+      marketplaceAppEncryptionKey: 'YOUR_SECRET_HERE',
       modules: {
         types: ['marketplace-apps'],
         marketplace_apps: {
@@ -117,14 +116,13 @@ describe('Marketplace App Helper Utils', () => {
 
       expect(managementSDKClientSpy.calledOnce).to.be.true;
       expect(mockStack.calledOnce).to.be.true;
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'test-stack-uid' });
+      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'API_KEY' });
       expect(mockFetch.calledOnce).to.be.true;
       expect(result).to.equal('test-org-uid-123');
     });
 
     it('should use apiKey from config as api_key', async () => {
-      mockExportConfig.apiKey = 'custom-stack-key';
+      mockExportConfig.apiKey = 'changeme';
       const mockStackData = { org_uid: 'org-123' };
 
       const mockFetch = sandbox.stub().resolves(mockStackData);
@@ -135,8 +133,7 @@ describe('Marketplace App Helper Utils', () => {
 
       await getOrgUid(mockExportConfig);
 
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'custom-stack-key' });
+      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'changeme' });
     });
 
     it('should handle API errors gracefully', async () => {
@@ -307,7 +304,7 @@ describe('Marketplace App Helper Utils', () => {
 
     it('should create NodeCrypto instance with correct arguments', async () => {
       mockExportConfig.forceStopMarketplaceAppsPrompt = true;
-      mockExportConfig.marketplaceAppEncryptionKey = 'test-encryption-key';
+      mockExportConfig.marketplaceAppEncryptionKey = 'YOUR_SECRET_HERE';
 
       let capturedArgs: any;
       const nodeCryptoConstructorSpy = sandbox.spy((args: any) => {
@@ -319,8 +316,7 @@ describe('Marketplace App Helper Utils', () => {
       await createNodeCryptoInstance(mockExportConfig);
 
       expect(nodeCryptoConstructorSpy.calledOnce).to.be.true;
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      expect(capturedArgs).to.deep.equal({ encryptionKey: 'test-encryption-key' });
+      expect(capturedArgs).to.deep.equal({ encryptionKey: 'YOUR_SECRET_HERE' });
     });
 
     it('should handle empty marketplaceAppEncryptionKey in config', async () => {

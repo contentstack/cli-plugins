@@ -143,8 +143,7 @@ describe("Migration Config validation", () => {
 
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -443,8 +442,7 @@ describe("Content Type with Single RTE Field of Single Type", function () {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -938,8 +936,7 @@ describe("Global Field Migration", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -1111,8 +1108,7 @@ describe("Content Type with single rte of multiple type", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -1143,8 +1139,7 @@ describe("Content Type with Single RTE inside modular block", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -1183,8 +1178,7 @@ describe("Content Type with Single RTE of type multiple inside group", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -1223,8 +1217,7 @@ describe("Content Type with Single RTE inside group of type multiple", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 
@@ -1263,8 +1256,7 @@ describe("Content Type with multiple file field", () => {
   const getTokenCallback = sinon.stub();
   getTokenCallback.withArgs("test1").returns({
     token: "testManagementToken",
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: "testApiKey",
+    apiKey: "API_KEY",
     type: "management",
   });
 

@@ -79,8 +79,8 @@ describe('CloneHandler - Branch', () => {
           module: 'clone',
           email: 'test@example.com',
         },
-        source_stack: 'test-source-key',
-        target_stack: 'test-target-key',
+        source_stack: 'API_KEY',
+        target_stack: 'changeme',
         sourceStackBranchAlias: 'main-alias',
         targetStackBranchAlias: 'develop-alias',
       };
@@ -105,13 +105,11 @@ describe('CloneHandler - Branch', () => {
       try {
         await handler.resolveBranchAliases(true);
         // If it doesn't throw, verify stack was called
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        expect(mockClient.stack.calledWith({ api_key: 'test-source-key' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'API_KEY' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        expect(mockClient.stack.calledWith({ api_key: 'test-source-key' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'API_KEY' })).to.be.true;
       }
     });
 
@@ -122,13 +120,11 @@ describe('CloneHandler - Branch', () => {
 
       try {
         await handler.resolveBranchAliases(false);
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'changeme' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        expect(mockClient.stack.calledWith({ api_key: 'test-target-key' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'changeme' })).to.be.true;
       }
     });
   });
@@ -146,8 +142,8 @@ describe('CloneHandler - Branch', () => {
 //           module: 'clone',
 //           email: 'test@example.com',
 //         },
-//         source_stack: 'test-source-key',
-//         target_stack: 'test-target-key',
+//         source_stack: 'API_KEY',
+//         target_stack: 'changeme',
 //       };
 //       handler = new CloneHandler(config);
 //       mockClient = {

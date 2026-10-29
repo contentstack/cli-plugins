@@ -46,8 +46,7 @@ describe('Login Handler', () => {
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
         password: 'testpassword',
         source_stack: 'test-api-key',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        access_token: 'test-access-token',
+        access_token: 'ACCESS_TOKEN',
         authtoken: 'test-auth-token',
         apiKey: 'test-api-key',
         contentDir: '/test/content',
@@ -67,7 +66,7 @@ describe('Login Handler', () => {
       expect(result).to.equal(config);
       expect(config.headers).to.exist;
       expect(config.headers!.api_key).to.equal('test-api-key');
-      expect(config.headers!.access_token).to.equal('test-access-token');
+      expect(config.headers!.access_token).to.equal('ACCESS_TOKEN');
       expect(config.headers!.authtoken).to.equal('test-auth-token');
       expect(config.headers!['X-User-Agent']).to.equal('contentstack-export/v');
       expect(mockClient.login.calledOnce).to.be.true;
@@ -420,8 +419,7 @@ describe('Login Handler', () => {
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
         apiKey: 'test-api-key',
         source_stack: 'test-api-key',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        access_token: 'test-access-token',
+        access_token: 'ACCESS_TOKEN',
         authtoken: 'test-auth-token',
         contentDir: '/test/content',
         data: '/test/content',

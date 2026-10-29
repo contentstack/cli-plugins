@@ -1280,11 +1280,9 @@ describe('Common Helper', () => {
         message: 'Base error',
         errors: {
           authorization: 'Invalid token',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'Invalid key',
+          api_key: 'API_KEY',
           uid: 'Invalid UID',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          access_token: 'Invalid access token',
+          access_token: 'ACCESS_TOKEN',
         },
       };
 
@@ -1292,9 +1290,9 @@ describe('Common Helper', () => {
 
       expect(result).to.include('Base error');
       expect(result).to.include('Management Token Invalid token');
-      expect(result).to.include('Stack API key Invalid key');
+      expect(result).to.include('Stack API key API_KEY');
       expect(result).to.include('Content Type Invalid UID');
-      expect(result).to.include('Delivery Token Invalid access token');
+      expect(result).to.include('Delivery Token ACCESS_TOKEN');
     });
 
     it('should return error itself when parsing fails', () => {

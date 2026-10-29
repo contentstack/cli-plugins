@@ -719,8 +719,7 @@ describe('BaseBulkCommand', () => {
       (command as any).bulkOperationConfig = {
         publishMode: 'bulk',
         apiKey: undefined,
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        stackApiKey: 'fallback-key',
+        stackApiKey: 'API_KEY',
         branch: 'main',
         bulkOperationFolder: './bulk-operation',
       };

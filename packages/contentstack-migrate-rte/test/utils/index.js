@@ -6,8 +6,7 @@ const globalFieldResponse = require('../dummy/globalFieldResponse.json')
 const dummyToken = {
   test1: {
     token: 'testManagementToken',
-    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    apiKey: 'testApiKey',
+    apiKey: 'API_KEY',
     type: 'management',
   },
 }

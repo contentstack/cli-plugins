@@ -34,8 +34,7 @@ describe('Marketplace App Helper', () => {
 
     mockConfig = {
       org_uid: 'test-org-uid',
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-stack-uid',
+      apiKey: 'API_KEY',
       host: 'https://api.contentstack.io',
       developerHubBaseUrl: 'https://developerhub-api.contentstack.com',
       forceStopMarketplaceAppsPrompt: false,
@@ -148,11 +147,11 @@ describe('Marketplace App Helper', () => {
       expect(result).to.have.lengthOf(2);
       expect(mockFetchAll.calledTwice).to.be.true;
       expect(mockFetchAll.firstCall.args[0]).to.deep.equal({
-        target_uids: 'test-stack-uid',
+        target_uids: 'API_KEY',
         skip: 0,
       });
       expect(mockFetchAll.secondCall.args[0]).to.deep.equal({
-        target_uids: 'test-stack-uid',
+        target_uids: 'API_KEY',
         skip: 50,
       });
     });
@@ -231,7 +230,6 @@ describe('Marketplace App Helper', () => {
       const result = await getOrgUid(mockConfig);
 
       expect(result).to.equal('test-org-123');
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
       expect(mockClient.stack.calledWith({ api_key: mockConfig.apiKey })).to.be.true;
     });
 

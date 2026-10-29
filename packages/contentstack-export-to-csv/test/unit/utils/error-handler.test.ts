@@ -65,12 +65,11 @@ describe('error-handler', () => {
     it('should append api_key error details', () => {
       const error = {
         errorMessage: 'Invalid request',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        errors: { api_key: 'is required' },
+        errors: { api_key: 'API_KEY' },
       };
       const result = formatError(error);
       expect(result).to.include('Stack API key');
-      expect(result).to.include('is required');
+      expect(result).to.include('API_KEY');
     });
 
     it('should append uid error details', () => {
@@ -86,12 +85,11 @@ describe('error-handler', () => {
     it('should append access_token error details', () => {
       const error = {
         errorMessage: 'Unauthorized',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        errors: { access_token: 'is expired' },
+        errors: { access_token: 'ACCESS_TOKEN' },
       };
       const result = formatError(error);
       expect(result).to.include('Delivery Token');
-      expect(result).to.include('is expired');
+      expect(result).to.include('ACCESS_TOKEN');
     });
 
     it('should handle multiple error fields', () => {
@@ -99,8 +97,7 @@ describe('error-handler', () => {
         errorMessage: 'Multiple errors',
         errors: {
           authorization: 'is invalid',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'is missing',
+          api_key: 'changeme',
         },
       };
       const result = formatError(error);

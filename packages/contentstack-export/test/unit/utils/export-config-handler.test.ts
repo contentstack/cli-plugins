@@ -206,8 +206,7 @@ describe('Export Config Handler', () => {
     it('should support alias flag as alternative to management-token-alias', async () => {
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         token: 'test-token',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key'
+        apiKey: 'API_KEY'
       });
 
       const flags = {
@@ -217,7 +216,7 @@ describe('Export Config Handler', () => {
       const config = await setupConfig(flags);
 
       expect(config.management_token).to.equal('test-token');
-      expect(config.apiKey).to.equal('test-key');
+      expect(config.apiKey).to.equal('API_KEY');
     });
   });
 
@@ -402,7 +401,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         'branch-alias': 'main-branch',
       };
       const config = await setupConfig(flags);
@@ -417,7 +416,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         branch: 'feature-branch',
       };
       const config = await setupConfig(flags);
@@ -432,7 +431,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         module: 'assets',
       };
       const config = await setupConfig(flags);
@@ -448,7 +447,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         'secured-assets': true,
       };
       const config = await setupConfig(flags);
@@ -463,7 +462,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         'content-types': ['ct-1', 'ct-2'],
       };
       const config = await setupConfig(flags);
@@ -478,7 +477,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         'content-types': [] as string[],
       };
       const config = await setupConfig(flags);
@@ -496,7 +495,7 @@ describe('Export Config Handler', () => {
       const queryObj = { content_type_uid: 'blog' };
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         query: JSON.stringify(queryObj),
       };
       const config = await setupConfig(flags);
@@ -515,7 +514,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         query: '/path/to/query.json',
       };
       const config = await setupConfig(flags);
@@ -534,7 +533,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         query: '/path/to/query',
       };
       const config = await setupConfig(flags);
@@ -550,7 +549,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         query: 'invalid json {',
       };
 
@@ -575,7 +574,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
         config: '/path/to/config.json',
       };
       const config = await setupConfig(flags);
@@ -596,7 +595,7 @@ describe('Export Config Handler', () => {
 
       const flags = {
         data: '/test/data',
-        'stack-api-key': 'test-key',
+        'stack-api-key': 'API_KEY',
       };
       const config = await setupConfig(flags);
 
