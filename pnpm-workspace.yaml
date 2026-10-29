@@ -10,3 +10,4 @@ overrides:
   fast-uri: 4.2.3
   ws: 8.22.0
   qs: 6.16.2
+  adm-zip: 0.6.1
