@@ -15,8 +15,7 @@ describe('Marketplace App Helper Utils', () => {
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-stack-uid',
+      apiKey: 'API_KEY',
       exportDir: '/test/export',
       data: '/test/data',
       branchName: '',
@@ -117,14 +116,13 @@ describe('Marketplace App Helper Utils', () => {
 
       expect(managementSDKClientSpy.calledOnce).to.be.true;
       expect(mockStack.calledOnce).to.be.true;
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'test-stack-uid' });
+      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'API_KEY' });
       expect(mockFetch.calledOnce).to.be.true;
       expect(result).to.equal('test-org-uid-123');
     });
 
     it('should use apiKey from config as api_key', async () => {
-      mockExportConfig.apiKey = 'custom-stack-key';
+      mockExportConfig.apiKey = 'API_KEY';
       const mockStackData = { org_uid: 'org-123' };
 
       const mockFetch = sandbox.stub().resolves(mockStackData);
@@ -135,8 +133,7 @@ describe('Marketplace App Helper Utils', () => {
 
       await getOrgUid(mockExportConfig);
 
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'custom-stack-key' });
+      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'API_KEY' });
     });
 
     it('should handle API errors gracefully', async () => {

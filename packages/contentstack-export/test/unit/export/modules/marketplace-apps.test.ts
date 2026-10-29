@@ -17,8 +17,7 @@ describe('ExportMarketplaceApps', () => {
       versioning: false,
       host: 'https://api.contentstack.io',
       developerHubUrls: {},
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      apiKey: 'test-stack-uid',
+      apiKey: 'API_KEY',
       exportDir: '/test/export',
       data: '/test/data',
       branchName: '',

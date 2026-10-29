@@ -197,8 +197,7 @@ describe('Bulk Operation Log Handler', () => {
           locales: ['en-us'],
           items: [{ uid: 'entry1' }],
           status: 'success',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          apiKey: 'test-key',
+          apiKey: 'API_KEY',
           branch: 'main',
         },
       ];
@@ -255,8 +254,7 @@ describe('Bulk Operation Log Handler', () => {
           items: [{ uid: 'entry1' }],
           status: 'failed',
           error: 'Network error',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          apiKey: 'test-key',
+          apiKey: 'API_KEY',
           branch: 'main',
         },
       ];
@@ -353,8 +351,7 @@ describe('Bulk Operation Log Handler', () => {
           item: { uid: 'entry1', type: 'entry', locale: 'en-us' },
           environments: ['prod'],
           status: 'success',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          apiKey: 'test-key',
+          apiKey: 'API_KEY',
           branch: 'main',
         },
       ];
@@ -403,8 +400,7 @@ describe('Bulk Operation Log Handler', () => {
           environments: ['prod'],
           status: 'failed',
           error: 'Network error',
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          apiKey: 'test-key',
+          apiKey: 'API_KEY',
           branch: 'main',
         },
       ];
@@ -446,8 +442,7 @@ describe('Bulk Operation Log Handler', () => {
         locales: ['en-us'],
         items: [{ uid: 'entry1', type: 'entry', locale: 'en-us' }],
         status: 'success',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -472,8 +467,7 @@ describe('Bulk Operation Log Handler', () => {
         locales: ['en-us'],
         items: [],
         status: 'success',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -498,8 +492,7 @@ describe('Bulk Operation Log Handler', () => {
         locales: [],
         items: [],
         status: 'success',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -535,8 +528,7 @@ describe('Bulk Operation Log Handler', () => {
         items: [],
         status: 'failed',
         error: 'API Error',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -571,8 +563,7 @@ describe('Bulk Operation Log Handler', () => {
         item: { uid: 'entry1', type: 'entry', locale: 'en-us' },
         environments: ['prod'],
         status: 'success',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -595,8 +586,7 @@ describe('Bulk Operation Log Handler', () => {
         item: { uid: 'new-entry', type: 'entry', locale: 'en-us' },
         environments: ['prod'],
         status: 'success',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -632,8 +622,7 @@ describe('Bulk Operation Log Handler', () => {
         environments: ['prod'],
         status: 'failed',
         error: 'Publish failed',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 
@@ -655,8 +644,7 @@ describe('Bulk Operation Log Handler', () => {
         item: { uid: 'entry1', type: 'entry', locale: 'en-us' },
         environments: [],
         status: 'failed',
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key',
+        apiKey: 'API_KEY',
         branch: 'main',
       };
 

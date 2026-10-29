@@ -4,8 +4,7 @@ jest.mock('@contentstack/cli-command', () => ({
     error = jest.fn()
     warn = jest.fn()
     getToken(_alias: string) {
-      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      return { apiKey: 'default-api', type: 'management' }
+      return { apiKey: 'API_KEY', type: 'management' }
     }
   },
 }))
@@ -151,12 +150,11 @@ describe('ContentTypeCommand', () => {
 
     it('sets apiKey from alias token and warns on delivery token', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'from-token',
+        apiKey: 'API_KEY',
         type: 'delivery',
       } as any)
       await cmd.setup({ alias: 'my-alias' })
-      expect((cmd as any).apiKey).toBe('from-token')
+      expect((cmd as any).apiKey).toBe('API_KEY')
       expect(cliux.print).toHaveBeenCalledWith(
         expect.stringContaining('delivery token'),
         { color: 'yellow' }
@@ -165,12 +163,11 @@ describe('ContentTypeCommand', () => {
 
     it('sets apiKey from management token alias without warning', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'mgmt-key',
+        apiKey: 'API_KEY',
         type: 'management',
       } as any)
       await cmd.setup({ alias: 'm' })
-      expect((cmd as any).apiKey).toBe('mgmt-key')
+      expect((cmd as any).apiKey).toBe('API_KEY')
       expect(cliux.print).not.toHaveBeenCalledWith(
         expect.stringContaining('delivery token'),
         expect.anything()

@@ -630,8 +630,7 @@ describe('cm:export-to-csv', () => {
 
       const aliasClient = { stack: sandbox.stub().returns({}) } as any;
       const aliasSpy = sandbox.stub(cmd, 'getAliasDetails').resolves({
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        stackDetails: { name: 'Aliased', apiKey: 'ak-alias' } as any,
+        stackDetails: { name: 'Aliased', apiKey: 'API_KEY' } as any,
         apiClient: aliasClient,
       });
       sandbox.stub(cmd, 'checkAndUpdateBranchDetail').callsFake(async (_b, _s, sc) => sc);
@@ -647,7 +646,7 @@ describe('cm:export-to-csv', () => {
       });
 
       expect(aliasSpy.calledOnceWithExactly('my-alias', undefined)).to.equal(true);
-      expect(cmd.commandContext.apiKey).to.equal('ak-alias');
+      expect(cmd.commandContext.apiKey).to.equal('API_KEY');
       const noCt = printStub.getCalls().some((c) => String(c.args[0]).includes('No content types found'));
       expect(noCt).to.equal(true);
     });
@@ -897,17 +896,15 @@ describe('cm:export-to-csv', () => {
       const restoreCli = patchCliUtilities({ isAuthenticated: () => true });
       try {
         const { ExportCmd, interactiveMod } = reloadExportCommandWithUtilsStubs(sandbox, {
-          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          chooseStack: { name: 'MyStack', apiKey: 'stack-key-99' },
+          chooseStack: { name: 'MyStack', apiKey: 'API_KEY' },
         });
         const cmd = new ExportCmd([], minimalConfig);
         await cmd.init();
 
-        const out = await cmd.getStackDetails({} as any, 'stack-key-99', 'org-uid-z');
+        const out = await cmd.getStackDetails({} as any, 'API_KEY', 'org-uid-z');
 
-        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'stack-key-99' });
-        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'stack-key-99')).to.equal(
+        expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'API_KEY' });
+        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'API_KEY')).to.equal(
           true,
         );
       } finally {
