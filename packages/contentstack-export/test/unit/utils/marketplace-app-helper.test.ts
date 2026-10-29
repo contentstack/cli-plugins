@@ -47,7 +47,7 @@ describe('Marketplace App Helper Utils', () => {
       fetchConcurrency: 5,
       writeConcurrency: 5,
       developerHubBaseUrl: '',
-      marketplaceAppEncryptionKey: 'YOUR_SECRET_HERE',
+      marketplaceAppEncryptionKey: 'test-encryption-key',
       modules: {
         types: ['marketplace-apps'],
         marketplace_apps: {
@@ -122,7 +122,7 @@ describe('Marketplace App Helper Utils', () => {
     });
 
     it('should use apiKey from config as api_key', async () => {
-      mockExportConfig.apiKey = 'changeme';
+      mockExportConfig.apiKey = 'API_KEY';
       const mockStackData = { org_uid: 'org-123' };
 
       const mockFetch = sandbox.stub().resolves(mockStackData);
@@ -133,7 +133,7 @@ describe('Marketplace App Helper Utils', () => {
 
       await getOrgUid(mockExportConfig);
 
-      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'changeme' });
+      expect(mockStack.firstCall.args[0]).to.deep.equal({ api_key: 'API_KEY' });
     });
 
     it('should handle API errors gracefully', async () => {
@@ -304,7 +304,7 @@ describe('Marketplace App Helper Utils', () => {
 
     it('should create NodeCrypto instance with correct arguments', async () => {
       mockExportConfig.forceStopMarketplaceAppsPrompt = true;
-      mockExportConfig.marketplaceAppEncryptionKey = 'YOUR_SECRET_HERE';
+      mockExportConfig.marketplaceAppEncryptionKey = 'test-encryption-key';
 
       let capturedArgs: any;
       const nodeCryptoConstructorSpy = sandbox.spy((args: any) => {
@@ -316,7 +316,8 @@ describe('Marketplace App Helper Utils', () => {
       await createNodeCryptoInstance(mockExportConfig);
 
       expect(nodeCryptoConstructorSpy.calledOnce).to.be.true;
-      expect(capturedArgs).to.deep.equal({ encryptionKey: 'YOUR_SECRET_HERE' });
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+      expect(capturedArgs).to.deep.equal({ encryptionKey: 'test-encryption-key' });
     });
 
     it('should handle empty marketplaceAppEncryptionKey in config', async () => {

@@ -85,11 +85,12 @@ describe('error-handler', () => {
     it('should append access_token error details', () => {
       const error = {
         errorMessage: 'Unauthorized',
-        errors: { access_token: 'ACCESS_TOKEN' },
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+        errors: { access_token: 'is expired' },
       };
       const result = formatError(error);
       expect(result).to.include('Delivery Token');
-      expect(result).to.include('ACCESS_TOKEN');
+      expect(result).to.include('is expired');
     });
 
     it('should handle multiple error fields', () => {
@@ -97,7 +98,7 @@ describe('error-handler', () => {
         errorMessage: 'Multiple errors',
         errors: {
           authorization: 'is invalid',
-          api_key: 'changeme',
+          api_key: 'API_KEY',
         },
       };
       const result = formatError(error);

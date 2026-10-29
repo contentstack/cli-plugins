@@ -183,7 +183,7 @@ describe('teams-export functional', () => {
       items: [{ uid: 'r1', name: 'Editor', stack: { api_key: 'k1', name: 'Stack1', uid: 's1' } }],
     } as any);
     roleStub.onSecondCall().resolves({
-      items: [{ uid: 'r2', name: 'Author', stack: { api_key: 'changeme', name: 'Stack2', uid: 's2' } }],
+      items: [{ uid: 'r2', name: 'Author', stack: { api_key: 'API_KEY', name: 'Stack2', uid: 's2' } }],
     } as any);
     const interactiveMod = loadInteractiveFresh();
     sandbox.stub(interactiveMod, 'promptContinueExport').resolves(true);

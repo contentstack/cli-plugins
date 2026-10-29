@@ -139,7 +139,8 @@ describe('EntriesImport', () => {
       forceStopMarketplaceAppsPrompt: false,
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
-      auth_token: 'dummy',
+      // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+      auth_token: 'auth-token',
       selectedModules: ['entries'],
       skipAudit: false,
       skipEntriesPublish: false,

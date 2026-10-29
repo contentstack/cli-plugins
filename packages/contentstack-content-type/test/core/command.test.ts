@@ -11,7 +11,8 @@ jest.mock('@contentstack/cli-command', () => ({
 
 jest.mock('@contentstack/cli-utilities', () => ({
   authenticationHandler: {
-    accessToken: 'dummy',
+    // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+    accessToken: 'auth-token',
     getAuthDetails: jest.fn(),
   },
   cliux: {
@@ -51,7 +52,7 @@ describe('ContentTypeCommand', () => {
     jest.clearAllMocks()
     cmd = makeCmd()
     ;(authenticationHandler.getAuthDetails as jest.Mock).mockResolvedValue(undefined)
-    ;(authenticationHandler as any).accessToken = 'dummy'
+    ;(authenticationHandler as any).accessToken = 'auth-token'
   })
 
   describe('printOutput', () => {
@@ -143,17 +144,17 @@ describe('ContentTypeCommand', () => {
       expect((cmd as any).apiKey).toBe('stack-key-1')
       expect(ContentstackClient).toHaveBeenCalledWith(
         'https://api.contentstack.io',
-        'dummy'
+        'auth-token'
       )
     })
 
     it('sets apiKey from alias token and warns on delivery token', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
-        apiKey: 'changeme',
+        apiKey: 'API_KEY',
         type: 'delivery',
       } as any)
       await cmd.setup({ alias: 'my-alias' })
-      expect((cmd as any).apiKey).toBe('changeme')
+      expect((cmd as any).apiKey).toBe('API_KEY')
       expect(cliux.print).toHaveBeenCalledWith(
         expect.stringContaining('delivery token'),
         { color: 'yellow' }
@@ -162,11 +163,11 @@ describe('ContentTypeCommand', () => {
 
     it('sets apiKey from management token alias without warning', async () => {
       jest.spyOn(cmd, 'getToken').mockReturnValue({
-        apiKey: 'dummy',
+        apiKey: 'API_KEY',
         type: 'management',
       } as any)
       await cmd.setup({ alias: 'm' })
-      expect((cmd as any).apiKey).toBe('dummy')
+      expect((cmd as any).apiKey).toBe('API_KEY')
       expect(cliux.print).not.toHaveBeenCalledWith(
         expect.stringContaining('delivery token'),
         expect.anything()

@@ -410,7 +410,8 @@ describe('Login Handler', () => {
         password: 'testpassword',
         apiKey: 'test-api-key',
         source_stack: 'test-api-key',
-        access_token: 'ACCESS_TOKEN',
+        // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+        access_token: 'test-access-token',
         authtoken: 'test-auth-token',
         contentDir: '/test/content',
         data: '/test/content',

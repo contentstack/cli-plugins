@@ -540,7 +540,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        apiKey: 'changeme',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -549,7 +549,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production',
-        apiKey: 'dummy',
+        apiKey: 'API_KEY',
       });
 
       const stackConfig = setupStackConfig(flags);
@@ -570,7 +570,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        apiKey: 'changeme',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -591,7 +591,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        apiKey: 'changeme',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -599,7 +599,7 @@ describe('Config Builder Utilities', () => {
       configHandlerGetStub.withArgs('tokens.mgmt-alias').returns({
         type: 'management',
         token: 'cs-mgmt-token',
-        apiKey: 'dummy',
+        apiKey: 'API_KEY',
       });
 
       expect(() => setupStackConfig(flags)).to.throw(/is not a delivery token/);
@@ -616,7 +616,7 @@ describe('Config Builder Utilities', () => {
       };
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
-        apiKey: 'changeme',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -625,7 +625,7 @@ describe('Config Builder Utilities', () => {
         type: 'delivery',
         token: 'cs-delivery-token',
         environment: 'production', // Different from source-env
-        apiKey: 'dummy',
+        apiKey: 'API_KEY',
       });
 
       const stackConfig = setupStackConfig(flags);
@@ -636,7 +636,7 @@ describe('Config Builder Utilities', () => {
 
     it('should set custom CMA host', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'dummy',
+        'stack-api-key': 'API_KEY',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -649,7 +649,7 @@ describe('Config Builder Utilities', () => {
 
     it('should set custom CDA host', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'dummy',
+        'stack-api-key': 'API_KEY',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -663,7 +663,7 @@ describe('Config Builder Utilities', () => {
 
     it('should use default CDA host if not provided', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'dummy',
+        'stack-api-key': 'API_KEY',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -676,7 +676,7 @@ describe('Config Builder Utilities', () => {
 
     it('should pass branch to stack config', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'dummy',
+        'stack-api-key': 'API_KEY',
         operation: 'publish',
         environments: ['dev'],
         locales: ['en-us'],
@@ -690,7 +690,7 @@ describe('Config Builder Utilities', () => {
 
     it('should handle source-env without source-alias', () => {
       const flags: CommandFlags = {
-        'stack-api-key': 'dummy',
+        'stack-api-key': 'API_KEY',
         operation: 'publish',
         'source-env': 'production',
         environments: ['dev'],

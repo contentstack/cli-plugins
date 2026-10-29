@@ -1282,7 +1282,8 @@ describe('Common Helper', () => {
           authorization: 'Invalid token',
           api_key: 'API_KEY',
           uid: 'Invalid UID',
-          access_token: 'ACCESS_TOKEN',
+          // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
+          access_token: 'Invalid access token',
         },
       };
 
@@ -1292,7 +1293,7 @@ describe('Common Helper', () => {
       expect(result).to.include('Management Token Invalid token');
       expect(result).to.include('Stack API key API_KEY');
       expect(result).to.include('Content Type Invalid UID');
-      expect(result).to.include('Delivery Token ACCESS_TOKEN');
+      expect(result).to.include('Delivery Token Invalid access token');
     });
 
     it('should return error itself when parsing fails', () => {

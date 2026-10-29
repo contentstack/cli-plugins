@@ -896,15 +896,15 @@ describe('cm:export-to-csv', () => {
       const restoreCli = patchCliUtilities({ isAuthenticated: () => true });
       try {
         const { ExportCmd, interactiveMod } = reloadExportCommandWithUtilsStubs(sandbox, {
-          chooseStack: { name: 'MyStack', apiKey: 'changeme' },
+          chooseStack: { name: 'MyStack', apiKey: 'API_KEY' },
         });
         const cmd = new ExportCmd([], minimalConfig);
         await cmd.init();
 
-        const out = await cmd.getStackDetails({} as any, 'changeme', 'org-uid-z');
+        const out = await cmd.getStackDetails({} as any, 'API_KEY', 'org-uid-z');
 
-        expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'changeme' });
-        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'changeme')).to.equal(
+        expect(out).to.deep.equal({ name: 'MyStack', apiKey: 'API_KEY' });
+        expect((interactiveMod.chooseStack as sinon.SinonStub).calledWith({}, 'org-uid-z', 'API_KEY')).to.equal(
           true,
         );
       } finally {

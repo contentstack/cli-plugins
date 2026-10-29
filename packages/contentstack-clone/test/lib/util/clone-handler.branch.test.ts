@@ -80,7 +80,7 @@ describe('CloneHandler - Branch', () => {
           email: 'test@example.com',
         },
         source_stack: 'API_KEY',
-        target_stack: 'changeme',
+        target_stack: 'API_KEY',
         sourceStackBranchAlias: 'main-alias',
         targetStackBranchAlias: 'develop-alias',
       };
@@ -120,11 +120,11 @@ describe('CloneHandler - Branch', () => {
 
       try {
         await handler.resolveBranchAliases(false);
-        expect(mockClient.stack.calledWith({ api_key: 'changeme' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'API_KEY' })).to.be.true;
       } catch (error) {
         // Expected to fail due to actual function call without proper setup
         expect(error).to.exist;
-        expect(mockClient.stack.calledWith({ api_key: 'changeme' })).to.be.true;
+        expect(mockClient.stack.calledWith({ api_key: 'API_KEY' })).to.be.true;
       }
     });
   });
@@ -142,8 +142,8 @@ describe('CloneHandler - Branch', () => {
 //           module: 'clone',
 //           email: 'test@example.com',
 //         },
-//         source_stack: 'API_KEY',
-//         target_stack: 'changeme',
+//         source_stack: 'test-source-key',
+//         target_stack: 'test-target-key',
 //       };
 //       handler = new CloneHandler(config);
 //       mockClient = {
