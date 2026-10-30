@@ -16,7 +16,7 @@ describe('Module Index - startModuleImport', () => {
   it('should import a module successfully', async () => {
     const mockStackAPIClient = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'test-key',
+      api_key: 'API_KEY',
       name: 'test-stack'
     } as any;
 
@@ -46,7 +46,7 @@ describe('Module Index - startModuleImport', () => {
   it('should handle module import errors', async () => {
     const mockStackAPIClient = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'test-key',
+      api_key: 'API_KEY',
       name: 'test-stack'
     } as any;
 
@@ -72,7 +72,7 @@ describe('Module Index - startModuleImport', () => {
   it('should handle different module names', async () => {
     const mockStackAPIClient = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'test-key',
+      api_key: 'API_KEY',
       name: 'test-stack'
     } as any;
 
@@ -101,7 +101,7 @@ describe('Module Index - startModuleImport', () => {
   it('should handle stack module', async () => {
     const mockStackAPIClient = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'test-key',
+      api_key: 'API_KEY',
       name: 'test-stack'
     } as any;
 
@@ -141,7 +141,7 @@ describe('Module Index - startModuleImport', () => {
 
     const mockStackAPIClient = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'test-key',
+      api_key: 'API_KEY',
       name: 'test-stack',
       asset: sandbox.stub().returns({
         create: sandbox.stub().resolves({ uid: 'asset-123' }),
