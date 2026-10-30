@@ -68,7 +68,7 @@
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "test": "jest",
     "lint": "eslint \"src/**/*.ts\"",
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",

@@ -15,7 +15,7 @@
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json && node scripts/copy-assets.js",
     "lint": "eslint \"src/**/*.ts\"",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "pretest": "tsc -p test",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
