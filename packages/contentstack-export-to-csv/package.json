@@ -70,7 +70,7 @@
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "lint": "eslint \"src/**/*.ts\"",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "mocha --timeout 10000 --forbid-only \"test/unit/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",

@@ -60,7 +60,7 @@
     "clean": "rm -rf ./lib ./node_modules tsconfig.tsbuildinfo oclif.manifest.json",
     "compile": "tsc -b tsconfig.json",
     "lint": "eslint \"src/**/*.ts\"",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
     "test": "jest --testPathPattern=test/unit",
     "test:integration": "jest --testPathPattern=test/integration",

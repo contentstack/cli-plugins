@@ -72,7 +72,7 @@
   },
   "scripts": {
     "build": "oclif manifest",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "prepack": "oclif manifest && oclif readme",
     "test": "nyc --check-coverage=false mocha --require test/setup.js --forbid-only \"test/**/*.test.js\"",
     "version": "oclif readme && git add README.md",

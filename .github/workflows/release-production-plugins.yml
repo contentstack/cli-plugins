@@ -29,6 +29,8 @@ jobs:
       - name: Install root dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Install ggshield
+        run: pipx install ggshield
       - name: Build all plugins
         run: pnpm -r --sort run build
 
@@ -47,6 +49,8 @@ jobs:
           package: ./packages/contentstack-asset-management/package.json
           access: public
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Variants
       - name: Publishing variants (Production)
@@ -55,6 +59,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-variants/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Export
       - name: Publishing export (Production)
@@ -63,6 +69,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Audit
       - name: Publishing audit (Production)
@@ -71,6 +79,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-audit/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Import
       - name: Publishing import (Production)
@@ -79,6 +89,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Clone
       - name: Publishing clone (Production)
@@ -87,6 +99,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-clone/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Import Setup
       - name: Publishing import-setup (Production)
@@ -95,6 +109,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-import-setup/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Export to CSV
       - name: Publishing export-to-csv (Production)
@@ -103,6 +119,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-export-to-csv/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Migration
       - name: Publishing migration (Production)
@@ -111,6 +129,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-migration/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Migrate RTE
       - name: Publishing migrate-rte (Production)
@@ -120,6 +140,8 @@ jobs:
           package: ./packages/contentstack-migrate-rte/package.json
           access: public
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Seed
       - name: Publishing seed (Production)
@@ -128,6 +150,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-seed/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Bootstrap
       - name: Publishing bootstrap (Production)
@@ -136,6 +160,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-bootstrap/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Branches
       - name: Publishing branches (Production)
@@ -144,6 +170,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-branches/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Apps CLI
       - name: Publishing apps-cli (Production)
@@ -152,6 +180,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-apps-cli/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Query Export
       - name: Publishing query-export (Production)
@@ -160,6 +190,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-query-export/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Content Type
       - name: Publishing content-type (Production)
@@ -168,6 +200,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-content-type/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Regex Validate
       - name: Publishing regex-validate (Production)
@@ -177,6 +211,8 @@ jobs:
           package: ./packages/contentstack-cli-cm-regex-validate/package.json
           access: public
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Tsgen
       - name: Publishing tsgen (Production)
@@ -185,6 +221,8 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./packages/contentstack-cli-tsgen/package.json
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # External Migrate
       - name: Publishing external-migrate (Production)
@@ -194,6 +232,8 @@ jobs:
           package: ./packages/contentstack-external-migrate/package.json
           access: public
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
       # Bulk Operations
       - name: Publishing bulk-operations (Production)
@@ -203,3 +243,5 @@ jobs:
           package: ./packages/contentstack-bulk-operations/package.json
           access: public
           tag: latest
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}

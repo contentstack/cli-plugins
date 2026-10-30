@@ -60,7 +60,7 @@
   },
   "scripts": {
     "build": "pnpm compile && oclif manifest && oclif readme",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "ggshield secret scan archive ./*.tgz && rm -f oclif.manifest.json",
     "generate-api-ref-md-doc": "nyc jsdoc2md ./src/modules/*.ts > ./docs/api-reference.md || true",
     "compile": "tsc -b tsconfig.json",
     "prepack": "pnpm compile && oclif manifest && oclif readme",
