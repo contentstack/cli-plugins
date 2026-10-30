@@ -77,7 +77,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 
@@ -100,7 +100,7 @@ describe('SeedCommand', () => {
       const flags = {
         repo: 'user/repo',
         org: undefined,
-        'stack-api-key': 'api-key-123',
+        'stack-api-key': 'API_KEY',
         'stack-name': undefined,
         yes: undefined,
         alias: undefined,
@@ -111,13 +111,13 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 
       expect(ContentModelSeeder).toHaveBeenCalledWith(
         expect.objectContaining({
-          stackUid: 'api-key-123',
+          stackUid: 'API_KEY',
           orgUid: undefined,
           stackName: undefined,
         }),
@@ -138,7 +138,7 @@ describe('SeedCommand', () => {
         'my-alias': {
           token: 'management-token-123',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          apiKey: 'api-key-123',
+          apiKey: 'API_KEY',
         },
       };
 
@@ -149,7 +149,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 
@@ -157,7 +157,7 @@ describe('SeedCommand', () => {
         expect.objectContaining({
           alias: 'my-alias',
           managementToken: 'management-token-123',
-          stackUid: 'api-key-123',
+          stackUid: 'API_KEY',
         }),
       );
     });
@@ -235,7 +235,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 
@@ -261,7 +261,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 
@@ -294,7 +294,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      const expectedResult = { api_key: 'api-key-123' };
+      const expectedResult = { api_key: 'API_KEY' };
       mockSeeder.run.mockResolvedValue(expectedResult);
 
       const result = await command.run();
@@ -317,7 +317,7 @@ describe('SeedCommand', () => {
       } as any);
 
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      mockSeeder.run.mockResolvedValue({ api_key: 'api-key-123' });
+      mockSeeder.run.mockResolvedValue({ api_key: 'API_KEY' });
 
       await command.run();
 

@@ -263,7 +263,7 @@ describe('Interactive', () => {
           name: 'Existing Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-1',
+          api_key: 'API_KEY',
           org_uid: 'org-1',
         },
       ];
@@ -289,7 +289,7 @@ describe('Interactive', () => {
           name: 'Existing Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-1',
+          api_key: 'API_KEY',
           org_uid: 'org-1',
         },
         {
@@ -297,7 +297,7 @@ describe('Interactive', () => {
           name: 'Another Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-2',
+          api_key: 'STACK_API_KEY',
           org_uid: 'org-1',
         },
       ];
@@ -315,7 +315,7 @@ describe('Interactive', () => {
       expect(result.isNew).toBe(false);
       expect(result.name).toBe('Another Stack');
       expect(result.uid).toBe('stack-2');
-      expect(result.api_key).toBe('api-key-2');
+      expect(result.api_key).toBe('STACK_API_KEY');
     });
 
     it('should prompt for stack name when creating new stack without stackName', async () => {
@@ -373,7 +373,7 @@ describe('Interactive', () => {
           name: 'Zebra Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-3',
+          api_key: 'API_KEY',
           org_uid: 'org-1',
         },
         {
@@ -381,7 +381,7 @@ describe('Interactive', () => {
           name: 'Alpha Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-1',
+          api_key: 'API_KEY',
           org_uid: 'org-1',
         },
         {
@@ -389,7 +389,7 @@ describe('Interactive', () => {
           name: 'Beta Stack',
           master_locale: 'en-us',
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          api_key: 'api-key-2',
+          api_key: 'API_KEY',
           org_uid: 'org-1',
         },
       ];
