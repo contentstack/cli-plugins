@@ -65,7 +65,7 @@ describe('Command Helpers', () => {
         cmdExport: async () => true,
         setBranch: async () => {},
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        createNewStack: async (params: any) => ({ api_key: 'test-key' }),
+        createNewStack: async (params: any) => ({ api_key: 'API_KEY' }),
         cloneTypeSelection: async () => 'success',
       };
     });

@@ -84,17 +84,17 @@ describe('utils/index', () => {
 
   it('getStack should map stack fields', async () => {
     const sdk = stackFactory({})
-    const stack = await getStack(sdk, 'api-key-1', spinner)
+    const stack = await getStack(sdk, 'API_KEY', spinner)
     expect(stack).toEqual({
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      api_key: 'api-key-1',
+      api_key: 'API_KEY',
       master_locale: 'en-us',
       name: 'Stack',
       org_uid: 'org-1',
       uid: 'stack-uid'
     })
     // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-    expect(sdk.stack).toHaveBeenCalledWith({ api_key: 'api-key-1' })
+    expect(sdk.stack).toHaveBeenCalledWith({ api_key: 'API_KEY' })
   })
 
   it('getUsers should return users array', async () => {

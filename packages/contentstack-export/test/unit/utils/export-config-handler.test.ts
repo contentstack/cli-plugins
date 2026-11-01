@@ -207,7 +207,7 @@ describe('Export Config Handler', () => {
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         token: 'test-token',
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'test-key'
+        apiKey: 'API_KEY'
       });
 
       const flags = {
@@ -217,7 +217,7 @@ describe('Export Config Handler', () => {
       const config = await setupConfig(flags);
 
       expect(config.management_token).to.equal('test-token');
-      expect(config.apiKey).to.equal('test-key');
+      expect(config.apiKey).to.equal('API_KEY');
     });
   });
 
@@ -230,7 +230,7 @@ describe('Export Config Handler', () => {
       readFileStub.resolves({
         username: 'test@example.com',
         // deepcode ignore NoHardcodedPasswords: test fixture value, not a real secret
-        password: 'test-password'
+        password: 'PASSWORD'
       });
 
       const flags = {

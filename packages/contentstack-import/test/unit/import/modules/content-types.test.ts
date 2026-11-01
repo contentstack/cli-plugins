@@ -170,7 +170,7 @@ describe('ImportContentTypes', () => {
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      auth_token: 'auth-token',
+      auth_token: 'TOKEN',
       selectedModules: ['content-types'],
       skipAudit: false,
       preserveStackVersion: false,

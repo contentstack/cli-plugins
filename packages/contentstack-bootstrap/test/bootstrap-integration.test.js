@@ -83,7 +83,7 @@ describe('Bootstrap Integration Tests', () => {
       cloneDirectory: '/test/path',
       seedParams: {
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        stackAPIKey: 'test-key',
+        stackAPIKey: 'API_KEY',
         managementTokenAlias: 'test-alias',
         managementToken: 'test-token',
       },
@@ -119,7 +119,7 @@ describe('Bootstrap Integration Tests', () => {
     // Verify that SeedParams interface includes the new properties
     const mockSeedParams = {
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-      stackAPIKey: 'test-key',
+      stackAPIKey: 'API_KEY',
       org: 'test-org',
       stackName: 'test-stack',
       yes: 'yes',

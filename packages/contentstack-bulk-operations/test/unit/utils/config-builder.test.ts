@@ -519,14 +519,14 @@ describe('Config Builder Utilities', () => {
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-from-alias',
+        apiKey: 'API_KEY',
         token: 'cs-token-123',
       });
 
       const stackConfig = setupStackConfig(flags);
 
       expect(stackConfig.alias).to.equal('test-alias');
-      expect(stackConfig.apiKey).to.equal('stack-from-alias');
+      expect(stackConfig.apiKey).to.equal('API_KEY');
       expect(configHandlerGetStub.calledWith('tokens.test-alias')).to.be.true;
     });
 
@@ -542,7 +542,7 @@ describe('Config Builder Utilities', () => {
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -552,7 +552,7 @@ describe('Config Builder Utilities', () => {
         token: 'cs-delivery-token',
         environment: 'production',
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'API_KEY',
       });
 
       const stackConfig = setupStackConfig(flags);
@@ -574,7 +574,7 @@ describe('Config Builder Utilities', () => {
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -596,7 +596,7 @@ describe('Config Builder Utilities', () => {
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -605,7 +605,7 @@ describe('Config Builder Utilities', () => {
         type: 'management',
         token: 'cs-mgmt-token',
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'API_KEY',
       });
 
       expect(() => setupStackConfig(flags)).to.throw(/is not a delivery token/);
@@ -623,7 +623,7 @@ describe('Config Builder Utilities', () => {
 
       configHandlerGetStub.withArgs('tokens.test-alias').returns({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack-mgmt',
+        apiKey: 'API_KEY',
         token: 'cs-mgmt-token',
         type: 'management',
       });
@@ -633,7 +633,7 @@ describe('Config Builder Utilities', () => {
         token: 'cs-delivery-token',
         environment: 'production', // Different from source-env
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        apiKey: 'stack123',
+        apiKey: 'API_KEY',
       });
 
       const stackConfig = setupStackConfig(flags);

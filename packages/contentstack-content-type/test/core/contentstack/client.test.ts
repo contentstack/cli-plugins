@@ -27,7 +27,7 @@ describe('ContentstackClient', () => {
   describe('getContentTypeAuditLogs', () => {
     it('should call GET /audit-logs with query and api_key header', async () => {
       const client = new ContentstackClient('api.contentstack.io', 'token123')
-      await client.getContentTypeAuditLogs('stack-key', 'ct-uid', spinner)
+      await client.getContentTypeAuditLogs('API_KEY', 'ct-uid', spinner)
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: 'https://api.contentstack.io/v3/',
@@ -37,7 +37,7 @@ describe('ContentstackClient', () => {
         '/audit-logs',
         expect.objectContaining({
           // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-          headers: { api_key: 'stack-key' },
+          headers: { api_key: 'API_KEY' },
           params: {
             query: {
               $and: [
@@ -104,11 +104,11 @@ describe('ContentstackClient', () => {
   describe('getContentTypeReferences', () => {
     it('should call GET content_types uid references with params', async () => {
       const client = new ContentstackClient('api.contentstack.io', 'token123')
-      await client.getContentTypeReferences('stack-key', 'ct-uid', spinner)
+      await client.getContentTypeReferences('API_KEY', 'ct-uid', spinner)
 
       expect(mockGet).toHaveBeenCalledWith('/content_types/ct-uid/references', {
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        headers: { api_key: 'stack-key' },
+        headers: { api_key: 'API_KEY' },
         params: { include_global_fields: true }
       })
     })

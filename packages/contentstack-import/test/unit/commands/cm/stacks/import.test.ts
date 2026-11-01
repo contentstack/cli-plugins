@@ -69,7 +69,7 @@ describe('ImportCommand', () => {
       skipPrivateAppRecreationIfExist: true,
       isAuthenticated: true,
       // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret      
-      auth_token: 'auth-token',
+      auth_token: 'TOKEN',
       selectedModules: ['entries'],
       skipAudit: false,
       'exclude-global-modules': false,

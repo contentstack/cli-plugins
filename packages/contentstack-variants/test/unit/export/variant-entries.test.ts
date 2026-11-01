@@ -36,7 +36,7 @@ describe('Variant Entries Export', () => {
     it('sets branch header in adapter headers when branchName is configured', () => {
       const instance = new Export.VariantEntries({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        ...config, apiKey: 'TEST-KEY', branchName: 'feature-branch', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
+        ...config, apiKey: 'API_KEY', branchName: 'feature-branch', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
       } as ExportConfig);
       expect(getHeaders(instance).branch).to.equal('feature-branch');
     });
@@ -44,7 +44,7 @@ describe('Variant Entries Export', () => {
     it('branch header is undefined when branchName is not set', () => {
       const instance = new Export.VariantEntries({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        ...config, apiKey: 'TEST-KEY', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
+        ...config, apiKey: 'API_KEY', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
       } as ExportConfig);
       expect(getHeaders(instance).branch).to.be.undefined;
     });
@@ -59,7 +59,7 @@ describe('Variant Entries Export', () => {
     it('branch header value matches branchName exactly', () => {
       const instance = new Export.VariantEntries({
         // deepcode ignore HardcodedNonCryptoSecret: test fixture value, not a real secret
-        ...config, apiKey: 'TEST-KEY', branchName: 'eu-release-2025', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
+        ...config, apiKey: 'API_KEY', branchName: 'eu-release-2025', org_uid: 'TEST-ORG', project_id: 'TEST-PROJECT',
       } as ExportConfig);
       expect(getHeaders(instance).branch).to.equal('eu-release-2025');
     });
