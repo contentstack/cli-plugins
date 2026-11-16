@@ -11,15 +11,37 @@ import { AddCSVRowParams, BranchDiffVerboseRes, CSV_HEADER, CSVRow, ContentTypeI
  */
 export function getFieldDisplayName(field: Record<string, any>): string {
   let fieldName = field?.displayName || field?.display_name || field?.title || field?.uid;
-  
-  // Special handling for field_rules
-  if (!fieldName && field?.path === 'field_rules') {
-    fieldName = 'Field Rules';
-  } else if (!fieldName) {
-    fieldName = 'Unknown Field';
+
+  if (!fieldName) {
+    const path = typeof field?.path === 'string' ? field.path : '';
+    if (path === 'field_rules') {
+      fieldName = 'Field Rules';
+    } else if (isContentTypeOptionPath(path)) {
+      fieldName = getOptionDisplayName(path);
+    } else {
+      fieldName = path || 'Unknown Field';
+    }
   }
-  
+
   return fieldName as string;
+}
+
+/**
+ * Whether a diff path points at a content type option (e.g. "options.is_page")
+ * @param path - The diff item path
+ * @returns {boolean}
+ */
+export function isContentTypeOptionPath(path: unknown): path is string {
+  return typeof path === 'string' && path.startsWith('options.') && path.length > 'options.'.length;
+}
+
+/**
+ * Readable label for a content type option path, e.g. "options.is_page" -> "Options → is_page"
+ * @param path - The option path
+ * @returns {string}
+ */
+export function getOptionDisplayName(path: string): string {
+  return `Options → ${path.slice('options.'.length).split('.').join(' → ')}`;
 }
 
 /**
@@ -230,7 +252,7 @@ function addCSVRow(csvRows: CSVRow[], params: AddCSVRowParams): void {
   csvRows.push({
     contentTypeName: params.contentTypeName,
     fieldName: params.fieldName,
-    fieldPath: 'N/A',
+    fieldPath: params.fieldPath || 'N/A',
     operation: params.fieldType,
     sourceBranchValue: params.sourceValue,
     srNo: params.srNo,
@@ -258,22 +280,36 @@ function addFieldChangesToCSV(csvRows: CSVRow[], params: {
 
     fields.forEach(field => {
       const fieldName = getFieldDisplayName(field);
+      const fieldPath = getCSVFieldPath(field);
 
       if (field.propertyChanges?.length > 0) {
         field.propertyChanges.forEach(propertyChange => {
           addCSVRow(csvRows, {
             contentTypeName: params.contentTypeName,
             fieldName,
+            fieldPath,
             fieldType,
             sourceValue: formatValue(propertyChange.newValue),
             srNo: srNo++,
             targetValue: formatValue(propertyChange.oldValue)
           });
         });
+      } else if (fieldType === 'modified' && ('newValue' in field || 'oldValue' in field)) {
+        // Content type level changes (options, title, description) carry their values directly
+        addCSVRow(csvRows, {
+          contentTypeName: params.contentTypeName,
+          fieldName,
+          fieldPath,
+          fieldType,
+          sourceValue: formatValue(field.newValue),
+          srNo: srNo++,
+          targetValue: formatValue(field.oldValue)
+        });
       } else {
         addCSVRow(csvRows, {
           contentTypeName: params.contentTypeName,
           fieldName,
+          fieldPath,
           fieldType,
           sourceValue: fieldType === 'added' ? 'N/A' : formatValue(field),
           srNo: srNo++,
@@ -282,6 +318,17 @@ function addFieldChangesToCSV(csvRows: CSVRow[], params: {
       }
     });
   });
+}
+
+/**
+ * Field path shown in the CSV: the diff path (e.g. "group.title", "options.is_page"),
+ * falling back to the uid for content type level changes that carry an empty path.
+ * @param field - The diff item
+ * @returns {string} Field path, or 'N/A' when none is known
+ */
+function getCSVFieldPath(field: Record<string, any>): string {
+  const path = typeof field?.path === 'string' && field.path && field.path !== 'undefined' ? field.path : '';
+  return path || (typeof field?.uid === 'string' && field.uid) || 'N/A';
 }
 
 /**
