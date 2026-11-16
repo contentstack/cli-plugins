@@ -365,22 +365,10 @@ async function prepareModifiedDiff(params: {
   listOfModifiedFields: any[];
 }) {
   const { baseBranchFieldExists, compareBranchFieldExists } = params;
-  if (
-    compareBranchFieldExists.path === 'description' ||
-    compareBranchFieldExists.path === 'title' ||
-    compareBranchFieldExists.path === 'options.singleton'
-  ) {
+  if (compareBranchFieldExists.path === 'description' || compareBranchFieldExists.path === 'title') {
     let displayName: string;
     let changeDetails = '';
-    if (baseBranchFieldExists.path === 'options.singleton') {
-      if (compareBranchFieldExists.value) {
-        displayName = 'Single';
-        changeDetails = `Changed from Multiple to Single`;
-      } else {
-        displayName = 'Multiple';
-        changeDetails = `Changed from Single to Multiple`;
-      }
-    } else if (baseBranchFieldExists.path === 'description') {
+    if (baseBranchFieldExists.path === 'description') {
       displayName = 'Description';
       const oldDesc = baseBranchFieldExists.value || 'undefined';
       const newDesc = compareBranchFieldExists.value || 'undefined';
@@ -401,7 +389,7 @@ async function prepareModifiedDiff(params: {
       uid: baseBranchFieldExists.path,
     });
   } else if (isContentTypeOptionPath(compareBranchFieldExists.path)) {
-    // Other content type options (is_page, title, url_pattern, url_prefix, ...) carry { path, value }
+    // Content type options (is_page, singleton, title, url_pattern, url_prefix, ...) carry { path, value }
     // and no uid/display_name, so they must not go through the schema field deep diff.
     const optionPath: string = compareBranchFieldExists.path;
     const oldValue = baseBranchFieldExists?.value;

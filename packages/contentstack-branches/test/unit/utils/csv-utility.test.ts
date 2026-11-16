@@ -214,33 +214,57 @@ describe('CSV Utility Testcases', () => {
       expect(result.some((row) => row.fieldName === 'Unknown Field')).to.be.false;
     });
 
-    it('should show values, not the uid, for content type level changes like singleton', () => {
+    it('DX-30314: should label singleton like the other content type options', async () => {
+      const { listOfModifiedFields } = await branchDiffUtility.prepareBranchVerboseRes({
+        diff: {
+          status: 'modified',
+          base_branch: { differences: [{ path: 'options.singleton', value: false }] },
+          compare_branch: { differences: [{ path: 'options.singleton', value: true }] },
+        },
+      });
+
       const result = csvUtility.generateCSVDataFromVerbose({
         modified: [
           {
             moduleDetails: { title: 'Home', uid: 'home', status: 'modified', type: 'content_type' },
-            modifiedFields: {
-              modified: [
-                {
-                  changeDetails: 'Changed from Multiple to Single',
-                  displayName: 'Single',
-                  field: 'changed',
-                  newValue: true,
-                  oldValue: false,
-                  path: '',
-                  uid: 'options.singleton',
-                },
-              ],
-            },
+            modifiedFields: { modified: listOfModifiedFields },
           },
         ],
         added: [],
         deleted: [],
       });
 
+      expect(result).to.have.length(1);
+      expect(result[0].fieldName).to.equal('Options → singleton');
       expect(result[0].fieldPath).to.equal('options.singleton');
       expect(result[0].sourceBranchValue).to.equal('true');
       expect(result[0].targetBranchValue).to.equal('false');
+    });
+
+    it('should show values, not the uid, for a content type rename', async () => {
+      const { listOfModifiedFields } = await branchDiffUtility.prepareBranchVerboseRes({
+        diff: {
+          status: 'modified',
+          base_branch: { differences: [{ path: 'title', value: 'Home' }] },
+          compare_branch: { differences: [{ path: 'title', value: 'Home Page' }] },
+        },
+      });
+
+      const result = csvUtility.generateCSVDataFromVerbose({
+        modified: [
+          {
+            moduleDetails: { title: 'Home', uid: 'home', status: 'modified', type: 'content_type' },
+            modifiedFields: { modified: listOfModifiedFields },
+          },
+        ],
+        added: [],
+        deleted: [],
+      });
+
+      expect(result[0].fieldName).to.equal('Display Name');
+      expect(result[0].fieldPath).to.equal('title');
+      expect(result[0].sourceBranchValue).to.equal('Home Page');
+      expect(result[0].targetBranchValue).to.equal('Home');
     });
 
     it('should handle empty verbose results gracefully', () => {
