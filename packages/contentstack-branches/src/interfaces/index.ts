@@ -92,6 +92,7 @@ export interface CSVRow {
 export interface AddCSVRowParams {
   contentTypeName: string;
   fieldName: string;
+  fieldPath?: string;
   fieldType: string;
   sourceValue: string;
   srNo: number;
