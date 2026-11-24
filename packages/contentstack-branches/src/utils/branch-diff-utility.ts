@@ -19,7 +19,13 @@ import {
   ModifiedFieldsInput,
   ModifiedFieldsType,
 } from '../interfaces/index';
-import { extractValueFromPath, generateCSVDataFromVerbose, getFieldDisplayName } from './csv-utility';
+import {
+  extractValueFromPath,
+  generateCSVDataFromVerbose,
+  getFieldDisplayName,
+  getOptionDisplayName,
+  isContentTypeOptionPath,
+} from './csv-utility';
 
 /**
  * Fetch differences between two branches
@@ -320,6 +326,9 @@ async function baseAndCompareBranchDiff(params: {
       displayName = 'Description';
       path = baseBranchFieldExists?.path;
       field = 'metadata';
+    } else if (isContentTypeOptionPath(baseBranchFieldExists.path)) {
+      displayName = getOptionDisplayName(baseBranchFieldExists.path);
+      field = 'option';
     }
     params.listOfDeletedFields.push({
       displayName: displayName,
@@ -335,6 +344,9 @@ async function baseAndCompareBranchDiff(params: {
       displayName = 'Description';
       path = compareBranchFieldExists?.path;
       field = 'metadata';
+    } else if (isContentTypeOptionPath(compareBranchFieldExists.path)) {
+      displayName = getOptionDisplayName(compareBranchFieldExists.path);
+      field = 'option';
     }
     params.listOfAddedFields.push({
       displayName: displayName,
@@ -353,22 +365,10 @@ async function prepareModifiedDiff(params: {
   listOfModifiedFields: any[];
 }) {
   const { baseBranchFieldExists, compareBranchFieldExists } = params;
-  if (
-    compareBranchFieldExists.path === 'description' ||
-    compareBranchFieldExists.path === 'title' ||
-    compareBranchFieldExists.path === 'options.singleton'
-  ) {
+  if (compareBranchFieldExists.path === 'description' || compareBranchFieldExists.path === 'title') {
     let displayName: string;
     let changeDetails = '';
-    if (baseBranchFieldExists.path === 'options.singleton') {
-      if (compareBranchFieldExists.value) {
-        displayName = 'Single';
-        changeDetails = `Changed from Multiple to Single`;
-      } else {
-        displayName = 'Multiple';
-        changeDetails = `Changed from Single to Multiple`;
-      }
-    } else if (baseBranchFieldExists.path === 'description') {
+    if (baseBranchFieldExists.path === 'description') {
       displayName = 'Description';
       const oldDesc = baseBranchFieldExists.value || 'undefined';
       const newDesc = compareBranchFieldExists.value || 'undefined';
@@ -387,6 +387,21 @@ async function prepareModifiedDiff(params: {
       oldValue: baseBranchFieldExists.value,
       path: '',
       uid: baseBranchFieldExists.path,
+    });
+  } else if (isContentTypeOptionPath(compareBranchFieldExists.path)) {
+    // Content type options (is_page, singleton, title, url_pattern, url_prefix, ...) carry { path, value }
+    // and no uid/display_name, so they must not go through the schema field deep diff.
+    const optionPath: string = compareBranchFieldExists.path;
+    const oldValue = baseBranchFieldExists?.value;
+    const newValue = compareBranchFieldExists.value;
+    params.listOfModifiedFields.push({
+      changeDetails: `Changed from "${oldValue}" to "${newValue}"`,
+      displayName: getOptionDisplayName(optionPath),
+      field: 'option',
+      newValue,
+      oldValue,
+      path: optionPath,
+      uid: optionPath,
     });
   } else {
     const fieldDisplayName = getFieldDisplayName(compareBranchFieldExists);
