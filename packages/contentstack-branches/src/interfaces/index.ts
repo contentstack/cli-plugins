@@ -181,6 +181,8 @@ export interface MergeJobStatusResponse {
     global_fields: { added: number; deleted: number; modified: number };
   };
   pollingTimeout?: boolean;
+  reason?: string;
   status: 'complete' | 'failed' | 'in_progress' | 'unknown';
+  statusUnknown?: boolean;
   uid: string;
 }

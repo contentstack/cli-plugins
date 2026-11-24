@@ -67,6 +67,11 @@ export const readFile = (filePath, options = { type: 'json' }) => {
   });
 };
 
+/**
+ * Fetches a merge job from the merge queue.
+ * Retries once per second on rate limiting (429). Any other error is thrown to the caller
+ * (it does not exit the process), so callers can decide how to report it.
+ */
 export async function getMergeQueueStatus(stackAPIClient, payload): Promise<any> {
   const mergeJobUID: string = payload.uid;
   return await stackAPIClient
@@ -74,7 +79,23 @@ export async function getMergeQueueStatus(stackAPIClient, payload): Promise<any>
     .mergeQueue(mergeJobUID)
     .fetch()
     .then((data) => data)
-    .catch((err) => handleErrorMsg(err, () => getMergeQueueStatus(stackAPIClient, payload)));
+    .catch(async (err) => {
+      if (err?.status === 429 || err?.response?.status === 429) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return getMergeQueueStatus(stackAPIClient, payload);
+      }
+      throw err;
+    });
+}
+
+/**
+ * True when the merge queue does not know the job yet. Right after a merge is submitted the
+ * queue can answer 404 "Invalid merge job UID" (error code 131) until the merge worker has
+ * registered the job.
+ */
+export function isMergeJobNotRegistered(err): boolean {
+  const status = err?.status ?? err?.response?.status;
+  return status === 404 || err?.errorCode === 131;
 }
 
 export async function executeMergeRequest(stackAPIClient, payload): Promise<any> {

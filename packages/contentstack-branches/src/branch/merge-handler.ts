@@ -304,13 +304,22 @@ export default class MergeHandler {
       const mergeResponse = await executeMerge(this.stackAPIKey, mergePayload, this.host);
       cliux.loaderV2('', spinner);
 
-      if (mergeResponse.merge_details?.status === 'complete') {
+      if (mergeResponse?.merge_details?.status === 'complete') {
         cliux.success(`Merged the changes successfully. Merge UID: ${mergeResponse.uid}`);
 
         if (this.enableEntryExp) {
           await this.executeEntryExpFlow(mergeResponse.uid, mergePayload);
         }
-      } else if (mergeResponse.pollingTimeout) {
+      } else if (mergeResponse?.statusUnknown) {
+        // The merge was accepted, but its status could not be read. It may still complete in the
+        // background, so do not report a failure; give the user the UID to check it.
+        cliux.success(`Merge job submitted. Merge UID: ${mergeResponse.uid}`);
+        cliux.print(`\nCould not confirm the merge status yet: ${mergeResponse.reason}.`, { color: 'yellow' });
+        cliux.print('The merge may still be processing in the background. Check its status using:', { color: 'grey' });
+        cliux.print(`  csdx cm:branches:merge-status -k ${this.stackAPIKey} --merge-uid ${mergeResponse.uid}`, {
+          color: 'cyan',
+        });
+      } else if (mergeResponse?.pollingTimeout) {
         cliux.success(`Merge job initiated successfully. Merge UID: ${mergeResponse.uid}`);
         cliux.print('\n⏱  The merge is still processing in the background...', { color: 'yellow' });
         cliux.print('\nCheck status later using:', { color: 'grey' });

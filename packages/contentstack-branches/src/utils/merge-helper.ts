@@ -12,6 +12,7 @@ import {
   executeMergeRequest,
   getMergeQueueStatus,
   getbranchConfig,
+  isMergeJobNotRegistered,
   readFile,
   writeFile,
 } from './';
@@ -137,9 +138,8 @@ export const displayMergeSummary = (options) => {
 };
 
 /**
- * Executes a merge request and waits for completion with limited polling.
- * If the merge is in_progress, polls for status with max 10 retries and exponential backoff.
- * Returns immediately if merge is complete, throws error if failed.
+ * Executes a merge request and waits for completion by polling the merge queue.
+ * Returns immediately if the merge is already complete; otherwise polls (see fetchMergeStatus).
  *
  * @param apiKey - Stack API key
  * @param mergePayload - Merge request payload
@@ -149,70 +149,112 @@ export const displayMergeSummary = (options) => {
 export const executeMerge = async (apiKey, mergePayload, host): Promise<any> => {
   const stackAPIClient = await (await managementSDKClient({ host })).stack({ api_key: apiKey });
   const mergeResponse = await executeMergeRequest(stackAPIClient, { params: mergePayload });
-  if (mergeResponse.merge_details?.status === 'in_progress') {
-    // TBD call the queue with the id
-    return await fetchMergeStatus(stackAPIClient, { uid: mergeResponse.uid });
-  } else if (mergeResponse.merge_details?.status === 'complete') {
-    // return the merge id success
+  const status = mergeResponse?.merge_details?.status;
+  if (status === 'complete') {
     return mergeResponse;
   }
+  if (status === 'in_progress' || mergeResponse?.uid) {
+    // in_progress, or any other not-yet-final status: follow the job in the merge queue
+    return await fetchMergeStatus(stackAPIClient, { uid: mergeResponse?.uid });
+  }
+  throw new Error(`The merge request returned an unexpected response (status: ${status ?? 'none'}).`);
 };
 
+/** How many times to re-check a merge job that the queue does not know yet, and the base wait. */
+export const MERGE_JOB_REGISTRATION_RETRIES = 5;
+export const MERGE_JOB_REGISTRATION_DELAY_MS = 1000;
+
 /**
- * Fetches merge status with retry-limited polling (max 10 attempts) and exponential backoff.
- * Returns a structured response on polling timeout instead of throwing an error.
+ * Polls the merge queue until the merge job completes or fails.
+ *
+ * Right after a merge is submitted, the queue can answer 404 "Invalid merge job UID" (or an
+ * empty queue) until the merge worker has registered the job. Those answers are retried with a
+ * short linear backoff. If the status still cannot be determined (or the status check fails for
+ * any other reason), a structured response with `statusUnknown: true` and the merge UID is
+ * returned instead of an error, because the merge may still complete in the background.
  *
  * @param stackAPIClient - The stack API client for making requests
  * @param mergePayload - The merge payload containing the UID
- * @param initialDelay - Initial delay between retries in milliseconds (default: 5000ms)
- * @param maxRetries - Maximum number of retry attempts (default: 10)
- * @returns Promise<any> - Merge response object with optional pollingTimeout flag
+ * @param initialDelay - Delay between in-progress polls in milliseconds (default: 5000ms, +1s per poll, max 60s)
+ * @param maxRetries - Maximum number of in-progress polls
+ * @param registrationDelay - Base delay for "job not registered yet" retries in milliseconds
+ * @returns Promise<any> - Merge response object, optionally with pollingTimeout / statusUnknown flags
  */
 export const fetchMergeStatus = async (
   stackAPIClient,
   mergePayload,
   initialDelay = 5000,
   maxRetries = 10000, // Temporary making infinite polling to unblock the users
+  registrationDelay = MERGE_JOB_REGISTRATION_DELAY_MS,
 ): Promise<any> => {
   let delayMs = initialDelay;
   const maxDelayMs = 60000; // Cap delay at 60 seconds
+  let registrationAttempts = 0;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const mergeStatusResponse = await getMergeQueueStatus(stackAPIClient, { uid: mergePayload.uid });
+  const statusUnknown = (reason: string) => ({
+    pollingTimeout: true,
+    reason,
+    status: 'unknown',
+    statusUnknown: true,
+    uid: mergePayload.uid,
+  });
 
-    if (mergeStatusResponse?.queue?.length >= 1) {
-      const mergeRequestStatusResponse = mergeStatusResponse.queue[0];
-      const mergeStatus = mergeRequestStatusResponse.merge_details?.status;
+  // Returns true when the caller should poll again, false when retries are used up.
+  const waitForRegistration = async (): Promise<boolean> => {
+    if (registrationAttempts >= MERGE_JOB_REGISTRATION_RETRIES) return false;
+    registrationAttempts++;
+    cliux.print(`Waiting for the merge job to be registered... (Retry ${registrationAttempts}/${MERGE_JOB_REGISTRATION_RETRIES})`, {
+      color: 'grey',
+    });
+    await new Promise((resolve) => setTimeout(resolve, registrationDelay * registrationAttempts));
+    return true;
+  };
 
-      if (mergeStatus === 'complete') {
-        return mergeRequestStatusResponse;
-      } else if (mergeStatus === 'in-progress' || mergeStatus === 'in_progress') {
-        if (attempt < maxRetries) {
-          cliux.print(`Merge in progress... (Attempt ${attempt}/${maxRetries})`, { color: 'grey' });
-          await new Promise((resolve) => setTimeout(resolve, delayMs));
-          delayMs = Math.min(delayMs + 1000, maxDelayMs);
-        } else {
-          // Polling timeout: return structured response instead of throwing
-          cliux.print(`Merge in progress... (Attempt ${attempt}/${maxRetries})`, { color: 'grey' });
-          return {
-            merge_details: mergeRequestStatusResponse.merge_details,
-            pollingTimeout: true,
-            status: 'in_progress',
-            uid: mergePayload.uid,
-          };
-        }
-      } else if (mergeStatus === 'failed') {
-        if (mergeRequestStatusResponse?.errors?.length > 0) {
-          const errorPath = path.join(process.cwd(), 'merge-error.log');
-          await writeFile(errorPath, mergeRequestStatusResponse.errors);
-          cliux.print(`\nComplete error log can be found in ${path.resolve(errorPath)}`, { color: 'grey' });
-        }
-        throw new Error(`merge uid: ${mergePayload.uid}`);
-      } else {
-        throw new Error(`Invalid merge status found with merge ID ${mergePayload.uid}`);
+  let attempt = 0; // in-progress polls; "not registered yet" retries are counted separately
+  while (attempt < maxRetries) {
+    let mergeStatusResponse;
+    try {
+      mergeStatusResponse = await getMergeQueueStatus(stackAPIClient, { uid: mergePayload.uid });
+    } catch (error) {
+      const notRegistered = isMergeJobNotRegistered(error);
+      if (notRegistered && (await waitForRegistration())) continue;
+      const message = error?.errorMessage || error?.message || 'unknown error';
+      return statusUnknown(notRegistered ? `the merge queue does not list the job yet (${message})` : message);
+    }
+
+    if (!mergeStatusResponse?.queue?.length) {
+      if (await waitForRegistration()) continue;
+      return statusUnknown('the merge queue does not list the job yet');
+    }
+
+    attempt++;
+    const mergeRequestStatusResponse = mergeStatusResponse.queue[0];
+    const mergeStatus = mergeRequestStatusResponse.merge_details?.status;
+
+    if (mergeStatus === 'complete') {
+      return mergeRequestStatusResponse;
+    } else if (mergeStatus === 'in-progress' || mergeStatus === 'in_progress') {
+      cliux.print(`Merge in progress... (Attempt ${attempt}/${maxRetries})`, { color: 'grey' });
+      if (attempt >= maxRetries) {
+        // Polling timeout: return structured response instead of throwing
+        return {
+          merge_details: mergeRequestStatusResponse.merge_details,
+          pollingTimeout: true,
+          status: 'in_progress',
+          uid: mergePayload.uid,
+        };
       }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs = Math.min(delayMs + 1000, maxDelayMs);
+    } else if (mergeStatus === 'failed') {
+      if (mergeRequestStatusResponse?.errors?.length > 0) {
+        const errorPath = path.join(process.cwd(), 'merge-error.log');
+        await writeFile(errorPath, mergeRequestStatusResponse.errors);
+        cliux.print(`\nComplete error log can be found in ${path.resolve(errorPath)}`, { color: 'grey' });
+      }
+      throw new Error(`merge uid: ${mergePayload.uid}`);
     } else {
-      throw new Error(`No queue found with merge ID ${mergePayload.uid}`);
+      throw new Error(`Invalid merge status found with merge ID ${mergePayload.uid}`);
     }
   }
 };
