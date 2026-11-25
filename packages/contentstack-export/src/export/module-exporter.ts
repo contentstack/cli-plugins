@@ -58,12 +58,7 @@ class ModuleExporter {
       // No specific branch mentioned - export only the main branch
       targetBranch = this.exportConfig.branches.find((branch) => branch.uid === 'main');
       if (!targetBranch) {
-        const accessible = this.exportConfig.branches.map((branch) => branch.uid).filter(Boolean);
-        throw new Error(
-          `No main branch found or it is not accessible with the current credentials. ` +
-            `Accessible branch(es): ${accessible.length ? accessible.join(', ') : 'none'}. ` +
-            `Use --branch <name> to export a specific branch.`,
-        );
+        throw new Error('No main branch or available branches found');
       }
     }
 

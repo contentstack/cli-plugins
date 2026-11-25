@@ -144,8 +144,6 @@ export default class ExportCommand extends Command {
         cliux.print(`Error: ${error}`, { color: 'red' });
         cliux.print(`The log has been stored at '${sessionLogPath}'`, { color: 'green' });
       }
-      // Exit non-zero so scripts and CI can detect a failed export
-      this.exit(1);
     }
   }
 
