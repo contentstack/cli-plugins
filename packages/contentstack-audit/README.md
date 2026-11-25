@@ -1,13 +1,18 @@
+<!-- Insert Nodejs CI here -->
+<!-- Insert Audit version here -->
+
 # @contentstack/cli-audit
 
-Contentstack audit plugin
+Audit plugin
 
-<!-- toc -->
-* [@contentstack/cli-audit](#contentstackcli-audit)
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
-# Usage
+## How to install this plugin
+
+```shell
+$ csdx plugins:install @contentstack/cli-audit
+```
+
+## How to use this plugin
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-audit
@@ -21,7 +26,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`csdx cm:stacks:audit`](#csdx-cmstacksaudit)
 * [`csdx cm:stacks:audit:fix`](#csdx-cmstacksauditfix)

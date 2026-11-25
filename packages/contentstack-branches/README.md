@@ -1,13 +1,18 @@
 # @contentstack/cli-cm-branches
 
-Contentstack CLI plugin to do branches operations
+It is Contentstack’s CLI plugin to compare and merge content.
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-branches](#contentstackcli-cm-branches)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
+
+To switch regions, use the `csdx config:set:region` command instead of manually editing config files.
+
 # Usage
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-cm-branches
@@ -21,7 +26,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`csdx cm:branches`](#csdx-cmbranches)
 * [`csdx cm:branches:create`](#csdx-cmbranchescreate)

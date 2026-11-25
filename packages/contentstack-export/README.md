@@ -1,13 +1,19 @@
 # @contentstack/cli-cm-export
 
-Contentstack CLI plugin to export content from stack
+It is Contentstack’s CLI plugin to export content from the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/headless-cms/cli/migration/).
+
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
 * [@contentstack/cli-cm-export](#contentstackcli-cm-export)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
+
+Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
+
 # Usage
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-cm-export
@@ -21,7 +27,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`csdx cm:stacks:export [--config <value>] [--stack-api-key <value>] [--data-dir <value>] [--alias <value>] [--module <value>] [--content-types <value>] [--branch <value>] [--secured-assets]`](#csdx-cmstacksexport---config-value---stack-api-key-value---data-dir-value---alias-value---module-value---content-types-value---branch-value---secured-assets)
 

@@ -1,13 +1,23 @@
+> **Source of truth:** [cli-plugins monorepo](https://github.com/contentstack/cli-plugins) — `packages/contentstack-apps-cli`  
+> Migrated from [contentstack-apps-cli](https://github.com/contentstack/contentstack-apps-cli). See [APPS-CLI-MIGRATION.md](../../APPS-CLI-MIGRATION.md).
+
+<!-- Insert Nodejs CI here -->
+<!-- Insert Apps CLI version here -->
+
 # @contentstack/apps-cli
 
-App ClI
+Contentstack lets you develop apps in your organization using the Developer Hub portal. With the Apps CLI plugin, Contentstack CLI allows you to perform the CRUD operations on your app in Developer Hub and then use the app in your organization or stack by installing or uninstalling your app as required.
 
-<!-- toc -->
-* [@contentstack/apps-cli](#contentstackapps-cli)
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
-# Usage
+## How to install this plugin
+
+```shell
+$ csdx plugins:install @contentstack/apps-cli
+```
+
+## How to use this plugin
+
+This plugin requires you to be authenticated using [csdx auth:login](https://www.contentstack.com/docs/headless-cms/cli-authentication).
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/apps-cli
@@ -21,7 +31,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`csdx app`](#csdx-app)
 * [`csdx app:create`](#csdx-appcreate)

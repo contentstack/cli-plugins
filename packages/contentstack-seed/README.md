@@ -1,13 +1,12 @@
-# @contentstack/cli-cm-seed
+## Description
+The “seed” command in Contentstack CLI allows users to import content to your stack, from Github repositories. It's an effective command that can help you to migrate content to your stack with minimal steps.
 
-create a Stack from existing content types, entries, assets, etc.
+To import content to your stack, you can use either of the following:
 
-<!-- toc -->
-* [@contentstack/cli-cm-seed](#contentstackcli-cm-seed)
-* [Usage](#usage)
-* [Commands](#commands)
-<!-- tocstop -->
-# Usage
+**Curated official stacks**: When you run the seed command without a full `owner/repo` on `--repo`, the CLI offers a fixed list of official Contentstack seed repositories on GitHub (no GitHub search API).
+
+**Any GitHub repository**: You can also import content from another GitHub repository by passing `--repo` in `owner/repository` form (organization, user, or enterprise account).
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-cm-seed
@@ -21,7 +20,7 @@ USAGE
 ...
 ```
 <!-- usagestop -->
-# Commands
+## Commands
 <!-- commands -->
 * [`csdx cm:stacks:seed [--repo <value>] [--org <value>] [--stack-api-key <value>] [--stack-name <value>] [-y] [--alias <value>]`](#csdx-cmstacksseed---repo-value---org-value---stack-api-key-value---stack-name-value--y---alias-value)
 
@@ -59,3 +58,44 @@ EXAMPLES
 
 _See code: [src/commands/cm/stacks/seed.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-seed/src/commands/cm/stacks/seed.ts)_
 <!-- commandsstop -->
+
+## Advanced Flags
+The following flags allow you to host and import Stacks from your own GitHub repository.
+The account name can be a personal user account, organization account, or enterprise account.
+
+```
+  $ csdx cm:stacks:seed --repo "account/repository"
+```
+
+**Step 1.** Export a Stack
+
+Identify a Stack that you would like to export.
+This stack might be used in conjunction with a sample web site or mobile app you have created.
+
+Now, run `csdx cm:stacks:export` against it. The following documentation explains the [Export Plugin](https://www.contentstack.com/docs/headless-cms/export-content-using-the-cli).
+
+In most cases, running `csdx cm:stacks:export -A` or `csdx cm:stacks:export -a "management token"` should work for you.
+
+The `csdx cm:stacks:seed` plugin uses the same libraries as `csdx cm:stacks:import`.
+
+**Step 2.** GitHub
+
+Once the Stack is exported:
+
+* Create a GitHub repository.
+    * By convention, your repository name should be prefixed with `stack-`. For example: `stack-your-starter-app`.
+      Doing so will allow the stack names to be found by the interactive prompt when running `csdx cm:stacks:seed --repo "account"`.
+      This step is optional. You can fully qualify the repository name if required: `csdx cm:stacks:seed --repo "account/repo`.
+* Create a folder named `stack` within the newly created GitHub repository
+* Take the content from **Step 1** and commit it to the `stack` folder
+* Create a [Release](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/managing-releases-in-a-repository)
+
+The latest release will be downloaded and extracted, when a user attempts to install a Stack using:
+
+```
+$ csdx cm:stacks:seed --repo "account"
+$ csdx cm:stacks:seed --repo "account/repository"
+```
+
+## Documentation
+To get more detailed documentation of this command, visit the Seed command documentation on our [docs](https://www.contentstack.com/docs/headless-cms/import-content-using-the-seed-command).

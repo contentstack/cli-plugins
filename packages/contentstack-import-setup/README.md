@@ -1,13 +1,18 @@
-# @contentstack/cli-cm-import-setup
+@contentstack/cli-cm-import-setup
 
-Contentstack CLI plugin to setup the mappers and configurations for the import command
+It is Contentstack’s CLI plugin to import content in the stack. To learn how to export and import content in Contentstack, refer to the [Migration guide](https://www.contentstack.com/docs/headless-cms/cli/migration/).
+
+[![License](https://img.shields.io/npm/l/@contentstack/cli)](https://github.com/contentstack/cli/blob/main/LICENSE)
 
 <!-- toc -->
-* [@contentstack/cli-cm-import-setup](#contentstackcli-cm-import-setup)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
+
+Use `csdx config:set:region` to set your region. Run `csdx config:set:region --help` for available regions.
+
 # Usage
+
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-cm-import-setup
@@ -21,7 +26,9 @@ USAGE
 ...
 ```
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
 * [`csdx cm:stacks:import-setup [-k <value>] [-d <value>] [-a <value>] [--module <value,value>]`](#csdx-cmstacksimport-setup--k-value--d-value--a-value---module-valuevalue)
 
