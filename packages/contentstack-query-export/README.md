@@ -1,109 +1,63 @@
-# Contentstack CLI Query Export Plugin
+# @contentstack/cli-cm-export-query
 
-A powerful CLI plugin for Contentstack that enables query-based content export with intelligent dependency resolution and asset reference detection.
+Contentstack CLI plugin to export content from stack
 
-## Overview
+<!-- toc -->
+* [@contentstack/cli-cm-export-query](#contentstackcli-cm-export-query)
+* [Usage](#usage)
+* [Commands](#commands)
+<!-- tocstop -->
+# Usage
+<!-- usage -->
+```sh-session
+$ npm install -g @contentstack/cli-cm-export-query
+$ csdx COMMAND
+running command...
+$ csdx (--version)
+@contentstack/cli-cm-export-query/2.0.2 darwin-arm64 node-v22.23.3
+$ csdx --help [COMMAND]
+USAGE
+  $ csdx COMMAND
+...
+```
+<!-- usagestop -->
+# Commands
+<!-- commands -->
+* [`csdx cm:stacks:export-query --query <value> [options]`](#csdx-cmstacksexport-query---query-value-options)
 
-This plugin extends the Contentstack CLI to export content based on custom queries, automatically resolving dependencies between content types, global fields, extensions, and taxonomies. It intelligently detects and exports referenced assets to ensure complete content portability.
+## `csdx cm:stacks:export-query --query <value> [options]`
 
-## Features
+Export content from a stack using query-based filtering
 
-- 🔍 **Query-based Export**: Export content using custom queries instead of entire content types
-- 🔗 **Dependency Resolution**: Automatically resolve and export dependencies (global fields, extensions, taxonomies)
-- 🖼️ **Asset Reference Detection**: Intelligent detection of asset references in various formats
-- 📁 **Organized Output**: Well-structured export with separate folders for each module
-- ⚙️ **Configurable**: Support for external config files and flexible options
-- 🌐 **Multi-locale Support**: Export content across different locales
-- 📊 **Export Metadata**: Comprehensive metadata tracking for export operations
+```
+USAGE
+  $ csdx cm:stacks:export-query --query <value> [options]
 
-## Installation
+FLAGS
+  -a, --alias=<value>          Management token alias
+  -c, --config=<value>         Path to the configuration file
+  -d, --data-dir=<value>       Path to store exported content
+  -k, --stack-api-key=<value>  Stack API key
+  -y, --yes                    Skip confirmation prompts
+      --branch=<value>         Branch name to export from
+      --branch-alias=<value>   Alias of Branch to export from
+      --query=<value>          (required) Query as JSON string or file path
+      --secured-assets         Export secured assets
+      --skip-dependencies      Skip dependent modules (global-fields, extensions, taxonomies)
+      --skip-references        Skip referenced content types
 
-```bash
-# Install as a Contentstack CLI plugin
-npm install -g @contentstack/cli-cm-export-query
+DESCRIPTION
+  Export content from a stack using query-based filtering
 
-# Or install locally
-npm install @contentstack/cli-cm-export-query
+EXAMPLES
+  $ csdx cm:stacks:export-query --query '{"modules":{"content-types":{"title":{"$in":["Blog","Author"]}}}}'
+
+  $ csdx cm:stacks:export-query --query ./ct-query.json --skip-references
+
+  $ csdx cm:stacks:export-query --alias <alias> --query '{"modules":{"entries":{"content_type_uid":"blog"}}}'
+
+  $ csdx cm:stacks:export-query --query '{"modules":{"assets":{"title":{"$regex":"image"}}}}'
 ```
 
-## Usage
-
-### Basic Export
-
-```bash
-# Export using management token alias
-csdx cm:stacks:export-query -a <alias> --query "{'title': {'$exists': true}}"
-
-# Export using API key
-csdx cm:stacks:export-query --stack-api-key <api-key> --query "{'title': {'$exists': true}}"
-```
-
-### Command Options
-
-| Flag | Description | Required |
-|------|-------------|----------|
-| `-a, --alias` | Management token alias | No |
-| `--stack-api-key` | Stack API key | No |
-| `--query` | Query for content export | Yes |
-| `-d, --data-dir` | Export directory path | No |
-| `--branch` | Branch name to export from | No |
-| `--branch-alias` | Alias of Branch to export from | No |
-| `--skip-references` | Skip reference resolution | No |
-| `--skip-dependencies` | Skip dependency export | No |
-| `--secured-assets` | Include secured assets | No |
-| `--config` | External config file path | No |
-| `-y, --yes` | Skip confirmation prompts | No |
-
-### Query Examples
-
-**Basic Content Query:**
-```bash
-csdx cm:stacks:export-query -a prod --query "{'title': {'$regex': 'blog'}}"
-```
-
-**Date Range Query:**
-```bash
-csdx cm:stacks:export-query -a prod --query "{'updated_at': {'$gte': '2024-01-01'}}"
-```
-
-**Complex Query:**
-```bash
-csdx cm:stacks:export-query -a prod --query "{'$and': [{'title': {'$exists': true}}, {'tags': {'$in': ['featured']}}]}"
-```
-
-## Configuration
-
-### Default Configuration
-
-The plugin includes a default configuration file at `src/config/export-defaults.json`:
-
-```json
-{
-  "skipReferences": false,
-  "skipDependencies": false,
-  "securedAssets": false,
-  "includeGlobalFieldSchema": true,
-  "includePublishDetails": true,
-  "includeDimension": false,
-  "fetchConcurrency": 5,
-  "writeConcurrency": 5,
-  "batchSize": 100
-}
-```
-
-### External Configuration
-
-Create a custom config file and pass it using the `--config` flag:
-
-```json
-{
-  "skipReferences": true,
-  "batchSize": 50,
-  "fetchConcurrency": 3,
-  "securedAssets": true
-}
-```
-
-```bash
-csdx cm:stacks:export-query -a prod --query "{'title': {'$exists': true}}" --config ./my-config.json
-```
+_See code: [src/commands/cm/stacks/export-query.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-query-export/src/commands/cm/stacks/export-query.ts)_
+<!-- commandsstop -->

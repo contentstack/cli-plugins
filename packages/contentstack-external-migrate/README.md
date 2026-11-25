@@ -1,20 +1,27 @@
-![npm](https://img.shields.io/npm/v/@contentstack/cli-external-migrate)
+# @contentstack/cli-external-migrate
 
-## Description
+Migrate from external source to Contentstack
 
-This is a plugin for [Contentstack's](https://www.contentstack.com/) CLI.
-This plugin migrates content from an external/legacy CMS (e.g. Contentful) into Contentstack. It exports the source, converts it into a Contentstack import bundle, creates a new stack in your organization, and imports the content into it.
-
-Source lives in [contentstack/cli-plugins](https://github.com/contentstack/cli-plugins) at `packages/contentstack-external-migrate`.
-
-## How to install this plugin
-
-```shell
-$ csdx plugins:install @contentstack/cli-external-migrate
+<!-- toc -->
+* [@contentstack/cli-external-migrate](#contentstackcli-external-migrate)
+* [Usage](#usage)
+* [Commands](#commands)
+<!-- tocstop -->
+# Usage
+<!-- usage -->
+```sh-session
+$ npm install -g @contentstack/cli-external-migrate
+$ csdx COMMAND
+running command...
+$ csdx (--version)
+@contentstack/cli-external-migrate/2.0.2 darwin-arm64 node-v22.23.3
+$ csdx --help [COMMAND]
+USAGE
+  $ csdx COMMAND
+...
 ```
-
-## How to use this plugin
-
+<!-- usagestop -->
+# Commands
 <!-- commands -->
 * [`csdx migrate:create`](#csdx-migratecreate)
 

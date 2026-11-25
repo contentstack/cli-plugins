@@ -1,19 +1,13 @@
-> **Source of truth:** [cli-plugins](https://github.com/contentstack/cli-plugins) — `packages/contentstack-bulk-operations`. Migrated from [cli-bulk-operations](https://github.com/contentstack/cli-bulk-operations). Command migration guide: [BULK-OPERATIONS-MIGRATION.md](../../BULK-OPERATIONS-MIGRATION.md).
-
 # @contentstack/cli-bulk-operations
 
-> Contentstack CLI plugin for performing bulk operations on your content.
+Contentstack CLI plugin for bulk operations
 
-## Features
-
-- Perform bulk operations on Contentstack content
-- Built with TypeScript for type safety
-- Comprehensive test coverage
-- Code quality enforced with ESLint and Prettier
-- Automated CI/CD workflows
-
-## Usage
-
+<!-- toc -->
+* [@contentstack/cli-bulk-operations](#contentstackcli-bulk-operations)
+* [Usage](#usage)
+* [Commands](#commands)
+<!-- tocstop -->
+# Usage
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-bulk-operations
@@ -27,9 +21,7 @@ USAGE
 ...
 ```
 <!-- usagestop -->
-
-## Commands
-
+# Commands
 <!-- commands -->
 * [`csdx cm:stacks:bulk-assets`](#csdx-cmstacksbulk-assets)
 * [`csdx cm:stacks:bulk-entries`](#csdx-cmstacksbulk-entries)
@@ -272,98 +264,3 @@ EXAMPLES
 
 _See code: [src/commands/cm/stacks/bulk-taxonomies.ts](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-bulk-operations/src/commands/cm/stacks/bulk-taxonomies.ts)_
 <!-- commandsstop -->
-
-## Requirements
-
-- Node.js >= 22
-- Contentstack account with API credentials
-
-## Development
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/contentstack/cli-plugins.git
-cd cli-plugins/packages/contentstack-bulk-operations
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
-
-### Available Scripts
-
-- `npm run build` - Build the TypeScript project
-- `npm run lint` - Run ESLint checks
-- `npm run lint:fix` - Fix ESLint issues automatically
-- `npm run format` - Format code with Prettier
-- `npm run format:check` - Check code formatting
-- `npm test` - Run tests
-- `npm run test:coverage` - Run tests with coverage
-- `npm run clean` - Clean build artifacts
-
-
-## Testing
-
-This project uses Mocha for testing with comprehensive coverage reporting.
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests with detailed coverage report
-npm run test:coverage:report
-```
-
-## Code Quality
-
-### Linting
-
-The project uses ESLint with TypeScript-specific rules:
-
-```bash
-npm run lint
-```
-
-### Formatting
-
-Code formatting is handled by Prettier:
-
-```bash
-npm run format
-```
-
-### Git Hooks
-
-Husky is configured to run checks before commits and pushes:
-
-- **Pre-commit**: Runs lint-staged to check and format staged files
-- **Pre-push**: Runs linting and tests to ensure code quality
-
-## CI/CD
-
-### GitHub Actions Workflows
-
-1. **PR Checks** (`pr-checks.yml`): Runs on pull requests
-   - Lint checks
-   - Test execution with coverage
-   - Build verification
-
-2. **Test** (`test.yml`): Runs on pushes and PRs
-   - Tests across multiple Node.js versions (18, 20, 22)
-   - Coverage reporting to Codecov
-
-3. **Release** (`release.yml`): Runs on main branch
-   - Automated npm publishing
-   - GitHub release creation
-   - Semantic versioning
-
-## Changelog
-
-See [CHANGELOG.md](./CHANGELOG.md) for release history.

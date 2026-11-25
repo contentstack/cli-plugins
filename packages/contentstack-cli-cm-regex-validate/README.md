@@ -1,54 +1,27 @@
-# Regex Validation CLI Plugin
+# @contentstack/cli-cm-regex-validate
 
-The “Regex Validation” plugin in Contentstack CLI allows users to search for invalid regexes within the content types and global fields of their stack.
-
-Using the CLI “Regex Validation” plugin, you can find the invalid regexes within your stack
-and rectify them.
-
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
-[![Downloads/week](https://img.shields.io/npm/dw/@contentstack/cli-cm-regex-validate.svg)](https://npmjs.org/package/@contentstack/cli-cm-regex-validate)
-[![License](https://img.shields.io/npm/l/@contentstack/cli-cm-regex-validate.svg)](https://github.com/contentstack/cli-plugins/blob/main/packages/contentstack-cli-cm-regex-validate/package.json)
+Validate Fields with Regex Property of Content Type and Global Field in a Stack
 
 <!-- toc -->
-* [Regex Validation CLI Plugin](#regex-validation-cli-plugin)
+* [@contentstack/cli-cm-regex-validate](#contentstackcli-cm-regex-validate)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
-
 # Usage
-
-<!-- usage-no-overwrite -->
-
-#### Step 1:
-
+<!-- usage -->
 ```sh-session
-$ npm install -g @contentstack/cli
-
-$ csdx plugins:install @contentstack/cli-cm-regex-validate
-
-$ csdx plugins
+$ npm install -g @contentstack/cli-cm-regex-validate
+$ csdx COMMAND
 running command...
-@contentstack/cli-cm-regex-validate/2.0.1 darwin-arm64 node-v22.x
-
+$ csdx (--version)
+@contentstack/cli-cm-regex-validate/2.0.2 darwin-arm64 node-v22.23.3
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND
 ...
 ```
-
-#### Step 2:
-
-[Set the region](https://www.contentstack.com/docs/headless-cms/configure-regions-in-the-cli#set-region)
-
-<!-- usagestop-overwrite -->
-
-#### Step 3:
-
-[Configured management token alias](https://www.contentstack.com/docs/headless-cms/cli-authentication#add-management-token)
-
+<!-- usagestop -->
 # Commands
-
 <!-- commands -->
 * [`csdx cm:stacks:validate-regex`](#csdx-cmstacksvalidate-regex)
 

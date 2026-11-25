@@ -1,14 +1,13 @@
-Contentstack CLI’s “Bootstrap” plugin enables you to automate the process of setting up projects for sample and starter apps in Contentstack.
+# @contentstack/cli-cm-bootstrap
 
-This means that all the required steps such as stack, environment, and content type creation, entry and asset publishing are performed just by using a single command.
+Bootstrap contentstack apps
 
 <!-- toc -->
+* [@contentstack/cli-cm-bootstrap](#contentstackcli-cm-bootstrap)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
-
 # Usage
-
 <!-- usage -->
 ```sh-session
 $ npm install -g @contentstack/cli-cm-bootstrap
@@ -22,9 +21,7 @@ USAGE
 ...
 ```
 <!-- usagestop -->
-
 # Commands
-
 <!-- commands -->
 * [`csdx cm:bootstrap`](#csdx-cmbootstrap)
 
