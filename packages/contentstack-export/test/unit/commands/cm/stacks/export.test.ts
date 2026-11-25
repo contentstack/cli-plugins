@@ -80,4 +80,22 @@ describe('ExportCommand', () => {
       expect(moduleOptions).to.have.lengthOf(17);
     });
   });
+
+  describe('run() error handling', () => {
+    it('should exit with code 1 when the export fails', async () => {
+      const command: any = Object.create(ExportCommand.prototype);
+      sinon.stub(command, 'parse').rejects(new Error('No main branch found'));
+      const exitStub = sinon.stub(command, 'exit');
+
+      await command.run();
+
+      expect(exitStub.calledOnceWithExactly(1)).to.be.true;
+    });
+
+    it('should describe main as the default branch in the --branch help text', () => {
+      const description = (ExportCommand.flags['branch'] as any).description as string;
+      expect(description).to.include('main branch');
+      expect(description).to.not.include('all the branches');
+    });
+  });
 });

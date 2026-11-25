@@ -128,6 +128,8 @@ describe('ModuleExporter exportByBranches', () => {
       expect.fail('Should have thrown');
     } catch (err: any) {
       expect(err.message).to.include('No main branch');
+      expect(err.message).to.include('Accessible branch(es): dev');
+      expect(err.message).to.include('--branch <name>');
     }
   });
 });

@@ -20,7 +20,7 @@ $ npm install -g @contentstack/cli-bulk-operations
 $ csdx COMMAND
 running command...
 $ csdx (--version|-v)
-@contentstack/cli-bulk-operations/2.1.0 darwin-arm64 node-v22.21.1
+@contentstack/cli-bulk-operations/2.1.1 darwin-arm64 node-v22.23.3
 $ csdx --help [COMMAND]
 USAGE
   $ csdx COMMAND

@@ -16,7 +16,11 @@ const setupBranches = async (config: ExportConfig, stackAPIClient: any) => {
     if (result && typeof result === 'object') {
       branches.push(result);
     } else {
-      throw new Error('No branch found with the given name ' + config.branchName);
+      throw new Error(
+        'No branch found with the given name ' +
+          config.branchName +
+          ' or it is not accessible with the current credentials',
+      );
     }
   } else {
     try {
