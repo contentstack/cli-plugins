@@ -91,9 +91,7 @@ describe('Setup Branches', () => {
         await setupBranches(mockConfig, mockStackAPIClient);
         expect.fail('Should have thrown an error');
       } catch (error: any) {
-        expect(error.message).to.equal(
-          'No branch found with the given name ' + branchName + ' or it is not accessible with the current credentials',
-        );
+        expect(error.message).to.equal('No branch found with the given name ' + branchName);
       }
 
       expect(makeDirectoryStub.called).to.be.false;
@@ -112,9 +110,7 @@ describe('Setup Branches', () => {
         await setupBranches(mockConfig, mockStackAPIClient);
         expect.fail('Should have thrown an error');
       } catch (error: any) {
-        expect(error.message).to.equal(
-          'No branch found with the given name ' + branchName + ' or it is not accessible with the current credentials',
-        );
+        expect(error.message).to.equal('No branch found with the given name ' + branchName);
       }
     });
 
@@ -131,9 +127,7 @@ describe('Setup Branches', () => {
         await setupBranches(mockConfig, mockStackAPIClient);
         expect.fail('Should have thrown an error');
       } catch (error: any) {
-        expect(error.message).to.equal(
-          'No branch found with the given name ' + branchName + ' or it is not accessible with the current credentials',
-        );
+        expect(error.message).to.equal('No branch found with the given name ' + branchName);
       }
     });
   });
