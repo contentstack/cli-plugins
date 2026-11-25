@@ -85,7 +85,7 @@ export default class ExportCommand extends Command {
     branch: flags.string({
       // default: 'main',
       description:
-        "[optional] The name of the branch where you want to export your content. If you don't mention the branch name, then by default the content will be exported from all the branches of your stack.",
+        "[optional] The name of the branch where you want to export your content. If you don't mention the branch name, then by default the content will be exported from the main branch of your stack.",
       exclusive: ['branch-alias'],
     }),
     'branch-alias': flags.string({
